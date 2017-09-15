@@ -1,1 +1,1 @@
-Puppet::Resource::ResourceType3.new('notwrongname')
+Oregano::Resource::ResourceType3.new('notwrongname')

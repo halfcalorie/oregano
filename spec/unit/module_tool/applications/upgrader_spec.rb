@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet/module_tool/applications'
-require 'puppet_spec/module_tool/shared_functions'
-require 'puppet_spec/module_tool/stub_source'
+require 'oregano/module_tool/applications'
+require 'oregano_spec/module_tool/shared_functions'
+require 'oregano_spec/module_tool/stub_source'
 require 'tmpdir'
 
-describe Puppet::ModuleTool::Applications::Upgrader do
-  include PuppetSpec::ModuleTool::SharedFunctions
-  include PuppetSpec::Files
+describe Oregano::ModuleTool::Applications::Upgrader do
+  include OreganoSpec::ModuleTool::SharedFunctions
+  include OreganoSpec::Files
 
   before do
     FileUtils.mkdir_p(primary_dir)
@@ -16,31 +16,31 @@ describe Puppet::ModuleTool::Applications::Upgrader do
   let(:vardir)   { tmpdir('upgrader') }
   let(:primary_dir) { File.join(vardir, "primary") }
   let(:secondary_dir) { File.join(vardir, "secondary") }
-  let(:remote_source) { PuppetSpec::ModuleTool::StubSource.new }
+  let(:remote_source) { OreganoSpec::ModuleTool::StubSource.new }
 
   let(:environment) do
-    Puppet.lookup(:current_environment).override_with(
+    Oregano.lookup(:current_environment).override_with(
       :vardir     => vardir,
       :modulepath => [ primary_dir, secondary_dir ]
     )
   end
 
   before do
-    SemanticPuppet::Dependency.clear_sources
-    installer = Puppet::ModuleTool::Applications::Upgrader.any_instance
+    SemanticOregano::Dependency.clear_sources
+    installer = Oregano::ModuleTool::Applications::Upgrader.any_instance
     installer.stubs(:module_repository).returns(remote_source)
   end
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     before :each do
-      Puppet.settings.stubs(:[])
-      Puppet.settings.stubs(:[]).with(:module_working_dir).returns(Dir.mktmpdir('upgradertmp'))
+      Oregano.settings.stubs(:[])
+      Oregano.settings.stubs(:[]).with(:module_working_dir).returns(Dir.mktmpdir('upgradertmp'))
     end
   end
 
   def upgrader(name, options = {})
-    Puppet::ModuleTool.set_option_defaults(options)
-    Puppet::ModuleTool::Applications::Upgrader.new(name, options)
+    Oregano::ModuleTool.set_option_defaults(options)
+    Oregano::ModuleTool::Applications::Upgrader.new(name, options)
   end
 
   describe '#run' do
@@ -60,8 +60,8 @@ describe Puppet::ModuleTool::Applications::Upgrader do
 
     context 'for an installed module' do
       context 'with only one version' do
-        before { preinstall('puppetlabs-oneversion', '0.0.1') }
-        let(:module) { 'puppetlabs-oneversion' }
+        before { preinstall('oreganolabs-oneversion', '0.0.1') }
+        let(:module) { 'oreganolabs-oneversion' }
 
         it 'declines to upgrade' do
           expect(subject).to include :result => :noop

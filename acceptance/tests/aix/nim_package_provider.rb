@@ -9,7 +9,7 @@ confine :to, :platform => "aix"
 
 teardown do
     test_apply('cdrecord', 'absent', '')
-    test_apply('puppet.test.rte', 'absent', '')
+    test_apply('oregano.test.rte', 'absent', '')
 end
 
 def assert_package_version(package, expected_version)
@@ -34,7 +34,7 @@ end
 
 def test_apply(package_name, ensure_value, expected_version)
   manifest = get_manifest(package_name, ensure_value)
-  on hosts, puppet_apply(["--detailed-exitcodes", "--verbose"]),
+  on hosts, oregano_apply(["--detailed-exitcodes", "--verbose"]),
      {:stdin => manifest, :acceptable_exit_codes => [2]}
 
   step "validate installed package version" do
@@ -42,7 +42,7 @@ def test_apply(package_name, ensure_value, expected_version)
   end
 
   step "run again to ensure idempotency" do
-    on hosts, puppet_apply(["--detailed-exitcodes", "--verbose"]),
+    on hosts, oregano_apply(["--detailed-exitcodes", "--verbose"]),
        {:stdin => manifest, :acceptable_exit_codes => [0]}
   end
 
@@ -53,7 +53,7 @@ end
 
 # These two packages live in an LPP source on the NIM master. Details
 # on our nim masters are available at
-# https://confluence.puppetlabs.com/display/OPS/IBM+Power+LPARs
+# https://confluence.oreganolabs.com/display/OPS/IBM+Power+LPARs
 package_types = {
     "RPM" => {
         :package_name    => "cdrecord",
@@ -61,16 +61,16 @@ package_types = {
         :new_version     => '1.9-9'
     },
     "BFF" => {
-        :package_name    => "puppet.test.rte",
+        :package_name    => "oregano.test.rte",
         :old_version     => '1.0.0.0',
         :new_version     => '2.0.0.0'
     }
 }
 
 step "Setup: ensure test packages are not installed" do
-  pkgs = ['cdrecord', 'puppet.test.rte']
+  pkgs = ['cdrecord', 'oregano.test.rte']
   pkgs.each do |pkg|
-    on hosts, puppet_apply(["--detailed-exitcodes", "--verbose"]),
+    on hosts, oregano_apply(["--detailed-exitcodes", "--verbose"]),
        {:stdin => get_manifest(pkg, 'absent'), :acceptable_exit_codes => [0,2]}
   end
 end
@@ -105,7 +105,7 @@ package_types.each do |package_type, details|
     version = details[:old_version]
 
     manifest = get_manifest(package_name, version)
-    on hosts, puppet_apply("--verbose", "--detailed-exitcodes"),
+    on hosts, oregano_apply("--verbose", "--detailed-exitcodes"),
        { :stdin => manifest,
          :acceptable_exit_codes => [4,6] } do
 

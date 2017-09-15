@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/relationship'
+require 'oregano/relationship'
 
-describe Puppet::Relationship do
+describe Oregano::Relationship do
   before do
-    @edge = Puppet::Relationship.new(:a, :b)
+    @edge = Oregano::Relationship.new(:a, :b)
   end
 
   it "should have a :source attribute" do
@@ -34,7 +34,7 @@ describe Puppet::Relationship do
   end
 
   it "should provide a :ref method that describes the edge" do
-    @edge = Puppet::Relationship.new("a", "b")
+    @edge = Oregano::Relationship.new("a", "b")
     expect(@edge.ref).to eq("a => b")
   end
 
@@ -46,13 +46,13 @@ describe Puppet::Relationship do
   end
 
   it "should work if nil options are provided" do
-    expect { Puppet::Relationship.new("a", "b", nil) }.not_to raise_error
+    expect { Oregano::Relationship.new("a", "b", nil) }.not_to raise_error
   end
 end
 
-describe Puppet::Relationship, " when initializing" do
+describe Oregano::Relationship, " when initializing" do
   before do
-    @edge = Puppet::Relationship.new(:a, :b)
+    @edge = Oregano::Relationship.new(:a, :b)
   end
 
   it "should use the first argument as the source" do
@@ -64,25 +64,25 @@ describe Puppet::Relationship, " when initializing" do
   end
 
   it "should set the rest of the arguments as the event and callback" do
-    @edge = Puppet::Relationship.new(:a, :b, :callback => :foo, :event => :bar)
+    @edge = Oregano::Relationship.new(:a, :b, :callback => :foo, :event => :bar)
     expect(@edge.callback).to eq(:foo)
     expect(@edge.event).to eq(:bar)
   end
 
   it "should accept events specified as strings" do
-    @edge = Puppet::Relationship.new(:a, :b, "event" => :NONE)
+    @edge = Oregano::Relationship.new(:a, :b, "event" => :NONE)
     expect(@edge.event).to eq(:NONE)
   end
 
   it "should accept callbacks specified as strings" do
-    @edge = Puppet::Relationship.new(:a, :b, "callback" => :foo)
+    @edge = Oregano::Relationship.new(:a, :b, "callback" => :foo)
     expect(@edge.callback).to eq(:foo)
   end
 end
 
-describe Puppet::Relationship, " when matching edges with no specified event" do
+describe Oregano::Relationship, " when matching edges with no specified event" do
   before do
-    @edge = Puppet::Relationship.new(:a, :b)
+    @edge = Oregano::Relationship.new(:a, :b)
   end
 
   it "should not match :NONE" do
@@ -98,9 +98,9 @@ describe Puppet::Relationship, " when matching edges with no specified event" do
   end
 end
 
-describe Puppet::Relationship, " when matching edges with :NONE as the event" do
+describe Oregano::Relationship, " when matching edges with :NONE as the event" do
   before do
-    @edge = Puppet::Relationship.new(:a, :b, :event => :NONE)
+    @edge = Oregano::Relationship.new(:a, :b, :event => :NONE)
   end
   it "should not match :NONE" do
     expect(@edge).not_to be_match(:NONE)
@@ -115,9 +115,9 @@ describe Puppet::Relationship, " when matching edges with :NONE as the event" do
   end
 end
 
-describe Puppet::Relationship, " when matching edges with :ALL as the event" do
+describe Oregano::Relationship, " when matching edges with :ALL as the event" do
   before do
-    @edge = Puppet::Relationship.new(:a, :b, :event => :ALL_EVENTS, :callback => :whatever)
+    @edge = Oregano::Relationship.new(:a, :b, :event => :ALL_EVENTS, :callback => :whatever)
   end
 
   it "should not match :NONE" do
@@ -133,9 +133,9 @@ describe Puppet::Relationship, " when matching edges with :ALL as the event" do
   end
 end
 
-describe Puppet::Relationship, " when matching edges with a non-standard event" do
+describe Oregano::Relationship, " when matching edges with a non-standard event" do
   before do
-    @edge = Puppet::Relationship.new(:a, :b, :event => :random, :callback => :whatever)
+    @edge = Oregano::Relationship.new(:a, :b, :event => :random, :callback => :whatever)
   end
 
   it "should not match :NONE" do
@@ -151,9 +151,9 @@ describe Puppet::Relationship, " when matching edges with a non-standard event" 
   end
 end
 
-describe Puppet::Relationship, "when converting to json" do
+describe Oregano::Relationship, "when converting to json" do
   before do
-    @edge = Puppet::Relationship.new('a', 'b', :event => :random, :callback => :whatever)
+    @edge = Oregano::Relationship.new('a', 'b', :event => :random, :callback => :whatever)
   end
 
   it "should store the stringified source as the source in the data" do
@@ -184,20 +184,20 @@ describe Puppet::Relationship, "when converting to json" do
   end
 end
 
-describe Puppet::Relationship, "when converting from json" do
+describe Oregano::Relationship, "when converting from json" do
   it "should pass the source in as the first argument" do
-    expect(Puppet::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget").source).to eq('mysource')
+    expect(Oregano::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget").source).to eq('mysource')
   end
 
   it "should pass the target in as the second argument" do
-    expect(Puppet::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget").target).to eq('mytarget')
+    expect(Oregano::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget").target).to eq('mytarget')
   end
 
   it "should pass the event as an argument if it's provided" do
-    expect(Puppet::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget", "event" => "myevent", "callback" => "eh").event).to eq(:myevent)
+    expect(Oregano::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget", "event" => "myevent", "callback" => "eh").event).to eq(:myevent)
   end
 
   it "should pass the callback as an argument if it's provided" do
-    expect(Puppet::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget", "callback" => "mycallback").callback).to eq(:mycallback)
+    expect(Oregano::Relationship.from_data_hash("source" => "mysource", "target" => "mytarget", "callback" => "mycallback").callback).to eq(:mycallback)
   end
 end

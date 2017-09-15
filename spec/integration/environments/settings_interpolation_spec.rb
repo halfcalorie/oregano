@@ -1,13 +1,13 @@
 require 'pp'
 require 'spec_helper'
-require 'puppet_spec/settings'
+require 'oregano_spec/settings'
 
 module SettingsInterpolationSpec
 describe "interpolating $environment" do
-  include PuppetSpec::Settings
+  include OreganoSpec::Settings
 
-  let(:confdir) { Puppet[:confdir] }
-  let(:cmdline_args) { ['--confdir', confdir, '--vardir', Puppet[:vardir], '--hiera_config', Puppet[:hiera_config]] }
+  let(:confdir) { Oregano[:confdir] }
+  let(:cmdline_args) { ['--confdir', confdir, '--vardir', Oregano[:vardir], '--hiera_config', Oregano[:hiera_config]] }
 
   before(:each) do
     FileUtils.mkdir_p(confdir)
@@ -16,21 +16,21 @@ describe "interpolating $environment" do
   shared_examples_for "a setting that does not interpolate $environment" do
 
     before(:each) do
-      set_puppet_conf(confdir, <<-EOF)
+      set_oregano_conf(confdir, <<-EOF)
         environmentpath=$confdir/environments
         #{setting}=#{value}
       EOF
     end
 
     it "does not interpolate $environment" do
-      Puppet.initialize_settings(cmdline_args)
-      expect(Puppet[:environmentpath]).to eq("#{confdir}/environments")
-      expect(Puppet[setting.intern]).to eq(expected)
+      Oregano.initialize_settings(cmdline_args)
+      expect(Oregano[:environmentpath]).to eq("#{confdir}/environments")
+      expect(Oregano[setting.intern]).to eq(expected)
     end
 
     it "displays the interpolated value in the warning" do
-      Puppet.initialize_settings(cmdline_args)
-      Puppet[setting.intern]
+      Oregano.initialize_settings(cmdline_args)
+      Oregano[setting.intern]
       expect(@logs).to have_matching_log(/cannot interpolate \$environment within '#{setting}'.*Its value will remain #{Regexp.escape(expected)}/)
     end
   end
@@ -42,7 +42,7 @@ describe "interpolating $environment" do
       value = '/some/script $environment'
       expected = "#{File.expand_path('/some/script')} testing"
 
-      set_puppet_conf(confdir, <<-EOF)
+      set_oregano_conf(confdir, <<-EOF)
         environmentpath=$confdir/environments
         environment=#{envname}
       EOF
@@ -51,9 +51,9 @@ describe "interpolating $environment" do
         #{setting}=#{value}
       EOF
 
-      Puppet.initialize_settings(cmdline_args)
-      expect(Puppet[:environmentpath]).to eq("#{confdir}/environments")
-      environment = Puppet.lookup(:environments).get(envname)
+      Oregano.initialize_settings(cmdline_args)
+      expect(Oregano[:environmentpath]).to eq("#{confdir}/environments")
+      environment = Oregano.lookup(:environments).get(envname)
       expect(environment.config_version).to eq(expected)
       expect(@logs).to be_empty
     end
@@ -67,12 +67,12 @@ describe "interpolating $environment" do
     it_behaves_like "a setting that does not interpolate $environment"
 
     it "logs a single warning for multiple instaces of $environment in the setting" do
-      set_puppet_conf(confdir, <<-EOF)
+      set_oregano_conf(confdir, <<-EOF)
         environmentpath=$confdir/environments
         #{setting}=#{value}
       EOF
 
-      Puppet.initialize_settings(cmdline_args)
+      Oregano.initialize_settings(cmdline_args)
       expect(@logs.map(&:to_s).grep(/cannot interpolate \$environment within '#{setting}'/).count).to eq(1)
     end
   end
@@ -98,12 +98,12 @@ describe "interpolating $environment" do
     value = "$confdir/environments/$environment"
     expected = "#{confdir}/environments/$environment"
 
-    set_puppet_conf(confdir, <<-EOF)
+    set_oregano_conf(confdir, <<-EOF)
       #{setting}=#{value}
     EOF
 
-    Puppet.initialize_settings(cmdline_args)
-    expect(Puppet[setting.intern]).to eq(expected)
+    Oregano.initialize_settings(cmdline_args)
+    expect(Oregano[setting.intern]).to eq(expected)
     expect(@logs).to have_matching_log(/cannot interpolate \$environment within '#{setting}'/)
   end
 end

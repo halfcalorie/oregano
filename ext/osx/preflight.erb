@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Make sure that old puppet cruft is removed
-# This also allows us to downgrade puppet as
+# Make sure that old oregano cruft is removed
+# This also allows us to downgrade oregano as
 # it's more likely that installing old versions
 # over new will cause issues.
 #
@@ -13,10 +13,10 @@
   <%- raise "Critical variable #{i} is unset!" if val.nil? or val.empty? -%>
 <%- end -%>
 
-# remove ruby library files. Because hiera and puppet both place a "hiera"
+# remove ruby library files. Because hiera and oregano both place a "hiera"
 # directory in the libdir, we have to be sure we only delete the files
 # belonging to this project. In this case, we only delete files from within
-# the 'hiera' directory, while deleting the entire puppet directory.
+# the 'hiera' directory, while deleting the entire oregano directory.
 <%- Dir.chdir("lib") do -%>
   <%- [@apple_old_libdir, @apple_libdir].compact.each do |libdir| -%>
     <%- Dir["hiera/**/*"].select{ |i| File.file?(i) }.each do |file| -%>
@@ -45,8 +45,8 @@
 
 # These files used to live in the sbindir but were
 # removed in Pupppet >= 3.0. Remove them
-/bin/rm -f "${3}<%= @apple_sbindir %>/puppetca"
-/bin/rm -f "${3}<%= @apple_sbindir %>/puppetd"
-/bin/rm -f "${3}<%= @apple_sbindir %>/puppetmasterd"
-/bin/rm -f "${3}<%= @apple_sbindir %>/puppetqd"
-/bin/rm -f "${3}<%= @apple_sbindir %>/puppetrun"
+/bin/rm -f "${3}<%= @apple_sbindir %>/oreganoca"
+/bin/rm -f "${3}<%= @apple_sbindir %>/oreganod"
+/bin/rm -f "${3}<%= @apple_sbindir %>/oreganomasterd"
+/bin/rm -f "${3}<%= @apple_sbindir %>/oreganoqd"
+/bin/rm -f "${3}<%= @apple_sbindir %>/oreganorun"

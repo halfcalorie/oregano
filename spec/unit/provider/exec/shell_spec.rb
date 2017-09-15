@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:exec).provider(:shell), :unless => Puppet.features.microsoft_windows? do
-  let(:resource) { Puppet::Type.type(:exec).new(:title => 'foo', :provider => 'shell') }
+describe Oregano::Type.type(:exec).provider(:shell), :unless => Oregano.features.microsoft_windows? do
+  let(:resource) { Oregano::Type.type(:exec).new(:title => 'foo', :provider => 'shell') }
   let(:provider) { described_class.new(resource) }
 
   describe "#run" do

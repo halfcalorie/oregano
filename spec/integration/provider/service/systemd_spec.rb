@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:service).provider(:systemd), '(integration)' do
+describe Oregano::Type.type(:service).provider(:systemd), '(integration)' do
   # TODO: Unfortunately there does not seem a way to stub the executable
   #       checks in the systemd provider because they happen at load time.
   it "should be considered suitable if /bin/systemctl is present", :if => File.executable?('/bin/systemctl') do

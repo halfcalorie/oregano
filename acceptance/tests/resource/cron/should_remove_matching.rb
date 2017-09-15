@@ -1,4 +1,4 @@
-test_name "puppet should remove a crontab entry based on command matching"
+test_name "oregano should remove a crontab entry based on command matching"
 confine :except, :platform => 'windows'
 confine :except, :platform => /^eos-/ # See PUP-5500
 tag 'audit:medium',
@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CronUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CronUtils
 
 teardown do
   step "Cron: cleanup"
@@ -18,14 +18,14 @@ teardown do
 end
 
 agents.each do |host|
-  step "ensure the user exist via puppet"
+  step "ensure the user exist via oregano"
   setup host
 
   step "create the existing job by hand..."
   run_cron_on(host,:add,'tstuser',"* * * * * /bin/true")
 
   step "Remove cron resource"
-  on(host, puppet_resource("cron", "bogus", "user=tstuser",
+  on(host, oregano_resource("cron", "bogus", "user=tstuser",
                            "command=/bin/true", "ensure=absent")) do
     assert_match(/bogus\D+ensure: removed/, stdout, "Removing cron entry failed for tstuser on #{host}")
   end

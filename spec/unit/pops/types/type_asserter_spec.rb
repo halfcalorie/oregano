@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops::Types
+module Oregano::Pops::Types
 describe 'the type asserter' do
   let!(:asserter) { TypeAsserter }
 

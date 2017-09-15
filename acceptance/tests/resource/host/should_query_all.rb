@@ -19,8 +19,8 @@ agents.each do |agent|
   on agent, "cp /etc/hosts #{backup}"
   on agent, "cat > /etc/hosts", :stdin => content
 
-  step "query all host records using puppet"
-  on(agent, puppet_resource('host')) do
+  step "query all host records using oregano"
+  on(agent, oregano_resource('host')) do
     found = stdout.scan(/host \{ '([^']+)'/).flatten.sort
     fail_test "the list of returned hosts was wrong: #{found.join(', ')}" unless
       found == %w{test1 test2 test3 test4}

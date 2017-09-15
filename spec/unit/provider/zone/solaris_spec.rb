@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:zone).provider(:solaris) do
-  let(:resource) { Puppet::Type.type(:zone).new(:name => 'dummy', :path => '/', :provider => :solaris) }
+describe Oregano::Type.type(:zone).provider(:solaris) do
+  let(:resource) { Oregano::Type.type(:zone).new(:name => 'dummy', :path => '/', :provider => :solaris) }
   let(:provider) { described_class.new(resource) }
 
   context "#configure" do
@@ -190,7 +190,7 @@ net:
     it "should not require path if sysidcfg is specified" do
       resource[:path] = '/mypath'
       resource[:sysidcfg] = 'dummy'
-      Puppet::FileSystem.stubs(:exist?).with('/mypath/root/etc/sysidcfg').returns true
+      Oregano::FileSystem.stubs(:exist?).with('/mypath/root/etc/sysidcfg').returns true
       File.stubs(:directory?).with('/mypath/root/etc').returns true
       provider.expects(:zoneadm).with(:boot)
       provider.start
@@ -201,7 +201,7 @@ net:
       resource.stubs(:[]).with(:sysidcfg).returns 'dummy'
       expect {
         provider.start
-      }.to raise_error(Puppet::Error, /Path is required/)
+      }.to raise_error(Oregano::Error, /Path is required/)
     end
   end
   context "#line2hash" do

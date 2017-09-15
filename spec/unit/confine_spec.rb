@@ -1,40 +1,40 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/confine'
+require 'oregano/confine'
 
-describe Puppet::Confine do
+describe Oregano::Confine do
   it "should require a value" do
-    expect { Puppet::Confine.new }.to raise_error(ArgumentError)
+    expect { Oregano::Confine.new }.to raise_error(ArgumentError)
   end
 
   it "should always convert values to an array" do
-    expect(Puppet::Confine.new("/some/file").values).to be_instance_of(Array)
+    expect(Oregano::Confine.new("/some/file").values).to be_instance_of(Array)
   end
 
   it "should have a 'true' test" do
-    expect(Puppet::Confine.test(:true)).to be_instance_of(Class)
+    expect(Oregano::Confine.test(:true)).to be_instance_of(Class)
   end
 
   it "should have a 'false' test" do
-    expect(Puppet::Confine.test(:false)).to be_instance_of(Class)
+    expect(Oregano::Confine.test(:false)).to be_instance_of(Class)
   end
 
   it "should have a 'feature' test" do
-    expect(Puppet::Confine.test(:feature)).to be_instance_of(Class)
+    expect(Oregano::Confine.test(:feature)).to be_instance_of(Class)
   end
 
   it "should have an 'exists' test" do
-    expect(Puppet::Confine.test(:exists)).to be_instance_of(Class)
+    expect(Oregano::Confine.test(:exists)).to be_instance_of(Class)
   end
 
   it "should have a 'variable' test" do
-    expect(Puppet::Confine.test(:variable)).to be_instance_of(Class)
+    expect(Oregano::Confine.test(:variable)).to be_instance_of(Class)
   end
 
   describe "when testing all values" do
     before do
-      @confine = Puppet::Confine.new(%w{a b c})
+      @confine = Oregano::Confine.new(%w{a b c})
       @confine.label = "foo"
     end
 
@@ -58,13 +58,13 @@ describe Puppet::Confine do
       @confine.stubs(:pass?).returns false
       @confine.expects(:message).returns "My message"
       @confine.expects(:label).returns "Mylabel"
-      Puppet.expects(:debug).with("Mylabel: My message")
+      Oregano.expects(:debug).with("Mylabel: My message")
       @confine.valid?
     end
   end
 
   describe "when testing the result of the values" do
-    before { @confine = Puppet::Confine.new(%w{a b c d}) }
+    before { @confine = Oregano::Confine.new(%w{a b c d}) }
 
     it "should return an array with the result of the test for each value" do
       @confine.stubs(:pass?).returns true

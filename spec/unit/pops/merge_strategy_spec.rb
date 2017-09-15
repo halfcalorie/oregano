@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
 describe 'MergeStrategy' do
   context 'deep merge' do
     it 'does not mutate the source of a merge' do

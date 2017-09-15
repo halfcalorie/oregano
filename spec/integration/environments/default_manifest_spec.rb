@@ -3,8 +3,8 @@ require 'spec_helper'
 module EnvironmentsDefaultManifestsSpec
 describe "default manifests" do
 
-  context "puppet with default_manifest settings" do
-    let(:confdir) { Puppet[:confdir] }
+  context "oregano with default_manifest settings" do
+    let(:confdir) { Oregano[:confdir] }
     let(:environmentpath) { File.expand_path("envdir", confdir) }
 
     context "relative default" do
@@ -22,7 +22,7 @@ describe "default manifests" do
           f.puts("notify { 'ManifestFromRelativeDefault': }")
         end
 
-        File.open(File.join(confdir, "puppet.conf"), "w", :encoding => Encoding::UTF_8) do |f|
+        File.open(File.join(confdir, "oregano.conf"), "w", :encoding => Encoding::UTF_8) do |f|
           f.puts("environmentpath=#{environmentpath}")
         end
 
@@ -43,7 +43,7 @@ describe "default manifests" do
         manifestsdir = File.expand_path("manifests", confdir)
         FileUtils.mkdir_p(manifestsdir)
 
-        File.open(File.join(confdir, "puppet.conf"), "w", :encoding => Encoding::UTF_8) do |f|
+        File.open(File.join(confdir, "oregano.conf"), "w", :encoding => Encoding::UTF_8) do |f|
           f.puts(<<-EOF)
   environmentpath=#{environmentpath}
   default_manifest=#{manifestsdir}
@@ -61,7 +61,7 @@ describe "default manifests" do
 
       it "reads manifest from directory environment manifest when environment.conf manifest set" do
         default_manifestsdir = File.expand_path("manifests", confdir)
-        File.open(File.join(confdir, "puppet.conf"), "w", :encoding => Encoding::UTF_8) do |f|
+        File.open(File.join(confdir, "oregano.conf"), "w", :encoding => Encoding::UTF_8) do |f|
           f.puts(<<-EOF)
   environmentpath=#{environmentpath}
   default_manifest=#{default_manifestsdir}
@@ -82,14 +82,14 @@ describe "default manifests" do
         expect(a_catalog_compiled_for_environment('testing')).to(
           include_resource('Notify[ManifestFromEnvironmentConfManifest]')
         )
-        expect(Puppet[:default_manifest]).to eq(default_manifestsdir)
+        expect(Oregano[:default_manifest]).to eq(default_manifestsdir)
       end
 
       it "ignores manifests in the local ./manifests if default_manifest specifies another directory" do
         default_manifestsdir = File.expand_path("manifests", confdir)
         FileUtils.mkdir_p(default_manifestsdir)
 
-        File.open(File.join(confdir, "puppet.conf"), "w", :encoding => Encoding::UTF_8) do |f|
+        File.open(File.join(confdir, "oregano.conf"), "w", :encoding => Encoding::UTF_8) do |f|
           f.puts(<<-EOF)
   environmentpath=#{environmentpath}
   default_manifest=#{default_manifestsdir}
@@ -125,7 +125,7 @@ describe "default manifests" do
       before(:each) do
         FileUtils.mkdir_p(manifestsdir)
 
-        File.open(File.join(confdir, "puppet.conf"), "w", :encoding => Encoding::UTF_8) do |f|
+        File.open(File.join(confdir, "oregano.conf"), "w", :encoding => Encoding::UTF_8) do |f|
           f.puts(<<-EOF)
   environmentpath=#{environmentpath}
   default_manifest=#{manifestsdir}
@@ -150,7 +150,7 @@ describe "default manifests" do
         end
 
         expect { a_catalog_compiled_for_environment('testing') }.to(
-          raise_error(Puppet::Error, /disable_per_environment_manifest.*environment.conf.*manifest.*conflict/)
+          raise_error(Oregano::Error, /disable_per_environment_manifest.*environment.conf.*manifest.*conflict/)
         )
       end
 
@@ -169,15 +169,15 @@ describe "default manifests" do
           f.puts("manifest=./special_manifests")
         end
 
-        Puppet.initialize_settings
-        expect(Puppet[:environmentpath]).to eq(environmentpath)
-        environment = Puppet.lookup(:environments).get('testing')
+        Oregano.initialize_settings
+        expect(Oregano[:environmentpath]).to eq(environmentpath)
+        environment = Oregano.lookup(:environments).get('testing')
         expect(environment.manifest).to eq(manifestsdir)
         expect(@logs.first.to_s).to match(%r{disable_per_environment_manifest.*is true, but.*environment.*at #{testingdir}.*has.*environment.conf.*manifest.*#{testingdir}/special_manifests})
       end
 
       it "raises an error if default_manifest is not absolute" do
-        File.open(File.join(confdir, "puppet.conf"), "w", :encoding => Encoding::UTF_8) do |f|
+        File.open(File.join(confdir, "oregano.conf"), "w", :encoding => Encoding::UTF_8) do |f|
           f.puts(<<-EOF)
   environmentpath=#{environmentpath}
   default_manifest=./relative
@@ -185,7 +185,7 @@ describe "default manifests" do
           EOF
         end
 
-        expect { Puppet.initialize_settings }.to raise_error(Puppet::Settings::ValidationError, /default_manifest.*must be.*absolute.*when.*disable_per_environment_manifest.*true/)
+        expect { Oregano.initialize_settings }.to raise_error(Oregano::Settings::ValidationError, /default_manifest.*must be.*absolute.*when.*disable_per_environment_manifest.*true/)
       end
     end
   end
@@ -205,11 +205,11 @@ describe "default manifests" do
   end
 
   def a_catalog_compiled_for_environment(envname)
-    Puppet.initialize_settings
-    expect(Puppet[:environmentpath]).to eq(environmentpath)
-    node = Puppet::Node.new('testnode', :environment => 'testing')
-    expect(node.environment).to eq(Puppet.lookup(:environments).get('testing'))
-    Puppet::Parser::Compiler.compile(node)
+    Oregano.initialize_settings
+    expect(Oregano[:environmentpath]).to eq(environmentpath)
+    node = Oregano::Node.new('testnode', :environment => 'testing')
+    expect(node.environment).to eq(Oregano.lookup(:environments).get('testing'))
+    Oregano::Parser::Compiler.compile(node)
   end
 end
 end

@@ -27,8 +27,8 @@ agents.each do |agent|
   on(agent, "echo '' >> #{auth_keys} && echo 'ssh-rsa mykey #{name}' >> #{auth_keys}")
 
   #------- TESTS -------#
-  step "verify SSH authorized key query with puppet"
-  on(agent, puppet_resource('ssh_authorized_key', "/#{name}")) do |res|
+  step "verify SSH authorized key query with oregano"
+  on(agent, oregano_resource('ssh_authorized_key', "/#{name}")) do |res|
     fail_test "Didn't find the ssh_authorized_key for #{name}" unless stdout.include? "#{name}"
   end
 

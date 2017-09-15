@@ -1,26 +1,26 @@
 require 'spec_helper'
-require 'puppet/transaction'
-require 'puppet_spec/compiler'
+require 'oregano/transaction'
+require 'oregano_spec/compiler'
 require 'matchers/relationship_graph_matchers'
 require 'matchers/include_in_order'
 require 'matchers/resource'
 
-describe Puppet::Transaction::AdditionalResourceGenerator do
-  include PuppetSpec::Compiler
-  include PuppetSpec::Files
+describe Oregano::Transaction::AdditionalResourceGenerator do
+  include OreganoSpec::Compiler
+  include OreganoSpec::Files
   include RelationshipGraphMatchers
   include Matchers::Resource
 
-  let(:prioritizer) { Puppet::Graph::SequentialPrioritizer.new }
-  let(:env) { Puppet::Node::Environment.create(:testing, []) }
-  let(:node) { Puppet::Node.new('test', :environment => env) }
-  let(:loaders) { Puppet::Pops::Loaders.new(env) }
+  let(:prioritizer) { Oregano::Graph::SequentialPrioritizer.new }
+  let(:env) { Oregano::Node::Environment.create(:testing, []) }
+  let(:node) { Oregano::Node.new('test', :environment => env) }
+  let(:loaders) { Oregano::Pops::Loaders.new(env) }
 
   around :each do |example|
-    Puppet::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
-    Puppet.override(:loaders => loaders, :current_environment => env) do
-      Puppet::Type.newtype(:generator) do
-        include PuppetSpec::Compiler
+    Oregano::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
+    Oregano.override(:loaders => loaders, :current_environment => env) do
+      Oregano::Type.newtype(:generator) do
+        include OreganoSpec::Compiler
 
         newparam(:name) do
           isnamevar
@@ -54,7 +54,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         end
       end
 
-      Puppet::Type.newtype(:autorequire) do
+      Oregano::Type.newtype(:autorequire) do
         newparam(:name) do
           isnamevar
         end
@@ -64,7 +64,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         end
       end
 
-      Puppet::Type.newtype(:gen_auto) do
+      Oregano::Type.newtype(:gen_auto) do
         newparam(:name) do
           isnamevar
         end
@@ -73,17 +73,17 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         end
 
         def generate()
-          [ Puppet::Type.type(:autorequire).new(:name => self[:eval_after]) ]
+          [ Oregano::Type.type(:autorequire).new(:name => self[:eval_after]) ]
         end
       end
 
-      Puppet::Type.newtype(:empty) do
+      Oregano::Type.newtype(:empty) do
         newparam(:name) do
           isnamevar
         end
       end
 
-      Puppet::Type.newtype(:gen_empty) do
+      Oregano::Type.newtype(:gen_empty) do
         newparam(:name) do
           isnamevar
         end
@@ -92,16 +92,16 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         end
 
         def generate()
-          [ Puppet::Type.type(:empty).new(:name => self[:eval_after], :require => "Notify[#{self[:eval_after]}]") ]
+          [ Oregano::Type.type(:empty).new(:name => self[:eval_after], :require => "Notify[#{self[:eval_after]}]") ]
         end
       end
 
       example.run
 
-      Puppet::Type.rmtype(:gen_empty)
-      Puppet::Type.rmtype(:eval_after)
-      Puppet::Type.rmtype(:autorequire)
-      Puppet::Type.rmtype(:generator)
+      Oregano::Type.rmtype(:gen_empty)
+      Oregano::Type.rmtype(:eval_after)
+      Oregano::Type.rmtype(:autorequire)
+      Oregano::Type.rmtype(:generator)
     end
   end
 
@@ -129,7 +129,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         }
       MANIFEST
 
-      expect(find_vertex(graph, :whit, "completed_thing")).to be_a(Puppet::Type.type(:whit))
+      expect(find_vertex(graph, :whit, "completed_thing")).to be_a(Oregano::Type.type(:whit))
     end
 
     it "should replace dependencies on the resource with dependencies on the sentinel" do
@@ -216,7 +216,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         }
       MANIFEST
 
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph_for(catalog), prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph_for(catalog), prioritizer)
 
       expect(generator.eval_generate(catalog.resource('Generator[thing]'))).
         to eq(false)
@@ -229,7 +229,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
         }
       MANIFEST
 
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph_for(catalog), prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph_for(catalog), prioritizer)
 
       expect(generator.eval_generate(catalog.resource('Generator[thing]'))).
         to eq(true)
@@ -241,7 +241,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
       MANIFEST
       relationship_graph = relationship_graph_for(catalog)
 
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
 
       expect(generator.eval_generate(catalog.resource('Generator[thing]'))).
         to eq(false)
@@ -318,7 +318,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
 
       catalog.resource("Notify[hello]").stubs(:eval_generate).raises(RuntimeError)
       relationship_graph = relationship_graph_for(catalog)
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
       generator.eval_generate(catalog.resource("Notify[hello]"))
 
       expect(generator.resources_failed_to_generate).to be_truthy
@@ -334,7 +334,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
     end
 
     def eval_generate_resources_in(catalog, relationship_graph, resource_to_generate)
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
       generator.eval_generate(catalog.resource(resource_to_generate))
     end
   end
@@ -494,7 +494,7 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
 
       catalog.resource("User[foo]").stubs(:generate).raises(RuntimeError)
       relationship_graph = relationship_graph_for(catalog)
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
       generator.generate_additional_resources(catalog.resource("User[foo]"))
 
       expect(generator.resources_failed_to_generate).to be_truthy
@@ -507,13 +507,13 @@ describe Puppet::Transaction::AdditionalResourceGenerator do
     end
 
     def generate_resources_in(catalog, relationship_graph, resource_to_generate)
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, relationship_graph, prioritizer)
       generator.generate_additional_resources(catalog.resource(resource_to_generate))
     end
   end
 
   def relationship_graph_for(catalog)
-    relationship_graph = Puppet::Graph::RelationshipGraph.new(prioritizer)
+    relationship_graph = Oregano::Graph::RelationshipGraph.new(prioritizer)
     relationship_graph.populate_from(catalog)
     relationship_graph
   end

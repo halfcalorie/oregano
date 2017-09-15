@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http/rack' if Puppet.features.rack?
+require 'oregano/network/http/rack' if Oregano.features.rack?
 
-describe "Puppet::Network::HTTP::Rack", :if => Puppet.features.rack? do
+describe "Oregano::Network::HTTP::Rack", :if => Oregano.features.rack? do
   describe "when called" do
     before :all do
-      @app = Puppet::Network::HTTP::Rack.new()
+      @app = Oregano::Network::HTTP::Rack.new()
       # let's use Rack::Lint to verify that we're OK with the rack specification
       @linted = Rack::Lint.new(@app)
     end
@@ -26,12 +26,12 @@ describe "Puppet::Network::HTTP::Rack", :if => Puppet.features.rack? do
     end
 
     it "should let RackREST process the request" do
-      Puppet::Network::HTTP::RackREST.any_instance.expects(:process).once
+      Oregano::Network::HTTP::RackREST.any_instance.expects(:process).once
       @linted.call(@env)
     end
 
     it "should catch unhandled exceptions from RackREST" do
-      Puppet::Network::HTTP::RackREST.any_instance.expects(:process).raises(ArgumentError, 'test error')
+      Oregano::Network::HTTP::RackREST.any_instance.expects(:process).raises(ArgumentError, 'test error')
       expect { @linted.call(@env) }.not_to raise_error
     end
 

@@ -1,4 +1,4 @@
 # HEADER: some simple
 # HEADER: header
-# Puppet Name: some_unrelevant job
+# Oregano Name: some_unrelevant job
 * * * * * /bin/true

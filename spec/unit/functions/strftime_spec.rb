@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe 'the strftime function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   def test_format(ctor_arg, format, expected)
     expect(eval_and_collect_notices("notice(strftime(Timespan(#{ctor_arg}), '#{format}'))")).to eql(["#{expected}"])
@@ -94,12 +94,12 @@ describe 'the strftime function' do
     expect(eval_and_collect_notices("notice(strftime(Timestamp('#{ctor_arg}'), '#{format}', '#{tz}'))")).to eql(["#{expected}"])
   end
 
-  def collect_log(code, node = Puppet::Node.new('foonode'))
-    Puppet[:code] = code
-    compiler = Puppet::Parser::Compiler.new(node)
+  def collect_log(code, node = Oregano::Node.new('foonode'))
+    Oregano[:code] = code
+    compiler = Oregano::Parser::Compiler.new(node)
     node.environment.check_for_reparse
     logs = []
-    Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+    Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
       compiler.compile
     end
     logs

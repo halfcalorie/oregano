@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:cron), :unless => Oregano.features.microsoft_windows? do
   let(:simple_provider) do
     @provider_class = described_class.provide(:simple) { mk_resource_methods }
     @provider_class.stubs(:suitable?).returns true
@@ -54,7 +54,7 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support other values" do
-        expect { described_class.new(:name => 'foo', :ensure => :foo) }.to raise_error(Puppet::Error, /Invalid value/)
+        expect { described_class.new(:name => 'foo', :ensure => :foo) }.to raise_error(Oregano::Error, /Invalid value/)
       end
     end
 
@@ -91,17 +91,17 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support non numeric characters" do
-        expect { described_class.new(:name => 'foo', :minute => 'z59') }.to raise_error(Puppet::Error, /z59 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => '5z9') }.to raise_error(Puppet::Error, /5z9 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => '59z') }.to raise_error(Puppet::Error, /59z is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => 'z59') }.to raise_error(Oregano::Error, /z59 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '5z9') }.to raise_error(Oregano::Error, /5z9 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '59z') }.to raise_error(Oregano::Error, /59z is not a valid minute/)
       end
 
       it "should not support single values out of range" do
 
-        expect { described_class.new(:name => 'foo', :minute => '-1') }.to raise_error(Puppet::Error, /-1 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => '60') }.to raise_error(Puppet::Error, /60 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => '61') }.to raise_error(Puppet::Error, /61 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => '120') }.to raise_error(Puppet::Error, /120 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '-1') }.to raise_error(Oregano::Error, /-1 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '60') }.to raise_error(Oregano::Error, /60 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '61') }.to raise_error(Oregano::Error, /61 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '120') }.to raise_error(Oregano::Error, /120 is not a valid minute/)
       end
 
       it "should support valid multiple values" do
@@ -112,13 +112,13 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
 
       it "should not support multiple values if at least one is invalid" do
         # one invalid
-        expect { described_class.new(:name => 'foo', :minute => ['0','1','60'] ) }.to raise_error(Puppet::Error, /60 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => ['0','120','59'] ) }.to raise_error(Puppet::Error, /120 is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => ['-1','1','59'] ) }.to raise_error(Puppet::Error, /-1 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => ['0','1','60'] ) }.to raise_error(Oregano::Error, /60 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => ['0','120','59'] ) }.to raise_error(Oregano::Error, /120 is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => ['-1','1','59'] ) }.to raise_error(Oregano::Error, /-1 is not a valid minute/)
         # two invalid
-        expect { described_class.new(:name => 'foo', :minute => ['0','61','62'] ) }.to raise_error(Puppet::Error, /(61|62) is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => ['0','61','62'] ) }.to raise_error(Oregano::Error, /(61|62) is not a valid minute/)
         # all invalid
-        expect { described_class.new(:name => 'foo', :minute => ['-1','61','62'] ) }.to raise_error(Puppet::Error, /(-1|61|62) is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => ['-1','61','62'] ) }.to raise_error(Oregano::Error, /(-1|61|62) is not a valid minute/)
       end
 
       it "should support valid step syntax" do
@@ -127,10 +127,10 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support invalid steps" do
-        expect { described_class.new(:name => 'foo', :minute => '*/A' ) }.to raise_error(Puppet::Error, /\*\/A is not a valid minute/)
-        expect { described_class.new(:name => 'foo', :minute => '*/2A' ) }.to raise_error(Puppet::Error, /\*\/2A is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '*/A' ) }.to raise_error(Oregano::Error, /\*\/A is not a valid minute/)
+        expect { described_class.new(:name => 'foo', :minute => '*/2A' ) }.to raise_error(Oregano::Error, /\*\/2A is not a valid minute/)
         # As it turns out cron does not complaining about steps that exceed the valid range
-        # expect { described_class.new(:name => 'foo', :minute => '*/120' ) }.to raise_error(Puppet::Error, /is not a valid minute/)
+        # expect { described_class.new(:name => 'foo', :minute => '*/120' ) }.to raise_error(Oregano::Error, /is not a valid minute/)
       end
     end
 
@@ -160,15 +160,15 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support non numeric characters" do
-        expect { described_class.new(:name => 'foo', :hour => 'z15') }.to raise_error(Puppet::Error, /z15 is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => '1z5') }.to raise_error(Puppet::Error, /1z5 is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => '15z') }.to raise_error(Puppet::Error, /15z is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => 'z15') }.to raise_error(Oregano::Error, /z15 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '1z5') }.to raise_error(Oregano::Error, /1z5 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '15z') }.to raise_error(Oregano::Error, /15z is not a valid hour/)
       end
 
       it "should not support single values out of range" do
-        expect { described_class.new(:name => 'foo', :hour => '-1') }.to raise_error(Puppet::Error, /-1 is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => '24') }.to raise_error(Puppet::Error, /24 is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => '120') }.to raise_error(Puppet::Error, /120 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '-1') }.to raise_error(Oregano::Error, /-1 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '24') }.to raise_error(Oregano::Error, /24 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '120') }.to raise_error(Oregano::Error, /120 is not a valid hour/)
       end
 
       it "should support valid multiple values" do
@@ -179,13 +179,13 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
 
       it "should not support multiple values if at least one is invalid" do
         # one invalid
-        expect { described_class.new(:name => 'foo', :hour => ['0','1','24'] ) }.to raise_error(Puppet::Error, /24 is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => ['0','-1','5'] ) }.to raise_error(Puppet::Error, /-1 is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => ['-1','1','23'] ) }.to raise_error(Puppet::Error, /-1 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => ['0','1','24'] ) }.to raise_error(Oregano::Error, /24 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => ['0','-1','5'] ) }.to raise_error(Oregano::Error, /-1 is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => ['-1','1','23'] ) }.to raise_error(Oregano::Error, /-1 is not a valid hour/)
         # two invalid
-        expect { described_class.new(:name => 'foo', :hour => ['0','25','26'] ) }.to raise_error(Puppet::Error, /(25|26) is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => ['0','25','26'] ) }.to raise_error(Oregano::Error, /(25|26) is not a valid hour/)
         # all invalid
-        expect { described_class.new(:name => 'foo', :hour => ['-1','24','120'] ) }.to raise_error(Puppet::Error, /(-1|24|120) is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => ['-1','24','120'] ) }.to raise_error(Oregano::Error, /(-1|24|120) is not a valid hour/)
       end
 
       it "should support valid step syntax" do
@@ -194,10 +194,10 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support invalid steps" do
-        expect { described_class.new(:name => 'foo', :hour => '*/A' ) }.to raise_error(Puppet::Error, /\*\/A is not a valid hour/)
-        expect { described_class.new(:name => 'foo', :hour => '*/2A' ) }.to raise_error(Puppet::Error, /\*\/2A is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '*/A' ) }.to raise_error(Oregano::Error, /\*\/A is not a valid hour/)
+        expect { described_class.new(:name => 'foo', :hour => '*/2A' ) }.to raise_error(Oregano::Error, /\*\/2A is not a valid hour/)
         # As it turns out cron does not complaining about steps that exceed the valid range
-        # expect { described_class.new(:name => 'foo', :hour => '*/26' ) }.to raise_error(Puppet::Error, /is not a valid hour/)
+        # expect { described_class.new(:name => 'foo', :hour => '*/26' ) }.to raise_error(Oregano::Error, /is not a valid hour/)
       end
     end
 
@@ -247,12 +247,12 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support numeric values out of range" do
-        expect { described_class.new(:name => 'foo', :weekday => '-1') }.to raise_error(Puppet::Error, /-1 is not a valid weekday/)
-        expect { described_class.new(:name => 'foo', :weekday => '8') }.to raise_error(Puppet::Error, /8 is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => '-1') }.to raise_error(Oregano::Error, /-1 is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => '8') }.to raise_error(Oregano::Error, /8 is not a valid weekday/)
       end
 
       it "should not support invalid weekday names" do
-        expect { described_class.new(:name => 'foo', :weekday => 'Sar') }.to raise_error(Puppet::Error, /Sar is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => 'Sar') }.to raise_error(Oregano::Error, /Sar is not a valid weekday/)
       end
 
       it "should support valid multiple values" do
@@ -262,13 +262,13 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
 
       it "should not support multiple values if at least one is invalid" do
         # one invalid
-        expect { described_class.new(:name => 'foo', :weekday => ['0','1','8'] ) }.to raise_error(Puppet::Error, /8 is not a valid weekday/)
-        expect { described_class.new(:name => 'foo', :weekday => ['Mon','Fii','Sat'] ) }.to raise_error(Puppet::Error, /Fii is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => ['0','1','8'] ) }.to raise_error(Oregano::Error, /8 is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => ['Mon','Fii','Sat'] ) }.to raise_error(Oregano::Error, /Fii is not a valid weekday/)
         # two invalid
-        expect { described_class.new(:name => 'foo', :weekday => ['Mos','Fii','Sat'] ) }.to raise_error(Puppet::Error, /(Mos|Fii) is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => ['Mos','Fii','Sat'] ) }.to raise_error(Oregano::Error, /(Mos|Fii) is not a valid weekday/)
         # all invalid
-        expect { described_class.new(:name => 'foo', :weekday => ['Mos','Fii','Saa'] ) }.to raise_error(Puppet::Error, /(Mos|Fii|Saa) is not a valid weekday/)
-        expect { described_class.new(:name => 'foo', :weekday => ['-1','8','11'] ) }.to raise_error(Puppet::Error, /(-1|8|11) is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => ['Mos','Fii','Saa'] ) }.to raise_error(Oregano::Error, /(Mos|Fii|Saa) is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => ['-1','8','11'] ) }.to raise_error(Oregano::Error, /(-1|8|11) is not a valid weekday/)
       end
 
       it "should support valid step syntax" do
@@ -277,10 +277,10 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support invalid steps" do
-        expect { described_class.new(:name => 'foo', :weekday => '*/A' ) }.to raise_error(Puppet::Error, /\*\/A is not a valid weekday/)
-        expect { described_class.new(:name => 'foo', :weekday => '*/2A' ) }.to raise_error(Puppet::Error, /\*\/2A is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => '*/A' ) }.to raise_error(Oregano::Error, /\*\/A is not a valid weekday/)
+        expect { described_class.new(:name => 'foo', :weekday => '*/2A' ) }.to raise_error(Oregano::Error, /\*\/2A is not a valid weekday/)
         # As it turns out cron does not complaining about steps that exceed the valid range
-        # expect { described_class.new(:name => 'foo', :weekday => '*/9' ) }.to raise_error(Puppet::Error, /is not a valid weekday/)
+        # expect { described_class.new(:name => 'foo', :weekday => '*/9' ) }.to raise_error(Oregano::Error, /is not a valid weekday/)
       end
     end
 
@@ -337,21 +337,21 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support numeric values out of range" do
-        expect { described_class.new(:name => 'foo', :month => '-1') }.to raise_error(Puppet::Error, /-1 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => '0') }.to raise_error(Puppet::Error, /0 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => '13') }.to raise_error(Puppet::Error, /13 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '-1') }.to raise_error(Oregano::Error, /-1 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '0') }.to raise_error(Oregano::Error, /0 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '13') }.to raise_error(Oregano::Error, /13 is not a valid month/)
       end
 
       it "should not support words that are not valid months" do
-        expect { described_class.new(:name => 'foo', :month => 'Jal') }.to raise_error(Puppet::Error, /Jal is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => 'Jal') }.to raise_error(Oregano::Error, /Jal is not a valid month/)
       end
 
       it "should not support single values out of range" do
 
-        expect { described_class.new(:name => 'foo', :month => '-1') }.to raise_error(Puppet::Error, /-1 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => '60') }.to raise_error(Puppet::Error, /60 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => '61') }.to raise_error(Puppet::Error, /61 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => '120') }.to raise_error(Puppet::Error, /120 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '-1') }.to raise_error(Oregano::Error, /-1 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '60') }.to raise_error(Oregano::Error, /60 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '61') }.to raise_error(Oregano::Error, /61 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '120') }.to raise_error(Oregano::Error, /120 is not a valid month/)
       end
 
       it "should support valid multiple values" do
@@ -361,14 +361,14 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
 
       it "should not support multiple values if at least one is invalid" do
         # one invalid
-        expect { described_class.new(:name => 'foo', :month => ['0','1','12'] ) }.to raise_error(Puppet::Error, /0 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => ['1','13','10'] ) }.to raise_error(Puppet::Error, /13 is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => ['Jan','Feb','Jxx'] ) }.to raise_error(Puppet::Error, /Jxx is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => ['0','1','12'] ) }.to raise_error(Oregano::Error, /0 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => ['1','13','10'] ) }.to raise_error(Oregano::Error, /13 is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => ['Jan','Feb','Jxx'] ) }.to raise_error(Oregano::Error, /Jxx is not a valid month/)
         # two invalid
-        expect { described_class.new(:name => 'foo', :month => ['Jan','Fex','Jux'] ) }.to raise_error(Puppet::Error, /(Fex|Jux) is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => ['Jan','Fex','Jux'] ) }.to raise_error(Oregano::Error, /(Fex|Jux) is not a valid month/)
         # all invalid
-        expect { described_class.new(:name => 'foo', :month => ['-1','0','13'] ) }.to raise_error(Puppet::Error, /(-1|0|13) is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => ['Jax','Fex','Aux'] ) }.to raise_error(Puppet::Error, /(Jax|Fex|Aux) is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => ['-1','0','13'] ) }.to raise_error(Oregano::Error, /(-1|0|13) is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => ['Jax','Fex','Aux'] ) }.to raise_error(Oregano::Error, /(Jax|Fex|Aux) is not a valid month/)
       end
 
       it "should support valid step syntax" do
@@ -377,10 +377,10 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support invalid steps" do
-        expect { described_class.new(:name => 'foo', :month => '*/A' ) }.to raise_error(Puppet::Error, /\*\/A is not a valid month/)
-        expect { described_class.new(:name => 'foo', :month => '*/2A' ) }.to raise_error(Puppet::Error, /\*\/2A is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '*/A' ) }.to raise_error(Oregano::Error, /\*\/A is not a valid month/)
+        expect { described_class.new(:name => 'foo', :month => '*/2A' ) }.to raise_error(Oregano::Error, /\*\/2A is not a valid month/)
         # As it turns out cron does not complaining about steps that exceed the valid range
-        # expect { described_class.new(:name => 'foo', :month => '*/13' ) }.to raise_error(Puppet::Error, /is not a valid month/)
+        # expect { described_class.new(:name => 'foo', :month => '*/13' ) }.to raise_error(Oregano::Error, /is not a valid month/)
       end
     end
 
@@ -408,15 +408,15 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support non numeric characters" do
-        expect { described_class.new(:name => 'foo', :monthday => 'z23') }.to raise_error(Puppet::Error, /z23 is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => '2z3') }.to raise_error(Puppet::Error, /2z3 is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => '23z') }.to raise_error(Puppet::Error, /23z is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => 'z23') }.to raise_error(Oregano::Error, /z23 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '2z3') }.to raise_error(Oregano::Error, /2z3 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '23z') }.to raise_error(Oregano::Error, /23z is not a valid monthday/)
       end
 
       it "should not support single values out of range" do
-        expect { described_class.new(:name => 'foo', :monthday => '-1') }.to raise_error(Puppet::Error, /-1 is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => '0') }.to raise_error(Puppet::Error, /0 is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => '32') }.to raise_error(Puppet::Error, /32 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '-1') }.to raise_error(Oregano::Error, /-1 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '0') }.to raise_error(Oregano::Error, /0 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '32') }.to raise_error(Oregano::Error, /32 is not a valid monthday/)
       end
 
       it "should support valid multiple values" do
@@ -427,13 +427,13 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
 
       it "should not support multiple values if at least one is invalid" do
         # one invalid
-        expect { described_class.new(:name => 'foo', :monthday => ['1','23','32'] ) }.to raise_error(Puppet::Error, /32 is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => ['-1','12','23'] ) }.to raise_error(Puppet::Error, /-1 is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => ['13','32','30'] ) }.to raise_error(Puppet::Error, /32 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => ['1','23','32'] ) }.to raise_error(Oregano::Error, /32 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => ['-1','12','23'] ) }.to raise_error(Oregano::Error, /-1 is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => ['13','32','30'] ) }.to raise_error(Oregano::Error, /32 is not a valid monthday/)
         # two invalid
-        expect { described_class.new(:name => 'foo', :monthday => ['-1','0','23'] ) }.to raise_error(Puppet::Error, /(-1|0) is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => ['-1','0','23'] ) }.to raise_error(Oregano::Error, /(-1|0) is not a valid monthday/)
         # all invalid
-        expect { described_class.new(:name => 'foo', :monthday => ['-1','0','32'] ) }.to raise_error(Puppet::Error, /(-1|0|32) is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => ['-1','0','32'] ) }.to raise_error(Oregano::Error, /(-1|0|32) is not a valid monthday/)
       end
 
       it "should support valid step syntax" do
@@ -442,10 +442,10 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       end
 
       it "should not support invalid steps" do
-        expect { described_class.new(:name => 'foo', :monthday => '*/A' ) }.to raise_error(Puppet::Error, /\*\/A is not a valid monthday/)
-        expect { described_class.new(:name => 'foo', :monthday => '*/2A' ) }.to raise_error(Puppet::Error, /\*\/2A is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '*/A' ) }.to raise_error(Oregano::Error, /\*\/A is not a valid monthday/)
+        expect { described_class.new(:name => 'foo', :monthday => '*/2A' ) }.to raise_error(Oregano::Error, /\*\/2A is not a valid monthday/)
         # As it turns out cron does not complaining about steps that exceed the valid range
-        # expect { described_class.new(:name => 'foo', :monthday => '*/32' ) }.to raise_error(Puppet::Error, /is not a valid monthday/)
+        # expect { described_class.new(:name => 'foo', :monthday => '*/32' ) }.to raise_error(Oregano::Error, /is not a valid monthday/)
       end
     end
 
@@ -471,7 +471,7 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
             it "should not accept the value '#{value}' for special" do
               expect {
                 described_class.new(:name => 'foo', :minute => "1", :special => value )
-              }.to raise_error(Puppet::Error, /cannot specify both a special schedule and a value/)
+              }.to raise_error(Oregano::Error, /cannot specify both a special schedule and a value/)
             end
           }
           it "should accept the 'absent' value for special" do
@@ -493,7 +493,7 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
       it "should not accept environment variables that do not contain '='" do
         expect do
           described_class.new(:name => 'foo',:environment => 'INVALID')
-        end.to raise_error(Puppet::Error, /Invalid environment setting "INVALID"/)
+        end.to raise_error(Oregano::Error, /Invalid environment setting "INVALID"/)
       end
 
       it "should accept empty environment variables that do not contain '='" do
@@ -514,9 +514,9 @@ describe Puppet::Type.type(:cron), :unless => Puppet.features.microsoft_windows?
   describe "when autorequiring resources" do
 
     before :each do
-      @user_bob = Puppet::Type.type(:user).new(:name => 'bob', :ensure => :present)
-      @user_alice = Puppet::Type.type(:user).new(:name => 'alice', :ensure => :present)
-      @catalog = Puppet::Resource::Catalog.new
+      @user_bob = Oregano::Type.type(:user).new(:name => 'bob', :ensure => :present)
+      @user_alice = Oregano::Type.type(:user).new(:name => 'alice', :ensure => :present)
+      @catalog = Oregano::Resource::Catalog.new
       @catalog.add_resource @user_bob, @user_alice
     end
 

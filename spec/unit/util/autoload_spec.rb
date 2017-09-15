@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/autoload'
+require 'oregano/util/autoload'
 
-describe Puppet::Util::Autoload do
-  include PuppetSpec::Files
+describe Oregano::Util::Autoload do
+  include OreganoSpec::Files
 
   before do
-    @autoload = Puppet::Util::Autoload.new("foo", "tmp")
+    @autoload = Oregano::Util::Autoload.new("foo", "tmp")
 
     @loaded = {}
     @autoload.class.stubs(:loaded).returns(@loaded)
@@ -16,7 +16,7 @@ describe Puppet::Util::Autoload do
   describe "when building the search path" do
     before :each do
       ## modulepath/libdir can't be used until after app settings are initialized, so we need to simulate that:
-      Puppet.settings.expects(:app_defaults_initialized?).returns(true).at_least_once
+      Oregano.settings.expects(:app_defaults_initialized?).returns(true).at_least_once
     end
 
     it "should collect all of the lib directories that exist in the current environment's module path" do
@@ -30,44 +30,44 @@ describe Puppet::Util::Autoload do
         "two" => { "lib" => {} }
       })
 
-      environment = Puppet::Node::Environment.create(:foo, [dira, dirb])
+      environment = Oregano::Node::Environment.create(:foo, [dira, dirb])
 
       expect(@autoload.class.module_directories(environment)).to eq(["#{dira}/two/lib", "#{dirb}/two/lib"])
     end
 
     it "ignores missing module directories" do
-      environment = Puppet::Node::Environment.create(:foo, [File.expand_path('does/not/exist')])
+      environment = Oregano::Node::Environment.create(:foo, [File.expand_path('does/not/exist')])
 
       expect(@autoload.class.module_directories(environment)).to be_empty
     end
 
     it "ignores the configured environment when it doesn't exist" do
-      Puppet[:environment] = 'nonexistent'
+      Oregano[:environment] = 'nonexistent'
 
-      Puppet.override({ :environments => Puppet::Environments::Static.new() }) do
+      Oregano.override({ :environments => Oregano::Environments::Static.new() }) do
         expect(@autoload.class.module_directories(nil)).to be_empty
       end
     end
 
     it "uses the configured environment when no environment is given" do
-      Puppet[:environment] = 'nonexistent'
+      Oregano[:environment] = 'nonexistent'
 
-      Puppet.override({ :environments => Puppet::Environments::Static.new() }) do
+      Oregano.override({ :environments => Oregano::Environments::Static.new() }) do
         expect(@autoload.class.module_directories(nil)).to be_empty
       end
     end
 
-    it "should include the module directories, the Puppet libdir, and all of the Ruby load directories" do
-      Puppet[:libdir] = '/libdir1'
+    it "should include the module directories, the Oregano libdir, and all of the Ruby load directories" do
+      Oregano[:libdir] = '/libdir1'
       @autoload.class.expects(:gem_directories).returns %w{/one /two}
       @autoload.class.expects(:module_directories).returns %w{/three /four}
-      expect(@autoload.class.search_directories(nil)).to eq(%w{/one /two /three /four} + [Puppet[:libdir]] + $LOAD_PATH)
+      expect(@autoload.class.search_directories(nil)).to eq(%w{/one /two /three /four} + [Oregano[:libdir]] + $LOAD_PATH)
     end
 
-    it "does not split the Puppet[:libdir]" do
-      Puppet[:libdir] = "/libdir1#{File::PATH_SEPARATOR}/libdir2"
+    it "does not split the Oregano[:libdir]" do
+      Oregano[:libdir] = "/libdir1#{File::PATH_SEPARATOR}/libdir2"
 
-      expect(@autoload.class.libdirs).to eq([Puppet[:libdir]])
+      expect(@autoload.class.libdirs).to eq([Oregano[:libdir]])
     end
   end
 
@@ -80,12 +80,12 @@ describe Puppet::Util::Autoload do
     end
 
     [RuntimeError, LoadError, SyntaxError].each do |error|
-      it "should die with Puppet::Error if a #{error.to_s} exception is thrown" do
-        Puppet::FileSystem.stubs(:exist?).returns true
+      it "should die with Oregano::Error if a #{error.to_s} exception is thrown" do
+        Oregano::FileSystem.stubs(:exist?).returns true
 
         Kernel.expects(:load).raises error
 
-        expect { @autoload.load("foo") }.to raise_error(Puppet::Error)
+        expect { @autoload.load("foo") }.to raise_error(Oregano::Error)
       end
     end
 
@@ -94,7 +94,7 @@ describe Puppet::Util::Autoload do
     end
 
     it "should register loaded files with the autoloader" do
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       Kernel.stubs(:load)
       @autoload.load("myfile")
 
@@ -104,7 +104,7 @@ describe Puppet::Util::Autoload do
     end
 
     it "should be seen by loaded? on the instance using the short name" do
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       Kernel.stubs(:load)
       @autoload.load("myfile")
 
@@ -114,7 +114,7 @@ describe Puppet::Util::Autoload do
     end
 
     it "should register loaded files with the main loaded file list so they are not reloaded by ruby" do
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       Kernel.stubs(:load)
 
       @autoload.load("myfile")
@@ -127,7 +127,7 @@ describe Puppet::Util::Autoload do
     it "should load the first file in the searchpath" do
       @autoload.stubs(:search_directories).returns [make_absolute("/a"), make_absolute("/b")]
       FileTest.stubs(:directory?).returns true
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       Kernel.expects(:load).with(make_absolute("/a/tmp/myfile.rb"), optionally(anything))
 
       @autoload.load("myfile")
@@ -136,7 +136,7 @@ describe Puppet::Util::Autoload do
     end
 
     it "should treat equivalent paths to a loaded file as loaded" do
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       Kernel.stubs(:load)
       @autoload.load("myfile")
 
@@ -154,7 +154,7 @@ describe Puppet::Util::Autoload do
       @autoload.class.stubs(:search_directories).returns [make_absolute("/a")]
       FileTest.stubs(:directory?).returns true
       Dir.stubs(:glob).returns [make_absolute("/a/foo/file.rb")]
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       @time_a = Time.utc(2010, 'jan', 1, 6, 30)
       File.stubs(:mtime).returns @time_a
 
@@ -165,7 +165,7 @@ describe Puppet::Util::Autoload do
       it "should die an if a #{error.to_s} exception is thrown" do
         Kernel.expects(:load).raises error
 
-        expect { @autoload.loadall }.to raise_error(Puppet::Error)
+        expect { @autoload.loadall }.to raise_error(Oregano::Error)
       end
     end
 
@@ -195,7 +195,7 @@ describe Puppet::Util::Autoload do
 
     it "changes should be seen by changed? on the instance using the short name" do
       File.stubs(:mtime).returns(@first_time)
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       Kernel.stubs(:load)
       @autoload.load("myfile")
       expect(@autoload.loaded?("myfile")).to be
@@ -216,14 +216,14 @@ describe Puppet::Util::Autoload do
 
       it "should reload if mtime changes" do
         File.stubs(:mtime).with(@file_a).returns(@first_time + 60)
-        Puppet::FileSystem.stubs(:exist?).with(@file_a).returns true
+        Oregano::FileSystem.stubs(:exist?).with(@file_a).returns true
         Kernel.expects(:load).with(@file_a, optionally(anything))
         @autoload.class.reload_changed
       end
 
       it "should do nothing if the file is deleted" do
         File.stubs(:mtime).with(@file_a).raises(Errno::ENOENT)
-        Puppet::FileSystem.stubs(:exist?).with(@file_a).returns false
+        Oregano::FileSystem.stubs(:exist?).with(@file_a).returns false
         Kernel.expects(:load).never
         @autoload.class.reload_changed
       end
@@ -238,8 +238,8 @@ describe Puppet::Util::Autoload do
         File.expects(:mtime).with(@file_a).returns(@first_time)
         @autoload.class.mark_loaded("file", @file_a)
         File.stubs(:mtime).with(@file_a).raises(Errno::ENOENT)
-        Puppet::FileSystem.stubs(:exist?).with(@file_a).returns false
-        Puppet::FileSystem.stubs(:exist?).with(@file_b).returns true
+        Oregano::FileSystem.stubs(:exist?).with(@file_a).returns false
+        Oregano::FileSystem.stubs(:exist?).with(@file_b).returns true
         File.stubs(:mtime).with(@file_b).returns @first_time
         Kernel.expects(:load).with(@file_b, optionally(anything))
         @autoload.class.reload_changed
@@ -248,11 +248,11 @@ describe Puppet::Util::Autoload do
 
       it "should load a/file when b/file is loaded and a/file is created" do
         File.stubs(:mtime).with(@file_b).returns @first_time
-        Puppet::FileSystem.stubs(:exist?).with(@file_b).returns true
+        Oregano::FileSystem.stubs(:exist?).with(@file_b).returns true
         @autoload.class.mark_loaded("file", @file_b)
 
         File.stubs(:mtime).with(@file_a).returns @first_time
-        Puppet::FileSystem.stubs(:exist?).with(@file_a).returns true
+        Oregano::FileSystem.stubs(:exist?).with(@file_a).returns true
         Kernel.expects(:load).with(@file_a, optionally(anything))
         @autoload.class.reload_changed
         expect(@autoload.class.send(:loaded)["file"]).to eq([@file_a, @first_time])
@@ -263,12 +263,12 @@ describe Puppet::Util::Autoload do
   describe "#cleanpath" do
     it "should leave relative paths relative" do
       path = "hello/there"
-      expect(Puppet::Util::Autoload.cleanpath(path)).to eq(path)
+      expect(Oregano::Util::Autoload.cleanpath(path)).to eq(path)
     end
 
-    describe "on Windows", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows", :if => Oregano.features.microsoft_windows? do
       it "should convert c:\ to c:/" do
-        expect(Puppet::Util::Autoload.cleanpath('c:\\')).to eq('c:/')
+        expect(Oregano::Util::Autoload.cleanpath('c:\\')).to eq('c:/')
       end
     end
   end

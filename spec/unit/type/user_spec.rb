@@ -2,7 +2,7 @@
 # encoding: UTF-8
 require 'spec_helper'
 
-describe Puppet::Type.type(:user) do
+describe Oregano::Type.type(:user) do
   before :each do
     @provider_class = described_class.provide(:simple) do
       has_features :manages_expiry, :manages_password_age, :manages_passwords, :manages_solaris_rbac, :manages_shell
@@ -66,7 +66,7 @@ describe Puppet::Type.type(:user) do
 
     it "cannot be set to true for a provider that does not manage homedirs" do
       provider.class.stubs(:manages_homedir?).returns false
-      expect { instance[:managehome] = 'yes' }.to raise_error(Puppet::Error, /can not manage home directories/)
+      expect { instance[:managehome] = 'yes' }.to raise_error(Oregano::Error, /can not manage home directories/)
     end
 
     it "can be set to true for a provider that does manage homedirs" do
@@ -90,7 +90,7 @@ describe Puppet::Type.type(:user) do
 
   properties.each do |property|
     it "should have a #{property} property" do
-      expect(described_class.attrclass(property).ancestors).to be_include(Puppet::Property)
+      expect(described_class.attrclass(property).ancestors).to be_include(Oregano::Property)
     end
 
     it "should have documentation for its #{property} property" do
@@ -102,16 +102,16 @@ describe Puppet::Type.type(:user) do
 
   list_properties.each do |property|
     it "should have a list '#{property}'" do
-      expect(described_class.attrclass(property).ancestors).to be_include(Puppet::Property::List)
+      expect(described_class.attrclass(property).ancestors).to be_include(Oregano::Property::List)
     end
   end
 
   it "should have an ordered list 'profiles'" do
-    expect(described_class.attrclass(:profiles).ancestors).to be_include(Puppet::Property::OrderedList)
+    expect(described_class.attrclass(:profiles).ancestors).to be_include(Oregano::Property::OrderedList)
   end
 
   it "should have key values 'keys'" do
-    expect(described_class.attrclass(:keys).ancestors).to be_include(Puppet::Property::KeyValue)
+    expect(described_class.attrclass(:keys).ancestors).to be_include(Oregano::Property::KeyValue)
   end
 
   describe "when retrieving all current values" do
@@ -212,22 +212,22 @@ describe Puppet::Type.type(:user) do
       end
 
       it "should return true if any of the specified groups are equal to the current integer" do
-        Puppet::Util.expects(:gid).with("foo").returns 300
-        Puppet::Util.expects(:gid).with("bar").returns 500
+        Oregano::Util.expects(:gid).with("foo").returns 300
+        Oregano::Util.expects(:gid).with("bar").returns 500
         expect(described_class.new(:name => 'baz', :gid => [ 'foo', 'bar' ]).parameter(:gid)).to be_safe_insync(500)
       end
 
       it "should return false if none of the specified groups are equal to the current integer" do
-        Puppet::Util.expects(:gid).with("foo").returns 300
-        Puppet::Util.expects(:gid).with("bar").returns 500
+        Oregano::Util.expects(:gid).with("foo").returns 300
+        Oregano::Util.expects(:gid).with("bar").returns 500
         expect(described_class.new(:name => 'baz', :gid => [ 'foo', 'bar' ]).parameter(:gid)).to_not be_safe_insync(700)
       end
     end
 
     describe "when syncing" do
       it "should use the first found, specified group as the desired value and send it to the provider" do
-        Puppet::Util.expects(:gid).with("foo").returns nil
-        Puppet::Util.expects(:gid).with("bar").returns 500
+        Oregano::Util.expects(:gid).with("foo").returns nil
+        Oregano::Util.expects(:gid).with("bar").returns 500
 
         @provider = @provider_class.new(:name => 'foo')
         resource = described_class.new(:name => 'foo', :provider => @provider, :gid => [ 'foo', 'bar' ])
@@ -249,17 +249,17 @@ describe Puppet::Type.type(:user) do
     end
 
     it "should not support a comma separated list" do
-      expect { described_class.new(:name => 'foo', :groups => 'bar,baz') }.to raise_error(Puppet::Error, /Group names must be provided as an array/)
+      expect { described_class.new(:name => 'foo', :groups => 'bar,baz') }.to raise_error(Oregano::Error, /Group names must be provided as an array/)
     end
 
     it "should not support an empty string" do
-      expect { described_class.new(:name => 'foo', :groups => '') }.to raise_error(Puppet::Error, /Group names must not be empty/)
+      expect { described_class.new(:name => 'foo', :groups => '') }.to raise_error(Oregano::Error, /Group names must not be empty/)
     end
 
     describe "when testing is in sync" do
 
       before :each do
-        # the useradd provider uses a single string to represent groups and so does Puppet::Property::List when converting to should values
+        # the useradd provider uses a single string to represent groups and so does Oregano::Property::List when converting to should values
         @provider = @provider_class.new(:name => 'foo', :groups => 'a,b,e,f')
       end
 
@@ -290,7 +290,7 @@ describe Puppet::Type.type(:user) do
 
   describe "when managing expiry" do
     it "should fail if given an invalid date" do
-      expect { described_class.new(:name => 'foo', :expiry => "200-20-20") }.to raise_error(Puppet::Error, /Expiry dates must be YYYY-MM-DD/)
+      expect { described_class.new(:name => 'foo', :expiry => "200-20-20") }.to raise_error(Oregano::Error, /Expiry dates must be YYYY-MM-DD/)
     end
   end
 
@@ -300,7 +300,7 @@ describe Puppet::Type.type(:user) do
     end
 
     it "should fail with an empty minimum age" do
-      expect { described_class.new(:name => 'foo', :password_min_age => '') }.to raise_error(Puppet::Error, /minimum age must be provided as a number/)
+      expect { described_class.new(:name => 'foo', :password_min_age => '') }.to raise_error(Oregano::Error, /minimum age must be provided as a number/)
     end
   end
 
@@ -310,7 +310,7 @@ describe Puppet::Type.type(:user) do
     end
 
     it "should fail with an empty maximum age" do
-      expect { described_class.new(:name => 'foo', :password_max_age => '') }.to raise_error(Puppet::Error, /maximum age must be provided as a number/)
+      expect { described_class.new(:name => 'foo', :password_max_age => '') }.to raise_error(Oregano::Error, /maximum age must be provided as a number/)
     end
   end
 
@@ -336,7 +336,7 @@ describe Puppet::Type.type(:user) do
     end
 
     it "should fail if a ':' is included in the password" do
-      expect { described_class.new(:name => 'foo', :password => "some:thing") }.to raise_error(Puppet::Error, /Passwords cannot include ':'/)
+      expect { described_class.new(:name => 'foo', :password => "some:thing") }.to raise_error(Oregano::Error, /Passwords cannot include ':'/)
     end
 
     it "should allow the value to be set to :absent" do
@@ -396,10 +396,10 @@ describe Puppet::Type.type(:user) do
       testuser = described_class.new(:name => "testuser", :roles => ['testrole'] )
       testrole = described_class.new(:name => "testrole")
 
-      config = Puppet::Resource::Catalog.new :testing do |conf|
+      config = Oregano::Resource::Catalog.new :testing do |conf|
         [testuser, testrole].each { |resource| conf.add_resource resource }
       end
-      Puppet::Type::User::ProviderDirectoryservice.stubs(:get_macosx_version_major).returns "10.5"
+      Oregano::Type::User::ProviderDirectoryservice.stubs(:get_macosx_version_major).returns "10.5"
 
       rel = testuser.autorequire[0]
       expect(rel.source.ref).to eq(testrole.ref)
@@ -428,9 +428,9 @@ describe Puppet::Type.type(:user) do
       @provider = @shell_provider_class.new(:name => 'foo', :shell => '/bin/bash', :ensure => :present)
       @provider.expects(:check_valid_shell)
       resource = described_class.new(:name => 'foo', :shell => '/bin/zsh', :provider => @provider)
-      Puppet::Util::Storage.stubs(:load)
-      Puppet::Util::Storage.stubs(:store)
-      catalog = Puppet::Resource::Catalog.new
+      Oregano::Util::Storage.stubs(:load)
+      Oregano::Util::Storage.stubs(:store)
+      catalog = Oregano::Resource::Catalog.new
       catalog.add_resource resource
       catalog.apply
     end
@@ -439,9 +439,9 @@ describe Puppet::Type.type(:user) do
       @provider = @shell_provider_class.new(:name => 'foo', :shell => '/bin/bash', :ensure => :absent)
       @provider.expects(:check_valid_shell)
       resource = described_class.new(:name => 'foo', :shell => '/bin/zsh', :provider => @provider)
-      Puppet::Util::Storage.stubs(:load)
-      Puppet::Util::Storage.stubs(:store)
-      catalog = Puppet::Resource::Catalog.new
+      Oregano::Util::Storage.stubs(:load)
+      Oregano::Util::Storage.stubs(:store)
+      catalog = Oregano::Resource::Catalog.new
       catalog.add_resource resource
       catalog.apply
     end
@@ -451,7 +451,7 @@ describe Puppet::Type.type(:user) do
     it "should not accept a keyfile with a relative path" do
       expect {
         described_class.new(:name => "a", :purge_ssh_keys => "keys")
-      }.to raise_error(Puppet::Error, /Paths to keyfiles must be absolute, not keys/)
+      }.to raise_error(Oregano::Error, /Paths to keyfiles must be absolute, not keys/)
     end
 
     context "with a home directory specified" do
@@ -467,7 +467,7 @@ describe Puppet::Type.type(:user) do
       it "raises when given a relative path" do
         expect {
           described_class.new(:name => "a", :home => "/tmp", :purge_ssh_keys => "keys")
-        }.to raise_error(Puppet::Error, /Paths to keyfiles must be absolute/)
+        }.to raise_error(Oregano::Error, /Paths to keyfiles must be absolute/)
       end
     end
 
@@ -475,17 +475,17 @@ describe Puppet::Type.type(:user) do
       it "should not accept true" do
         expect {
           described_class.new(:name => "a", :purge_ssh_keys => true)
-        }.to raise_error(Puppet::Error, /purge_ssh_keys can only be true for users with a defined home directory/)
+        }.to raise_error(Oregano::Error, /purge_ssh_keys can only be true for users with a defined home directory/)
       end
       it "should not accept the ~ wildcard" do
         expect {
           described_class.new(:name => "a", :purge_ssh_keys => "~/keys")
-        }.to raise_error(Puppet::Error, /meta character ~ or %h only allowed for users with a defined home directory/)
+        }.to raise_error(Oregano::Error, /meta character ~ or %h only allowed for users with a defined home directory/)
       end
       it "should not accept the %h wildcard" do
         expect {
           described_class.new(:name => "a", :purge_ssh_keys => "%h/keys")
-        }.to raise_error(Puppet::Error, /meta character ~ or %h only allowed for users with a defined home directory/)
+        }.to raise_error(Oregano::Error, /meta character ~ or %h only allowed for users with a defined home directory/)
       end
     end
 
@@ -495,7 +495,7 @@ describe Puppet::Type.type(:user) do
       end
       subject do
         res = described_class.new(:name => "test", :purge_ssh_keys => paths)
-        res.catalog = Puppet::Resource::Catalog.new
+        res.catalog = Oregano::Resource::Catalog.new
         res
       end
       it "should not just return from generate" do
@@ -513,7 +513,7 @@ describe Puppet::Type.type(:user) do
     describe "generated keys" do
       subject do
         res = described_class.new(:name => "test_user_name", :purge_ssh_keys => purge_param)
-        res.catalog = Puppet::Resource::Catalog.new
+        res.catalog = Oregano::Resource::Catalog.new
         res
       end
       context "when purging is disabled" do

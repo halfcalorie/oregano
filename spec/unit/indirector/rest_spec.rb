@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 require 'json'
-require 'puppet/indirector'
-require 'puppet/indirector/errors'
-require 'puppet/indirector/rest'
-require 'puppet/util/psych_support'
+require 'oregano/indirector'
+require 'oregano/indirector/errors'
+require 'oregano/indirector/rest'
+require 'oregano/util/psych_support'
 
 HTTP_ERROR_CODES = [300, 400, 500]
 
@@ -17,34 +17,34 @@ shared_examples_for "a REST terminus method" do |terminus_method|
     end
 
     it "falls back to pson for future requests" do
-      response.stubs(:[]).with(Puppet::Network::HTTP::HEADER_PUPPET_VERSION).returns("4.10.1")
+      response.stubs(:[]).with(Oregano::Network::HTTP::HEADER_PUPPET_VERSION).returns("4.10.1")
       terminus.send(terminus_method, request)
 
-      expect(Puppet[:preferred_serialization_format]).to eq("pson")
+      expect(Oregano[:preferred_serialization_format]).to eq("pson")
     end
 
-    it "doesn't change the serialization format if the X-Puppet-Version header is missing" do
-      response.stubs(:[]).with(Puppet::Network::HTTP::HEADER_PUPPET_VERSION).returns(nil)
+    it "doesn't change the serialization format if the X-Oregano-Version header is missing" do
+      response.stubs(:[]).with(Oregano::Network::HTTP::HEADER_PUPPET_VERSION).returns(nil)
 
       terminus.send(terminus_method, request)
 
-      expect(Puppet[:preferred_serialization_format]).to eq("json")
+      expect(Oregano[:preferred_serialization_format]).to eq("json")
     end
 
     it "doesn't change the serialization format if the server major version is 5" do
-      response.stubs(:[]).with(Puppet::Network::HTTP::HEADER_PUPPET_VERSION).returns("5.0.3")
+      response.stubs(:[]).with(Oregano::Network::HTTP::HEADER_PUPPET_VERSION).returns("5.0.3")
 
       terminus.send(terminus_method, request)
 
-      expect(Puppet[:preferred_serialization_format]).to eq("json")
+      expect(Oregano[:preferred_serialization_format]).to eq("json")
     end
 
     it "doesn't change the serialization format if the current format is already pson" do
-      response.stubs(:[]).with(Puppet::Network::HTTP::HEADER_PUPPET_VERSION).returns("4.10.1")
-      Puppet[:preferred_serialization_format] = "pson"
+      response.stubs(:[]).with(Oregano::Network::HTTP::HEADER_PUPPET_VERSION).returns("4.10.1")
+      Oregano[:preferred_serialization_format] = "pson"
       terminus.send(terminus_method, request)
 
-      expect(Puppet[:preferred_serialization_format]).to eq("pson")
+      expect(Oregano[:preferred_serialization_format]).to eq("pson")
     end
   end
 
@@ -121,17 +121,17 @@ shared_examples_for "a deserializing terminus method" do |terminus_method|
   end
 
   it "doesn't catch errors in deserialization" do
-    model.expects(:convert_from).raises(Puppet::Error, "Whoa there")
+    model.expects(:convert_from).raises(Oregano::Error, "Whoa there")
 
-    expect { terminus.send(terminus_method, request) }.to raise_error(Puppet::Error, "Whoa there")
+    expect { terminus.send(terminus_method, request) }.to raise_error(Oregano::Error, "Whoa there")
   end
 end
 
-describe Puppet::Indirector::REST do
+describe Oregano::Indirector::REST do
   before :all do
-    class Puppet::TestModel
-      include Puppet::Util::PsychSupport
-      extend Puppet::Indirector
+    class Oregano::TestModel
+      include Oregano::Util::PsychSupport
+      extend Oregano::Indirector
       indirects :test_model
       attr_accessor :name, :data
       def initialize(name = "name", data = '')
@@ -152,31 +152,31 @@ describe Puppet::Indirector::REST do
       end
 
       def ==(other)
-        other.is_a? Puppet::TestModel and other.name == name and other.data == data
+        other.is_a? Oregano::TestModel and other.name == name and other.data == data
       end
     end
 
     # The subclass must not be all caps even though the superclass is
-    class Puppet::TestModel::Rest < Puppet::Indirector::REST
+    class Oregano::TestModel::Rest < Oregano::Indirector::REST
     end
 
-    Puppet::TestModel.indirection.terminus_class = :rest
+    Oregano::TestModel.indirection.terminus_class = :rest
   end
 
   after :all do
-    Puppet::TestModel.indirection.delete
+    Oregano::TestModel.indirection.delete
     # Remove the class, unlinking it from the rest of the system.
-    Puppet.send(:remove_const, :TestModel)
+    Oregano.send(:remove_const, :TestModel)
   end
 
-  let(:terminus_class) { Puppet::TestModel::Rest }
-  let(:terminus) { Puppet::TestModel.indirection.terminus(:rest) }
-  let(:indirection) { Puppet::TestModel.indirection }
-  let(:model) { Puppet::TestModel }
-  let(:url_prefix) { "#{Puppet::Network::HTTP::MASTER_URL_PREFIX}/v3"}
+  let(:terminus_class) { Oregano::TestModel::Rest }
+  let(:terminus) { Oregano::TestModel.indirection.terminus(:rest) }
+  let(:indirection) { Oregano::TestModel.indirection }
+  let(:model) { Oregano::TestModel }
+  let(:url_prefix) { "#{Oregano::Network::HTTP::MASTER_URL_PREFIX}/v3"}
 
   around(:each) do |example|
-    Puppet.override(:current_environment => Puppet::Node::Environment.create(:production, [])) do
+    Oregano.override(:current_environment => Oregano::Node::Environment.create(:production, [])) do
       example.run
     end
   end
@@ -185,28 +185,28 @@ describe Puppet::Indirector::REST do
     obj = stub('http 200 ok', :code => code.to_s, :body => body)
     obj.stubs(:[]).with('content-type').returns(content_type)
     obj.stubs(:[]).with('content-encoding').returns(encoding)
-    obj.stubs(:[]).with(Puppet::Network::HTTP::HEADER_PUPPET_VERSION).returns(Puppet.version)
+    obj.stubs(:[]).with(Oregano::Network::HTTP::HEADER_PUPPET_VERSION).returns(Oregano.version)
     obj
   end
 
   def find_request(key, options={})
-    Puppet::Indirector::Request.new(:test_model, :find, key, nil, options)
+    Oregano::Indirector::Request.new(:test_model, :find, key, nil, options)
   end
 
   def head_request(key, options={})
-    Puppet::Indirector::Request.new(:test_model, :head, key, nil, options)
+    Oregano::Indirector::Request.new(:test_model, :head, key, nil, options)
   end
 
   def search_request(key, options={})
-    Puppet::Indirector::Request.new(:test_model, :search, key, nil, options)
+    Oregano::Indirector::Request.new(:test_model, :search, key, nil, options)
   end
 
   def delete_request(key, options={})
-    Puppet::Indirector::Request.new(:test_model, :destroy, key, nil, options)
+    Oregano::Indirector::Request.new(:test_model, :destroy, key, nil, options)
   end
 
   def save_request(key, instance, options={})
-    Puppet::Indirector::Request.new(:test_model, :save, key, instance, options)
+    Oregano::Indirector::Request.new(:test_model, :save, key, instance, options)
   end
 
   it "should have a method for specifying what setting a subclass should use to retrieve its server" do
@@ -215,13 +215,13 @@ describe Puppet::Indirector::REST do
 
   it "should use any specified setting to pick the server" do
     terminus_class.expects(:server_setting).returns :ca_server
-    Puppet[:ca_server] = "myserver"
+    Oregano[:ca_server] = "myserver"
     expect(terminus_class.server).to eq("myserver")
   end
 
   it "should default to :server for the server setting" do
     terminus_class.expects(:server_setting).returns nil
-    Puppet[:server] = "myserver"
+    Oregano[:server] = "myserver"
     expect(terminus_class.server).to eq("myserver")
   end
 
@@ -231,70 +231,70 @@ describe Puppet::Indirector::REST do
 
   it "should use any specified setting to pick the port" do
     terminus_class.expects(:port_setting).returns :ca_port
-    Puppet[:ca_port] = "321"
+    Oregano[:ca_port] = "321"
     expect(terminus_class.port).to eq(321)
   end
 
   it "should default to :port for the port setting" do
     terminus_class.expects(:port_setting).returns nil
-    Puppet[:masterport] = "543"
+    Oregano[:masterport] = "543"
     expect(terminus_class.port).to eq(543)
   end
 
   it "should use a failover-selected server if set" do
     terminus_class.expects(:server_setting).returns nil
-    Puppet.override(:server => "myserver") do
+    Oregano.override(:server => "myserver") do
       expect(terminus_class.server).to eq("myserver")
     end
   end
 
   it "should use a failover-selected port if set" do
     terminus_class.expects(:port_setting).returns nil
-    Puppet.override(:serverport => 321) do
+    Oregano.override(:serverport => 321) do
       expect(terminus_class.port).to eq(321)
     end
   end
 
   it "should use server_list for server when available" do
     terminus_class.expects(:server_setting).returns nil
-    Puppet[:server_list] = [["foo", "123"]]
+    Oregano[:server_list] = [["foo", "123"]]
     expect(terminus_class.server).to eq("foo")
   end
 
   it "should prefer failover-selected server from server list" do
     terminus_class.expects(:server_setting).returns nil
-    Puppet[:server_list] = [["foo", "123"],["bar", "321"]]
-    Puppet.override(:server => "bar") do
+    Oregano[:server_list] = [["foo", "123"],["bar", "321"]]
+    Oregano.override(:server => "bar") do
       expect(terminus_class.server).to eq("bar")
     end
   end
 
   it "should use server_list for port when available" do
     terminus_class.expects(:port_setting).returns nil
-    Puppet[:server_list] = [["foo", "123"]]
+    Oregano[:server_list] = [["foo", "123"]]
     expect(terminus_class.port).to eq(123)
   end
 
   it "should prefer failover-selected port from server list" do
     terminus_class.expects(:port_setting).returns nil
-    Puppet[:server_list] = [["foo", "123"],["bar", "321"]]
-    Puppet.override(:serverport => "321") do
+    Oregano[:server_list] = [["foo", "123"],["bar", "321"]]
+    Oregano.override(:serverport => "321") do
       expect(terminus_class.port).to eq(321)
     end
   end
 
   it "should use an explicitly specified more-speciic server when failover is active" do
     terminus_class.expects(:server_setting).returns :ca_server
-    Puppet[:ca_server] = "myserver"
-    Puppet.override(:server => "anotherserver") do
+    Oregano[:ca_server] = "myserver"
+    Oregano.override(:server => "anotherserver") do
       expect(terminus_class.server).to eq("myserver")
     end
   end
 
   it "should use an explicitly specified more-specific port when failover is active" do
     terminus_class.expects(:port_setting).returns :ca_port
-    Puppet[:ca_port] = 321
-    Puppet.override(:serverport => 543) do
+    Oregano[:ca_port] = 321
+    Oregano.override(:serverport => 543) do
       expect(terminus_class.port).to eq(321)
     end
   end
@@ -302,14 +302,14 @@ describe Puppet::Indirector::REST do
   it "should use a default port when a more-specific server is set" do
     terminus_class.expects(:server_setting).returns :ca_server
     terminus_class.expects(:port_setting).returns :ca_port
-    Puppet[:ca_server] = "myserver"
-    Puppet.override(:server => "anotherserver", :port => 666) do
+    Oregano[:ca_server] = "myserver"
+    Oregano.override(:server => "anotherserver", :port => 666) do
       expect(terminus_class.port).to eq(8140)
     end
   end
 
-  it 'should default to :puppet for the srv_service' do
-    expect(Puppet::Indirector::REST.srv_service).to eq(:puppet)
+  it 'should default to :oregano for the srv_service' do
+    expect(Oregano::Indirector::REST.srv_service).to eq(:oregano)
   end
 
   it 'excludes yaml from the Accept header' do
@@ -335,21 +335,21 @@ describe Puppet::Indirector::REST do
       @request = stub 'request', :key => "foo", :server => nil, :port => nil
       terminus.class.expects(:port).returns 321
       terminus.class.expects(:server).returns "myserver"
-      Puppet::Network::HttpPool.expects(:http_instance).with("myserver", 321).returns "myconn"
+      Oregano::Network::HttpPool.expects(:http_instance).with("myserver", 321).returns "myconn"
       expect(terminus.network(@request)).to eq("myconn")
     end
 
     it "should use the server from the indirection request if one is present" do
       @request = stub 'request', :key => "foo", :server => "myserver", :port => nil
       terminus.class.stubs(:port).returns 321
-      Puppet::Network::HttpPool.expects(:http_instance).with("myserver", 321).returns "myconn"
+      Oregano::Network::HttpPool.expects(:http_instance).with("myserver", 321).returns "myconn"
       expect(terminus.network(@request)).to eq("myconn")
     end
 
     it "should use the port from the indirection request if one is present" do
       @request = stub 'request', :key => "foo", :server => nil, :port => 321
       terminus.class.stubs(:server).returns "myserver"
-      Puppet::Network::HttpPool.expects(:http_instance).with("myserver", 321).returns "myconn"
+      Oregano::Network::HttpPool.expects(:http_instance).with("myserver", 321).returns "myconn"
       expect(terminus.network(@request)).to eq("myconn")
     end
   end
@@ -424,7 +424,7 @@ describe Puppet::Indirector::REST do
         expect do
           terminus.find(request)
         end.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           "Find #{url_prefix}/test_model/foo?environment=production&fail_on_404=true resulted in 404 with the message: this is the notfound you are looking for")
       end
 
@@ -436,12 +436,12 @@ describe Puppet::Indirector::REST do
         expect do
           terminus.find(request)
         end.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /\/test_model\/foo.*\?environment=production&.*long_param=A+\.\.\..*resulted in 404 with the message/)
       end
 
       it 'does not truncate the URI when logging debug information' do
-        Puppet.debug = true
+        Oregano.debug = true
         request = find_request('foo', :fail_on_404 => true, :long_param => ('A' * 100) + 'B')
         response = mock_response('404', 'this is the notfound you are looking for')
         connection.expects(:get).returns(response)
@@ -449,7 +449,7 @@ describe Puppet::Indirector::REST do
         expect do
           terminus.find(request)
         end.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /\/test_model\/foo.*\?environment=production&.*long_param=A+B.*resulted in 404 with the message/)
       end
     end
@@ -482,8 +482,8 @@ describe Puppet::Indirector::REST do
       terminus.find(request)
     end
 
-    it "provides a version header with the current puppet version" do
-      connection.expects(:get).with(anything, has_entry(Puppet::Network::HTTP::HEADER_PUPPET_VERSION => Puppet.version)).returns(response)
+    it "provides a version header with the current oregano version" do
+      connection.expects(:get).with(anything, has_entry(Oregano::Network::HTTP::HEADER_PUPPET_VERSION => Oregano.version)).returns(response)
 
       terminus.find(request)
     end
@@ -542,8 +542,8 @@ describe Puppet::Indirector::REST do
       expect(terminus.head(request)).to eq(false)
     end
 
-    it "provides a version header with the current puppet version" do
-      connection.expects(:head).with(anything, has_entry(Puppet::Network::HTTP::HEADER_PUPPET_VERSION => Puppet.version)).returns(response)
+    it "provides a version header with the current oregano version" do
+      connection.expects(:head).with(anything, has_entry(Oregano::Network::HTTP::HEADER_PUPPET_VERSION => Oregano.version)).returns(response)
 
       terminus.head(request)
     end
@@ -587,8 +587,8 @@ describe Puppet::Indirector::REST do
       terminus.search(request)
     end
 
-    it "provides a version header with the current puppet version" do
-      connection.expects(:get).with(anything, has_entry(Puppet::Network::HTTP::HEADER_PUPPET_VERSION => Puppet.version)).returns(mock_response(200, ''))
+    it "provides a version header with the current oregano version" do
+      connection.expects(:get).with(anything, has_entry(Oregano::Network::HTTP::HEADER_PUPPET_VERSION => Oregano.version)).returns(mock_response(200, ''))
 
       terminus.search(request)
     end
@@ -646,8 +646,8 @@ describe Puppet::Indirector::REST do
       terminus.destroy(request)
     end
 
-    it "provides a version header with the current puppet version" do
-      connection.expects(:delete).with(anything, has_entry(Puppet::Network::HTTP::HEADER_PUPPET_VERSION => Puppet.version)).returns(response)
+    it "provides a version header with the current oregano version" do
+      connection.expects(:delete).with(anything, has_entry(Oregano::Network::HTTP::HEADER_PUPPET_VERSION => Oregano.version)).returns(response)
 
       terminus.destroy(request)
     end
@@ -709,8 +709,8 @@ describe Puppet::Indirector::REST do
       terminus.save(request)
     end
 
-    it "provides a version header with the current puppet version" do
-      connection.expects(:put).with(anything, anything, has_entry(Puppet::Network::HTTP::HEADER_PUPPET_VERSION => Puppet.version)).returns(response)
+    it "provides a version header with the current oregano version" do
+      connection.expects(:put).with(anything, anything, has_entry(Oregano::Network::HTTP::HEADER_PUPPET_VERSION => Oregano.version)).returns(response)
 
       terminus.save(request)
     end
@@ -732,7 +732,7 @@ describe Puppet::Indirector::REST do
       :search
     ].each do |method|
       it "##{method} passes the SRV service, and fall-back server & port to the request's do_request method" do
-        request = Puppet::Indirector::Request.new(:indirection, method, 'key', nil)
+        request = Oregano::Indirector::Request.new(:indirection, method, 'key', nil)
         stub_response = mock_response('200', 'body')
 
         request.expects(:do_request).with(terminus.class.srv_service, terminus.class.server, terminus.class.port).returns(stub_response)

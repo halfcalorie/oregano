@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'puppet/util/profiler'
+require 'oregano/util/profiler'
 
-describe Puppet::Util::Profiler::WallClock do
+describe Oregano::Util::Profiler::WallClock do
 
   it "logs the number of seconds it took to execute the segment" do
-    profiler = Puppet::Util::Profiler::WallClock.new(nil, nil)
+    profiler = Oregano::Util::Profiler::WallClock.new(nil, nil)
 
     message = profiler.do_finish(profiler.start(["foo", "bar"], "Testing"), ["foo", "bar"], "Testing")[:msg]
 

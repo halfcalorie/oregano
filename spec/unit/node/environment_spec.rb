@@ -3,15 +3,15 @@ require 'spec_helper'
 
 require 'tmpdir'
 
-require 'puppet/node/environment'
-require 'puppet/util/execution'
-require 'puppet_spec/modules'
-require 'puppet/parser/parser_factory'
+require 'oregano/node/environment'
+require 'oregano/util/execution'
+require 'oregano_spec/modules'
+require 'oregano/parser/parser_factory'
 
-describe Puppet::Node::Environment do
-  let(:env) { Puppet::Node::Environment.create("testing", []) }
+describe Oregano::Node::Environment do
+  let(:env) { Oregano::Node::Environment.create("testing", []) }
 
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   context 'the environment' do
     it "converts an environment to string when converting to YAML" do
@@ -20,14 +20,14 @@ describe Puppet::Node::Environment do
 
     describe ".create" do
       it "creates equivalent environments whether specifying name as a symbol or a string" do
-        expect(Puppet::Node::Environment.create(:one, [])).to eq(Puppet::Node::Environment.create("one", []))
+        expect(Oregano::Node::Environment.create(:one, [])).to eq(Oregano::Node::Environment.create("one", []))
       end
 
       it "interns name" do
-        expect(Puppet::Node::Environment.create("one", []).name).to equal(:one)
+        expect(Oregano::Node::Environment.create("one", []).name).to equal(:one)
       end
       it "does not produce environment singletons" do
-        expect(Puppet::Node::Environment.create("one", [])).to_not equal(Puppet::Node::Environment.create("one", []))
+        expect(Oregano::Node::Environment.create("one", [])).to_not equal(Oregano::Node::Environment.create("one", []))
       end
     end
 
@@ -36,16 +36,16 @@ describe Puppet::Node::Environment do
     end
 
     it "has an inspect method for debugging" do
-      e = Puppet::Node::Environment.create(:test, ['/modules/path', '/other/modules'], '/manifests/path')
+      e = Oregano::Node::Environment.create(:test, ['/modules/path', '/other/modules'], '/manifests/path')
       expect("a #{e} env").to eq("a test env")
-      expect(e.inspect).to match(%r{<Puppet::Node::Environment:\w* @name="test" @manifest="#{File.expand_path('/manifests/path')}" @modulepath="#{File.expand_path('/modules/path')}:#{File.expand_path('/other/modules')}" >})
+      expect(e.inspect).to match(%r{<Oregano::Node::Environment:\w* @name="test" @manifest="#{File.expand_path('/manifests/path')}" @modulepath="#{File.expand_path('/modules/path')}:#{File.expand_path('/other/modules')}" >})
     end
 
     describe "equality" do
       it "works as a hash key" do
-        base = Puppet::Node::Environment.create(:first, ["modules"], "manifests")
-        same = Puppet::Node::Environment.create(:first, ["modules"], "manifests")
-        different = Puppet::Node::Environment.create(:first, ["different"], "manifests")
+        base = Oregano::Node::Environment.create(:first, ["modules"], "manifests")
+        same = Oregano::Node::Environment.create(:first, ["modules"], "manifests")
+        different = Oregano::Node::Environment.create(:first, ["different"], "manifests")
         hash = {}
 
         hash[base] = "base env"
@@ -58,8 +58,8 @@ describe Puppet::Node::Environment do
       end
 
       it "is equal when name, modules, and manifests are the same" do
-        base = Puppet::Node::Environment.create(:base, ["modules"], "manifests")
-        different_name = Puppet::Node::Environment.create(:different, base.full_modulepath, base.manifest)
+        base = Oregano::Node::Environment.create(:base, ["modules"], "manifests")
+        different_name = Oregano::Node::Environment.create(:different, base.full_modulepath, base.manifest)
 
         expect(base).to_not eq("not an environment")
 
@@ -80,7 +80,7 @@ describe Puppet::Node::Environment do
     describe "overriding an existing environment" do
       let(:original_path) { [tmpdir('original')] }
       let(:new_path) { [tmpdir('new')] }
-      let(:environment) { Puppet::Node::Environment.create(:overridden, original_path, 'orig.pp', '/config/script') }
+      let(:environment) { Oregano::Node::Environment.create(:overridden, original_path, 'orig.pp', '/config/script') }
 
       it "overrides modulepath" do
         overridden = environment.override_with(:modulepath => new_path)
@@ -112,11 +112,11 @@ describe Puppet::Node::Environment do
 
     describe "when managing known resource types" do
       before do
-        env.stubs(:perform_initial_import).returns(Puppet::Parser::AST::Hostclass.new(''))
+        env.stubs(:perform_initial_import).returns(Oregano::Parser::AST::Hostclass.new(''))
       end
 
       it "creates a resource type collection if none exists" do
-        expect(env.known_resource_types).to be_kind_of(Puppet::Resource::TypeCollection)
+        expect(env.known_resource_types).to be_kind_of(Oregano::Resource::TypeCollection)
       end
 
       it "memoizes resource type collection" do
@@ -124,7 +124,7 @@ describe Puppet::Node::Environment do
       end
 
       it "performs the initial import when creating a new collection" do
-        env.expects(:perform_initial_import).returns(Puppet::Parser::AST::Hostclass.new(''))
+        env.expects(:perform_initial_import).returns(Oregano::Parser::AST::Hostclass.new(''))
         env.known_resource_types
       end
 
@@ -135,7 +135,7 @@ describe Puppet::Node::Environment do
         env.check_for_reparse
 
         new_type_collection = env.known_resource_types
-        expect(new_type_collection).to be_a Puppet::Resource::TypeCollection
+        expect(new_type_collection).to be_a Oregano::Resource::TypeCollection
         expect(new_type_collection).to_not equal(old_type_collection)
       end
     end
@@ -144,50 +144,50 @@ describe Puppet::Node::Environment do
       real_file = tmpdir('moduledir')
       path = ['/one', '/two', real_file]
 
-      env = Puppet::Node::Environment.create(:test, path)
+      env = Oregano::Node::Environment.create(:test, path)
 
       expect(env.modulepath).to eq([real_file])
     end
 
     it "prefixes the value of the 'PUPPETLIB' environment variable to the module path if present" do
-      first_puppetlib = tmpdir('puppetlib1')
-      second_puppetlib = tmpdir('puppetlib2')
+      first_oreganolib = tmpdir('oreganolib1')
+      second_oreganolib = tmpdir('oreganolib2')
       first_moduledir = tmpdir('moduledir1')
       second_moduledir = tmpdir('moduledir2')
-      Puppet::Util.withenv("PUPPETLIB" => [first_puppetlib, second_puppetlib].join(File::PATH_SEPARATOR)) do
-        env = Puppet::Node::Environment.create(:testing, [first_moduledir, second_moduledir])
+      Oregano::Util.withenv("PUPPETLIB" => [first_oreganolib, second_oreganolib].join(File::PATH_SEPARATOR)) do
+        env = Oregano::Node::Environment.create(:testing, [first_moduledir, second_moduledir])
 
-        expect(env.modulepath).to eq([first_puppetlib, second_puppetlib, first_moduledir, second_moduledir])
+        expect(env.modulepath).to eq([first_oreganolib, second_oreganolib, first_moduledir, second_moduledir])
       end
     end
 
     describe "validating manifest settings" do
       before(:each) do
-        Puppet[:default_manifest] = "/default/manifests/site.pp"
+        Oregano[:default_manifest] = "/default/manifests/site.pp"
       end
 
       it "has no validation errors when disable_per_environment_manifest is false" do
-        expect(Puppet::Node::Environment.create(:directory, [], '/some/non/default/manifest.pp').validation_errors).to be_empty
+        expect(Oregano::Node::Environment.create(:directory, [], '/some/non/default/manifest.pp').validation_errors).to be_empty
       end
 
       context "when disable_per_environment_manifest is true" do
         let(:config) { mock('config') }
         let(:global_modulepath) { ["/global/modulepath"] }
-        let(:envconf) { Puppet::Settings::EnvironmentConf.new("/some/direnv", config, global_modulepath) }
+        let(:envconf) { Oregano::Settings::EnvironmentConf.new("/some/direnv", config, global_modulepath) }
 
         before(:each) do
-          Puppet[:disable_per_environment_manifest] = true
+          Oregano[:disable_per_environment_manifest] = true
         end
 
         def assert_manifest_conflict(expectation, envconf_manifest_value)
           config.expects(:setting).with(:manifest).returns(
             mock('setting', :value => envconf_manifest_value)
           )
-          environment = Puppet::Node::Environment.create(:directory, [], '/default/manifests/site.pp')
-          loader = Puppet::Environments::Static.new(environment)
+          environment = Oregano::Node::Environment.create(:directory, [], '/default/manifests/site.pp')
+          loader = Oregano::Environments::Static.new(environment)
           loader.stubs(:get_conf).returns(envconf)
 
-          Puppet.override(:environments => loader) do
+          Oregano.override(:environments => loader) do
             if expectation
               expect(environment.validation_errors).to have_matching_element(/The 'disable_per_environment_manifest' setting is true.*and the.*environment.*conflicts/)
             else
@@ -217,12 +217,12 @@ describe Puppet::Node::Environment do
     describe "when modeling a specific environment" do
       let(:first_modulepath) { tmpdir('firstmodules') }
       let(:second_modulepath) { tmpdir('secondmodules') }
-      let(:env) { Puppet::Node::Environment.create(:modules_test, [first_modulepath, second_modulepath]) }
+      let(:env) { Oregano::Node::Environment.create(:modules_test, [first_modulepath, second_modulepath]) }
       let(:module_options) {
         {
           :environment => env,
           :metadata => {
-            :author       => 'puppetlabs',
+            :author       => 'oreganolabs',
           },
         }
       }
@@ -231,7 +231,7 @@ describe Puppet::Node::Environment do
         describe ".module" do
 
           it "returns an individual module that exists in its module path" do
-            one = PuppetSpec::Modules.create('one', first_modulepath, module_options)
+            one = OreganoSpec::Modules.create('one', first_modulepath, module_options)
             expect(env.module('one')).to eq(one)
           end
 
@@ -249,8 +249,8 @@ describe Puppet::Node::Environment do
           end
 
           it "includes modules even if they exist in multiple dirs in the modulepath" do
-            one = PuppetSpec::Modules.create('one', first_modulepath, module_options)
-            two = PuppetSpec::Modules.create('two', second_modulepath, module_options)
+            one = OreganoSpec::Modules.create('one', first_modulepath, module_options)
+            two = OreganoSpec::Modules.create('two', second_modulepath, module_options)
 
             expect(env.modules_by_path).to eq({
               first_modulepath  => [one],
@@ -259,17 +259,17 @@ describe Puppet::Node::Environment do
           end
 
           it "ignores modules with invalid names" do
-            PuppetSpec::Modules.generate_files('foo', first_modulepath)
-            PuppetSpec::Modules.generate_files('.foo', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo2', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo-bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo_bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo=bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo.bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('-foo', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo-', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo--bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('.foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo2', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo-bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo_bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo=bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo.bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('-foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo-', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo--bar', first_modulepath)
 
             expect(env.modules_by_path[first_modulepath].collect{|mod| mod.name}.sort).to eq(%w{foo foo2 foo_bar})
           end
@@ -278,88 +278,88 @@ describe Puppet::Node::Environment do
 
         describe "#module_requirements" do
           it "returns a list of what modules depend on other modules" do
-            PuppetSpec::Modules.create(
+            OreganoSpec::Modules.create(
               'foo',
               first_modulepath,
               :metadata => {
-                :author       => 'puppetlabs',
-                :dependencies => [{ 'name' => 'puppetlabs/bar', "version_requirement" => ">= 1.0.0" }]
+                :author       => 'oreganolabs',
+                :dependencies => [{ 'name' => 'oreganolabs/bar', "version_requirement" => ">= 1.0.0" }]
               }
             )
-            PuppetSpec::Modules.create(
+            OreganoSpec::Modules.create(
               'bar',
               second_modulepath,
               :metadata => {
-                :author       => 'puppetlabs',
-                :dependencies => [{ 'name' => 'puppetlabs/foo', "version_requirement" => "<= 2.0.0" }]
+                :author       => 'oreganolabs',
+                :dependencies => [{ 'name' => 'oreganolabs/foo', "version_requirement" => "<= 2.0.0" }]
               }
             )
-            PuppetSpec::Modules.create(
+            OreganoSpec::Modules.create(
               'baz',
               first_modulepath,
               :metadata => {
-                :author       => 'puppetlabs',
-                :dependencies => [{ 'name' => 'puppetlabs-bar', "version_requirement" => "3.0.0" }]
+                :author       => 'oreganolabs',
+                :dependencies => [{ 'name' => 'oreganolabs-bar', "version_requirement" => "3.0.0" }]
               }
             )
-            PuppetSpec::Modules.create(
+            OreganoSpec::Modules.create(
               'alpha',
               first_modulepath,
               :metadata => {
-                :author       => 'puppetlabs',
-                :dependencies => [{ 'name' => 'puppetlabs/bar', "version_requirement" => "~3.0.0" }]
+                :author       => 'oreganolabs',
+                :dependencies => [{ 'name' => 'oreganolabs/bar', "version_requirement" => "~3.0.0" }]
               }
             )
 
             expect(env.module_requirements).to eq({
-              'puppetlabs/alpha' => [],
-              'puppetlabs/foo' => [
+              'oreganolabs/alpha' => [],
+              'oreganolabs/foo' => [
                 {
-                  "name"    => "puppetlabs/bar",
+                  "name"    => "oreganolabs/bar",
                   "version" => "9.9.9",
                   "version_requirement" => "<= 2.0.0"
                 }
               ],
-              'puppetlabs/bar' => [
+              'oreganolabs/bar' => [
                 {
-                  "name"    => "puppetlabs/alpha",
+                  "name"    => "oreganolabs/alpha",
                   "version" => "9.9.9",
                   "version_requirement" => "~3.0.0"
                 },
                 {
-                  "name"    => "puppetlabs/baz",
+                  "name"    => "oreganolabs/baz",
                   "version" => "9.9.9",
                   "version_requirement" => "3.0.0"
                 },
                 {
-                  "name"    => "puppetlabs/foo",
+                  "name"    => "oreganolabs/foo",
                   "version" => "9.9.9",
                   "version_requirement" => ">= 1.0.0"
                 }
               ],
-              'puppetlabs/baz' => []
+              'oreganolabs/baz' => []
             })
           end
         end
 
         describe ".module_by_forge_name" do
           it "finds modules by forge_name" do
-            mod = PuppetSpec::Modules.create(
+            mod = OreganoSpec::Modules.create(
               'baz',
               first_modulepath,
               module_options
             )
-            expect(env.module_by_forge_name('puppetlabs/baz')).to eq(mod)
+            expect(env.module_by_forge_name('oreganolabs/baz')).to eq(mod)
           end
 
           it "does not find modules with same name by the wrong author" do
-            mod = PuppetSpec::Modules.create(
+            mod = OreganoSpec::Modules.create(
               'baz',
               first_modulepath,
               :metadata => {:author => 'sneakylabs'},
               :environment => env
             )
-            expect(env.module_by_forge_name('puppetlabs/baz')).to eq(nil)
+            expect(env.module_by_forge_name('oreganolabs/baz')).to eq(nil)
           end
 
           it "returns nil when the module can't be found" do
@@ -374,35 +374,35 @@ describe Puppet::Node::Environment do
 
           it "returns a module named for every directory in each module path" do
             %w{foo bar}.each do |mod_name|
-              PuppetSpec::Modules.generate_files(mod_name, first_modulepath)
+              OreganoSpec::Modules.generate_files(mod_name, first_modulepath)
             end
             %w{bee baz}.each do |mod_name|
-              PuppetSpec::Modules.generate_files(mod_name, second_modulepath)
+              OreganoSpec::Modules.generate_files(mod_name, second_modulepath)
             end
             expect(env.modules.collect{|mod| mod.name}.sort).to eq(%w{foo bar bee baz}.sort)
           end
 
           it "removes duplicates" do
-            PuppetSpec::Modules.generate_files('foo', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo', second_modulepath)
+            OreganoSpec::Modules.generate_files('foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo', second_modulepath)
 
             expect(env.modules.collect{|mod| mod.name}.sort).to eq(%w{foo})
           end
 
           it "ignores modules with invalid names" do
-            PuppetSpec::Modules.generate_files('foo', first_modulepath)
-            PuppetSpec::Modules.generate_files('.foo', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo2', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo-bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo_bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo=bar', first_modulepath)
-            PuppetSpec::Modules.generate_files('foo bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('.foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo2', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo-bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo_bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo=bar', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo bar', first_modulepath)
 
             expect(env.modules.collect{|mod| mod.name}.sort).to eq(%w{foo foo2 foo_bar})
           end
 
           it "creates modules with the correct environment" do
-            PuppetSpec::Modules.generate_files('foo', first_modulepath)
+            OreganoSpec::Modules.generate_files('foo', first_modulepath)
 
             env.modules.each do |mod| 
               expect(mod.environment).to eq(env)
@@ -410,16 +410,16 @@ describe Puppet::Node::Environment do
           end
 
           it "logs an exception if a module contains invalid metadata" do
-            PuppetSpec::Modules.generate_files(
+            OreganoSpec::Modules.generate_files(
               'foo',
               first_modulepath,
               :metadata => {
-                :author       => 'puppetlabs'
+                :author       => 'oreganolabs'
                 # missing source, version, etc
               }
             )
 
-            Puppet.expects(:log_exception).with(is_a(Puppet::Module::MissingMetadata))
+            Oregano.expects(:log_exception).with(is_a(Oregano::Module::MissingMetadata))
 
             env.modules
           end
@@ -428,65 +428,65 @@ describe Puppet::Node::Environment do
     end
 
     describe "when performing initial import" do
-      let(:loaders) { Puppet::Pops::Loaders.new(env) }
+      let(:loaders) { Oregano::Pops::Loaders.new(env) }
 
       around :each do |example|
-        Puppet::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
-        Puppet.override(:loaders => loaders, :current_environment => env) do
+        Oregano::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
+        Oregano.override(:loaders => loaders, :current_environment => env) do
           example.run
-          Puppet::Pops::Loaders.clear
+          Oregano::Pops::Loaders.clear
         end
       end
 
-      it "loads from Puppet[:code]" do
-        Puppet[:code] = "define foo {}"
+      it "loads from Oregano[:code]" do
+        Oregano[:code] = "define foo {}"
         krt = env.known_resource_types
-        expect(krt.find_definition('foo')).to be_kind_of(Puppet::Resource::Type)
+        expect(krt.find_definition('foo')).to be_kind_of(Oregano::Resource::Type)
       end
 
-      it "parses from the the environment's manifests if Puppet[:code] is not set" do
+      it "parses from the the environment's manifests if Oregano[:code] is not set" do
         filename = tmpfile('a_manifest.pp')
         File.open(filename, 'w') do |f|
           f.puts("define from_manifest {}")
         end
-        env = Puppet::Node::Environment.create(:testing, [], filename)
+        env = Oregano::Node::Environment.create(:testing, [], filename)
         krt = env.known_resource_types
-        expect(krt.find_definition('from_manifest')).to be_kind_of(Puppet::Resource::Type)
+        expect(krt.find_definition('from_manifest')).to be_kind_of(Oregano::Resource::Type)
       end
 
-      it "prefers Puppet[:code] over manifest files" do
-        Puppet[:code] = "define from_code_setting {}"
+      it "prefers Oregano[:code] over manifest files" do
+        Oregano[:code] = "define from_code_setting {}"
         filename = tmpfile('a_manifest.pp')
         File.open(filename, 'w') do |f|
           f.puts("define from_manifest {}")
         end
-        env = Puppet::Node::Environment.create(:testing, [], filename)
+        env = Oregano::Node::Environment.create(:testing, [], filename)
         krt = env.known_resource_types
-        expect(krt.find_definition('from_code_setting')).to be_kind_of(Puppet::Resource::Type)
+        expect(krt.find_definition('from_code_setting')).to be_kind_of(Oregano::Resource::Type)
       end
 
       it "initial import proceeds even if manifest file does not exist on disk" do
         filename = tmpfile('a_manifest.pp')
-        env = Puppet::Node::Environment.create(:testing, [], filename)
-        expect(env.known_resource_types).to be_kind_of(Puppet::Resource::TypeCollection)
+        env = Oregano::Node::Environment.create(:testing, [], filename)
+        expect(env.known_resource_types).to be_kind_of(Oregano::Resource::TypeCollection)
       end
 
       it "returns an empty TypeCollection if neither code nor manifests is present" do
-        expect(env.known_resource_types).to be_kind_of(Puppet::Resource::TypeCollection)
+        expect(env.known_resource_types).to be_kind_of(Oregano::Resource::TypeCollection)
       end
 
       it "fails helpfully if there is an error importing" do
-        Puppet[:code] = "oops {"
+        Oregano[:code] = "oops {"
         expect do
           env.known_resource_types
-        end.to raise_error(Puppet::Error, /Could not parse for environment #{env.name}/)
+        end.to raise_error(Oregano::Error, /Could not parse for environment #{env.name}/)
       end
 
       it "should mark the type collection as needing a reparse when there is an error parsing" do
-        Puppet[:code] = "oops {"
+        Oregano[:code] = "oops {"
         expect do
           env.known_resource_types
-        end.to raise_error(Puppet::Error, /Syntax error at .../)
+        end.to raise_error(Oregano::Error, /Syntax error at .../)
         expect(env.known_resource_types.parse_failed?).to be_truthy
       end
     end

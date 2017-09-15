@@ -1,15 +1,15 @@
 require 'spec_helper'
 
-require 'puppet/settings'
-require 'puppet/settings/autosign_setting'
-require 'puppet/type/file'
+require 'oregano/settings'
+require 'oregano/settings/autosign_setting'
+require 'oregano/type/file'
 
-describe Puppet::Settings::AutosignSetting do
+describe Oregano::Settings::AutosignSetting do
   let(:settings) do
     s = stub('settings')
     s.stubs(:[]).with(:mkusers).returns true
-    s.stubs(:[]).with(:user).returns 'puppet'
-    s.stubs(:[]).with(:group).returns 'puppet'
+    s.stubs(:[]).with(:user).returns 'oregano'
+    s.stubs(:[]).with(:group).returns 'oregano'
     s.stubs(:[]).with(:manage_internal_file_permissions).returns true
     s
   end
@@ -49,7 +49,7 @@ describe Puppet::Settings::AutosignSetting do
       cases.each do |invalid|
         expect {
           setting.munge(invalid)
-        }.to raise_error Puppet::Settings::ValidationError, /Invalid autosign value/
+        }.to raise_error Oregano::Settings::ValidationError, /Invalid autosign value/
       end
     end
   end
@@ -62,12 +62,12 @@ describe Puppet::Settings::AutosignSetting do
 
     it "can set the file owner" do
       setting.owner = 'service'
-      expect(setting.owner).to eq 'puppet'
+      expect(setting.owner).to eq 'oregano'
     end
 
     it "can set the file group" do
       setting.group = 'service'
-      expect(setting.group).to eq 'puppet'
+      expect(setting.group).to eq 'oregano'
     end
   end
 
@@ -75,8 +75,8 @@ describe Puppet::Settings::AutosignSetting do
     it "converts the file path to a file resource" do
       path = File.expand_path('/path/to/autosign.conf')
       settings.stubs(:value).with('autosign', nil, false).returns(path)
-      Puppet::FileSystem.stubs(:exist?).with(path).returns true
-      Puppet.stubs(:features).returns(stub(:root? => true, :microsoft_windows? => false))
+      Oregano::FileSystem.stubs(:exist?).with(path).returns true
+      Oregano.stubs(:features).returns(stub(:root? => true, :microsoft_windows? => false))
 
       setting.mode = '0664'
       setting.owner = 'service'
@@ -87,8 +87,8 @@ describe Puppet::Settings::AutosignSetting do
       expect(resource.title).to eq path
       expect(resource[:ensure]).to eq :file
       expect(resource[:mode]).to eq '664'
-      expect(resource[:owner]).to eq 'puppet'
-      expect(resource[:group]).to eq 'puppet'
+      expect(resource[:owner]).to eq 'oregano'
+      expect(resource[:group]).to eq 'oregano'
     end
 
     it "returns nil when the setting is a boolean" do

@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/agent'
-require 'puppet/configurer'
+require 'oregano/agent'
+require 'oregano/configurer'
 
 class AgentTestClient
   def run
@@ -19,19 +19,19 @@ def without_warnings
   $VERBOSE = flag
 end
 
-describe Puppet::Agent do
+describe Oregano::Agent do
   before do
-    Puppet::Status.indirection.stubs(:find).returns Puppet::Status.new("version" => Puppet.version)
+    Oregano::Status.indirection.stubs(:find).returns Oregano::Status.new("version" => Oregano.version)
 
-    @agent = Puppet::Agent.new(AgentTestClient, false)
+    @agent = Oregano::Agent.new(AgentTestClient, false)
 
     # So we don't actually try to hit the filesystem.
     @agent.stubs(:lock).yields
 
-    # make Puppet::Application safe for stubbing; restore in an :after block; silence warnings for this.
-    without_warnings { Puppet::Application = Class.new(Puppet::Application) }
-    Puppet::Application.stubs(:clear?).returns(true)
-    Puppet::Application.class_eval do
+    # make Oregano::Application safe for stubbing; restore in an :after block; silence warnings for this.
+    without_warnings { Oregano::Application = Class.new(Oregano::Application) }
+    Oregano::Application.stubs(:clear?).returns(true)
+    Oregano::Application.class_eval do
       class << self
         def controlled_run(&block)
           block.call
@@ -41,16 +41,16 @@ describe Puppet::Agent do
   end
 
   after do
-    # restore Puppet::Application from stub-safe subclass, and silence warnings
-    without_warnings { Puppet::Application = Puppet::Application.superclass }
+    # restore Oregano::Application from stub-safe subclass, and silence warnings
+    without_warnings { Oregano::Application = Oregano::Application.superclass }
   end
 
   it "should set its client class at initialization" do
-    expect(Puppet::Agent.new("foo", false).client_class).to eq("foo")
+    expect(Oregano::Agent.new("foo", false).client_class).to eq("foo")
   end
 
   it "should include the Locker module" do
-    expect(Puppet::Agent.ancestors).to be_include(Puppet::Agent::Locker)
+    expect(Oregano::Agent.ancestors).to be_include(Oregano::Agent::Locker)
   end
 
   it "should create an instance of its client class and run it when asked to run" do
@@ -113,32 +113,32 @@ describe Puppet::Agent do
     end
 
     it "(#11057) should notify the user about why a run is skipped" do
-      Puppet::Application.stubs(:controlled_run).returns(false)
-      Puppet::Application.stubs(:run_status).returns('MOCK_RUN_STATUS')
+      Oregano::Application.stubs(:controlled_run).returns(false)
+      Oregano::Application.stubs(:run_status).returns('MOCK_RUN_STATUS')
       # This is the actual test that we inform the user why the run is skipped.
       # We assume this information is contained in
-      # Puppet::Application.run_status
-      Puppet.expects(:notice).with(regexp_matches(/MOCK_RUN_STATUS/))
+      # Oregano::Application.run_status
+      Oregano.expects(:notice).with(regexp_matches(/MOCK_RUN_STATUS/))
       @agent.run
     end
 
     it "should display an informative message if the agent is administratively disabled" do
       @agent.expects(:disabled?).returns true
       @agent.expects(:disable_message).returns "foo"
-      Puppet.expects(:notice).with(regexp_matches(/Skipping run of .*; administratively disabled.*\(Reason: 'foo'\)/))
+      Oregano.expects(:notice).with(regexp_matches(/Skipping run of .*; administratively disabled.*\(Reason: 'foo'\)/))
       @agent.run
     end
 
-    it "should use Puppet::Application.controlled_run to manage process state behavior" do
+    it "should use Oregano::Application.controlled_run to manage process state behavior" do
       calls = sequence('calls')
-      Puppet::Application.expects(:controlled_run).yields.in_sequence(calls)
+      Oregano::Application.expects(:controlled_run).yields.in_sequence(calls)
       AgentTestClient.expects(:new).once.in_sequence(calls)
       @agent.run
     end
 
     it "should not fail if a client class instance cannot be created" do
       AgentTestClient.expects(:new).raises "eh"
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       @agent.run
     end
 
@@ -146,7 +146,7 @@ describe Puppet::Agent do
       client = AgentTestClient.new
       AgentTestClient.expects(:new).returns client
       client.expects(:run).raises "eh"
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       @agent.run
     end
 
@@ -184,9 +184,9 @@ describe Puppet::Agent do
       expect(@agent.run).to eq(:result)
     end
 
-    describe "when should_fork is true", :if => Puppet.features.posix? do
+    describe "when should_fork is true", :if => Oregano.features.posix? do
       before do
-        @agent = Puppet::Agent.new(AgentTestClient, true)
+        @agent = Oregano::Agent.new(AgentTestClient, true)
 
         # So we don't actually try to hit the filesystem.
         @agent.stubs(:lock).yields
@@ -252,9 +252,9 @@ describe Puppet::Agent do
       end
     end
 
-    describe "on Windows", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows", :if => Oregano.features.microsoft_windows? do
       it "should never fork" do
-        agent = Puppet::Agent.new(AgentTestClient, true)
+        agent = Oregano::Agent.new(AgentTestClient, true)
         expect(agent.should_fork).to be_falsey
       end
     end
@@ -263,10 +263,10 @@ describe Puppet::Agent do
   describe "when checking execution state" do
     describe 'with regular run status' do
       before :each do
-        Puppet::Application.stubs(:restart_requested?).returns(false)
-        Puppet::Application.stubs(:stop_requested?).returns(false)
-        Puppet::Application.stubs(:interrupted?).returns(false)
-        Puppet::Application.stubs(:clear?).returns(true)
+        Oregano::Application.stubs(:restart_requested?).returns(false)
+        Oregano::Application.stubs(:stop_requested?).returns(false)
+        Oregano::Application.stubs(:interrupted?).returns(false)
+        Oregano::Application.stubs(:clear?).returns(true)
       end
 
       it 'should be false for :stopping?' do
@@ -280,10 +280,10 @@ describe Puppet::Agent do
 
     describe 'with a stop requested' do
       before :each do
-        Puppet::Application.stubs(:clear?).returns(false)
-        Puppet::Application.stubs(:restart_requested?).returns(false)
-        Puppet::Application.stubs(:stop_requested?).returns(true)
-        Puppet::Application.stubs(:interrupted?).returns(true)
+        Oregano::Application.stubs(:clear?).returns(false)
+        Oregano::Application.stubs(:restart_requested?).returns(false)
+        Oregano::Application.stubs(:stop_requested?).returns(true)
+        Oregano::Application.stubs(:interrupted?).returns(true)
       end
 
       it 'should be true for :stopping?' do
@@ -297,10 +297,10 @@ describe Puppet::Agent do
 
     describe 'with a restart requested' do
       before :each do
-        Puppet::Application.stubs(:clear?).returns(false)
-        Puppet::Application.stubs(:restart_requested?).returns(true)
-        Puppet::Application.stubs(:stop_requested?).returns(false)
-        Puppet::Application.stubs(:interrupted?).returns(true)
+        Oregano::Application.stubs(:clear?).returns(false)
+        Oregano::Application.stubs(:restart_requested?).returns(true)
+        Oregano::Application.stubs(:stop_requested?).returns(false)
+        Oregano::Application.stubs(:interrupted?).returns(true)
       end
 
       it 'should be false for :stopping?' do

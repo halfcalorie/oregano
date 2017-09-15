@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/configurer'
-require 'puppet/configurer/plugin_handler'
+require 'oregano/configurer'
+require 'oregano/configurer/plugin_handler'
 
-describe Puppet::Configurer::PluginHandler do
-  let(:factory)       { Puppet::Configurer::DownloaderFactory.new }
-  let(:pluginhandler) { Puppet::Configurer::PluginHandler.new(factory) }
-  let(:environment)   { Puppet::Node::Environment.create(:myenv, []) }
+describe Oregano::Configurer::PluginHandler do
+  let(:factory)       { Oregano::Configurer::DownloaderFactory.new }
+  let(:pluginhandler) { Oregano::Configurer::PluginHandler.new(factory) }
+  let(:environment)   { Oregano::Node::Environment.create(:myenv, []) }
 
   before :each do
     # PluginHandler#load_plugin has an extra-strong rescue clause
     # this mock is to make sure that we don't silently ignore errors
-    Puppet.expects(:err).never
+    Oregano.expects(:err).never
   end
 
   it "downloads plugins and facts" do

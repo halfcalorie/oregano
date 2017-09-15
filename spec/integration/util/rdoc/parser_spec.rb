@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/rdoc'
+require 'oregano/util/rdoc'
 
-describe "RDoc::Parser", :unless => Puppet.features.microsoft_windows? do
-  require 'puppet_spec/files'
-  include PuppetSpec::Files
+describe "RDoc::Parser", :unless => Oregano.features.microsoft_windows? do
+  require 'oregano_spec/files'
+  include OreganoSpec::Files
 
   let(:document_all) { false }
   let(:tmp_dir) { tmpdir('rdoc_parser_tmp') }
@@ -69,19 +69,19 @@ define a_module::a_type() {}
         EOF
       ],
       :module_plugin => [
-        File.join(modules_dir, 'a_module', 'lib', 'puppet', 'type', 'a_plugin.rb'),
+        File.join(modules_dir, 'a_module', 'lib', 'oregano', 'type', 'a_plugin.rb'),
         <<-EOF
 # The a_plugin type comment
-Puppet::Type.newtype(:a_plugin) do
+Oregano::Type.newtype(:a_plugin) do
   @doc = "Not presented"
 end
         EOF
       ],
       :module_function => [
-        File.join(modules_dir, 'a_module', 'lib', 'puppet', 'parser', 'a_function.rb'),
+        File.join(modules_dir, 'a_module', 'lib', 'oregano', 'parser', 'a_function.rb'),
         <<-EOF
 # The a_function function comment
-module Puppet::Parser::Functions
+module Oregano::Parser::Functions
   newfunction(:a_function, :type => :rvalue) do
     return
   end
@@ -113,7 +113,7 @@ end
   end
 
   def file_exists_and_matches_content(file, *content_patterns)
-    expect(Puppet::FileSystem.exist?(file)).to(be_truthy, "Cannot find #{file}")
+    expect(Oregano::FileSystem.exist?(file)).to(be_truthy, "Cannot find #{file}")
     content_patterns.each do |pattern|
       content = File.read(file)
       expect(content).to match(pattern)
@@ -128,17 +128,17 @@ end
   end
 
   around(:each) do |example|
-    env = Puppet::Node::Environment.create(:doc_test_env, [modules_dir], manifests_dir)
-    Puppet.override({:environments => Puppet::Environments::Static.new(env), :current_environment => env}) do
+    env = Oregano::Node::Environment.create(:doc_test_env, [modules_dir], manifests_dir)
+    Oregano.override({:environments => Oregano::Environments::Static.new(env), :current_environment => env}) do
       example.run
     end
   end
 
   before :each do
     prepare_manifests_and_modules
-    Puppet.settings[:document_all] = document_all
-    Puppet.settings[:modulepath] = modules_dir
-    Puppet::Util::RDoc.rdoc(doc_dir, [modules_dir, manifests_dir])
+    Oregano.settings[:document_all] = document_all
+    Oregano.settings[:modulepath] = modules_dir
+    Oregano::Util::RDoc.rdoc(doc_dir, [modules_dir, manifests_dir])
   end
 
   module RdocTesters

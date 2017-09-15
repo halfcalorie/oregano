@@ -28,8 +28,8 @@ agents.each do |agent|
   end
 
   #------- TESTS -------#
-  step "query for the mail alias with puppet"
-  on(agent, puppet_resource('mailalias', name)) do
+  step "query for the mail alias with oregano"
+  on(agent, oregano_resource('mailalias', name)) do
     fail_test "didn't find the scheduled_task #{name}" unless stdout.include? 'present'
   end
 end

@@ -14,9 +14,9 @@ config_content =<<EOS
   main_collective = mcollective
   collectives = mcollective
 
-  libdir = C:/ProgramData/PuppetLabs/mcollective/plugins
+  libdir = C:/ProgramData/OreganoLabs/mcollective/plugins
 
-  logfile = C:/ProgramData/PuppetLabs/mcollective/var/log/mcollective.log
+  logfile = C:/ProgramData/OreganoLabs/mcollective/var/log/mcollective.log
   loglevel = debug
   daemonize = 1
 
@@ -33,11 +33,11 @@ config_content =<<EOS
 
   # Facts
   factsource = yaml
-  plugin.yaml = C:/ProgramData/PuppetLabs/mcollective/facts.yaml
+  plugin.yaml = C:/ProgramData/OreganoLabs/mcollective/facts.yaml
 EOS
 
 manifest = <<MANIFEST
-  file { 'C:/ProgramData/PuppetLabs/mcollective/etc/server.cfg':
+  file { 'C:/ProgramData/OreganoLabs/mcollective/etc/server.cfg':
     ensure  => present,
     content => '#{config_content}',
   }
@@ -49,7 +49,7 @@ end
 
 step 'Setup - ensure MCollective service is running on Windows agent'
 agents.each do |agent|
-  on agent, puppet('resource service mcollective ensure=running')
+  on agent, oregano('resource service mcollective ensure=running')
 end
 
 step 'Shutdown MCollective service on Windows agent'

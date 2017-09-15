@@ -7,18 +7,18 @@ tag 'audit:medium',
 if master.is_pe?
   require "time"
 
-  def puppetdb
-    puppetdb = hosts.detect { |h| h['roles'].include?('database') }
+  def oreganodb
+    oreganodb = hosts.detect { |h| h['roles'].include?('database') }
   end
 
   def sleep_until_queue_empty(timeout=60)
-    metric = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=com.puppetlabs.puppetdb.commands"
+    metric = "org.apache.activemq:BrokerName=localhost,Type=Queue,Destination=com.oreganolabs.oreganodb.commands"
     queue_size = nil
 
     begin
       Timeout.timeout(timeout) do
         until queue_size == 0
-          result = on(puppetdb, %Q{curl http://localhost:8080/v3/metrics/mbean/#{CGI.escape(metric)}})
+          result = on(oreganodb, %Q{curl http://localhost:8080/v3/metrics/mbean/#{CGI.escape(metric)}})
           if md = /"?QueueSize"?\s*:\s*(\d+)/.match(result.stdout.chomp)
             queue_size = Integer(md[1])
           end
@@ -35,13 +35,13 @@ if master.is_pe?
       require "net/http"
       require "json"
 
-      puppetdb_url = URI("http://localhost:8080/v3/reports")
-      puppetdb_url.query = CGI.escape(%Q{query=["=","certname","#{agent}"]})
-      result = Net::HTTP.get(puppetdb_url)
+      oreganodb_url = URI("http://localhost:8080/v3/reports")
+      oreganodb_url.query = CGI.escape(%Q{query=["=","certname","#{agent}"]})
+      result = Net::HTTP.get(oreganodb_url)
       json = JSON.load(result)
       puts json.first["receive-time"]
     EOS
-    on(puppetdb, "#{master[:privatebindir]}/ruby -e '#{time_query_script}'").output.chomp
+    on(oreganodb, "#{master[:privatebindir]}/ruby -e '#{time_query_script}'").output.chomp
   end
 
   last_times = {}
@@ -50,9 +50,9 @@ if master.is_pe?
     last_times[agent] = query_last_report_time_on(agent)
   end
 
-  with_puppet_running_on(master, {}) do
+  with_oregano_running_on(master, {}) do
     agents.each do |agent|
-      on(agent, puppet('agent', "-t --server #{master}"))
+      on(agent, oregano('agent', "-t --server #{master}"))
 
       sleep_until_queue_empty
 
@@ -71,9 +71,9 @@ else
     on master, "rm -rf #{testdir}"
   end
 
-  with_puppet_running_on(master, :main => { :reportdir => testdir, :reports => 'store' }) do
+  with_oregano_running_on(master, :main => { :reportdir => testdir, :reports => 'store' }) do
     agents.each do |agent|
-      on(agent, puppet('agent', "-t --server #{master}"))
+      on(agent, oregano('agent', "-t --server #{master}"))
 
       on master, "grep -q #{agent.node_name} #{testdir}/*/*"
     end

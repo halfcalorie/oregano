@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/monkey_patches'
+require 'oregano/util/monkey_patches'
 
 
 describe Symbol do
@@ -64,13 +64,13 @@ describe OpenSSL::SSL::SSLContext do
 end
 
 
-describe OpenSSL::X509::Store, :if => Puppet::Util::Platform.windows? do
+describe OpenSSL::X509::Store, :if => Oregano::Util::Platform.windows? do
   let(:store)    { described_class.new }
   let(:cert)     { OpenSSL::X509::Certificate.new(File.read(my_fixture('x509.pem'))) }
   let(:samecert) { cert.dup() }
 
   def with_root_certs(certs)
-    Puppet::Util::Windows::RootCerts.expects(:instance).returns(certs)
+    Oregano::Util::Windows::RootCerts.expects(:instance).returns(certs)
   end
 
   it "adds a root cert to the store" do

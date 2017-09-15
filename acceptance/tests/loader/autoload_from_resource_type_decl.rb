@@ -1,11 +1,11 @@
 test_name 'C100303: Resource type statement triggered auto-loading works both with and without generated types' do
   tag 'risk:medium'
 
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
 
-  require 'puppet/acceptance/agent_fqdn_utils'
-  extend Puppet::Acceptance::AgentFqdnUtils
+  require 'oregano/acceptance/agent_fqdn_utils'
+  extend Oregano::Acceptance::AgentFqdnUtils
 
   # create the file and make sure its empty and accessible by everyone
   def empty_execution_log_file(host, path)
@@ -17,7 +17,7 @@ test_name 'C100303: Resource type statement triggered auto-loading works both wi
   tmp_environment        = mk_tmp_environment_with_teardown(master, app_type)
   fq_tmp_environmentpath = "#{environmentpath}/#{tmp_environment}"
 
-  relative_type_dir  = 'modules/one/lib/puppet/type'
+  relative_type_dir  = 'modules/one/lib/oregano/type'
   relative_type_path = "#{relative_type_dir}/type_tst.rb"
 
   execution_log = {}
@@ -39,7 +39,7 @@ test_name 'C100303: Resource type statement triggered auto-loading works both wi
     # create a custom type that will write out to a different file on each agent
     # this way we can verify whether the newtype code was executed on each system
     custom_type = <<-END
-    Puppet::Type.newtype(:type_tst) do
+    Oregano::Type.newtype(:type_tst) do
       newparam(:name, :namevar => true) do
         fqdn = Facter.value(:fqdn)
         if fqdn == '#{agent_to_fqdn(master)}'
@@ -54,7 +54,7 @@ test_name 'C100303: Resource type statement triggered auto-loading works both wi
       END
     end
     custom_type << <<-END
-        Puppet.notice("found_type_tst")
+        Oregano.notice("found_type_tst")
       end
     end
     END
@@ -70,15 +70,15 @@ test_name 'C100303: Resource type statement triggered auto-loading works both wi
   # when the agent does its run, the newtype is executed on both the agent and master nodes
   # so we should see a message in the execution log file on the agent and the master
   agents.each do |agent|
-    with_puppet_running_on(master, {}) do
+    with_oregano_running_on(master, {}) do
 
       empty_execution_log_file(master, execution_log[agent_to_fqdn(master)])
       empty_execution_log_file(agent, execution_log[agent_to_fqdn(agent)])
 
-      on(agent, puppet("agent -t --server #{master.hostname} --environment '#{tmp_environment}'")) do |puppet_result|
-        assert_match(/\/File\[.*\/type_tst.rb\]\/ensure: defined content as/, puppet_result.stdout,
+      on(agent, oregano("agent -t --server #{master.hostname} --environment '#{tmp_environment}'")) do |oregano_result|
+        assert_match(/\/File\[.*\/type_tst.rb\]\/ensure: defined content as/, oregano_result.stdout,
                      'Expected to see defined content message for type: type_tst')
-        assert_match(/Notice: found_type_tst/, puppet_result.stdout, 'Expected to see the notice from the new type: type_tst')
+        assert_match(/Notice: found_type_tst/, oregano_result.stdout, 'Expected to see the notice from the new type: type_tst')
       end
 
       on(master, "cat '#{execution_log[agent_to_fqdn(master)]}'") do |cat_result|
@@ -100,10 +100,10 @@ test_name 'C100303: Resource type statement triggered auto-loading works both wi
       empty_execution_log_file(agent, execution_log[agent_to_fqdn(agent)])
     end
 
-    on(master, puppet("generate types --environment '#{tmp_environment}'")) do |puppet_result|
-      assert_match(/Notice: Generating '\/.*\/type_tst\.pp' using 'pcore' format/, puppet_result.stdout,
+    on(master, oregano("generate types --environment '#{tmp_environment}'")) do |oregano_result|
+      assert_match(/Notice: Generating '\/.*\/type_tst\.pp' using 'pcore' format/, oregano_result.stdout,
                    'Expected to see Generating message for type: type_tst')
-      assert_match(/Notice: found_type_tst/, puppet_result.stdout, 'Expected to see log entry on master ')
+      assert_match(/Notice: found_type_tst/, oregano_result.stdout, 'Expected to see log entry on master ')
     end
 
     # we should see a log entry on the master node
@@ -124,13 +124,13 @@ test_name 'C100303: Resource type statement triggered auto-loading works both wi
   agents.each do |agent|
     empty_execution_log_file(agent, execution_log[agent_to_fqdn(agent)])
 
-    # this test is relying on the beaker helper with_puppet_running_on() to restart the server
+    # this test is relying on the beaker helper with_oregano_running_on() to restart the server
     # Compilation should now work using the generated types,
     # so we should only see a log entry on the agent node and nothing on the master node
-    with_puppet_running_on(master, {}) do
-      on(agent, puppet("agent -t --server #{master.hostname} --environment '#{tmp_environment}'"),
-         :acceptable_exit_codes => 0) do |puppet_result|
-        assert_match(/Notice: found_type_tst/, puppet_result.stdout, 'Expected to see output from new type: type_tst')
+    with_oregano_running_on(master, {}) do
+      on(agent, oregano("agent -t --server #{master.hostname} --environment '#{tmp_environment}'"),
+         :acceptable_exit_codes => 0) do |oregano_result|
+        assert_match(/Notice: found_type_tst/, oregano_result.stdout, 'Expected to see output from new type: type_tst')
       end
     end
 

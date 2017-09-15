@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe Puppet::Type.type(:group).provider(:directoryservice) do
+describe Oregano::Type.type(:group).provider(:directoryservice) do
   let :resource do
-    Puppet::Type.type(:group).new(
+    Oregano::Type.type(:group).new(
       :title => 'testgroup',
       :provider => :directoryservice,
     )

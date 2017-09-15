@@ -16,7 +16,7 @@ those downsides are easily worth it.
 # How to use
 
 To use autotest, install ZenTest and run it with no arguments
-from the root of the puppet repository:
+from the root of the oregano repository:
 
     $ autotest
 

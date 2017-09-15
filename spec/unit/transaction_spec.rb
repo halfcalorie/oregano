@@ -1,33 +1,33 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 require 'matchers/include_in_order'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
-require 'puppet/transaction'
+require 'oregano/transaction'
 require 'fileutils'
 
-describe Puppet::Transaction do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Transaction do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   def catalog_with_resource(resource)
-    catalog = Puppet::Resource::Catalog.new
+    catalog = Oregano::Resource::Catalog.new
     catalog.add_resource(resource)
     catalog
   end
 
   def transaction_with_resource(resource)
-    transaction = Puppet::Transaction.new(catalog_with_resource(resource), nil, Puppet::Graph::RandomPrioritizer.new)
+    transaction = Oregano::Transaction.new(catalog_with_resource(resource), nil, Oregano::Graph::RandomPrioritizer.new)
     transaction
   end
 
   before do
     @basepath = make_absolute("/what/ever")
-    @transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, Puppet::Graph::RandomPrioritizer.new)
+    @transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, Oregano::Graph::RandomPrioritizer.new)
   end
 
   it "should be able to look resource status up by resource reference" do
-    resource = Puppet::Type.type(:notify).new :title => "foobar"
+    resource = Oregano::Type.type(:notify).new :title => "foobar"
     transaction = transaction_with_resource(resource)
     transaction.evaluate
 
@@ -36,13 +36,13 @@ describe Puppet::Transaction do
 
   # This will basically only ever be used during testing.
   it "should automatically create resource statuses if asked for a non-existent status" do
-    resource = Puppet::Type.type(:notify).new :title => "foobar"
+    resource = Oregano::Type.type(:notify).new :title => "foobar"
     transaction = transaction_with_resource(resource)
-    expect(transaction.resource_status(resource)).to be_instance_of(Puppet::Resource::Status)
+    expect(transaction.resource_status(resource)).to be_instance_of(Oregano::Resource::Status)
   end
 
   it "should add provided resource statuses to its report" do
-    resource = Puppet::Type.type(:notify).new :title => "foobar"
+    resource = Oregano::Type.type(:notify).new :title => "foobar"
     transaction = transaction_with_resource(resource)
     transaction.evaluate
 
@@ -51,7 +51,7 @@ describe Puppet::Transaction do
   end
 
   it "should not consider there to be failed or failed_to_restart resources if no statuses are marked failed" do
-    resource = Puppet::Type.type(:notify).new :title => "foobar"
+    resource = Oregano::Type.type(:notify).new :title => "foobar"
     transaction = transaction_with_resource(resource)
     transaction.evaluate
 
@@ -59,44 +59,44 @@ describe Puppet::Transaction do
   end
 
   it "should use the provided report object" do
-    report = Puppet::Transaction::Report.new
-    transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, report, nil)
+    report = Oregano::Transaction::Report.new
+    transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, report, nil)
 
     expect(transaction.report).to eq(report)
   end
 
   it "should create a report if none is provided" do
-    transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, nil)
+    transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, nil)
 
-    expect(transaction.report).to be_kind_of Puppet::Transaction::Report
+    expect(transaction.report).to be_kind_of Oregano::Transaction::Report
   end
 
   describe "when initializing" do
     it "should create an event manager" do
-      transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, nil)
-      expect(transaction.event_manager).to be_instance_of(Puppet::Transaction::EventManager)
+      transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, nil)
+      expect(transaction.event_manager).to be_instance_of(Oregano::Transaction::EventManager)
       expect(transaction.event_manager.transaction).to equal(transaction)
     end
 
     it "should create a resource harness" do
-      transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, nil)
-      expect(transaction.resource_harness).to be_instance_of(Puppet::Transaction::ResourceHarness)
+      transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, nil)
+      expect(transaction.resource_harness).to be_instance_of(Oregano::Transaction::ResourceHarness)
       expect(transaction.resource_harness.transaction).to equal(transaction)
     end
 
     it "should set retrieval time on the report" do
-      catalog = Puppet::Resource::Catalog.new
-      report = Puppet::Transaction::Report.new
+      catalog = Oregano::Resource::Catalog.new
+      report = Oregano::Transaction::Report.new
       catalog.retrieval_duration = 5
 
       report.expects(:add_times).with(:config_retrieval, 5)
 
-      transaction = Puppet::Transaction.new(catalog, report, nil)
+      transaction = Oregano::Transaction.new(catalog, report, nil)
     end
   end
 
   describe "when evaluating a resource" do
-    let(:resource) { Puppet::Type.type(:file).new :path => @basepath }
+    let(:resource) { Oregano::Type.type(:file).new :path => @basepath }
 
     it "should process events" do
       transaction = transaction_with_resource(resource)
@@ -135,12 +135,12 @@ describe Puppet::Transaction do
 
   describe "when applying a resource" do
     before do
-      @catalog = Puppet::Resource::Catalog.new
-      @resource = Puppet::Type.type(:file).new :path => @basepath
+      @catalog = Oregano::Resource::Catalog.new
+      @resource = Oregano::Type.type(:file).new :path => @basepath
       @catalog.add_resource(@resource)
-      @status = Puppet::Resource::Status.new(@resource)
+      @status = Oregano::Resource::Status.new(@resource)
 
-      @transaction = Puppet::Transaction.new(@catalog, nil, Puppet::Graph::RandomPrioritizer.new)
+      @transaction = Oregano::Transaction.new(@catalog, nil, Oregano::Graph::RandomPrioritizer.new)
       @transaction.event_manager.stubs(:queue_events)
     end
 
@@ -152,7 +152,7 @@ describe Puppet::Transaction do
     it "should add the resulting resource status to its status list" do
       @transaction.resource_harness.stubs(:evaluate).returns(@status)
       @transaction.evaluate
-      expect(@transaction.resource_status(@resource)).to be_instance_of(Puppet::Resource::Status)
+      expect(@transaction.resource_status(@resource)).to be_instance_of(Oregano::Resource::Status)
     end
 
     it "should queue any events added to the resource status" do
@@ -185,12 +185,12 @@ describe Puppet::Transaction do
 
   describe "#unblock" do
     let(:graph) { @transaction.relationship_graph }
-    let(:resource) { Puppet::Type.type(:notify).new(:name => 'foo') }
+    let(:resource) { Oregano::Type.type(:notify).new(:name => 'foo') }
 
     it "should calculate the number of blockers if it's not known" do
       graph.add_vertex(resource)
       3.times do |i|
-        other = Puppet::Type.type(:notify).new(:name => i.to_s)
+        other = Oregano::Type.type(:notify).new(:name => i.to_s)
         graph.add_vertex(other)
         graph.add_edge(other, resource)
       end
@@ -231,14 +231,14 @@ describe Puppet::Transaction do
 
   describe "when traversing" do
     let(:path) { tmpdir('eval_generate') }
-    let(:resource) { Puppet::Type.type(:file).new(:path => path, :recurse => true) }
+    let(:resource) { Oregano::Type.type(:file).new(:path => path, :recurse => true) }
 
     before :each do
       @transaction.catalog.add_resource(resource)
     end
 
     it "should yield the resource even if eval_generate is called" do
-      Puppet::Transaction::AdditionalResourceGenerator.any_instance.expects(:eval_generate).with(resource).returns true
+      Oregano::Transaction::AdditionalResourceGenerator.any_instance.expects(:eval_generate).with(resource).returns true
 
       yielded = false
       @transaction.evaluate do |res|
@@ -255,7 +255,7 @@ describe Puppet::Transaction do
     end
 
     it "traverses independent resources before dependent resources" do
-      dependent = Puppet::Type.type(:notify).new(:name => "hello", :require => resource)
+      dependent = Oregano::Type.type(:notify).new(:name => "hello", :require => resource)
       @transaction.catalog.add_resource(dependent)
 
       seen = []
@@ -267,7 +267,7 @@ describe Puppet::Transaction do
     end
 
     it "traverses completely independent resources in the order they appear in the catalog" do
-      independent = Puppet::Type.type(:notify).new(:name => "hello", :require => resource)
+      independent = Oregano::Type.type(:notify).new(:name => "hello", :require => resource)
       @transaction.catalog.add_resource(independent)
 
       seen = []
@@ -279,7 +279,7 @@ describe Puppet::Transaction do
     end
 
     it "should fail unsuitable resources and go on if it gets blocked" do
-      dependent = Puppet::Type.type(:notify).new(:name => "hello", :require => resource)
+      dependent = Oregano::Type.type(:notify).new(:name => "hello", :require => resource)
       @transaction.catalog.add_resource(dependent)
 
       resource.stubs(:suitable?).returns false
@@ -296,11 +296,11 @@ describe Puppet::Transaction do
   end
 
   describe "when generating resources before traversal" do
-    let(:catalog) { Puppet::Resource::Catalog.new }
-    let(:transaction) { Puppet::Transaction.new(catalog, nil, Puppet::Graph::RandomPrioritizer.new) }
-    let(:generator) { Puppet::Type.type(:notify).new :title => "generator" }
+    let(:catalog) { Oregano::Resource::Catalog.new }
+    let(:transaction) { Oregano::Transaction.new(catalog, nil, Oregano::Graph::RandomPrioritizer.new) }
+    let(:generator) { Oregano::Type.type(:notify).new :title => "generator" }
     let(:generated) do
-      %w[a b c].map { |name| Puppet::Type.type(:notify).new(:name => name) }
+      %w[a b c].map { |name| Oregano::Type.type(:notify).new(:name => name) }
     end
 
     before :each do
@@ -335,19 +335,19 @@ describe Puppet::Transaction do
   end
 
   describe "after resource traversal" do
-    let(:catalog) { Puppet::Resource::Catalog.new }
-    let(:prioritizer) { Puppet::Graph::RandomPrioritizer.new }
-    let(:report) { Puppet::Transaction::Report.new }
-    let(:transaction) { Puppet::Transaction.new(catalog, report, prioritizer) }
-    let(:generator) { Puppet::Transaction::AdditionalResourceGenerator.new(catalog, nil, prioritizer) }
+    let(:catalog) { Oregano::Resource::Catalog.new }
+    let(:prioritizer) { Oregano::Graph::RandomPrioritizer.new }
+    let(:report) { Oregano::Transaction::Report.new }
+    let(:transaction) { Oregano::Transaction.new(catalog, report, prioritizer) }
+    let(:generator) { Oregano::Transaction::AdditionalResourceGenerator.new(catalog, nil, prioritizer) }
 
     before :each do
-      generator = Puppet::Transaction::AdditionalResourceGenerator.new(catalog, nil, prioritizer)
-      Puppet::Transaction::AdditionalResourceGenerator.stubs(:new).returns(generator)
+      generator = Oregano::Transaction::AdditionalResourceGenerator.new(catalog, nil, prioritizer)
+      Oregano::Transaction::AdditionalResourceGenerator.stubs(:new).returns(generator)
     end
 
     it "should should query the generator for whether resources failed to generate" do
-      relationship_graph = Puppet::Graph::RelationshipGraph.new(prioritizer)
+      relationship_graph = Oregano::Graph::RelationshipGraph.new(prioritizer)
       catalog.stubs(:relationship_graph).returns(relationship_graph)
 
       sequence = sequence(:traverse_first)
@@ -373,7 +373,7 @@ describe Puppet::Transaction do
   end
 
   describe "when performing pre-run checks" do
-    let(:resource) { Puppet::Type.type(:notify).new(:title => "spec") }
+    let(:resource) { Oregano::Type.type(:notify).new(:title => "spec") }
     let(:transaction) { transaction_with_resource(resource) }
     let(:spec_exception) { 'spec-exception' }
 
@@ -384,25 +384,25 @@ describe Puppet::Transaction do
     end
 
     it "should abort the transaction on failure" do
-      resource.expects(:pre_run_check).raises(Puppet::Error, spec_exception)
+      resource.expects(:pre_run_check).raises(Oregano::Error, spec_exception)
 
-      expect { transaction.evaluate }.to raise_error(Puppet::Error, /Some pre-run checks failed/)
+      expect { transaction.evaluate }.to raise_error(Oregano::Error, /Some pre-run checks failed/)
     end
 
     it "should log the resource-specific exception" do
-      resource.expects(:pre_run_check).raises(Puppet::Error, spec_exception)
+      resource.expects(:pre_run_check).raises(Oregano::Error, spec_exception)
       resource.expects(:log_exception).with(responds_with(:message, spec_exception))
 
-      expect { transaction.evaluate }.to raise_error(Puppet::Error)
+      expect { transaction.evaluate }.to raise_error(Oregano::Error)
     end
   end
 
   describe "when skipping a resource" do
     before :each do
-      @resource = Puppet::Type.type(:notify).new :name => "foo"
-      @catalog = Puppet::Resource::Catalog.new
+      @resource = Oregano::Type.type(:notify).new :name => "foo"
+      @catalog = Oregano::Resource::Catalog.new
       @resource.catalog = @catalog
-      @transaction = Puppet::Transaction.new(@catalog, nil, nil)
+      @transaction = Oregano::Transaction.new(@catalog, nil, nil)
     end
 
     it "should skip resource with missing tags" do
@@ -468,10 +468,10 @@ describe Puppet::Transaction do
 
   describe "when determining if tags are missing" do
     before :each do
-      @resource = Puppet::Type.type(:notify).new :name => "foo"
-      @catalog = Puppet::Resource::Catalog.new
+      @resource = Oregano::Type.type(:notify).new :name => "foo"
+      @catalog = Oregano::Resource::Catalog.new
       @resource.catalog = @catalog
-      @transaction = Puppet::Transaction.new(@catalog, nil, nil)
+      @transaction = Oregano::Transaction.new(@catalog, nil, nil)
 
       @transaction.stubs(:ignore_tags?).returns false
     end
@@ -499,10 +499,10 @@ describe Puppet::Transaction do
 
   describe "when determining if a resource should be scheduled" do
     before :each do
-      @resource = Puppet::Type.type(:notify).new :name => "foo"
-      @catalog = Puppet::Resource::Catalog.new
+      @resource = Oregano::Type.type(:notify).new :name => "foo"
+      @catalog = Oregano::Resource::Catalog.new
       @catalog.add_resource(@resource)
-      @transaction = Puppet::Transaction.new(@catalog, nil, Puppet::Graph::RandomPrioritizer.new)
+      @transaction = Oregano::Transaction.new(@catalog, nil, Oregano::Graph::RandomPrioritizer.new)
     end
 
     it "should always schedule resources if 'ignoreschedules' is set" do
@@ -521,10 +521,10 @@ describe Puppet::Transaction do
   end
 
   describe "when prefetching" do
-    let(:catalog) { Puppet::Resource::Catalog.new }
-    let(:transaction) { Puppet::Transaction.new(catalog, nil, nil) }
-    let(:resource) { Puppet::Type.type(:sshkey).new :title => "foo", :name => "bar", :type => :dsa, :key => "eh", :provider => :parsed }
-    let(:resource2) { Puppet::Type.type(:package).new :title => "blah", :provider => "apt" }
+    let(:catalog) { Oregano::Resource::Catalog.new }
+    let(:transaction) { Oregano::Transaction.new(catalog, nil, nil) }
+    let(:resource) { Oregano::Type.type(:sshkey).new :title => "foo", :name => "bar", :type => :dsa, :key => "eh", :provider => :parsed }
+    let(:resource2) { Oregano::Type.type(:package).new :title => "blah", :provider => "apt" }
 
     before :each do
       catalog.add_resource resource
@@ -554,7 +554,7 @@ describe Puppet::Transaction do
     end
 
     it "should prefetch resources without a provider if prefetching the default provider" do
-      other = Puppet::Type.type(:sshkey).new :name => "other"
+      other = Oregano::Type.type(:sshkey).new :name => "other"
 
       other.instance_variable_set(:@provider, nil)
 
@@ -567,13 +567,13 @@ describe Puppet::Transaction do
   end
 
   describe "during teardown" do
-    let(:catalog) { Puppet::Resource::Catalog.new }
+    let(:catalog) { Oregano::Resource::Catalog.new }
     let(:transaction) do
-      Puppet::Transaction.new(catalog, nil, Puppet::Graph::RandomPrioritizer.new)
+      Oregano::Transaction.new(catalog, nil, Oregano::Graph::RandomPrioritizer.new)
     end
 
     let(:teardown_type) do
-      Puppet::Type.newtype(:teardown_test) do
+      Oregano::Type.newtype(:teardown_test) do
         newparam(:name) {}
       end
     end
@@ -606,7 +606,7 @@ describe Puppet::Transaction do
 
           def post_resource_eval
             @result = 'failed'
-            raise Puppet::Error, "This provider always fails"
+            raise Oregano::Error, "This provider always fails"
           end
         end
       end
@@ -636,13 +636,13 @@ describe Puppet::Transaction do
 
   describe 'when checking application run state' do
     before do
-      @catalog = Puppet::Resource::Catalog.new
-      @transaction = Puppet::Transaction.new(@catalog, nil, Puppet::Graph::RandomPrioritizer.new)
+      @catalog = Oregano::Resource::Catalog.new
+      @transaction = Oregano::Transaction.new(@catalog, nil, Oregano::Graph::RandomPrioritizer.new)
     end
 
     context "when stop is requested" do
       before :each do
-        Puppet::Application.stubs(:stop_requested?).returns(true)
+        Oregano::Application.stubs(:stop_requested?).returns(true)
       end
 
       it 'should return true for :stop_processing?' do
@@ -655,14 +655,14 @@ describe Puppet::Transaction do
       end
     end
 
-    it 'should return false for :stop_processing? if Puppet::Application.stop_requested? is false' do
-      Puppet::Application.stubs(:stop_requested?).returns(false)
+    it 'should return false for :stop_processing? if Oregano::Application.stop_requested? is false' do
+      Oregano::Application.stubs(:stop_requested?).returns(false)
       expect(@transaction.stop_processing?).to be_falsey
     end
 
     describe 'within an evaluate call' do
       before do
-        @resource = Puppet::Type.type(:notify).new :title => "foobar"
+        @resource = Oregano::Type.type(:notify).new :title => "foobar"
         @catalog.add_resource @resource
         @transaction.stubs(:add_dynamically_generated_resources)
       end
@@ -682,26 +682,26 @@ describe Puppet::Transaction do
   end
 
   it "errors with a dependency cycle for a resource that requires itself" do
-    Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
+    Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
     expect do
       apply_compiled_manifest(<<-MANIFEST)
         notify { cycle: require => Notify[cycle] }
       MANIFEST
-    end.to raise_error(Puppet::Error, 'One or more resource dependency cycles detected in graph')
+    end.to raise_error(Oregano::Error, 'One or more resource dependency cycles detected in graph')
   end
 
   it "errors with a dependency cycle for a self-requiring resource also required by another resource" do
-    Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
+    Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
     expect do
       apply_compiled_manifest(<<-MANIFEST)
         notify { cycle: require => Notify[cycle] }
         notify { other: require => Notify[cycle] }
       MANIFEST
-    end.to raise_error(Puppet::Error, 'One or more resource dependency cycles detected in graph')
+    end.to raise_error(Oregano::Error, 'One or more resource dependency cycles detected in graph')
   end
 
   it "errors with a dependency cycle for a resource that requires itself and another resource" do
-    Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
+    Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
     expect do
       apply_compiled_manifest(<<-MANIFEST)
         notify { cycle:
@@ -709,11 +709,11 @@ describe Puppet::Transaction do
         }
         notify { other: }
       MANIFEST
-    end.to raise_error(Puppet::Error, 'One or more resource dependency cycles detected in graph')
+    end.to raise_error(Oregano::Error, 'One or more resource dependency cycles detected in graph')
   end
 
   it "errors with a dependency cycle for a resource that is later modified to require itself" do
-    Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
+    Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:.*\(Notify\[cycle\] => Notify\[cycle\]\)/m))
     expect do
       apply_compiled_manifest(<<-MANIFEST)
         notify { cycle: }
@@ -721,7 +721,7 @@ describe Puppet::Transaction do
           require => Notify[cycle]
         }
       MANIFEST
-    end.to raise_error(Puppet::Error, 'One or more resource dependency cycles detected in graph')
+    end.to raise_error(Oregano::Error, 'One or more resource dependency cycles detected in graph')
   end
 
   context "when generating a report for a transaction with a dependency cycle" do
@@ -732,13 +732,13 @@ describe Puppet::Transaction do
       MANIFEST
     end
 
-    let(:prioritizer) { Puppet::Graph::SequentialPrioritizer.new }
-    let(:transaction) { Puppet::Transaction.new(catalog,
-                                          Puppet::Transaction::Report.new("apply"),
+    let(:prioritizer) { Oregano::Graph::SequentialPrioritizer.new }
+    let(:transaction) { Oregano::Transaction.new(catalog,
+                                          Oregano::Transaction::Report.new("apply"),
                                           prioritizer) }
 
     before(:each) do
-      expect { transaction.evaluate }.to raise_error(Puppet::Error)
+      expect { transaction.evaluate }.to raise_error(Oregano::Error)
       transaction.report.finalize_report
     end
 
@@ -767,7 +767,7 @@ describe Puppet::Transaction do
 
   describe "when interrupted" do
     it "marks unprocessed resources as skipped" do
-      Puppet::Application.stop!
+      Oregano::Application.stop!
 
       transaction = apply_compiled_manifest(<<-MANIFEST)
         notify { a: } ->
@@ -780,25 +780,25 @@ describe Puppet::Transaction do
   end
 end
 
-describe Puppet::Transaction, " when determining tags" do
+describe Oregano::Transaction, " when determining tags" do
   before do
-    @config = Puppet::Resource::Catalog.new
-    @transaction = Puppet::Transaction.new(@config, nil, nil)
+    @config = Oregano::Resource::Catalog.new
+    @transaction = Oregano::Transaction.new(@config, nil, nil)
   end
 
   it "should default to the tags specified in the :tags setting" do
-    Puppet[:tags] = "one"
+    Oregano[:tags] = "one"
     expect(@transaction).to be_tagged("one")
   end
 
   it "should split tags based on ','" do
-    Puppet[:tags] = "one,two"
+    Oregano[:tags] = "one,two"
     expect(@transaction).to be_tagged("one")
     expect(@transaction).to be_tagged("two")
   end
 
   it "should use any tags set after creation" do
-    Puppet[:tags] = ""
+    Oregano[:tags] = ""
     @transaction.tags = %w{one two}
     expect(@transaction).to be_tagged("one")
     expect(@transaction).to be_tagged("two")

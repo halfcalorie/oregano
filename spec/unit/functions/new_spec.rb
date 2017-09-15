@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 describe 'the new function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
 
   it 'yields converted value if given a block' do
@@ -28,7 +28,7 @@ describe 'the new function' do
       $x = Integer.new(undef)
       notify { "one${x}word": }
     MANIFEST
-    )}.to raise_error(Puppet::Error, /expects an Integer value, got Undef/)
+    )}.to raise_error(Oregano::Error, /expects an Integer value, got Undef/)
   end
 
   it 'errors if converted value is not assignable to the type' do
@@ -36,7 +36,7 @@ describe 'the new function' do
       $x = Integer[1,5].new('42')
       notify { "one${x}word": }
     MANIFEST
-    )}.to raise_error(Puppet::Error, /expects an Integer\[1, 5\] value, got Integer\[42, 42\]/)
+    )}.to raise_error(Oregano::Error, /expects an Integer\[1, 5\] value, got Integer\[42, 42\]/)
   end
 
   it 'accepts and returns a second parameter that is an instance of the first, even when the type has no backing new_function' do
@@ -225,7 +225,7 @@ describe 'the new function' do
           expect{compile_to_catalog(<<-"MANIFEST"
             $x = Integer.new("#{str}", 2)
           MANIFEST
-        )}.to raise_error(Puppet::Error, /invalid value/)
+        )}.to raise_error(Oregano::Error, /invalid value/)
         end
       end
     end
@@ -261,7 +261,7 @@ describe 'the new function' do
           expect{compile_to_catalog(<<-"MANIFEST"
             $x = Integer.new("#{str}", 8)
           MANIFEST
-        )}.to raise_error(Puppet::Error, /invalid value/)
+        )}.to raise_error(Oregano::Error, /invalid value/)
         end
       end
     end
@@ -298,7 +298,7 @@ describe 'the new function' do
           expect{compile_to_catalog(<<-"MANIFEST"
             $x = Integer.new("#{str}", 8)
           MANIFEST
-        )}.to raise_error(Puppet::Error, /invalid value/)
+        )}.to raise_error(Oregano::Error, /invalid value/)
         end
       end
     end
@@ -325,7 +325,7 @@ describe 'the new function' do
           expect{compile_to_catalog(<<-"MANIFEST"
             $x = Integer.new("#{str}", 10)
           MANIFEST
-        )}.to raise_error(Puppet::Error, /invalid value/)
+        )}.to raise_error(Oregano::Error, /invalid value/)
         end
       end
     end
@@ -352,28 +352,28 @@ describe 'the new function' do
         expect{compile_to_catalog(<<-"MANIFEST"
           $x = Integer.new('10', 3)
         MANIFEST
-      )}.to raise_error(Puppet::Error, /rejected: parameter 'radix'/m)
+      )}.to raise_error(Oregano::Error, /rejected: parameter 'radix'/m)
       end
 
       it 'radix is wrong and when given in long form' do
         expect{compile_to_catalog(<<-"MANIFEST"
           $x = Integer.new({from =>'10', radix=>3})
         MANIFEST
-      )}.to raise_error(Puppet::Error, /rejected: parameter 'hash_args' entry 'radix'/m)
+      )}.to raise_error(Oregano::Error, /rejected: parameter 'hash_args' entry 'radix'/m)
       end
 
       it 'value is not numeric and given directly' do
         expect{compile_to_catalog(<<-"MANIFEST"
           $x = Integer.new('eleven', 10)
         MANIFEST
-      )}.to raise_error(Puppet::Error, /invalid value/)
+      )}.to raise_error(Oregano::Error, /invalid value/)
       end
 
       it 'value is not numeric and given in long form' do
         expect{compile_to_catalog(<<-"MANIFEST"
       $x = Integer.new({from => 'eleven', radix => 10})
         MANIFEST
-      )}.to raise_error(Puppet::Error, /invalid value/)
+      )}.to raise_error(Oregano::Error, /invalid value/)
       end
     end
   end
@@ -538,14 +538,14 @@ describe 'the new function' do
       expect{compile_to_catalog(<<-"MANIFEST"
         $x = Boolean.new('hello')
       MANIFEST
-      )}.to raise_error(Puppet::Error, /cannot be converted to Boolean/)
+      )}.to raise_error(Oregano::Error, /cannot be converted to Boolean/)
     end
 
     it "does not convert an undef (as may be expected, but is handled as every other undef)" do
       expect{compile_to_catalog(<<-"MANIFEST"
         $x = Boolean.new(undef)
       MANIFEST
-      )}.to raise_error(Puppet::Error, /expects a Boolean value, got Undef/)
+      )}.to raise_error(Oregano::Error, /expects a Boolean value, got Undef/)
     end
   end
 
@@ -573,7 +573,7 @@ describe 'the new function' do
         expect{compile_to_catalog(<<-"MANIFEST"
           $x = Array.new(#{input.inspect})
         MANIFEST
-        )}.to raise_error(Puppet::Error, error_match)
+        )}.to raise_error(Oregano::Error, error_match)
       end
     end
 
@@ -627,7 +627,7 @@ describe 'the new function' do
       expect{compile_to_catalog(<<-"MANIFEST"
         $x = Tuple[Integer,6].new(3)
       MANIFEST
-      )}.to raise_error(Puppet::Error, /expects size to be at least 6, got 3/)
+      )}.to raise_error(Oregano::Error, /expects size to be at least 6, got 3/)
     end
   end
 
@@ -657,7 +657,7 @@ describe 'the new function' do
         expect{compile_to_catalog(<<-"MANIFEST"
           $x = Hash.new(#{input.inspect})
         MANIFEST
-        )}.to raise_error(Puppet::Error, error_match)
+        )}.to raise_error(Oregano::Error, error_match)
       end
     end
 
@@ -714,7 +714,7 @@ describe 'the new function' do
       expect{compile_to_catalog(<<-"MANIFEST"
         $x = Struct[{a => Integer[2]}].new({a => 0})
       MANIFEST
-      )}.to raise_error(Puppet::Error, /entry 'a' expects an Integer\[2, default\]/)
+      )}.to raise_error(Oregano::Error, /entry 'a' expects an Integer\[2, default\]/)
     end
   end
 

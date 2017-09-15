@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'puppet/provider/aixobject'
+require 'oregano/provider/aixobject'
 
-describe Puppet::Provider::AixObject do
+describe Oregano::Provider::AixObject do
   let(:resource) do
-    Puppet::Type.type(:user).new(
+    Oregano::Type.type(:user).new(
       :name   => 'test_aix_user',
       :ensure => :present
     )
   end
 
   let(:provider) do
-    provider = Puppet::Provider::AixObject.new resource
+    provider = Oregano::Provider::AixObject.new resource
   end
 
   describe "base provider methods" do
@@ -22,7 +22,7 @@ describe Puppet::Provider::AixObject do
       it "should raise an error when unimplemented method #{method} called" do
         expect do
           provider.send(method)
-        end.to raise_error(Puppet::Error, /not defined/)
+        end.to raise_error(Oregano::Error, /not defined/)
       end
     end
   end
@@ -31,9 +31,9 @@ describe Puppet::Provider::AixObject do
     let(:mapping) do
       [
         { :aix_attr => :test_aix_property,
-          :puppet_prop => :test_puppet_property,
+          :oregano_prop => :test_oregano_property,
           :to => :test_convert_to_aix_method,
-          :from => :test_convert_to_puppet_method
+          :from => :test_convert_to_oregano_method
         }
       ]
     end
@@ -49,10 +49,10 @@ describe Puppet::Provider::AixObject do
          end
       end
 
-      it "should create a hash where the key is the puppet property and the value is a hash with the aix property and the conversion method" do
+      it "should create a hash where the key is the oregano property and the value is a hash with the aix property and the conversion method" do
         hash = provider.class.attribute_mapping_to
-        expect(hash).to have_key :test_puppet_property
-        sub_hash = hash[:test_puppet_property]
+        expect(hash).to have_key :test_oregano_property
+        sub_hash = hash[:test_oregano_property]
         expect(sub_hash).to have_key :key
         expect(sub_hash).to have_key :method
         expect(sub_hash[:key]).to eq(:test_aix_property)
@@ -73,14 +73,14 @@ describe Puppet::Provider::AixObject do
         end
       end
 
-      it "should create a hash where the key is the aix property and the value is a hash with the puppet property and the conversion method" do
+      it "should create a hash where the key is the aix property and the value is a hash with the oregano property and the conversion method" do
         hash = provider.class.attribute_mapping_from
         expect(hash).to have_key :test_aix_property
         sub_hash = hash[:test_aix_property]
         expect(sub_hash).to have_key :key
         expect(sub_hash).to have_key :method
-        expect(sub_hash[:key]).to eq(:test_puppet_property)
-        expect(sub_hash[:method]).to eq(:test_convert_to_puppet_method)
+        expect(sub_hash[:key]).to eq(:test_oregano_property)
+        expect(sub_hash[:method]).to eq(:test_convert_to_oregano_method)
       end
 
       it "should cache results between calls" do

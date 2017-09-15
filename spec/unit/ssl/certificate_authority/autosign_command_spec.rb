@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_authority/autosign_command'
+require 'oregano/ssl/certificate_authority/autosign_command'
 
-describe Puppet::SSL::CertificateAuthority::AutosignCommand do
+describe Oregano::SSL::CertificateAuthority::AutosignCommand do
 
   let(:csr) { stub 'csr', :name => 'host', :to_s => 'CSR PEM goes here' }
-  let(:decider) { Puppet::SSL::CertificateAuthority::AutosignCommand.new('/autosign/command') }
+  let(:decider) { Oregano::SSL::CertificateAuthority::AutosignCommand.new('/autosign/command') }
 
   it "returns true if the command succeeded" do
     executes_the_command_resulting_in(0)
@@ -20,11 +20,11 @@ describe Puppet::SSL::CertificateAuthority::AutosignCommand do
   end
 
   def executes_the_command_resulting_in(exitstatus)
-    Puppet::Util::Execution.expects(:execute).
+    Oregano::Util::Execution.expects(:execute).
       with(['/autosign/command', 'host'],
            has_entries(:stdinfile => anything,
                        :combine => true,
                        :failonfail => false)).
-      returns(Puppet::Util::Execution::ProcessOutput.new('', exitstatus))
+      returns(Oregano::Util::Execution::ProcessOutput.new('', exitstatus))
   end
 end

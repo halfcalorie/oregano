@@ -1,19 +1,19 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/file_server'
-require 'puppet/file_serving/configuration'
+require 'oregano/indirector/file_server'
+require 'oregano/file_serving/configuration'
 
-describe Puppet::Indirector::FileServer do
+describe Oregano::Indirector::FileServer do
 
   before :all do
-    Puppet::Indirector::Terminus.stubs(:register_terminus_class)
+    Oregano::Indirector::Terminus.stubs(:register_terminus_class)
     @model = mock 'model'
     @indirection = stub 'indirection', :name => :mystuff, :register_terminus_type => nil, :model => @model
-    Puppet::Indirector::Indirection.stubs(:instance).returns(@indirection)
+    Oregano::Indirector::Indirection.stubs(:instance).returns(@indirection)
 
     module Testing; end
-    @file_server_class = class Testing::MyFileServer < Puppet::Indirector::FileServer
+    @file_server_class = class Testing::MyFileServer < Oregano::Indirector::FileServer
       self
     end
   end
@@ -21,11 +21,11 @@ describe Puppet::Indirector::FileServer do
   before :each do
     @file_server = @file_server_class.new
 
-    @uri = "puppet://host/my/local/file"
+    @uri = "oregano://host/my/local/file"
     @configuration = mock 'configuration'
-    Puppet::FileServing::Configuration.stubs(:configuration).returns(@configuration)
+    Oregano::FileServing::Configuration.stubs(:configuration).returns(@configuration)
 
-    @request = Puppet::Indirector::Request.new(:myind, :mymethod, @uri, :environment => "myenv")
+    @request = Oregano::Indirector::Request.new(:myind, :mymethod, @uri, :environment => "myenv")
   end
 
   describe "when finding files" do
@@ -154,14 +154,14 @@ describe Puppet::Indirector::FileServer do
 
       @mount.expects(:search).with { |key, request| key == "rel/path" }.returns %w{/one /two}
 
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
 
       one = mock 'fileset_one'
-      Puppet::FileServing::Fileset.expects(:new).with("/one", @request).returns(one)
+      Oregano::FileServing::Fileset.expects(:new).with("/one", @request).returns(one)
       two = mock 'fileset_two'
-      Puppet::FileServing::Fileset.expects(:new).with("/two", @request).returns(two)
+      Oregano::FileServing::Fileset.expects(:new).with("/two", @request).returns(two)
 
-      Puppet::FileServing::Fileset.expects(:merge).with(one, two).returns []
+      Oregano::FileServing::Fileset.expects(:merge).with(one, two).returns []
 
       @file_server.search(@request)
     end
@@ -171,9 +171,9 @@ describe Puppet::Indirector::FileServer do
 
       @mount.expects(:search).with { |key, request| key == "rel/path" }.returns []
 
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
 
-      Puppet::FileServing::Fileset.expects(:merge).returns("one" => "/one", "two" => "/two")
+      Oregano::FileServing::Fileset.expects(:merge).returns("one" => "/one", "two" => "/two")
 
       one = stub 'one', :collect => nil
       @model.expects(:new).with("/one", :relative_path => "one").returns one
@@ -193,9 +193,9 @@ describe Puppet::Indirector::FileServer do
 
       @mount.expects(:search).with { |key, request| key == "rel/path" }.returns []
 
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
 
-      Puppet::FileServing::Fileset.expects(:merge).returns("one" => "/one")
+      Oregano::FileServing::Fileset.expects(:merge).returns("one" => "/one")
 
       one = stub 'one', :collect => nil
       @model.expects(:new).with("/one", :relative_path => "one").returns one
@@ -211,9 +211,9 @@ describe Puppet::Indirector::FileServer do
 
       @mount.expects(:search).with { |key, request| key == "rel/path" }.returns []
 
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
 
-      Puppet::FileServing::Fileset.expects(:merge).returns("one" => "/one")
+      Oregano::FileServing::Fileset.expects(:merge).returns("one" => "/one")
 
       one = stub 'one', :collect => nil
       @model.expects(:new).with("/one", :relative_path => "one").returns one
@@ -229,9 +229,9 @@ describe Puppet::Indirector::FileServer do
 
       @mount.expects(:search).with { |key, options| key == "rel/path" }.returns []
 
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
 
-      Puppet::FileServing::Fileset.expects(:merge).returns("one" => "/one")
+      Oregano::FileServing::Fileset.expects(:merge).returns("one" => "/one")
 
       one = mock 'one'
       @model.expects(:new).with("/one", :relative_path => "one").returns one

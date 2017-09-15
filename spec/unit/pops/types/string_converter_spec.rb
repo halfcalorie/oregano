@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
 describe 'The string converter' do
-  let(:converter) { Puppet::Pops::Types::StringConverter.singleton }
-  let(:factory) { Puppet::Pops::Types::TypeFactory }
-  let(:format) { Puppet::Pops::Types::StringConverter::Format }
-  let(:binary) { Puppet::Pops::Types::PBinaryType::Binary }
+  let(:converter) { Oregano::Pops::Types::StringConverter.singleton }
+  let(:factory) { Oregano::Pops::Types::TypeFactory }
+  let(:format) { Oregano::Pops::Types::StringConverter::Format }
+  let(:binary) { Oregano::Pops::Types::PBinaryType::Binary }
 
   describe 'helper Format' do
     it 'parses a single character like "%d" as a format' do
@@ -113,17 +113,17 @@ describe 'The string converter' do
     end
 
     it 'float point value decimal digits can be specified' do
-      string_formats = { Puppet::Pops::Types::PFloatType::DEFAULT => '%.2f'}
+      string_formats = { Oregano::Pops::Types::PFloatType::DEFAULT => '%.2f'}
       expect(converter.convert(3.14, string_formats)).to eq('3.14')
     end
 
     it 'when specifying format for one type, other formats are not affected' do
-      string_formats = { Puppet::Pops::Types::PFloatType::DEFAULT => '%.2f'}
+      string_formats = { Oregano::Pops::Types::PFloatType::DEFAULT => '%.2f'}
       expect(converter.convert('3.1415', string_formats)).to eq('3.1415')
     end
 
     context 'The %p format for string produces' do
-      let!(:string_formats) { { Puppet::Pops::Types::PStringType::DEFAULT => '%p'} }
+      let!(:string_formats) { { Oregano::Pops::Types::PStringType::DEFAULT => '%p'} }
       it 'double quoted result for string that contains control characters' do
          expect(converter.convert("hello\tworld.\r\nSun is brigth today.", string_formats)).to eq('"hello\\tworld.\\r\\nSun is brigth today."')
       end
@@ -176,7 +176,7 @@ describe 'The string converter' do
       '%#u'   => "'HELLO::WORLD'",
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => fmt}
         expect(converter.convert('hello::world', string_formats)).to eq(result)
       end
     end
@@ -188,7 +188,7 @@ describe 'The string converter' do
       '%#d'  => "'hello::world'",
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => fmt}
         expect(converter.convert('HELLO::WORLD', string_formats)).to eq(result)
       end
     end
@@ -211,7 +211,7 @@ describe 'The string converter' do
       '   a b'   => 'a b',
     }.each do |input, result |
       it "the input #{input} is trimmed to #{result} by using format '%t'" do
-        string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => '%t'}
+        string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => '%t'}
         expect(converter.convert(input, string_formats)).to eq(result)
       end
     end
@@ -222,30 +222,30 @@ describe 'The string converter' do
       '   a b'   => "'a b'",
     }.each do |input, result |
       it "the input #{input} is trimmed to #{result} by using format '%#t'" do
-        string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => '%#t'}
+        string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => '%#t'}
         expect(converter.convert(input, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => "%k"}
       converter.convert('wat', string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of String type - expected one of the characters 'cCudspt'/)
     end
 
     it 'Width pads a string left with spaces to given width' do
-      string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => '%6s'}
+      string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => '%6s'}
       expect(converter.convert("abcd", string_formats)).to eq('  abcd')
     end
 
     it 'Width pads a string right with spaces to given width and - flag' do
-      string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => '%-6s'}
+      string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => '%-6s'}
       expect(converter.convert("abcd", string_formats)).to eq('abcd  ')
     end
 
     it 'Precision truncates the string if precision < length' do
-      string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => '%-6.2s'}
+      string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => '%-6.2s'}
       expect(converter.convert("abcd", string_formats)).to eq('ab    ')
     end
 
@@ -260,7 +260,7 @@ describe 'The string converter' do
       '%#4.2d'  => "  'h"
     }.each do |fmt, result |
       it "width and precision can be combined with #{fmt}" do
-        string_formats = { Puppet::Pops::Types::PStringType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PStringType::DEFAULT => fmt}
         expect(converter.convert('hello::world', string_formats)).to eq(result)
       end
     end
@@ -313,24 +313,24 @@ describe 'The string converter' do
       '%.1f'    => '18.0',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PIntegerType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PIntegerType::DEFAULT => fmt}
         expect(converter.convert(18, string_formats)).to eq(result)
       end
     end
 
     it 'produces a unicode char string by using format %c' do
-      string_formats = { Puppet::Pops::Types::PIntegerType::DEFAULT => '%c'}
+      string_formats = { Oregano::Pops::Types::PIntegerType::DEFAULT => '%c'}
       expect(converter.convert(0x1F603, string_formats)).to eq("\u{1F603}")
     end
 
     it 'produces a quoted unicode char string by using format %#c' do
-      string_formats = { Puppet::Pops::Types::PIntegerType::DEFAULT => '%#c'}
+      string_formats = { Oregano::Pops::Types::PIntegerType::DEFAULT => '%#c'}
       expect(converter.convert(0x1F603, string_formats)).to eq("\"\u{1F603}\"")
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PIntegerType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PIntegerType::DEFAULT => "%k"}
       converter.convert(18, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Integer type - expected one of the characters 'dxXobBeEfgGaAspc'/)
     end
@@ -400,14 +400,14 @@ describe 'The string converter' do
       '%#B'     => '0B10010',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PFloatType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PFloatType::DEFAULT => fmt}
         expect(converter.convert(18.0, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PFloatType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PFloatType::DEFAULT => "%k"}
       converter.convert(18.0, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Float type - expected one of the characters 'dxXobBeEfgGaAsp'/)
     end
@@ -442,7 +442,7 @@ describe 'The string converter' do
       "%A"  => 'NaN',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PUndefType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PUndefType::DEFAULT => fmt}
         expect(converter.convert(nil, string_formats)).to eq(result)
       end
     end
@@ -506,14 +506,14 @@ describe 'The string converter' do
       "%-5A"   => 'NaN  ',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PUndefType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PUndefType::DEFAULT => fmt}
         expect(converter.convert(nil, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PUndefType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PUndefType::DEFAULT => "%k"}
       converter.convert(nil, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Undef type - expected one of the characters 'nudxXobBeEfgGaAvVsp'/)
     end
@@ -532,14 +532,14 @@ describe 'The string converter' do
       "%p"  => 'default',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PDefaultType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PDefaultType::DEFAULT => fmt}
         expect(converter.convert(:default, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PDefaultType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PDefaultType::DEFAULT => "%k"}
       converter.convert(:default, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Default type - expected one of the characters 'dDsp'/)
     end
@@ -576,14 +576,14 @@ describe 'The string converter' do
       "%#Y"  => 'Y',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PBooleanType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PBooleanType::DEFAULT => fmt}
         expect(converter.convert(true, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PBooleanType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PBooleanType::DEFAULT => "%k"}
       converter.convert(true, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Boolean type - expected one of the characters 'tTyYdxXobBeEfgGaAsp'/)
     end
@@ -622,14 +622,14 @@ describe 'The string converter' do
       "%#Y"  => 'N',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PBooleanType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PBooleanType::DEFAULT => fmt}
         expect(converter.convert(false, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PBooleanType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PBooleanType::DEFAULT => "%k"}
       converter.convert(false, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Boolean type - expected one of the characters 'tTyYdxXobBeEfgGaAsp'/)
     end
@@ -663,11 +663,11 @@ describe 'The string converter' do
 
       {'format' => '%(a',
         'separator' => ' ',
-        'string_formats' => {Puppet::Pops::Types::PIntegerType::DEFAULT => '%#x'}
+        'string_formats' => {Oregano::Pops::Types::PIntegerType::DEFAULT => '%#x'}
       } => "(0x1 'hello')",
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => fmt}
         expect(converter.convert([1, "hello"], string_formats)).to eq(result)
       end
     end
@@ -684,7 +684,7 @@ describe 'The string converter' do
     end
 
     it 'indents elements in alternate mode' do
-      string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#a', 'separator' =>", " } }
+      string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#a', 'separator' =>", " } }
       # formatting matters here
       result = [
        "[1, 2, 9, 9,",
@@ -699,7 +699,7 @@ describe 'The string converter' do
     end
 
     it 'treats hashes as nested arrays wrt indentation' do
-      string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#a', 'separator' =>", " } }
+      string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#a', 'separator' =>", " } }
       # formatting matters here
       result = [
        "[1, 2, 9, 9,",
@@ -714,7 +714,7 @@ describe 'The string converter' do
     end
 
     it 'indents and breaks when a sequence > given width, in alternate mode' do
-      string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#3a', 'separator' =>", " } }
+      string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#3a', 'separator' =>", " } }
       # formatting matters here
       result = [
        "[ 1,",
@@ -732,7 +732,7 @@ describe 'The string converter' do
     end
 
     it 'indents and breaks when a sequence (placed last) > given width, in alternate mode' do
-      string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#3a', 'separator' =>", " } }
+      string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#3a', 'separator' =>", " } }
       # formatting matters here
       result = [
        "[ 1,",
@@ -750,7 +750,7 @@ describe 'The string converter' do
     end
 
     it 'indents and breaks nested sequences when one is placed first' do
-      string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#a', 'separator' =>", " } }
+      string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#a', 'separator' =>", " } }
       # formatting matters here
       result = [
        "[",
@@ -768,7 +768,7 @@ describe 'The string converter' do
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => "%k"}
       converter.convert([1,2], string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Array type - expected one of the characters 'asp'/)
     end
@@ -795,11 +795,11 @@ describe 'The string converter' do
 
       {'format' => '%(h',
         'separator2' => ' ',
-        'string_formats' => {Puppet::Pops::Types::PIntegerType::DEFAULT => '%#x'}
+        'string_formats' => {Oregano::Pops::Types::PIntegerType::DEFAULT => '%#x'}
       } => "(0x1 'world')",
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PHashType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PHashType::DEFAULT => fmt}
         expect(converter.convert({1 => "world"}, string_formats)).to eq(result)
       end
     end
@@ -818,18 +818,18 @@ describe 'The string converter' do
        {'format' => '%(h',
          'separator' => ' >> ',
          'separator2' => ' <=> ',
-         'string_formats' => {Puppet::Pops::Types::PIntegerType::DEFAULT => '%#x'}
+         'string_formats' => {Oregano::Pops::Types::PIntegerType::DEFAULT => '%#x'}
        } => "(0x1 <=> 'hello' >> 0x2 <=> 'world')",
      }.each do |fmt, result |
        it "the format #{fmt} produces #{result}" do
-         string_formats = { Puppet::Pops::Types::PHashType::DEFAULT => fmt}
+         string_formats = { Oregano::Pops::Types::PHashType::DEFAULT => fmt}
          expect(converter.convert({1 => "hello", 2 => "world"}, string_formats)).to eq(result)
        end
      end
 
     it 'indents elements in alternative mode #' do
       string_formats = {
-        Puppet::Pops::Types::PHashType::DEFAULT => {
+        Oregano::Pops::Types::PHashType::DEFAULT => {
           'format' => '%#h',
         }
       }
@@ -854,7 +854,7 @@ describe 'The string converter' do
       end
 
       it 'the array renders with breaks if so specified' do
-        string_formats = { Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#1a', 'separator' =>"," } }
+        string_formats = { Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#1a', 'separator' =>"," } }
         result = [
         "{1 => [ 1,",
         "    2,",
@@ -866,8 +866,8 @@ describe 'The string converter' do
 
       it 'both hash and array renders with breaks and indentation if so specified for both' do
         string_formats = {
-          Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#1a', 'separator' =>", " },
-          Puppet::Pops::Types::PHashType::DEFAULT => { 'format' => '%#h', 'separator' =>"," }
+          Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%#1a', 'separator' =>", " },
+          Oregano::Pops::Types::PHashType::DEFAULT => { 'format' => '%#h', 'separator' =>"," }
         }
         result = [
         "{",
@@ -882,8 +882,8 @@ describe 'The string converter' do
 
       it 'hash, but not array is rendered with breaks and indentation if so specified only for the hash' do
         string_formats = {
-          Puppet::Pops::Types::PArrayType::DEFAULT => { 'format' => '%a', 'separator' =>", " },
-          Puppet::Pops::Types::PHashType::DEFAULT => { 'format' => '%#h', 'separator' =>"," }
+          Oregano::Pops::Types::PArrayType::DEFAULT => { 'format' => '%a', 'separator' =>", " },
+          Oregano::Pops::Types::PHashType::DEFAULT => { 'format' => '%#h', 'separator' =>"," }
         }
         result = [
         "{",
@@ -945,7 +945,7 @@ describe 'The string converter' do
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PHashType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PHashType::DEFAULT => "%k"}
       converter.convert({1 => 2}, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Hash type - expected one of the characters 'hasp'/)
     end
@@ -988,45 +988,45 @@ describe 'The string converter' do
       "%#p"  => '/.*/'
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => fmt}
         expect(converter.convert(/.*/, string_formats)).to eq(result)
       end
     end
 
     context 'that contains flags' do
       it 'the format %s produces \'(?m-ix:[a-z]\s*)\' for expression /[a-z]\s*/m' do
-        string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%s'}
+        string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%s'}
         expect(converter.convert(/[a-z]\s*/m, string_formats)).to eq('(?m-ix:[a-z]\s*)')
       end
 
       it 'the format %p produces \'/(?m-ix:[a-z]\s*)/\' for expression /[a-z]\s*/m' do
-        string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%p'}
+        string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%p'}
         expect(converter.convert(/[a-z]\s*/m, string_formats)).to eq('/(?m-ix:[a-z]\s*)/')
       end
 
       it 'the format %p produces \'/foo\/bar/\' for expression /foo\/bar/' do
-        string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%p'}
+        string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%p'}
         expect(converter.convert(/foo\/bar/, string_formats)).to eq('/foo\/bar/')
       end
 
       context 'and slashes' do
         it 'the format %s produces \'(?m-ix:foo/bar)\' for expression /foo\/bar/m' do
-          string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%s'}
+          string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%s'}
           expect(converter.convert(/foo\/bar/m, string_formats)).to eq('(?m-ix:foo/bar)')
         end
 
         it 'the format %s produces \'(?m-ix:foo\/bar)\' for expression /foo\\\/bar/m' do
-          string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%s'}
+          string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%s'}
           expect(converter.convert(/foo\\\/bar/m, string_formats)).to eq('(?m-ix:foo\\\\/bar)')
         end
 
         it 'the format %p produces \'(?m-ix:foo\/bar)\' for expression /foo\/bar/m' do
-          string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%p'}
+          string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%p'}
           expect(converter.convert(/foo\/bar/m, string_formats)).to eq('/(?m-ix:foo\/bar)/')
         end
 
         it 'the format %p produces \'(?m-ix:foo\/bar)\' for expression /(?m-ix:foo\/bar)/' do
-          string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => '%p'}
+          string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => '%p'}
           expect(converter.convert(/(?m-ix:foo\/bar)/, string_formats)).to eq('/(?m-ix:foo\/bar)/')
         end
       end
@@ -1034,7 +1034,7 @@ describe 'The string converter' do
 
     it 'errors when format is not recognized' do
       expect do
-      string_formats = { Puppet::Pops::Types::PRegexpType::DEFAULT => "%k"}
+      string_formats = { Oregano::Pops::Types::PRegexpType::DEFAULT => "%k"}
       converter.convert(/.*/, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Regexp type - expected one of the characters 'sp'/)
     end
@@ -1052,38 +1052,38 @@ describe 'The string converter' do
     end
 
     it '%B formats in base64 strict mode (same as default)' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%B'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%B'}
       expect(converter.convert(sample, string_formats)).to eq("YmluYXJ5")
     end
 
     it '%b formats in base64 relaxed mode, and adds newline' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%b'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%b'}
       expect(converter.convert(sample, string_formats)).to eq("YmluYXJ5\n")
     end
 
     it '%u formats in base64 urlsafe mode' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%u'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%u'}
       expect(converter.convert(binary.from_base64("++//"), string_formats)).to eq("--__")
     end
 
     it '%p formats with type name' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%p'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%p'}
       expect(converter.convert(sample, string_formats)).to eq("Binary(\"YmluYXJ5\")")
     end
 
     it '%#s formats as quoted string with escaped non printable bytes' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%#s'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%#s'}
       expect(converter.convert(binary.from_base64("apa="), string_formats)).to eq("\"j\\x96\"")
     end
 
     it '%s formats as unquoted string with valid UTF-8 chars' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%s'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%s'}
       # womans hat emoji is E318, a three byte UTF-8 char EE 8C 98
       expect(converter.convert(binary.from_binary_string("\xEE\x8C\x98"), string_formats)).to eq("\uE318")
     end
 
     it '%s errors if given non UTF-8 bytes' do
-      string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => '%s'}
+      string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => '%s'}
       expect {
         converter.convert(binary.from_base64("apa="), string_formats)
       }.to raise_error(Encoding::UndefinedConversionError)
@@ -1122,7 +1122,7 @@ describe 'The string converter' do
       "%.3T"  => 'BIN',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PBinaryType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PBinaryType::DEFAULT => fmt}
         expect(converter.convert(sample, string_formats)).to eq(result)
       end
     end
@@ -1130,7 +1130,7 @@ describe 'The string converter' do
 
   context 'when converting iterator' do
     it 'the iterator is transformed to an array and formatted using array rules' do
-      itor = Puppet::Pops::Types::Iterator.new(Puppet::Pops::Types::PIntegerType::DEFAULT, [1,2,3]).reverse_each
+      itor = Oregano::Pops::Types::Iterator.new(Oregano::Pops::Types::PIntegerType::DEFAULT, [1,2,3]).reverse_each
       expect(converter.convert(itor, :default)).to eq('[3, 2, 1]')
     end
   end
@@ -1146,14 +1146,14 @@ describe 'The string converter' do
       "%#p" => 'Integer',
     }.each do |fmt, result |
       it "the format #{fmt} produces #{result}" do
-        string_formats = { Puppet::Pops::Types::PTypeType::DEFAULT => fmt}
+        string_formats = { Oregano::Pops::Types::PTypeType::DEFAULT => fmt}
         expect(converter.convert(factory.integer, string_formats)).to eq(result)
       end
     end
 
     it 'errors when format is not recognized' do
       expect do
-        string_formats = { Puppet::Pops::Types::PTypeType::DEFAULT => "%k"}
+        string_formats = { Oregano::Pops::Types::PTypeType::DEFAULT => "%k"}
         converter.convert(factory.integer, string_formats)
       end.to raise_error(/Illegal format 'k' specified for value of Type type - expected one of the characters 'sp'/)
     end
@@ -1164,6 +1164,6 @@ describe 'The string converter' do
   end
 
   it 'an explicit format for a type will override more specific defaults' do
-    expect(converter.convert({ 'x' => 'X' }, { Puppet::Pops::Types::PCollectionType::DEFAULT => '%#p' })).to eq("{\n  'x' => 'X'\n}")
+    expect(converter.convert({ 'x' => 'X' }, { Oregano::Pops::Types::PCollectionType::DEFAULT => '%#p' })).to eq("{\n  'x' => 'X'\n}")
   end
 end

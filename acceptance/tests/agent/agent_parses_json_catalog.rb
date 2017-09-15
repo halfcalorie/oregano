@@ -6,23 +6,23 @@ tag 'risk:medium',
     'server',
     'catalog:json'
 
-require 'puppet/acceptance/common_utils'
+require 'oregano/acceptance/common_utils'
 require 'json'
 
 step "Agent parses a JSON catalog" do
   agents.each do |agent|
     # Path to a ruby binary
-    ruby = Puppet::Acceptance::CommandUtils.ruby_command(agent)
+    ruby = Oregano::Acceptance::CommandUtils.ruby_command(agent)
   
     # Refresh the catalog
-    on(agent, puppet("agent --test --server #{master}"))
+    on(agent, oregano("agent --test --server #{master}"))
 
     # The catalog file should be parseable JSON
-    json_catalog = File.join(agent.puppet['client_datadir'], 'catalog',
-                             "#{agent.puppet['certname']}.json")
+    json_catalog = File.join(agent.oregano['client_datadir'], 'catalog',
+                             "#{agent.oregano['certname']}.json")
     on(agent, "cat #{json_catalog} | #{ruby} -rjson -e 'JSON.parse(STDIN.read)'")
 
     # Can the agent parse it as JSON?
-    on(agent, puppet("catalog find --terminus json --server #{master} > /dev/null"))
+    on(agent, oregano("catalog find --terminus json --server #{master} > /dev/null"))
   end
 end

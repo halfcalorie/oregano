@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/parameter/package_options'
+require 'oregano/parameter/package_options'
 
-describe Puppet::Parameter::PackageOptions do
+describe Oregano::Parameter::PackageOptions do
   let (:resource) { mock('resource') }
   let (:param)    { described_class.new(:resource => resource) }
   let (:arg)      { '/S' }
@@ -38,7 +38,7 @@ describe Puppet::Parameter::PackageOptions do
     it 'should reject symbols' do
       expect {
         param.munge([:symbol])
-      }.to raise_error(Puppet::Error, /Expected either a string or hash of options/)
+      }.to raise_error(Oregano::Error, /Expected either a string or hash of options/)
     end
   end
 end

@@ -1,19 +1,19 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-module Puppet::Util::Plist
+module Oregano::Util::Plist
 end
 
-macauth_type = Puppet::Type.type(:macauthorization)
+macauth_type = Oregano::Type.type(:macauthorization)
 
-describe Puppet::Type.type(:macauthorization), "when checking macauthorization objects" do
+describe Oregano::Type.type(:macauthorization), "when checking macauthorization objects" do
 
   before do
     authplist = {}
     authplist["rules"] = { "foorule" => "foo" }
     authplist["rights"] = { "fooright" => "foo" }
     provider_class = macauth_type.provider(macauth_type.providers[0])
-    Puppet::Util::Plist.stubs(:parse_plist).with("/etc/authorization").returns(authplist)
+    Oregano::Util::Plist.stubs(:parse_plist).with("/etc/authorization").returns(authplist)
     macauth_type.stubs(:defaultprovider).returns provider_class
     @resource = macauth_type.new(:name => 'foo')
   end
@@ -27,7 +27,7 @@ describe Puppet::Type.type(:macauthorization), "when checking macauthorization o
 
     parameters.each do |parameter|
       it "should have a #{parameter} parameter" do
-        expect(macauth_type.attrclass(parameter).ancestors).to be_include(Puppet::Parameter)
+        expect(macauth_type.attrclass(parameter).ancestors).to be_include(Oregano::Parameter)
       end
 
       it "should have documentation for its #{parameter} parameter" do
@@ -37,7 +37,7 @@ describe Puppet::Type.type(:macauthorization), "when checking macauthorization o
 
     properties.each do |property|
       it "should have a #{property} property" do
-        expect(macauth_type.attrclass(property).ancestors).to be_include(Puppet::Property)
+        expect(macauth_type.attrclass(property).ancestors).to be_include(Oregano::Property)
       end
 
       it "should have documentation for its #{property} property" do
@@ -49,8 +49,8 @@ describe Puppet::Type.type(:macauthorization), "when checking macauthorization o
 
   describe "when validating properties" do
 
-    it "should have a default provider inheriting from Puppet::Provider" do
-      expect(macauth_type.defaultprovider.ancestors).to be_include(Puppet::Provider)
+    it "should have a default provider inheriting from Oregano::Provider" do
+      expect(macauth_type.defaultprovider.ancestors).to be_include(Oregano::Provider)
     end
 
     it "should be able to create an instance" do
@@ -87,7 +87,7 @@ describe Puppet::Type.type(:macauthorization), "when checking macauthorization o
       end
       it "should raise an error for non-integer values" do
         prop = macauth_type.attrclass(property).new(:resource => @resource)
-        expect { prop.should = "foo" }.to raise_error(Puppet::Error)
+        expect { prop.should = "foo" }.to raise_error(Oregano::Error)
       end
     end
   end
@@ -106,7 +106,7 @@ describe Puppet::Type.type(:macauthorization), "when checking macauthorization o
       end
       it "should raise an error for non-boolean values" do
         prop = macauth_type.attrclass(property).new(:resource => @resource)
-        expect { prop.should = "foo" }.to raise_error(Puppet::Error)
+        expect { prop.should = "foo" }.to raise_error(Oregano::Error)
       end
     end
   end

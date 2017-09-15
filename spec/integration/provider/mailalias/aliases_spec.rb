@@ -2,7 +2,7 @@
 require 'spec_helper'
 require 'shared_behaviours/all_parsedfile_providers'
 
-provider_class = Puppet::Type.type(:mailalias).provider(:aliases)
+provider_class = Oregano::Type.type(:mailalias).provider(:aliases)
 
 describe provider_class do
   # #1560, in which we corrupt the format of complex mail aliases.

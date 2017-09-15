@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/file_bucket/dipper'
+require 'oregano/file_bucket/dipper'
 
-describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration)', :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:ssh_authorized_key).provider(:parsed), '(integration)', :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   let :fake_userfile do
     tmpfile('authorized_keys.user')
@@ -38,7 +38,7 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
   end
 
   let :dummy do
-    Puppet::Type.type(:ssh_authorized_key).new(
+    Oregano::Type.type(:ssh_authorized_key).new(
       :name   => 'dummy',
       :target => fake_userfile,
       :user   => 'nobody',
@@ -49,7 +49,7 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
   before :each do
     File.stubs(:chown)
     File.stubs(:chmod)
-    Puppet::Util::SUIDManager.stubs(:asuser).yields
+    Oregano::Util::SUIDManager.stubs(:asuser).yields
   end
 
   after :each do
@@ -72,8 +72,8 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
   end
 
   def run_in_catalog(*resources)
-    Puppet::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to the filebucket
-    catalog = Puppet::Resource::Catalog.new
+    Oregano::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to the filebucket
+    catalog = Oregano::Resource::Catalog.new
     catalog.host_config = false
     resources.each do |resource|
       resource.expects(:err).never
@@ -100,7 +100,7 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
 
     describe "with ensure set to absent" do
       let :resource do
-        Puppet::Type.type(:ssh_authorized_key).new(
+        Oregano::Type.type(:ssh_authorized_key).new(
           :name     => 'root@hostname',
           :type     => :rsa,
           :key      => sample_rsa_keys[0],
@@ -125,7 +125,7 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
 
     describe "when ensure is present" do
       let :resource do
-        Puppet::Type.type(:ssh_authorized_key).new(
+        Oregano::Type.type(:ssh_authorized_key).new(
           :name     => 'root@hostname',
           :type     => :rsa,
           :key      => sample_rsa_keys[0],
@@ -184,7 +184,7 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
   describe "when managing two resource" do
     let :examples do
       resources = []
-      resources << Puppet::Type.type(:ssh_authorized_key).new(
+      resources << Oregano::Type.type(:ssh_authorized_key).new(
         :name     => 'root@hostname',
         :type     => :rsa,
         :key      => sample_rsa_keys[0],
@@ -192,7 +192,7 @@ describe Puppet::Type.type(:ssh_authorized_key).provider(:parsed), '(integration
         :user     => 'root',
         :ensure   => :present
       )
-      resources << Puppet::Type.type(:ssh_authorized_key).new(
+      resources << Oregano::Type.type(:ssh_authorized_key).new(
         :name   => 'user@hostname',
         :key    => sample_rsa_keys[1],
         :type   => :rsa,

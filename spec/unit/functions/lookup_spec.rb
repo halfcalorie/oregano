@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet_spec/files'
-require 'puppet/pops'
+require 'oregano_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano/pops'
 require 'deep_merge/core'
 
 describe "The lookup function" do
-  include PuppetSpec::Compiler
-  include PuppetSpec::Files
+  include OreganoSpec::Compiler
+  include OreganoSpec::Files
 
   let(:env_name) { 'spec' }
   let(:code_dir_files) { {} }
@@ -44,12 +44,12 @@ describe "The lookup function" do
   let(:notices) { logs.select { |log| log.level == :notice }.map { |log| log.message } }
   let(:warnings) { logs.select { |log| log.level == :warning }.map { |log| log.message } }
   let(:debugs) { logs.select { |log| log.level == :debug }.map { |log| log.message } }
-  let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, env_name, 'modules')]) }
-  let(:environments) { Puppet::Environments::Directories.new(populated_env_dir, []) }
-  let(:node) { Puppet::Node.new('test_lookup', :environment => env) }
-  let(:compiler) { Puppet::Parser::Compiler.new(node) }
-  let(:lookup_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'lookup') }
-  let(:invocation_with_explain) { Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true) }
+  let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, env_name, 'modules')]) }
+  let(:environments) { Oregano::Environments::Directories.new(populated_env_dir, []) }
+  let(:node) { Oregano::Node.new('test_lookup', :environment => env) }
+  let(:compiler) { Oregano::Parser::Compiler.new(node) }
+  let(:lookup_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'lookup') }
+  let(:invocation_with_explain) { Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true) }
   let(:explanation) { invocation_with_explain.explainer.explain }
 
   let(:populated_code_dir) do
@@ -74,12 +74,12 @@ describe "The lookup function" do
   end
 
   before(:each) do
-    Puppet.settings[:codedir] = code_dir
-    Puppet.push_context(:environments => environments, :current_environment => env)
+    Oregano.settings[:codedir] = code_dir
+    Oregano.push_context(:environments => environments, :current_environment => env)
   end
 
   after(:each) do
-    Puppet.pop_context
+    Oregano.pop_context
     if Object.const_defined?(:Hiera)
       Hiera.send(:remove_instance_variable, :@config) if Hiera.instance_variable_defined?(:@config)
       Hiera.send(:remove_instance_variable, :@logger) if Hiera.instance_variable_defined?(:@logger)
@@ -93,8 +93,8 @@ describe "The lookup function" do
   end
 
   def collect_notices(code, explain = false, &block)
-    Puppet[:code] = code
-    Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+    Oregano[:code] = code
+    Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
       scope = compiler.topscope
       scope['environment'] = env_name
       scope['domain'] = 'example.com'
@@ -123,13 +123,13 @@ describe "The lookup function" do
   end
 
   def lookup(key, options = {}, explain = false)
-    nc_opts = options.empty? ? '' : ", #{Puppet::Pops::Types::TypeFormatter.string(options)}"
+    nc_opts = options.empty? ? '' : ", #{Oregano::Pops::Types::TypeFormatter.string(options)}"
     keys = key.is_a?(Array) ? key : [key]
     collect_notices(keys.map { |k| "notice(String(lookup('#{k}'#{nc_opts}), '%p'))" }.join("\n"), explain)
     if explain
       explanation
     else
-      result = notices.map { |n| Puppet::Pops::Types::TypeParser.singleton.parse_literal(n) }
+      result = notices.map { |n| Oregano::Pops::Types::TypeParser.singleton.parse_literal(n) }
       key.is_a?(Array) ? result : result[0]
     end
   end
@@ -158,8 +158,8 @@ describe "The lookup function" do
 
       before(:each) do
         # Need to set here since spec_helper defines these settings in its "before each"
-        Puppet.settings[:codedir] = populated_code_dir
-        Puppet.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
+        Oregano.settings[:codedir] = populated_code_dir
+        Oregano.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
       end
 
       context 'using a not yet supported hiera version' do
@@ -276,7 +276,7 @@ describe "The lookup function" do
             YAML
 
           it 'fails and reports error' do
-            Puppet[:strict] = :error
+            Oregano[:strict] = :error
             expect { lookup('a') }.to raise_error(
               "Unable to find 'data_hash' function named 'nonesuch_txt_data' in #{code_dir}/hiera.yaml")
           end
@@ -294,7 +294,7 @@ describe "The lookup function" do
             YAML
 
           it 'fails and reports error' do
-            Puppet[:strict] = :error
+            Oregano[:strict] = :error
             expect { lookup('a') }.to raise_error(
               "'default_hierarchy' is only allowed in the module layer at #{code_dir}/hiera.yaml:5")
           end
@@ -310,7 +310,7 @@ describe "The lookup function" do
             YAML
 
           it 'fails and reports errors when strict == error' do
-            Puppet[:strict] = :error
+            Oregano[:strict] = :error
             expect { lookup('a') }.to raise_error("Undefined variable '::nonesuch' at #{code_dir}/hiera.yaml:4")
           end
         end
@@ -324,7 +324,7 @@ describe "The lookup function" do
             YAML
 
           it 'fails and reports errors when strict == error' do
-            Puppet[:strict] = :error
+            Oregano[:strict] = :error
             expect { lookup('a') }.to raise_error("Interpolation using method syntax is not allowed in this context in #{code_dir}/hiera.yaml")
           end
         end
@@ -397,7 +397,7 @@ describe "The lookup function" do
             YAML
 
           it 'fails and reports error' do
-            Puppet[:strict] = :error
+            Oregano[:strict] = :error
             expect { lookup('a') }.to raise_error(
               "'default_hierarchy' is only allowed in the module layer at #{env_dir}/spec/hiera.yaml:5")
           end
@@ -439,7 +439,7 @@ describe "The lookup function" do
     end
 
     context 'with log-level debug' do
-      before(:each) { Puppet[:log_level] = 'debug' }
+      before(:each) { Oregano[:log_level] = 'debug' }
 
       it 'does not report a regular lookup as APL' do
         expect(lookup('a')).to eql('value a (from environment)')
@@ -472,7 +472,7 @@ describe "The lookup function" do
       end
 
       it 'does not find data in the environment' do
-        expect { lookup('a') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value for the name 'a'/)
+        expect { lookup('a') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value for the name 'a'/)
       end
 
       context "but an environment.conf with 'environment_data_provider=hiera'" do
@@ -579,7 +579,7 @@ describe "The lookup function" do
         let(:data_path) { 'x%{var.sub}.yaml' }
 
         it 'reloads the configuration if interpolated values change' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             expect(lookup_func.call(scope, 'y')).to eql('value y from x')
             scope['var'] = { 'sub' => '_d' }
@@ -593,7 +593,7 @@ describe "The lookup function" do
         end
 
         it 'does not include the lookups performed during stability check in explain output' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             var = { 'sub' => '_d' }
             scope['var'] = var
@@ -611,7 +611,7 @@ describe "The lookup function" do
         let(:data_path) { 'x%{::var.sub}.yaml' }
 
         it 'reloads the configuration if interpolated that was previously undefined, gets defined' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             expect(lookup_func.call(scope, 'y')).to eql('value y from x')
             scope['var'] = { 'sub' => '_d' }
@@ -622,7 +622,7 @@ describe "The lookup function" do
         end
 
         it 'does not reload the configuration if value changes locally' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             scope['var'] = { 'sub' => '_d' }
             expect(lookup_func.call(scope, 'y')).to eql('value y from x_d')
@@ -656,7 +656,7 @@ describe "The lookup function" do
 
           it 'fails and reports the reserved option key' do
             expect { lookup('a') }.to raise_error do |e|
-              expect(e.message).to match(/Option key 'path' used in hierarchy 'Illegal' is reserved by Puppet/)
+              expect(e.message).to match(/Option key 'path' used in hierarchy 'Illegal' is reserved by Oregano/)
             end
           end
         end
@@ -666,7 +666,7 @@ describe "The lookup function" do
 
           it 'fails and reports the reserved option key' do
             expect { lookup('a') }.to raise_error do |e|
-              expect(e.message).to match(/Option key 'uri' used in hierarchy 'Illegal' is reserved by Puppet/)
+              expect(e.message).to match(/Option key 'uri' used in hierarchy 'Illegal' is reserved by Oregano/)
             end
           end
         end
@@ -689,7 +689,7 @@ describe "The lookup function" do
 
           it 'fails and reports the reserved option key' do
             expect { lookup('a') }.to raise_error do |e|
-              expect(e.message).to match(/Option key 'path' used in defaults is reserved by Puppet/)
+              expect(e.message).to match(/Option key 'path' used in defaults is reserved by Oregano/)
             end
           end
         end
@@ -699,7 +699,7 @@ describe "The lookup function" do
 
           it 'fails and reports the reserved option key' do
             expect { lookup('a') }.to raise_error do |e|
-              expect(e.message).to match(/Option key 'uri' used in defaults is reserved by Puppet/)
+              expect(e.message).to match(/Option key 'uri' used in defaults is reserved by Oregano/)
             end
           end
         end
@@ -732,7 +732,7 @@ describe "The lookup function" do
         end
 
         it 'interpolates both key and value"' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             expect(lookup_func.call(scope, 'a')).to eql({'' => 'the '})
             scope['key'] = 'a_key'
@@ -743,7 +743,7 @@ describe "The lookup function" do
         end
 
         it 'navigates to a value behind an interpolated key"' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             scope['key'] = 'a_key'
             scope['value'] = 'interpolated value'
@@ -753,7 +753,7 @@ describe "The lookup function" do
         end
 
         it 'navigates to a value behind an interpolated key using an interpolated value"' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             scope['key'] = 'a_key'
             scope['value'] = 'interpolated value'
@@ -773,7 +773,7 @@ describe "The lookup function" do
         end
 
         it 'logs a warning that the file does not contain a hash' do
-          expect { lookup('a') }.to raise_error(Puppet::DataBinding::LookupError)
+          expect { lookup('a') }.to raise_error(Oregano::DataBinding::LookupError)
           expect(warnings).to include(/spec\/data\/common.yaml: file does not contain a valid yaml hash/)
         end
       end
@@ -798,7 +798,7 @@ describe "The lookup function" do
         end
 
         it 'logs a warning that the file does not contain a hash' do
-          expect { lookup('a') }.to raise_error(Puppet::DataBinding::LookupError)
+          expect { lookup('a') }.to raise_error(Oregano::DataBinding::LookupError)
           expect(warnings).to include(/spec\/data\/common.yaml: file does not contain a valid yaml hash/)
         end
       end
@@ -807,14 +807,14 @@ describe "The lookup function" do
         let(:common_yaml) do
           <<-YAML.unindent
           ---
-          a: !ruby/object:Puppet::Graph::Key
+          a: !ruby/object:Oregano::Graph::Key
               value: x
           YAML
         end
 
         it 'fails lookup and reports a type mismatch' do
           expect { lookup('a') }.to raise_error do |e|
-            expect(e.message).to match(/key 'a'.*data_hash function 'yaml_data'.*using location.*wrong type, expects Puppet::LookupValue, got Runtime/)
+            expect(e.message).to match(/key 'a'.*data_hash function 'yaml_data'.*using location.*wrong type, expects Oregano::LookupValue, got Runtime/)
           end
         end
       end
@@ -1026,7 +1026,7 @@ describe "The lookup function" do
         }
 
         it 'fails with error' do
-          expect { lookup('mod::a') }.to raise_error(Puppet::DataBinding::LookupError, /all lookup_options patterns must match a key starting with module name/)
+          expect { lookup('mod::a') }.to raise_error(Oregano::DataBinding::LookupError, /all lookup_options patterns must match a key starting with module name/)
         end
       end
 
@@ -1204,7 +1204,7 @@ describe "The lookup function" do
         end
 
         it 'keeps track of changes in key overridden by interpolated key' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             expect(lookup_func.call(scope, 'path_h', 'merge' => 'hash')).to eql(
               {
@@ -1230,7 +1230,7 @@ describe "The lookup function" do
         end
 
         it 'keeps track of changes in elements of mapped key' do
-          Puppet[:log_level] = 'debug'
+          Oregano[:log_level] = 'debug'
           collect_notices("notice('success')") do |scope|
             expect(lookup_func.call(scope, 'path_h', 'merge' => 'hash')).to eql(
               {
@@ -1364,24 +1364,24 @@ describe "The lookup function" do
       end
 
       it 'will raise an error if --strict is set to error' do
-        Puppet[:strict] = :error
-        expect { lookup('g') }.to raise_error(Puppet::Error, /hiera.yaml version 3 cannot be used in an environment/)
+        Oregano[:strict] = :error
+        expect { lookup('g') }.to raise_error(Oregano::Error, /hiera.yaml version 3 cannot be used in an environment/)
       end
 
       it 'will log a warning and ignore the file if --strict is set to warning' do
-        Puppet[:strict] = :warning
-        expect { lookup('g') }.to raise_error(Puppet::Error, /did not find a value for the name 'g'/)
+        Oregano[:strict] = :warning
+        expect { lookup('g') }.to raise_error(Oregano::Error, /did not find a value for the name 'g'/)
       end
 
       it 'will not log a warning and ignore the file if --strict is set to off' do
-        Puppet[:strict] = :off
-        expect { lookup('g') }.to raise_error(Puppet::Error, /did not find a value for the name 'g'/)
+        Oregano[:strict] = :off
+        expect { lookup('g') }.to raise_error(Oregano::Error, /did not find a value for the name 'g'/)
         expect(warnings).to include(/hiera.yaml version 3 found at the environment root was ignored/)
       end
 
       it 'will use the configuration if appointed by global setting but still warn when encountered by environment data provider' do
-        Puppet[:strict] = :warning
-        Puppet.settings[:hiera_config] = File.join(env_dir, env_name, 'hiera.yaml')
+        Oregano[:strict] = :warning
+        Oregano.settings[:hiera_config] = File.join(env_dir, env_name, 'hiera.yaml')
         expect(lookup('g')).to eql('Value g')
         expect(warnings).to include(/hiera.yaml version 3 found at the environment root was ignored/)
       end
@@ -1409,18 +1409,18 @@ describe "The lookup function" do
 
       before(:each) do
         # Need to set here since spec_helper defines these settings in its "before each"
-        Puppet.settings[:hiera_config] = hiera_yaml_path
+        Oregano.settings[:hiera_config] = hiera_yaml_path
       end
 
       it 'uses a Hiera version 3 defaults' do
         expect(lookup('x')).to eql('value x (from environment)')
       end
 
-      context 'obtained using /dev/null', :unless => Puppet.features.microsoft_windows? do
+      context 'obtained using /dev/null', :unless => Oregano.features.microsoft_windows? do
         let(:code_dir_files) { {} }
 
         it 'uses a Hiera version 3 defaults' do
-          Puppet[:hiera_config] = '/dev/null'
+          Oregano[:hiera_config] = '/dev/null'
           expect(lookup('x')).to eql('value x (from environment)')
         end
       end
@@ -1529,8 +1529,8 @@ describe "The lookup function" do
 
       before(:each) do
         # Need to set here since spec_helper defines these settings in its "before each"
-        Puppet.settings[:codedir] = populated_code_dir
-        Puppet.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
+        Oregano.settings[:codedir] = populated_code_dir
+        Oregano.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
       end
 
       around(:each) do |example|
@@ -1538,7 +1538,7 @@ describe "The lookup function" do
         # for the custom backend
         $LOAD_PATH.unshift(populated_ruby_dir)
         begin
-          Puppet.override(:environments => environments, :current_environment => env) do
+          Oregano.override(:environments => environments, :current_environment => env) do
             example.run
           end
         ensure
@@ -1781,7 +1781,7 @@ describe "The lookup function" do
           end
 
           before(:each) do
-            Puppet.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
+            Oregano.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
           end
 
           it 'finds data in the global layer' do
@@ -2001,12 +2001,12 @@ describe "The lookup function" do
               :hierarchy => ['common', '%{domain}'],
               :custom => { :datadir => "#{code_dir}/hieradata" },
               :other => { :other_option => 'value of other_option', :datadir=>"#{code_dir}/hieradata" },
-              :logger => 'puppet'
+              :logger => 'oregano'
             })
         end
 
         it 'provides a sensible error message when the hocon library is not loaded' do
-          Puppet.features.stubs(:hocon?).returns(false)
+          Oregano.features.stubs(:hocon?).returns(false)
 
           expect { lookup('a') }.to raise_error do |e|
             expect(e.message).to match(/Lookup using Hocon data_hash function is not supported without hocon library/)
@@ -2109,7 +2109,7 @@ describe "The lookup function" do
         end
 
         it 'does not find data in the module' do
-          expect { lookup('mod_a::b') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value for the name 'mod_a::b'/)
+          expect { lookup('mod_a::b') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value for the name 'mod_a::b'/)
         end
 
         context 'with a Hiera v3 configuration' do
@@ -2424,9 +2424,9 @@ describe "The lookup function" do
         end
       end
 
-      context 'using a lookup_key that is a puppet function' do
-        let(:puppet_function) { <<-PUPPET.unindent }
-          function mod_a::pp_lookup_key(Puppet::LookupKey $key, Hash[String,String] $options, Puppet::LookupContext $context) >> Puppet::LookupValue {
+      context 'using a lookup_key that is a oregano function' do
+        let(:oregano_function) { <<-PUPPET.unindent }
+          function mod_a::pp_lookup_key(Oregano::LookupKey $key, Hash[String,String] $options, Oregano::LookupContext $context) >> Oregano::LookupValue {
             case $key {
               'mod_a::really_interpolated': { $context.interpolate("-- %{lookup('mod_a::a')} --") }
               'mod_a::recursive': { lookup($key) }
@@ -2475,7 +2475,7 @@ describe "The lookup function" do
           {
             'mod_a' => {
               'functions' => {
-                'pp_lookup_key.pp' => puppet_function
+                'pp_lookup_key.pp' => oregano_function
               },
               'hiera.yaml' => <<-YAML.unindent,
               ---
@@ -2538,20 +2538,20 @@ describe "The lookup function" do
         context 'and calling function via API' do
           it 'finds and delivers rich data' do
             collect_notices("notice('success')") do |scope|
-              expect(lookup_func.call(scope, 'mod_a::sensitive')).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-              expect(lookup_func.call(scope, 'mod_a::type')).to be_a(Puppet::Pops::Types::PObjectType)
-              expect(lookup_func.call(scope, 'mod_a::version')).to eql(SemanticPuppet::Version.parse('3.4.1'))
-              expect(lookup_func.call(scope, 'mod_a::version_range')).to eql(SemanticPuppet::VersionRange.parse('>=3.4.1'))
-              expect(lookup_func.call(scope, 'mod_a::timestamp')).to eql(Puppet::Pops::Time::Timestamp.parse('1994-03-25T19:30:00'))
-              expect(lookup_func.call(scope, 'mod_a::timespan')).to eql(Puppet::Pops::Time::Timespan.parse('3-10:00:00'))
+              expect(lookup_func.call(scope, 'mod_a::sensitive')).to be_a(Oregano::Pops::Types::PSensitiveType::Sensitive)
+              expect(lookup_func.call(scope, 'mod_a::type')).to be_a(Oregano::Pops::Types::PObjectType)
+              expect(lookup_func.call(scope, 'mod_a::version')).to eql(SemanticOregano::Version.parse('3.4.1'))
+              expect(lookup_func.call(scope, 'mod_a::version_range')).to eql(SemanticOregano::VersionRange.parse('>=3.4.1'))
+              expect(lookup_func.call(scope, 'mod_a::timestamp')).to eql(Oregano::Pops::Time::Timestamp.parse('1994-03-25T19:30:00'))
+              expect(lookup_func.call(scope, 'mod_a::timespan')).to eql(Oregano::Pops::Time::Timespan.parse('3-10:00:00'))
             end
             expect(notices).to eql(['success'])
           end
         end
 
         context 'with declared but incompatible return_type' do
-          let(:puppet_function) { <<-PUPPET.unindent }
-            function mod_a::pp_lookup_key(Puppet::LookupKey $key, Hash[String,String] $options, Puppet::LookupContext $context) >> Runtime['ruby','Symbol'] {
+          let(:oregano_function) { <<-PUPPET.unindent }
+            function mod_a::pp_lookup_key(Oregano::LookupKey $key, Hash[String,String] $options, Oregano::LookupContext $context) >> Runtime['ruby','Symbol'] {
               undef
             }
             PUPPET
@@ -2568,16 +2568,16 @@ describe "The lookup function" do
           {
             'mod_a' => {
               'lib' => {
-                'puppet' => {
+                'oregano' => {
                   'functions' => {
                     'mod_a' => {
                       'ruby_dig.rb' => <<-RUBY.unindent
-                      Puppet::Functions.create_function(:'mod_a::ruby_dig') do
+                      Oregano::Functions.create_function(:'mod_a::ruby_dig') do
                         dispatch :ruby_dig do
                           param 'Array[String[1]]', :segments
                           param 'Hash[String,Any]', :options
-                          param 'Puppet::LookupContext', :context
-                          return_type 'Puppet::LookupValue'
+                          param 'Oregano::LookupContext', :context
+                          return_type 'Oregano::LookupValue'
                         end
 
                         def ruby_dig(segments, options, context)
@@ -3168,7 +3168,7 @@ describe "The lookup function" do
         end
 
         before(:each) do
-          Puppet.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
+          Oregano.settings[:hiera_config] = File.join(code_dir, 'hiera.yaml')
         end
 
         it 'finds data in the global layer' do

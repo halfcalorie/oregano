@@ -10,7 +10,7 @@ agents.each do |agent|
   on(agent, "rm -rf #{target}")
 
   step "verify we can create an empty file"
-  on(agent, puppet_resource("file", target, 'ensure=present'))
+  on(agent, oregano_resource("file", target, 'ensure=present'))
 
   step "verify the target was created"
   on(agent, "test -f #{target} && test ! -s #{target}")

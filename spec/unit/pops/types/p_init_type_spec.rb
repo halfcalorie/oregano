@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'The Init Type' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include_context 'types_setup'
 
-  context 'when used in Puppet expressions' do
+  context 'when used in Oregano expressions' do
     it 'an unparameterized type can be used' do
       code = <<-CODE
       notice(type(Init))

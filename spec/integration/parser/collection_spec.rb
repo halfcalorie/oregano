@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe 'collectors' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
-  def expect_the_message_to_be(expected_messages, code, node = Puppet::Node.new('the node'))
+  def expect_the_message_to_be(expected_messages, code, node = Oregano::Node.new('the node'))
     catalog = compile_to_catalog(code, node)
     messages = catalog.resources.find_all { |resource| resource.type == 'Notify' }.
                                  collect { |notify| notify[:message] }
@@ -178,7 +178,7 @@ describe 'collectors' do
     end
 
     it "does not collect classes" do
-      node = Puppet::Node.new('the node')
+      node = Oregano::Node.new('the node')
       expect do
         catalog = compile_to_catalog(<<-MANIFEST, node)
           class theclass {
@@ -190,7 +190,7 @@ describe 'collectors' do
     end
 
     it "does not collect resources that don't exist" do
-      node = Puppet::Node.new('the node')
+      node = Oregano::Node.new('the node')
       expect do
         catalog = compile_to_catalog(<<-MANIFEST, node)
           class theclass {
@@ -327,26 +327,26 @@ describe 'collectors' do
         MANIFEST
 
         around(:each) do |example|
-          Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+          Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
             example.run
           end
         end
 
         it 'and --strict=off, it silently skips the override' do
-          Puppet[:strict] = :off
+          Oregano[:strict] = :off
           expect_the_message_to_be(['given'], manifest)
           expect(warnings).to be_empty
         end
 
         it 'and --strict=warning, it warns about the attempt to override and skips it' do
-          Puppet[:strict] = :warning
+          Oregano[:strict] = :warning
           expect_the_message_to_be(['given'], manifest)
           expect(warnings).to include(
             /Attempt to override an already evaluated resource, defined at line 4, with new values at line 6/)
         end
 
         it 'and --strict=error, it fails compilation' do
-          Puppet[:strict] = :error
+          Oregano[:strict] = :error
           expect { compile_to_catalog(manifest) }.to raise_error(
             /Attempt to override an already evaluated resource, defined at line 4, with new values at line 6/)
           expect(warnings).to be_empty

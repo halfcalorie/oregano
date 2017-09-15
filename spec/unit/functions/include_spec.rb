@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet/parser/functions'
+require 'oregano_spec/compiler'
+require 'oregano/parser/functions'
 require 'matchers/containment_matchers'
 require 'matchers/resource'
 require 'matchers/include_in_order'
@@ -9,13 +9,13 @@ require 'unit/functions/shared'
 
 
 describe 'The "include" function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include ContainmentMatchers
   include Matchers::Resource
 
   before(:each) do
-    compiler  = Puppet::Parser::Compiler.new(Puppet::Node.new("foo"))
-    @scope = Puppet::Parser::Scope.new(compiler)
+    compiler  = Oregano::Parser::Compiler.new(Oregano::Node.new("foo"))
+    @scope = Oregano::Parser::Scope.new(compiler)
   end
 
   it "includes a class" do
@@ -95,7 +95,7 @@ describe 'The "include" function' do
       catalog = compile_to_catalog(<<-MANIFEST)
         include the_god_in_your_religion
       MANIFEST
-    }.to raise_error(Puppet::Error)
+    }.to raise_error(Oregano::Error)
   end
 
   it "does not contained the included class in the current class" do

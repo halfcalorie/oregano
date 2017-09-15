@@ -15,7 +15,7 @@ agents.each do |agent|
   agent.user_present(name)
 
   step "query for the resource and verify it was found"
-  on(agent, puppet_resource('user', name)) do
+  on(agent, oregano_resource('user', name)) do
     fail_test "didn't find the user #{name}" unless stdout.include? 'present'
   end
 

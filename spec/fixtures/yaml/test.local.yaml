@@ -1,4 +1,4 @@
---- !ruby/object:Puppet::Node::Facts
+--- !ruby/object:Oregano::Node::Facts
   expiration: 2010-06-07 19:15:36.519351 -07:00
   name: test.local
   values: 

@@ -7,8 +7,8 @@ tag 'audit:medium',
     'audit:acceptance' # Could be done as integration tests, but would
                        # require drastically changing the system running the test
 
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::ZoneUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::ZoneUtils
 
 teardown do
   step "Zone: removal - cleanup"

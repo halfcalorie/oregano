@@ -13,7 +13,7 @@ agents.each do |agent|
   agent.group_absent(name)
 
   step "create the group"
-  on agent, puppet_resource('group', name, 'ensure=present')
+  on agent, oregano_resource('group', name, 'ensure=present')
 
   step "verify the group exists"
   agent.group_get(name)

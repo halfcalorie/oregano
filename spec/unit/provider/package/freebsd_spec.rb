@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:freebsd)
+provider_class = Oregano::Type.type(:package).provider(:freebsd)
 
 describe provider_class do
   before :each do
@@ -33,7 +33,7 @@ describe provider_class do
       # For better or worse, trailing '/' is needed. --daniel 2011-01-26
       path = '/path/to/directory/'
       @resource.stubs(:[]).with(:source).returns(path)
-      Puppet::Util.expects(:withenv).once.with({:PKG_PATH => path}).yields
+      Oregano::Util.expects(:withenv).once.with({:PKG_PATH => path}).yields
       @provider.expects(:pkgadd).once.with("mypackage")
 
       expect { @provider.install }.to_not raise_error
@@ -44,7 +44,7 @@ describe provider_class do
         # For better or worse, trailing '/' is needed. --daniel 2011-01-26
         path = "#{protocol}://localhost/"
         @resource.stubs(:[]).with(:source).returns(path)
-        Puppet::Util.expects(:withenv).once.with({:PACKAGESITE => path}).yields
+        Oregano::Util.expects(:withenv).once.with({:PACKAGESITE => path}).yields
         @provider.expects(:pkgadd).once.with('-r', "mypackage")
 
         expect { @provider.install }.to_not raise_error

@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-if Puppet.features.telnet?
-  require 'puppet/util/network_device/transport/telnet'
+if Oregano.features.telnet?
+  require 'oregano/util/network_device/transport/telnet'
 
-  describe Puppet::Util::NetworkDevice::Transport::Telnet do
+  describe Oregano::Util::NetworkDevice::Transport::Telnet do
 
     before(:each) do
       TCPSocket.stubs(:open).returns stub_everything('tcp')
-      @transport = Puppet::Util::NetworkDevice::Transport::Telnet.new()
+      @transport = Oregano::Util::NetworkDevice::Transport::Telnet.new()
     end
 
     it "should not handle login through the transport" do

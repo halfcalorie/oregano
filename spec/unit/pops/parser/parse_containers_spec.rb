@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/parser_rspec_helper')
@@ -82,7 +82,7 @@ describe "egrammar parsing containers" do
         # The weirdness here is that a class can inherit 'default' but not declare a class called default.
         # (It will work with relative names i.e. foo::default though). The whole idea with keywords as
         # names is flawed to begin with - it generally just a very bad idea.
-        expect { parse("class default {}") }.to raise_error(Puppet::ParseError)
+        expect { parse("class default {}") }.to raise_error(Oregano::ParseError)
       end
 
       it "class 'foo' {} # a string as class name" do
@@ -184,7 +184,7 @@ describe "egrammar parsing containers" do
       it "define default {} # a define named 'default'" do
         # Check unwanted ability to define 'default'.
         # The expression below is not allowed (which is good).
-        expect { parse("define default {}") }.to raise_error(Puppet::ParseError)
+        expect { parse("define default {}") }.to raise_error(Oregano::ParseError)
       end
     end
 

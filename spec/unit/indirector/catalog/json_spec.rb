@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet/resource/catalog'
-require 'puppet/indirector/catalog/json'
+require 'oregano_spec/files'
+require 'oregano/resource/catalog'
+require 'oregano/indirector/catalog/json'
 
-describe Puppet::Resource::Catalog::Json do
-  include PuppetSpec::Files
+describe Oregano::Resource::Catalog::Json do
+  include OreganoSpec::Files
 
   # This is it for local functionality
   it "should be registered with the catalog store indirection" do
-    expect(Puppet::Resource::Catalog.indirection.terminus(:json)).
+    expect(Oregano::Resource::Catalog.indirection.terminus(:json)).
       to be_an_instance_of described_class
   end
 
@@ -18,15 +18,15 @@ describe Puppet::Resource::Catalog::Json do
     let(:key)    { 'foo' }
     let(:file)   { subject.path(key) }
     let(:catalog) do
-      catalog = Puppet::Resource::Catalog.new(key, Puppet::Node::Environment.create(:testing, []))
-      catalog.add_resource(Puppet::Resource.new(:file, '/tmp/a_file', :parameters => { :content => binary }))
+      catalog = Oregano::Resource::Catalog.new(key, Oregano::Node::Environment.create(:testing, []))
+      catalog.add_resource(Oregano::Resource.new(:file, '/tmp/a_file', :parameters => { :content => binary }))
       catalog
     end
 
     before :each do
-      Puppet.run_mode.stubs(:master?).returns(true)
-      Puppet[:server_datadir] = tmpdir('jsondir')
-      FileUtils.mkdir_p(File.join(Puppet[:server_datadir], 'indirector_testing'))
+      Oregano.run_mode.stubs(:master?).returns(true)
+      Oregano[:server_datadir] = tmpdir('jsondir')
+      FileUtils.mkdir_p(File.join(Oregano[:server_datadir], 'indirector_testing'))
     end
 
     it 'saves a catalog containing binary content' do

@@ -1,2 +1,2 @@
 version=3
-http://pkg-ruby-extras.alioth.debian.org/cgi-bin/gemwatch/puppet .*/puppet-(.*).tar.gz
+http://pkg-ruby-extras.alioth.debian.org/cgi-bin/gemwatch/oregano .*/oregano-(.*).tar.gz

@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe Puppet::Context do
-  let(:context) { Puppet::Context.new({ :testing => "value" }) }
+describe Oregano::Context do
+  let(:context) { Oregano::Context.new({ :testing => "value" }) }
 
   context "with the implicit test_helper.rb pushed context" do
     it "fails to lookup a value that does not exist" do
-      expect { context.lookup("a") }.to raise_error(Puppet::Context::UndefinedBindingError)
+      expect { context.lookup("a") }.to raise_error(Oregano::Context::UndefinedBindingError)
     end
 
     it "calls a provided block for a default value when none is found" do
@@ -19,7 +19,7 @@ describe Puppet::Context do
     end
 
     it "fails if you try to pop off the top of the stack" do
-      expect { context.pop }.to raise_error(Puppet::Context::StackUnderflow)
+      expect { context.pop }.to raise_error(Oregano::Context::StackUnderflow)
     end
   end
 
@@ -100,14 +100,14 @@ describe Puppet::Context do
     it "fails to rollback to an unknown mark" do
       expect do
         context.rollback("unknown")
-      end.to raise_error(Puppet::Context::UnknownRollbackMarkError)
+      end.to raise_error(Oregano::Context::UnknownRollbackMarkError)
     end
 
     it "does not allow the same mark to be set twice" do
       context.mark("duplicate")
       expect do
         context.mark("duplicate")
-      end.to raise_error(Puppet::Context::DuplicateRollbackMarkError)
+      end.to raise_error(Oregano::Context::DuplicateRollbackMarkError)
     end
   end
 

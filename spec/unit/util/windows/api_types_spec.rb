@@ -3,7 +3,7 @@
 
 require 'spec_helper'
 
-describe "FFI::MemoryPointer", :if => Puppet.features.microsoft_windows? do
+describe "FFI::MemoryPointer", :if => Oregano.features.microsoft_windows? do
   # use 2 bad bytes at end so we have even number of bytes / characters
   let (:bad_string) { "hello invalid world".encode(Encoding::UTF_16LE) + "\xDD\xDD".force_encoding(Encoding::UTF_16LE) }
   let (:bad_string_bytes) { bad_string.bytes.to_a }
@@ -31,9 +31,9 @@ describe "FFI::MemoryPointer", :if => Puppet.features.microsoft_windows? do
 
     it "should raise an error and emit a debug message when receiving a string containing invalid bytes in the destination encoding" do
       # enable a debug output sink to local string array
-      Puppet.debug = true
+      Oregano.debug = true
       arraydest = []
-      Puppet::Util::Log.newdestination(Puppet::Test::LogCollector.new(arraydest))
+      Oregano::Util::Log.newdestination(Oregano::Test::LogCollector.new(arraydest))
 
       read_string = nil
 

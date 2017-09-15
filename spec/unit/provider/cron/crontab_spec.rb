@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:cron).provider(:crontab) do
+describe Oregano::Type.type(:cron).provider(:crontab) do
   subject do
-    provider = Puppet::Type.type(:cron).provider(:crontab)
+    provider = Oregano::Type.type(:cron).provider(:crontab)
     provider.initvars
     provider
   end
@@ -123,7 +123,7 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
 
   context "when adding a cronjob with the same command as an existing job" do
     let(:record) { {:name => "existing", :user => "root", :command => "/bin/true", :record_type => :crontab} }
-    let(:resource) { Puppet::Type::Cron.new(:name => "test", :user => "root", :command => "/bin/true") }
+    let(:resource) { Oregano::Type::Cron.new(:name => "test", :user => "root", :command => "/bin/true") }
     let(:resources) { { "test" => resource } }
 
     before :each do
@@ -134,12 +134,12 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
 # figured out how to get it working
 #    it "should include both jobs in the output" do
 #      subject.prefetch(resources)
-#      class Puppet::Provider::ParsedFile
+#      class Oregano::Provider::ParsedFile
 #        def self.records
 #          @records
 #        end
 #      end
-#      subject.to_file(subject.records).should match /Puppet name: test/
+#      subject.to_file(subject.records).should match /Oregano name: test/
 #    end
 
     it "should not base the new resource's provider on the existing record" do
@@ -181,13 +181,13 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
   end
 
   context "when matching resources to existing crontab entries" do
-    let(:first_resource) { Puppet::Type::Cron.new(:name => :one, :user => 'root', :command => '/bin/true') }
-    let(:second_resource) { Puppet::Type::Cron.new(:name => :two, :user => 'nobody', :command => '/bin/false') }
+    let(:first_resource) { Oregano::Type::Cron.new(:name => :one, :user => 'root', :command => '/bin/true') }
+    let(:second_resource) { Oregano::Type::Cron.new(:name => :two, :user => 'nobody', :command => '/bin/false') }
 
     let(:resources) {{:one => first_resource, :two => second_resource}}
 
     describe "with a record with a matching name and mismatching user (#2251)" do
-      # Puppet::Resource objects have #should defined on them, so in these
+      # Oregano::Resource objects have #should defined on them, so in these
       # examples we have to use the monkey patched `must` alias for the rspec
       # `should` method.
 

@@ -2,17 +2,17 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).attrclass(:group) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:group) do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('mode_spec') }
-  let(:resource) { Puppet::Type.type(:file).new :path => path, :group => 'users' }
+  let(:resource) { Oregano::Type.type(:file).new :path => path, :group => 'users' }
   let(:group) { resource.property(:group) }
 
   before :each do
     # If the provider was already loaded without root, it won't have the
     # feature, so we have to add it here to test.
-    Puppet::Type.type(:file).defaultprovider.has_feature :manages_ownership
+    Oregano::Type.type(:file).defaultprovider.has_feature :manages_ownership
   end
 
   describe "#insync?" do

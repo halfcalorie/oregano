@@ -1,12 +1,12 @@
-require 'puppet/acceptance/temp_file_utils'
-extend Puppet::Acceptance::TempFileUtils
+require 'oregano/acceptance/temp_file_utils'
+extend Oregano::Acceptance::TempFileUtils
 
 tag 'audit:high',
     'audit:acceptance',
-    'audit:refactor'  # This should be folded into `ensure_puppet-agent_paths` test
+    'audit:refactor'  # This should be folded into `ensure_oregano-agent_paths` test
 
-# ensure a version file is created according to the puppet-agent path specification:
-# https://github.com/puppetlabs/puppet-specifications/blob/master/file_paths.md
+# ensure a version file is created according to the oregano-agent path specification:
+# https://github.com/oreganolabs/oregano-specifications/blob/master/file_paths.md
 
 test_name 'PA-466: Ensure version file is created on agent' do
 
@@ -19,10 +19,10 @@ test_name 'PA-466: Ensure version file is created on agent' do
 
       if platform =~ /windows/
         version_file = platform =~ /-64$/ && ruby_arch == 'x86' ?
-          "C:/Program Files (x86)/Puppet Labs/Puppet/VERSION" :
-          "C:/Program Files/Puppet Labs/Puppet/VERSION"
+          "C:/Program Files (x86)/Oregano Labs/Oregano/VERSION" :
+          "C:/Program Files/Oregano Labs/Oregano/VERSION"
       else
-        version_file = "/opt/puppetlabs/puppet/VERSION"
+        version_file = "/opt/oreganolabs/oregano/VERSION"
       end
 
       if !file_exists?(agent, version_file)

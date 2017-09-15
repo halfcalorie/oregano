@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/loaders'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano/loaders'
+require 'oregano_spec/compiler'
 
 describe 'the assert_type function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
-  after(:all) { Puppet::Pops::Loaders.clear }
+  after(:all) { Oregano::Pops::Loaders.clear }
 
-  let(:loaders) { Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, [])) }
-  let(:func) { loaders.puppet_system_loader.load(:function, 'assert_type') }
+  let(:loaders) { Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, [])) }
+  let(:func) { loaders.oregano_system_loader.load(:function, 'assert_type') }
 
   it 'asserts compliant type by returning the value' do
     expect(func.call({}, type(String), 'hello world')).to eql('hello world')
@@ -22,7 +22,7 @@ describe 'the assert_type function' do
   it 'asserts non compliant type by raising an error' do
     expect do
       func.call({}, type(Integer), 'hello world')
-    end.to raise_error(Puppet::Pops::Types::TypeAssertionError, /expects an Integer value, got String/)
+    end.to raise_error(Oregano::Pops::Types::TypeAssertionError, /expects an Integer value, got String/)
   end
 
   it 'checks that first argument is a type' do
@@ -49,11 +49,11 @@ describe 'the assert_type function' do
   end
 
   def optional(type_ref)
-    Puppet::Pops::Types::TypeFactory.optional(type(type_ref))
+    Oregano::Pops::Types::TypeFactory.optional(type(type_ref))
   end
 
   def type(type_ref)
-    Puppet::Pops::Types::TypeFactory.type_of(type_ref)
+    Oregano::Pops::Types::TypeFactory.type_of(type_ref)
   end
 
   it 'can validate a resource type' do
@@ -84,14 +84,14 @@ describe 'the assert_type function' do
       assert_type(UnprivilegedPort, 345)
       notice('ok')
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects an UnprivilegedPort = Integer\[1024, 65537\] value, got Integer\[345, 345\]/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects an UnprivilegedPort = Integer\[1024, 65537\] value, got Integer\[345, 345\]/)
   end
 
   it 'will use infer_set to report detailed information about complex mismatches' do
     code = <<-CODE
       assert_type(Struct[{a=>Integer,b=>Boolean}], {a=>hej,x=>s})
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error,
       /entry 'a' expects an Integer value, got String.*expects a value for key 'b'.*unrecognized key 'x'/m)
   end
 end

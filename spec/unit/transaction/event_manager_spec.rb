@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/transaction/event_manager'
+require 'oregano/transaction/event_manager'
 
-describe Puppet::Transaction::EventManager do
-  include PuppetSpec::Files
+describe Oregano::Transaction::EventManager do
+  include OreganoSpec::Files
 
   describe "at initialization" do
     it "should require a transaction" do
-      expect(Puppet::Transaction::EventManager.new("trans").transaction).to eq("trans")
+      expect(Oregano::Transaction::EventManager.new("trans").transaction).to eq("trans")
     end
   end
 
   it "should delegate its relationship graph to the transaction" do
     transaction = stub 'transaction'
-    manager = Puppet::Transaction::EventManager.new(transaction)
+    manager = Oregano::Transaction::EventManager.new(transaction)
 
     transaction.expects(:relationship_graph).returns "mygraph"
 
@@ -23,18 +23,18 @@ describe Puppet::Transaction::EventManager do
 
   describe "when queueing events" do
     before do
-      @manager = Puppet::Transaction::EventManager.new(@transaction)
+      @manager = Oregano::Transaction::EventManager.new(@transaction)
 
-      @resource = Puppet::Type.type(:file).new :path => make_absolute("/my/file")
+      @resource = Oregano::Type.type(:file).new :path => make_absolute("/my/file")
 
       @graph = stub 'graph', :matching_edges => [], :resource => @resource
       @manager.stubs(:relationship_graph).returns @graph
 
-      @event = Puppet::Transaction::Event.new(:name => :foo, :resource => @resource)
+      @event = Oregano::Transaction::Event.new(:name => :foo, :resource => @resource)
     end
 
     it "should store all of the events in its event list" do
-      @event2 = Puppet::Transaction::Event.new(:name => :bar, :resource => @resource)
+      @event2 = Oregano::Transaction::Event.new(:name => :bar, :resource => @resource)
       @manager.queue_events(@resource, [@event, @event2])
 
       expect(@manager.events).to include(@event)
@@ -104,7 +104,7 @@ describe Puppet::Transaction::EventManager do
     end
 
     it "should dequeue events for the changed resource if an event with invalidate_refreshes is processed" do
-      @event2 = Puppet::Transaction::Event.new(:name => :foo, :resource => @resource, :invalidate_refreshes => true)
+      @event2 = Oregano::Transaction::Event.new(:name => :foo, :resource => @resource, :invalidate_refreshes => true)
 
       @graph.stubs(:matching_edges).returns []
 
@@ -117,7 +117,7 @@ describe Puppet::Transaction::EventManager do
   describe "when queueing events for a resource" do
     before do
       @transaction = stub 'transaction'
-      @manager = Puppet::Transaction::EventManager.new(@transaction)
+      @manager = Oregano::Transaction::EventManager.new(@transaction)
     end
 
     it "should do nothing if no events are queued" do
@@ -147,12 +147,12 @@ describe Puppet::Transaction::EventManager do
 
   describe "when processing events for a given resource" do
     before do
-      @transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, nil)
-      @manager = Puppet::Transaction::EventManager.new(@transaction)
+      @transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, nil)
+      @manager = Oregano::Transaction::EventManager.new(@transaction)
       @manager.stubs(:queue_events)
 
-      @resource = Puppet::Type.type(:file).new :path => make_absolute("/my/file")
-      @event = Puppet::Transaction::Event.new(:name => :event, :resource => @resource)
+      @resource = Oregano::Type.type(:file).new :path => make_absolute("/my/file")
+      @event = Oregano::Transaction::Event.new(:name => :event, :resource => @resource)
     end
 
     it "should call the required callback once for each set of associated events" do
@@ -198,7 +198,7 @@ describe Puppet::Transaction::EventManager do
     describe "and the events include a noop event and at least one non-noop event" do
       before do
         @event.stubs(:status).returns "noop"
-        @event2 = Puppet::Transaction::Event.new(:name => :event, :resource => @resource)
+        @event2 = Oregano::Transaction::Event.new(:name => :event, :resource => @resource)
         @event2.status = "success"
         @manager.expects(:queued_events).with(@resource).yields(:callback1, [@event, @event2])
       end
@@ -213,7 +213,7 @@ describe Puppet::Transaction::EventManager do
     describe "and the events are all noop events" do
       before do
         @event.stubs(:status).returns "noop"
-        @resource.stubs(:event).returns(Puppet::Transaction::Event.new)
+        @resource.stubs(:event).returns(Oregano::Transaction::Event.new)
         @manager.expects(:queued_events).with(@resource).yields(:callback1, [@event])
       end
 
@@ -230,7 +230,7 @@ describe Puppet::Transaction::EventManager do
       end
 
       it "should queue a new noop event generated from the resource" do
-        event = Puppet::Transaction::Event.new
+        event = Oregano::Transaction::Event.new
         @resource.expects(:event).with(:status => "noop", :name => :noop_restart).returns event
         @manager.expects(:queue_events).with(@resource, [event])
 
@@ -241,7 +241,7 @@ describe Puppet::Transaction::EventManager do
     describe "and the resource has noop set to true" do
       before do
         @event.stubs(:status).returns "success"
-        @resource.stubs(:event).returns(Puppet::Transaction::Event.new)
+        @resource.stubs(:event).returns(Oregano::Transaction::Event.new)
         @resource.stubs(:noop?).returns(true)
         @manager.expects(:queued_events).with(@resource).yields(:callback1, [@event])
       end
@@ -259,7 +259,7 @@ describe Puppet::Transaction::EventManager do
       end
 
       it "should queue a new noop event generated from the resource" do
-        event = Puppet::Transaction::Event.new
+        event = Oregano::Transaction::Event.new
         @resource.expects(:event).with(:status => "noop", :name => :noop_restart).returns event
         @manager.expects(:queue_events).with(@resource, [event])
 
@@ -301,19 +301,19 @@ describe Puppet::Transaction::EventManager do
 
   describe "when queueing then processing events for a given resource" do
     before do
-      @transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, nil)
-      @manager = Puppet::Transaction::EventManager.new(@transaction)
+      @transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, nil)
+      @manager = Oregano::Transaction::EventManager.new(@transaction)
 
-      @resource = Puppet::Type.type(:file).new :path => make_absolute("/my/file")
-      @target = Puppet::Type.type(:file).new :path => make_absolute("/your/file")
+      @resource = Oregano::Type.type(:file).new :path => make_absolute("/my/file")
+      @target = Oregano::Type.type(:file).new :path => make_absolute("/your/file")
 
       @graph = stub 'graph'
       @graph.stubs(:matching_edges).returns []
       @graph.stubs(:matching_edges).with(anything, @resource).returns [stub('edge', :target => @target, :callback => :refresh)]
       @manager.stubs(:relationship_graph).returns @graph
 
-      @event  = Puppet::Transaction::Event.new(:name => :notify, :resource => @target)
-      @event2 = Puppet::Transaction::Event.new(:name => :service_start, :resource => @target, :invalidate_refreshes => true)
+      @event  = Oregano::Transaction::Event.new(:name => :notify, :resource => @target)
+      @event2 = Oregano::Transaction::Event.new(:name => :service_start, :resource => @target, :invalidate_refreshes => true)
     end
 
     it "should succeed when there's no invalidated event" do

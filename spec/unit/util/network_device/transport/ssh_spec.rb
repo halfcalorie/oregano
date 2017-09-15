@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/network_device/transport/ssh'
+require 'oregano/util/network_device/transport/ssh'
 
-describe Puppet::Util::NetworkDevice::Transport::Ssh, :if => Puppet.features.ssh? do
+describe Oregano::Util::NetworkDevice::Transport::Ssh, :if => Oregano.features.ssh? do
 
   before(:each) do
-    @transport = Puppet::Util::NetworkDevice::Transport::Ssh.new()
+    @transport = Oregano::Util::NetworkDevice::Transport::Ssh.new()
   end
 
   it "should handle login through the transport" do
@@ -29,12 +29,12 @@ describe Puppet::Util::NetworkDevice::Transport::Ssh, :if => Puppet.features.ssh
     @transport.connect
   end
 
-  it "should raise a Puppet::Error when encountering an authentication failure" do
+  it "should raise a Oregano::Error when encountering an authentication failure" do
     Net::SSH.expects(:start).raises Net::SSH::AuthenticationFailed
     @transport.host = "localhost"
     @transport.user = "user"
 
-    expect { @transport.connect }.to raise_error Puppet::Error
+    expect { @transport.connect }.to raise_error Oregano::Error
   end
 
   describe "when connected" do

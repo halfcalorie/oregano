@@ -4,7 +4,7 @@ tag 'audit:low',
     'audit:refactor', # Use block style `test_name`
     'audit:unit'     # basic language syntax
 
-# Jeff McCune <jeff@puppetlabs.com>
+# Jeff McCune <jeff@oreganolabs.com>
 # 2011-03-14
 #
 # If bug 6710 is closed, then this manifests should apply cleanly.

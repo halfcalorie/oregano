@@ -1,18 +1,18 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).attrclass(:checksum_value), :uses_checksums => true do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:checksum_value), :uses_checksums => true do
+  include OreganoSpec::Files
   include_context 'with supported checksum types'
 
   let(:path) { tmpfile('foo_bar') }
   let(:source_file) { file_containing('temp_foo', 'nothing at all') }
-  let(:environment) { Puppet::Node::Environment.create(:testing, []) }
-  let(:catalog) { Puppet::Resource::Catalog.new(:test, environment) }
-  let(:resource) { Puppet::Type.type(:file).new(:path => path, :catalog => catalog) }
+  let(:environment) { Oregano::Node::Environment.create(:testing, []) }
+  let(:catalog) { Oregano::Resource::Catalog.new(:test, environment) }
+  let(:resource) { Oregano::Type.type(:file).new(:path => path, :catalog => catalog) }
 
   it "should be a property" do
-    expect(described_class.superclass).to eq(Puppet::Property)
+    expect(described_class.superclass).to eq(Oregano::Property)
   end
 
   describe "when retrieving the current checksum_value" do
@@ -132,9 +132,9 @@ describe Puppet::Type.type(:file).attrclass(:checksum_value), :uses_checksums =>
           end
 
           [true, false].product([true, false]).each do |cfg, param|
-            describe "and Puppet[:show_diff] is #{cfg} and show_diff => #{param}" do
+            describe "and Oregano[:show_diff] is #{cfg} and show_diff => #{param}" do
               before do
-                Puppet[:show_diff] = cfg
+                Oregano[:show_diff] = cfg
                 resource.stubs(:show_diff?).returns param
                 resource[:loglevel] = "debug"
               end
@@ -229,7 +229,7 @@ describe Puppet::Type.type(:file).attrclass(:checksum_value), :uses_checksums =>
     CHECKSUM_TYPES_TO_TRY.each do |checksum_type, checksum|
       describe "sync with checksum type #{checksum_type} and the file exists" do
         before do
-          @new_resource = Puppet::Type.type(:file).new :ensure => :file, :path => path, :catalog => catalog,
+          @new_resource = Oregano::Type.type(:file).new :ensure => :file, :path => path, :catalog => catalog,
             :checksum_value => checksum, :checksum => checksum_type, :source => source_file
           @new_resource.stubs(:stat).returns mock('stat')
         end

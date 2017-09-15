@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
 # This file contains testing of Conditionals, if, case, unless, selector
 #
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl' do
   include EvaluatorRspecHelper
 
   context "When the evaluator evaluates" do

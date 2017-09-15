@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops::Types
+module Oregano::Pops::Types
 describe 'The type formatter' do
   let(:s) { TypeFormatter.new }
   let(:f) { TypeFactory }
@@ -384,12 +384,12 @@ FORMATTED
       expect(s.string(t)).to eq('Alias')
     end
 
-    it "should yield 'Type[Runtime[ruby, Puppet]]' for the Puppet module" do
-      expect(s.string(Puppet)).to eq("Runtime[ruby, 'Puppet']")
+    it "should yield 'Type[Runtime[ruby, Oregano]]' for the Oregano module" do
+      expect(s.string(Oregano)).to eq("Runtime[ruby, 'Oregano']")
     end
 
-    it "should yield 'Type[Runtime[ruby, Puppet::Pops]]' for the Puppet::Resource class" do
-      expect(s.string(Puppet::Resource)).to eq("Runtime[ruby, 'Puppet::Resource']")
+    it "should yield 'Type[Runtime[ruby, Oregano::Pops]]' for the Oregano::Resource class" do
+      expect(s.string(Oregano::Resource)).to eq("Runtime[ruby, 'Oregano::Resource']")
     end
 
     it "should yield \"SemVer['1.x', '3.x']\" for the PSemVerType['1.x', '3.x']" do
@@ -399,7 +399,7 @@ FORMATTED
     it 'should present a valid simple name' do
       (all_types - [PTypeType, PClassType]).each do |t|
         name = t::DEFAULT.simple_name
-        expect(t.name).to match("^Puppet::Pops::Types::P#{name}Type$")
+        expect(t.name).to match("^Oregano::Pops::Types::P#{name}Type$")
       end
       expect(PTypeType::DEFAULT.simple_name).to eql('Type')
       expect(PClassType::DEFAULT.simple_name).to eql('Class')

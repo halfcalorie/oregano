@@ -1,4 +1,4 @@
-test_name "tests that puppet correctly runs an exec."
+test_name "tests that oregano correctly runs an exec."
 # original author: Dan Bode  --daniel 2010-12-23
 
 tag 'audit:high',
@@ -27,7 +27,7 @@ agents.each do |agent|
   after(agent, touched)
 
   touched = before(agent)
-  on(agent, puppet_resource('-d', 'exec', 'test', "command='#{agent.touch(touched)}'}")) do
+  on(agent, oregano_resource('-d', 'exec', 'test', "command='#{agent.touch(touched)}'}")) do
     fail_test "didn't seem to run the command" unless
       stdout.include? 'executed successfully' unless agent['locale'] == 'ja'
   end

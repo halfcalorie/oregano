@@ -7,7 +7,7 @@ require 'shared_behaviours/all_parsedfile_providers'
 # remove, but I don't want to do so just yet, in case we get pushback to
 # restore Solaris spec tests.
 
-describe Puppet::Type.type(:mount).provider(:parsed), :unless => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:mount).provider(:parsed), :unless => Oregano.features.microsoft_windows? do
   before :each do
     Facter.clear
   end
@@ -191,7 +191,7 @@ FSTAB
 
     it "should raise an error if a line is not understandable" do
       described_class.stubs(:mountcmd).returns("bazinga!")
-      expect { described_class.mountinstances }.to raise_error Puppet::Error, 'Could not understand line bazinga! from mount output'
+      expect { described_class.mountinstances }.to raise_error Oregano::Error, 'Could not understand line bazinga! from mount output'
     end
 
   end
@@ -234,7 +234,7 @@ FSTAB
         end
 
         # Note: we have to stub default_target before creating resources
-        # because it is used by Puppet::Type::Mount.new to populate the
+        # because it is used by Oregano::Type::Mount.new to populate the
         # :target property.
         described_class.stubs(:default_target).returns fstab
         @retrieve = described_class.instances.collect { |prov| {:name => prov.get(:name), :ensure => prov.get(:ensure)}}
@@ -275,14 +275,14 @@ FSTAB
         end
 
         # Note: we have to stub default_target before creating resources
-        # because it is used by Puppet::Type::Mount.new to populate the
+        # because it is used by Oregano::Type::Mount.new to populate the
         # :target property.
         described_class.stubs(:default_target).returns fstab
 
-        @res_ghost = Puppet::Type::Mount.new(:name => '/ghost')    # in no fake fstab
-        @res_mounted = Puppet::Type::Mount.new(:name => '/')       # in every fake fstab
-        @res_unmounted = Puppet::Type::Mount.new(:name => '/boot') # in every fake fstab
-        @res_absent = Puppet::Type::Mount.new(:name => '/absent')  # in no fake fstab
+        @res_ghost = Oregano::Type::Mount.new(:name => '/ghost')    # in no fake fstab
+        @res_mounted = Oregano::Type::Mount.new(:name => '/')       # in every fake fstab
+        @res_unmounted = Oregano::Type::Mount.new(:name => '/boot') # in every fake fstab
+        @res_absent = Oregano::Type::Mount.new(:name => '/absent')  # in no fake fstab
 
         # Simulate transaction.rb:prefetch
         @resource_hash = {}

@@ -1,23 +1,23 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-augeas = Puppet::Type.type(:augeas)
+augeas = Oregano::Type.type(:augeas)
 
 describe augeas do
-  describe "when augeas is present", :if => Puppet.features.augeas? do
-    it "should have a default provider inheriting from Puppet::Provider" do
-      expect(augeas.defaultprovider.ancestors).to be_include(Puppet::Provider)
+  describe "when augeas is present", :if => Oregano.features.augeas? do
+    it "should have a default provider inheriting from Oregano::Provider" do
+      expect(augeas.defaultprovider.ancestors).to be_include(Oregano::Provider)
     end
 
     it "should have a valid provider" do
-      expect(augeas.new(:name => "foo").provider.class.ancestors).to be_include(Puppet::Provider)
+      expect(augeas.new(:name => "foo").provider.class.ancestors).to be_include(Oregano::Provider)
     end
   end
 
   describe "basic structure" do
     it "should be able to create an instance" do
-      provider_class = Puppet::Type::Augeas.provider(Puppet::Type::Augeas.providers[0])
-      Puppet::Type::Augeas.expects(:defaultprovider).returns provider_class
+      provider_class = Oregano::Type::Augeas.provider(Oregano::Type::Augeas.providers[0])
+      Oregano::Type::Augeas.expects(:defaultprovider).returns provider_class
       expect(augeas.new(:name => "bar")).not_to be_nil
     end
 
@@ -38,7 +38,7 @@ describe augeas do
 
     properties.each do |property|
       it "should have a #{property} property" do
-        expect(augeas.attrclass(property).ancestors).to be_include(Puppet::Property)
+        expect(augeas.attrclass(property).ancestors).to be_include(Oregano::Property)
       end
 
       it "should have documentation for its #{property} property" do
@@ -48,7 +48,7 @@ describe augeas do
 
     params.each do |param|
       it "should have a #{param} parameter" do
-        expect(augeas.attrclass(param).ancestors).to be_include(Puppet::Parameter)
+        expect(augeas.attrclass(param).ancestors).to be_include(Oregano::Parameter)
       end
 
       it "should have documentation for its #{param} parameter" do
@@ -103,11 +103,11 @@ describe augeas do
 
   describe "loading specific files" do
     it "should require lens when incl is used" do
-      expect { augeas.new(:name => :no_lens, :incl => "/etc/hosts")}.to raise_error(Puppet::Error)
+      expect { augeas.new(:name => :no_lens, :incl => "/etc/hosts")}.to raise_error(Oregano::Error)
     end
 
     it "should require incl when lens is used" do
-      expect { augeas.new(:name => :no_incl, :lens => "Hosts.lns") }.to raise_error(Puppet::Error)
+      expect { augeas.new(:name => :no_incl, :lens => "Hosts.lns") }.to raise_error(Oregano::Error)
     end
 
     it "should set the context when a specific file is used" do

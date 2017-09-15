@@ -1,10 +1,10 @@
 {
-    "name": "puppetlabs/ruby",
+    "name": "oreganolabs/ruby",
     "version": "0.0.2",
     "summary": "Manage Ruby",
-    "source": "git@github.com/puppetlabs/puppetlabs-ruby.git",
-    "project_page": "https://github.com/puppetlabs/puppetlabs-ruby",
-    "author": "Puppet Labs",
+    "source": "git@github.com/oreganolabs/oreganolabs-ruby.git",
+    "project_page": "https://github.com/oreganolabs/oreganolabs-ruby",
+    "author": "Oregano Labs",
     "license": "Apache-2.0",
     "operatingsystem_support": [
         "RedHat",
@@ -14,7 +14,7 @@
         "Debian",
         "Ubuntu"
     ],
-    "puppet_version": [
+    "oregano_version": [
         2.7,
         3.0,
         3.1,

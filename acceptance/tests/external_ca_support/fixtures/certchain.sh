@@ -2,9 +2,9 @@
 
 ## NOTE:
 ## This script requires the following in /etc/hosts:
-## 127.0.0.2   puppet master1.example.org
+## 127.0.0.2   oregano master1.example.org
 
-# This will fail with a stock puppet 3.1.1, but will succeed if all of the
+# This will fail with a stock oregano 3.1.1, but will succeed if all of the
 # certificate subjects contain only the "CN" portion, and no O, OU, or
 # emailAddress.
 
@@ -127,7 +127,7 @@ OPENSSL_TMP
             [ "$name" = "root" ] && ca_config=root_ca_config || ca_config=master_ca_config
 
             dedent > openssl.conf << OPENSSL_CONF
-                SAN = DNS:puppet
+                SAN = DNS:oregano
 
                 [ca]
                 default_ca = ${ca_config}
@@ -221,7 +221,7 @@ OPENSSL_TMP
                 # around https://bugs.ruby-lang.org/issues/6493
                 # NOTE: Alt Names should be set in the request, so they know
                 # their FQDN
-                # subjectAltName = DNS:puppet,DNS:${name}.example.org
+                # subjectAltName = DNS:oregano,DNS:${name}.example.org
 OPENSSL_CONF
             touch inventory.txt
             mkdir certs
@@ -279,7 +279,7 @@ create_leaf_cert() {
 
         openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "${fname}.key"
         openssl req -subj "/CN=${fqdn}" -new -key "${fname}.key" -out "${fname}.csr"
-        CN="${fqdn}" SAN="DNS:${fqdn}, DNS:${fqdn%%.*}, DNS:puppet, DNS:puppetmaster" \
+        CN="${fqdn}" SAN="DNS:${fqdn}, DNS:${fqdn%%.*}, DNS:oregano, DNS:oreganomaster" \
           openssl ca -config "${B}/${ca}/openssl.conf" -in "${fname}.csr" -notext \
           -out "${fname}.crt" -batch $exts
     )
@@ -333,9 +333,9 @@ create_leaf_email_certs() {
 
 set_up_apache() {
     local apachedir="${B}/apache"
-    mkdir -p "${apachedir}/puppetmaster/public"
+    mkdir -p "${apachedir}/oreganomaster/public"
 
-    echo 'passed'> "${apachedir}/puppetmaster/public/test.txt"
+    echo 'passed'> "${apachedir}/oreganomaster/public/test.txt"
     dedent > "${apachedir}/httpd.conf" <<HTTPD_CONF
         LoadModule mpm_prefork_module modules/mod_mpm_prefork.so
         LoadModule unixd_module modules/mod_unixd.so
@@ -360,7 +360,7 @@ set_up_apache() {
         SSLProtocol all -SSLv2
         SSLCipherSuite HIGH:MEDIUM:!aNULL:!MD5
 
-        # puppet-relevant SSL config:
+        # oregano-relevant SSL config:
 
         SSLCertificateFile "${B}/leaves/master1.example.org.crt"
         SSLCertificateKeyFile "${B}/leaves/master1.example.org.key"
@@ -377,10 +377,10 @@ set_up_apache() {
         RequestHeader set X-Client-Verify %{SSL_CLIENT_VERIFY}e
 
         ServerName master1.example.org
-        DocumentRoot "${apachedir}/puppetmaster/public"
+        DocumentRoot "${apachedir}/oreganomaster/public"
 
         # NOTE: this is httpd-2.4 syntax
-        <Directory "${apachedir}/puppetmaster/public">
+        <Directory "${apachedir}/oreganomaster/public">
             Require all granted
         </Directory>
 
@@ -389,23 +389,23 @@ set_up_apache() {
 HTTPD_CONF
 }
 
-set_up_puppetmaster() {
+set_up_oreganomaster() {
     local apachedir="${B}/apache"
-    local masterdir="${B}/puppetmaster"
+    local masterdir="${B}/oreganomaster"
     local confdir="${masterdir}/conf"
     local environmentdir="${confdir}/environments/production"
     mkdir -p "${confdir}" "${masterdir}/var" "${environmentdir}/manifests"
-    dedent > "${apachedir}/puppetmaster/config.ru" <<CONFIG_RU
+    dedent > "${apachedir}/oreganomaster/config.ru" <<CONFIG_RU
         \$0 = "master"
         ARGV << "--rack"
         ARGV << "--debug"
         ARGV << "--confdir=${masterdir}/conf"
         ARGV << "--vardir=${masterdir}/var"
-        require 'puppet/application/master'
-        run Puppet::Application[:master].run
+        require 'oregano/application/master'
+        run Oregano::Application[:master].run
 CONFIG_RU
 
-    dedent > "${masterdir}/conf/puppet.conf" <<PUPPET_CONF
+    dedent > "${masterdir}/conf/oregano.conf" <<PUPPET_CONF
         [main]
         node_name = cert
         strict_hostname_checking = true
@@ -447,7 +447,7 @@ check_apache() {
     grep -q "Verify return code: 0 (ok)" "${B}/verify.out"
 }
 
-check_puppetmaster() {
+check_oreganomaster() {
     # this is insecure, because otherwise curl will check that 127.0.0.1 ==
     # master1.example.org and fail; validation of the server certs is done
     # above in check_apache, so this is fine.
@@ -455,7 +455,7 @@ check_puppetmaster() {
             --header 'Accept: yaml' \
             --cert "${B}/leaves/client2a.example.org.crt" \
             --key "${B}/leaves/client2a.example.org.key" \
-        "https://127.0.0.1:${HTTPS_PORT}/puppet/v3/catalog/client2a.example.org?environment=production" >/dev/null
+        "https://127.0.0.1:${HTTPS_PORT}/oregano/v3/catalog/client2a.example.org?environment=production" >/dev/null
     echo
 }
 
@@ -466,7 +466,7 @@ set_up_agent() {
     mkdir -p "${agentdir}/conf" "${agentdir}/var"
     mkdir -p "${agentdir}/conf/ssl/private_keys" "${agentdir}/conf/ssl/certs"
 
-    dedent > "${agentdir}/conf/puppet.conf" <<PUPPET_CONF
+    dedent > "${agentdir}/conf/oregano.conf" <<PUPPET_CONF
         [agent]
         server = master1.example.org
         # agent can't verify CRLs for a chain
@@ -493,7 +493,7 @@ run_agent() {
     # the manifest will create this file
     rm -f "${B}/i_was_here"
 
-    if puppet agent --test --debug \
+    if oregano agent --test --debug \
             --confdir=/tmp/certchain/agent/conf/ --vardir=/tmp/certchain/agent/var/ \
             --fqdn "${fqdn}"; then
         if ${expfail}; then
@@ -529,10 +529,10 @@ main() {
 
     exit 0
     call set_up_apache
-    call set_up_puppetmaster
+    call set_up_oreganomaster
     call start_apache
     call check_apache
-    call check_puppetmaster
+    call check_oreganomaster
 
     # set up the client to run normally, then revoke the client's cert and see it fail
     call set_up_agent client2a.example.org

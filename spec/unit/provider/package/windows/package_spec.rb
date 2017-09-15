@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/provider/package/windows/package'
+require 'oregano/provider/package/windows/package'
 
-describe Puppet::Provider::Package::Windows::Package do
+describe Oregano::Provider::Package::Windows::Package do
   subject { described_class }
 
   let(:hklm) { 'HKEY_LOCAL_MACHINE' }
@@ -21,7 +21,7 @@ describe Puppet::Provider::Package::Windows::Package do
     it 'should yield each package it finds' do
       subject.expects(:with_key).yields(key, {})
 
-      Puppet::Provider::Package::Windows::MsiPackage.expects(:from_registry).with('Google', {}).returns(package)
+      Oregano::Provider::Package::Windows::MsiPackage.expects(:from_registry).with('Google', {}).returns(package)
 
       yielded = nil
       subject.each do |pkg|
@@ -32,7 +32,7 @@ describe Puppet::Provider::Package::Windows::Package do
     end
   end
 
-  context '::with_key', :if => Puppet.features.microsoft_windows? do
+  context '::with_key', :if => Oregano.features.microsoft_windows? do
     it 'should search HKLM (64 & 32) and HKCU (64 & 32)' do
       seq = sequence('reg')
 
@@ -45,7 +45,7 @@ describe Puppet::Provider::Package::Windows::Package do
     end
 
     it 'should ignore file not found exceptions' do
-      ex = Puppet::Util::Windows::Error.new('Failed to open registry key', Puppet::Util::Windows::Error::ERROR_FILE_NOT_FOUND)
+      ex = Oregano::Util::Windows::Error.new('Failed to open registry key', Oregano::Util::Windows::Error::ERROR_FILE_NOT_FOUND)
 
       # make sure we don't stop after the first exception
       subject.expects(:open).times(4).raises(ex)
@@ -56,13 +56,13 @@ describe Puppet::Provider::Package::Windows::Package do
     end
 
     it 'should raise other types of exceptions' do
-      ex = Puppet::Util::Windows::Error.new('Failed to open registry key', Puppet::Util::Windows::Error::ERROR_ACCESS_DENIED)
+      ex = Oregano::Util::Windows::Error.new('Failed to open registry key', Oregano::Util::Windows::Error::ERROR_ACCESS_DENIED)
       subject.expects(:open).raises(ex)
 
       expect {
         subject.with_key{ |key, values| }
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
         expect(error.code).to eq(5) # ERROR_ACCESS_DENIED
       end
     end
@@ -72,11 +72,11 @@ describe Puppet::Provider::Package::Windows::Package do
     it 'should require the source parameter' do
       expect {
         subject.installer_class({})
-      }.to raise_error(Puppet::Error, /The source parameter is required when using the Windows provider./)
+      }.to raise_error(Oregano::Error, /The source parameter is required when using the Windows provider./)
     end
 
     context 'MSI' do
-      let (:klass) { Puppet::Provider::Package::Windows::MsiPackage }
+      let (:klass) { Oregano::Provider::Package::Windows::MsiPackage }
 
       it 'should accept source ending in .msi' do
         expect(subject.installer_class({:source => 'foo.msi'})).to eq(klass)
@@ -93,7 +93,7 @@ describe Puppet::Provider::Package::Windows::Package do
       it 'should reject source containing msi in the name' do
         expect {
           subject.installer_class({:source => 'mymsi.txt'})
-        }.to raise_error(Puppet::Error, /Don't know how to install 'mymsi.txt'/)
+        }.to raise_error(Oregano::Error, /Don't know how to install 'mymsi.txt'/)
       end
     end
 
@@ -101,7 +101,7 @@ describe Puppet::Provider::Package::Windows::Package do
       it 'should reject packages it does not know about' do
         expect {
           subject.installer_class({:source => 'basram'})
-        }.to raise_error(Puppet::Error, /Don't know how to install 'basram'/)
+        }.to raise_error(Oregano::Error, /Don't know how to install 'basram'/)
       end
     end
   end

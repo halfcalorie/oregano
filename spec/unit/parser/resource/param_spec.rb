@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe Puppet::Parser::Resource::Param do
+describe Oregano::Parser::Resource::Param do
   it "has readers for all of the attributes" do
-    param = Puppet::Parser::Resource::Param.new(:name => 'myparam', :value => 'foo', :file => 'foo.pp', :line => 42)
+    param = Oregano::Parser::Resource::Param.new(:name => 'myparam', :value => 'foo', :file => 'foo.pp', :line => 42)
 
     expect(param.name).to eq(:myparam)
     expect(param.value).to eq('foo')
@@ -13,20 +13,20 @@ describe Puppet::Parser::Resource::Param do
   context "parameter validation" do
     it "throws an error when instantiated without a name" do
       expect {
-        Puppet::Parser::Resource::Param.new(:value => 'foo')
-      }.to raise_error(Puppet::Error, /name is a required option/)
+        Oregano::Parser::Resource::Param.new(:value => 'foo')
+      }.to raise_error(Oregano::Error, /name is a required option/)
     end
 
     it "does not require a value" do
-      param = Puppet::Parser::Resource::Param.new(:name => 'myparam')
+      param = Oregano::Parser::Resource::Param.new(:name => 'myparam')
 
       expect(param.value).to be_nil
     end
 
     it "includes file/line context in errors" do
       expect {
-        Puppet::Parser::Resource::Param.new(:file => 'foo.pp', :line => 42)
-      }.to raise_error(Puppet::Error, /foo.pp:42/)
+        Oregano::Parser::Resource::Param.new(:file => 'foo.pp', :line => 42)
+      }.to raise_error(Oregano::Error, /foo.pp:42/)
     end
   end
 end

@@ -1,31 +1,31 @@
 require 'spec_helper'
-require 'puppet/graph'
+require 'oregano/graph'
 
-describe Puppet::Graph::TitleHashPrioritizer do
+describe Oregano::Graph::TitleHashPrioritizer do
   it "produces different priorities for different resource references" do
-    prioritizer = Puppet::Graph::TitleHashPrioritizer.new
+    prioritizer = Oregano::Graph::TitleHashPrioritizer.new
 
     expect(prioritizer.generate_priority_for(resource(:notify, "one"))).to_not(
       eq(prioritizer.generate_priority_for(resource(:notify, "two"))))
   end
 
   it "always produces the same priority for the same resource ref" do
-    a_prioritizer = Puppet::Graph::TitleHashPrioritizer.new
-    another_prioritizer = Puppet::Graph::TitleHashPrioritizer.new
+    a_prioritizer = Oregano::Graph::TitleHashPrioritizer.new
+    another_prioritizer = Oregano::Graph::TitleHashPrioritizer.new
 
     expect(a_prioritizer.generate_priority_for(resource(:notify, "one"))).to(
       eq(another_prioritizer.generate_priority_for(resource(:notify, "one"))))
   end
 
   it "does not use the container when generating priorities" do
-    prioritizer = Puppet::Graph::TitleHashPrioritizer.new
+    prioritizer = Oregano::Graph::TitleHashPrioritizer.new
 
     expect(prioritizer.generate_priority_contained_in(nil, resource(:notify, "one"))).to(
       eq(prioritizer.generate_priority_for(resource(:notify, "one"))))
   end
 
   it "can retrieve a previously provided priority with the same resource" do
-    prioritizer = Puppet::Graph::TitleHashPrioritizer.new
+    prioritizer = Oregano::Graph::TitleHashPrioritizer.new
     resource = resource(:notify, "title")
 
     generated = prioritizer.generate_priority_for(resource)
@@ -34,7 +34,7 @@ describe Puppet::Graph::TitleHashPrioritizer do
   end
 
   it "can not retrieve the priority of a resource with a different resource with the same title" do
-    prioritizer = Puppet::Graph::TitleHashPrioritizer.new
+    prioritizer = Oregano::Graph::TitleHashPrioritizer.new
     resource = resource(:notify, "title")
     different_resource = resource(:notify, "title")
 
@@ -44,6 +44,6 @@ describe Puppet::Graph::TitleHashPrioritizer do
   end
 
   def resource(type, title)
-    Puppet::Resource.new(type, title)
+    Oregano::Resource.new(type, title)
   end
 end

@@ -1,19 +1,19 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate'
+require 'oregano/ssl/certificate'
 
-describe Puppet::SSL::Certificate do
-  let :key do Puppet::SSL::Key.new("test.localdomain").generate end
+describe Oregano::SSL::Certificate do
+  let :key do Oregano::SSL::Key.new("test.localdomain").generate end
 
   # Sign the provided cert so that it can be DER-decoded later
   def sign_wrapped_cert(cert)
-    signer = Puppet::SSL::CertificateSigner.new
+    signer = Oregano::SSL::CertificateSigner.new
     signer.sign(cert.content, key)
   end
 
   before do
-    @class = Puppet::SSL::Certificate
+    @class = Oregano::SSL::Certificate
   end
 
   after do
@@ -21,7 +21,7 @@ describe Puppet::SSL::Certificate do
   end
 
   it "should be extended with the Indirector module" do
-    expect(@class.singleton_class).to be_include(Puppet::Indirector)
+    expect(@class.singleton_class).to be_include(Oregano::Indirector)
   end
 
   it "should indirect certificate" do
@@ -85,12 +85,12 @@ describe Puppet::SSL::Certificate do
   describe "when managing instances" do
 
     def build_cert(opts)
-      key = Puppet::SSL::Key.new('quux')
+      key = Oregano::SSL::Key.new('quux')
       key.generate
-      csr = Puppet::SSL::CertificateRequest.new('quux')
+      csr = Oregano::SSL::CertificateRequest.new('quux')
       csr.generate(key, opts)
 
-      raw_cert = Puppet::SSL::CertificateFactory.build('client', csr, csr.content, 14)
+      raw_cert = Oregano::SSL::CertificateFactory.build('client', csr, csr.content, 14)
       @class.from_instance(raw_cert)
     end
 
@@ -162,7 +162,7 @@ describe Puppet::SSL::Certificate do
 
     it "should be able to read certificates from disk" do
       path = "/my/path"
-      Puppet::FileSystem.expects(:read).with(path, :encoding => Encoding::ASCII).returns("my certificate")
+      Oregano::FileSystem.expects(:read).with(path, :encoding => Encoding::ASCII).returns("my certificate")
       certificate = mock 'certificate'
       OpenSSL::X509::Certificate.expects(:new).with("my certificate").returns(certificate)
       expect(@certificate.read(path)).to equal(certificate)
@@ -178,7 +178,7 @@ describe Puppet::SSL::Certificate do
 
     it "should parse the old non-DER encoded extension values" do
       cert = OpenSSL::X509::Certificate.new(File.read(my_fixture("old-style-cert-exts.pem")))
-      wrapped_cert = Puppet::SSL::Certificate.from_instance cert
+      wrapped_cert = Oregano::SSL::Certificate.from_instance cert
       exts = wrapped_cert.custom_extensions
 
       expect(exts.find { |ext| ext['oid'] == 'pp_uuid'}['value']).to eq('I-AM-A-UUID')

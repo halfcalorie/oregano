@@ -1,6 +1,6 @@
-test_name "puppet module uninstall (with module installed)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module uninstall (with module installed)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -55,7 +55,7 @@ file {
 PP
 
 step "Uninstall #{module_author}-#{module_name} version 0.5.x"
-on master, puppet("module uninstall #{module_author}-#{module_name} --version 0.5.x") do
+on master, oregano("module uninstall #{module_author}-#{module_name} --version 0.5.x") do
   assert_match(/Removed '#{module_author}-#{module_name}'/, stdout,
         "Notice that module was uninstalled was not displayed")
 end
@@ -63,7 +63,7 @@ on master, "[ -d #{master['distmoduledir']}/#{module_name} ]"
 on master, "[ ! -d #{master['sitemoduledir']}/#{module_name} ]"
 
 step "Try to uninstall #{module_author}-#{module_name} v0.4.0 with `--version 0.5.x`"
-on master, puppet("module uninstall #{module_author}-#{module_name} --version 0.5.x"), :acceptable_exit_codes => [1] do
+on master, oregano("module uninstall #{module_author}-#{module_name} --version 0.5.x"), :acceptable_exit_codes => [1] do
   assert_match(/Could not uninstall module '#{module_author}-#{module_name}'/, stderr,
         "Error that module could not be uninstalled was not displayed")
   assert_match(/No installed version of '#{module_author}-#{module_name}' matches/, stderr,
@@ -73,7 +73,7 @@ on master, "[ -d #{master['distmoduledir']}/#{module_name} ]"
 
 module_name = 'appleseed'
 step "Try to uninstall #{module_author}-#{module_name} v0.4.0 with `--version >9.9.9`"
-on master, puppet("module uninstall #{module_author}-#{module_name} --version \">9.9.9\""), :acceptable_exit_codes => [1] do
+on master, oregano("module uninstall #{module_author}-#{module_name} --version \">9.9.9\""), :acceptable_exit_codes => [1] do
   assert_match(/Could not uninstall module '#{module_author}-#{module_name}'/, stderr,
         "Error that module could not be uninstalled was not displayed")
   assert_match(/No installed version of '#{module_author}-#{module_name}' matches/, stderr,
@@ -82,7 +82,7 @@ end
 on master, "[ -d #{master['sitemoduledir']}/#{module_name} ]"
 
 step "Uninstall #{module_author}-#{module_name} v0.4.0 with `--version >0.0.0`"
-on master, puppet("module uninstall #{module_author}-#{module_name} --version \">0.0.0\"") do
+on master, oregano("module uninstall #{module_author}-#{module_name} --version \">0.0.0\"") do
   assert_match(/Removed '#{module_author}-#{module_name}'/, stdout,
         "Notice that module was uninstalled was not displayed")
 end

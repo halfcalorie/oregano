@@ -1,4 +1,4 @@
-A working demo of Hiera with YAML and Puppet backends.
+A working demo of Hiera with YAML and Oregano backends.
 ======================================================
 
 This demo consists of:
@@ -12,19 +12,19 @@ This demo consists of:
 Below various usage scenarios can be tested using this module.
 
 The examples below assume you have Hiera already installed and that you have
-hiera-puppet cloned from github and running these commands in _hiera-puppet/example_ as cwd.
+hiera-oregano cloned from github and running these commands in _hiera-oregano/example_ as cwd.
 
 Module from forge with module defaults
 --------------------------------------
 
  * Move the _modules/data_ directory to _modules/data.bak_ to avoid overrides
    used further in the example
- * Run puppet, creates _/etc/ntp.conf_ with ntp.org addresses
+ * Run oregano, creates _/etc/ntp.conf_ with ntp.org addresses
  * The _hiera\_include()_ function includes just _users::common_
 
 <pre>
 $ mv modules/data modules/data.bak
-$ puppet apply --config etc/puppet.conf site.pp
+$ oregano apply --config etc/oregano.conf site.pp
 notice: /Stage[main]/Ntp::Config/File[/tmp/ntp.conf]/ensure: defined content as '{md5}7045121976147a932a66c7671939a9ad'
 notice: /Stage[main]/Users::Common/Notify[Adding users::common]/message: defined 'message' as 'Adding users::common'
 $ cat /tmp/ntp.conf
@@ -40,7 +40,7 @@ Site wide override data in _data::common_
 
 <pre>
 $ mv modules/data.bak modules/data
-$ puppet apply --config etc/puppet.conf site.pp
+$ oregano apply --config etc/oregano.conf site.pp
 notice: /Stage[main]/Ntp::Config/File[/tmp/ntp.conf]/content: content changed '{md5}7045121976147a932a66c7671939a9addc2' to '{md5}8f9039fe1989a278a0a8e1836acb8d23'
 notice: /Stage[main]/Users::Common/Notify[Adding users::common]/message: defined 'message' as 'Adding users::common'
 $ cat /tmp/ntp.conf
@@ -56,7 +56,7 @@ Fact driven overrides for location=dc1
  * The _hiera_include()_ function includes _users::common_ and _users::dc1_ as the data file for dc1 adds that
 
 <pre>
-$ FACTER_location=dc1 puppet apply --config etc/puppet.conf site.pp
+$ FACTER_location=dc1 oregano apply --config etc/oregano.conf site.pp
 notice: /Stage[main]/Ntp::Config/File[/tmp/ntp.conf]/content: content changed '{md5}8f9039fe1989a278a0a8e1836acb8d23' to '{md5}074d0e2ac727f6cb9afe3345d574b578'
 notice: /Stage[main]/Users::Common/Notify[Adding users::common]/message: defined 'message' as 'Adding users::common'
 notice: /Stage[main]/Users::Dc1/Notify[Adding users::dc1]/message: defined 'message' as 'Adding users::dc1'
@@ -69,7 +69,7 @@ Now simulate a machine in _dc2_, because there is no data for dc2 it uses the si
 does not include the _users::dc1_ class anymore
 
 <pre>
-$ FACTER_location=dc2 puppet apply --config etc/puppet.conf site.pp
+$ FACTER_location=dc2 oregano apply --config etc/oregano.conf site.pp
 warning: Could not find class data::dc2 for nephilim.ml.org
 notice: /Stage[main]/Ntp::Config/File[/tmp/ntp.conf]/content: content changed '{md5}074d0e2ac727f6cb9afe3345d574b578' to '{md5}8f9039fe1989a278a0a8e1836acb8d23'
 notice: /Stage[main]/Users::Common/Notify[Adding users::common]/message: defined 'message' as 'Adding users::common'

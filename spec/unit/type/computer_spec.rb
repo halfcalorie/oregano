@@ -1,26 +1,26 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-computer = Puppet::Type.type(:computer)
+computer = Oregano::Type.type(:computer)
 
-describe Puppet::Type.type(:computer), " when checking computer objects" do
+describe Oregano::Type.type(:computer), " when checking computer objects" do
   before do
-    provider_class = Puppet::Type::Computer.provider(Puppet::Type::Computer.providers[0])
-    Puppet::Type::Computer.expects(:defaultprovider).returns provider_class
+    provider_class = Oregano::Type::Computer.provider(Oregano::Type::Computer.providers[0])
+    Oregano::Type::Computer.expects(:defaultprovider).returns provider_class
 
-          @resource = Puppet::Type::Computer.new(
+          @resource = Oregano::Type::Computer.new(
                 
-            :name => "puppetcomputertest",
+            :name => "oreganocomputertest",
             :en_address => "aa:bb:cc:dd:ee:ff",
         
             :ip_address => "1.2.3.4")
     @properties = {}
-    @ensure = Puppet::Type::Computer.attrclass(:ensure).new(:resource => @resource)
+    @ensure = Oregano::Type::Computer.attrclass(:ensure).new(:resource => @resource)
   end
 
   it "should be able to create an instance" do
-    provider_class = Puppet::Type::Computer.provider(Puppet::Type::Computer.providers[0])
-    Puppet::Type::Computer.expects(:defaultprovider).returns provider_class
+    provider_class = Oregano::Type::Computer.provider(Oregano::Type::Computer.providers[0])
+    Oregano::Type::Computer.expects(:defaultprovider).returns provider_class
     expect(computer.new(:name => "bar")).not_to be_nil
   end
 
@@ -29,7 +29,7 @@ describe Puppet::Type.type(:computer), " when checking computer objects" do
 
   properties.each do |property|
     it "should have a #{property} property" do
-      expect(computer.attrclass(property).ancestors).to be_include(Puppet::Property)
+      expect(computer.attrclass(property).ancestors).to be_include(Oregano::Property)
     end
 
     it "should have documentation for its #{property} property" do
@@ -45,7 +45,7 @@ describe Puppet::Type.type(:computer), " when checking computer objects" do
 
   params.each do |param|
     it "should have a #{param} parameter" do
-      expect(computer.attrclass(param).ancestors).to be_include(Puppet::Parameter)
+      expect(computer.attrclass(param).ancestors).to be_include(Oregano::Parameter)
     end
 
     it "should have documentation for its #{param} parameter" do

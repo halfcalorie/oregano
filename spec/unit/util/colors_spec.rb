@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Util::Colors do
-  include Puppet::Util::Colors
+describe Oregano::Util::Colors do
+  include Oregano::Util::Colors
 
   let (:message) { 'a message' }
   let (:color) { :black }
@@ -29,14 +29,14 @@ describe Puppet::Util::Colors do
 
     context "ansicolor supported" do
       it "should colorize console output" do
-        Puppet[:color] = true
+        Oregano[:color] = true
 
         subject.expects(:console_color).with(color, message)
         subject.colorize(:black, message)
       end
 
       it "should not colorize unknown color schemes" do
-        Puppet[:color] = :thisisanunknownscheme
+        Oregano[:color] = :thisisanunknownscheme
 
         expect(subject.colorize(:black, message)).to eq(message)
       end

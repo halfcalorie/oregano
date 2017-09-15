@@ -1,31 +1,31 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/node/ldap'
+require 'oregano/indirector/node/ldap'
 
-describe Puppet::Node::Ldap do
+describe Oregano::Node::Ldap do
   let(:nodename) { "mynode.domain.com" }
-  let(:node_indirection) { Puppet::Node::Ldap.new }
-  let(:environment) { Puppet::Node::Environment.create(:myenv, []) }
+  let(:node_indirection) { Oregano::Node::Ldap.new }
+  let(:environment) { Oregano::Node::Environment.create(:myenv, []) }
   let(:fact_values) { {:afact => "a value", "one" => "boo"} }
-  let(:facts) { Puppet::Node::Facts.new(nodename, fact_values) }
+  let(:facts) { Oregano::Node::Facts.new(nodename, fact_values) }
 
   before do
-    Puppet::Node::Facts.indirection.stubs(:find).with(nodename, :environment => environment).returns(facts)
+    Oregano::Node::Facts.indirection.stubs(:find).with(nodename, :environment => environment).returns(facts)
   end
 
   describe "when searching for a single node" do
-    let(:request) { Puppet::Indirector::Request.new(:node, :find, nodename, nil, :environment => environment) }
+    let(:request) { Oregano::Indirector::Request.new(:node, :find, nodename, nil, :environment => environment) }
 
     it "should convert the hostname into a search filter" do
       entry = stub 'entry', :dn => 'cn=mynode.domain.com,ou=hosts,dc=madstop,dc=com', :vals => %w{}, :to_hash => {}
-      node_indirection.expects(:ldapsearch).with("(&(objectclass=puppetClient)(cn=#{nodename}))").yields entry
+      node_indirection.expects(:ldapsearch).with("(&(objectclass=oreganoClient)(cn=#{nodename}))").yields entry
       node_indirection.name2hash(nodename)
     end
 
     it "should convert any found entry into a hash" do
       entry = stub 'entry', :dn => 'cn=mynode.domain.com,ou=hosts,dc=madstop,dc=com', :vals => %w{}, :to_hash => {}
-      node_indirection.expects(:ldapsearch).with("(&(objectclass=puppetClient)(cn=#{nodename}))").yields entry
+      node_indirection.expects(:ldapsearch).with("(&(objectclass=oreganoClient)(cn=#{nodename}))").yields entry
       myhash = {"myhash" => true}
       node_indirection.expects(:entry2hash).with(entry).returns myhash
       expect(node_indirection.name2hash(nodename)).to eq(myhash)
@@ -51,7 +51,7 @@ describe Puppet::Node::Ldap do
       end
 
       it "should add all of the entry's classes to the hash" do
-        @entry.stubs(:vals).with("puppetclass").returns %w{one two}
+        @entry.stubs(:vals).with("oreganoclass").returns %w{one two}
         expect(node_indirection.entry2hash(@entry)[:classes]).to eq(%w{one two})
       end
 
@@ -69,16 +69,16 @@ describe Puppet::Node::Ldap do
       end
 
       it "should add all stacked parameters as parameters in the hash" do
-        @entry.stubs(:vals).with("puppetvar").returns(%w{one=two three=four})
+        @entry.stubs(:vals).with("oreganovar").returns(%w{one=two three=four})
         result = node_indirection.entry2hash(@entry)
         expect(result[:parameters]["one"]).to eq("two")
         expect(result[:parameters]["three"]).to eq("four")
       end
 
       it "should not add the stacked parameter as a normal parameter" do
-        @entry.stubs(:vals).with("puppetvar").returns(%w{one=two three=four})
-        @entry.stubs(:to_hash).returns("puppetvar" => %w{one=two three=four})
-        expect(node_indirection.entry2hash(@entry)[:parameters]["puppetvar"]).to be_nil
+        @entry.stubs(:vals).with("oreganovar").returns(%w{one=two three=four})
+        @entry.stubs(:to_hash).returns("oreganovar" => %w{one=two three=four})
+        expect(node_indirection.entry2hash(@entry)[:parameters]["oreganovar"]).to be_nil
       end
 
       it "should add all other attributes as parameters in the hash" do
@@ -176,11 +176,11 @@ describe Puppet::Node::Ldap do
       end
 
       it "should set the node's environment to the environment of the results" do
-        result_env = Puppet::Node::Environment.create(:local_test, [])
-        Puppet::Node::Facts.indirection.stubs(:find).with(nodename, :environment => result_env).returns(facts)
+        result_env = Oregano::Node::Environment.create(:local_test, [])
+        Oregano::Node::Facts.indirection.stubs(:find).with(nodename, :environment => result_env).returns(facts)
         @result[:environment] = "local_test"
 
-        Puppet.override(:environments => Puppet::Environments::Static.new(result_env)) do
+        Oregano.override(:environments => Oregano::Environments::Static.new(result_env)) do
           expect(node_indirection.find(request).environment).to eq(result_env)
         end
       end
@@ -192,19 +192,19 @@ describe Puppet::Node::Ldap do
       end
 
       context("when merging facts") do
-        let(:request_facts) { Puppet::Node::Facts.new('test', 'foo' => 'bar') }
-        let(:indirection_facts) { Puppet::Node::Facts.new('test', 'baz' => 'qux') }
+        let(:request_facts) { Oregano::Node::Facts.new('test', 'foo' => 'bar') }
+        let(:indirection_facts) { Oregano::Node::Facts.new('test', 'baz' => 'qux') }
 
         it "should merge facts from the request if supplied" do
           request.options[:facts] = request_facts
-          Puppet::Node::Facts.stubs(:find) { indirection_facts }
+          Oregano::Node::Facts.stubs(:find) { indirection_facts }
 
           expect(node_indirection.find(request).parameters).to include(request_facts.values)
           expect(node_indirection.find(request).facts).to eq(request_facts)
         end
 
         it "should find facts if none are supplied" do
-          Puppet::Node::Facts.indirection.stubs(:find).with(nodename, :environment => environment).returns(indirection_facts)
+          Oregano::Node::Facts.indirection.stubs(:find).with(nodename, :environment => environment).returns(indirection_facts)
           request.options.delete(:facts)
 
           expect(node_indirection.find(request).parameters).to include(indirection_facts.values)
@@ -249,7 +249,7 @@ describe Puppet::Node::Ldap do
 
           node_indirection.expects(:name2hash).with('parent').returns nil
 
-          expect { node_indirection.find(request) }.to raise_error(Puppet::Error, /Could not find parent node/)
+          expect { node_indirection.find(request) }.to raise_error(Oregano::Error, /Could not find parent node/)
         end
 
         it "should add any parent classes to the node's classes" do
@@ -280,28 +280,28 @@ describe Puppet::Node::Ldap do
         end
 
         it "should use the parent's environment if the node has none" do
-          env = Puppet::Node::Environment.create(:parent, [])
+          env = Oregano::Node::Environment.create(:parent, [])
           @entry[:parent] = "parent"
 
           @parent[:environment] = "parent"
 
-          Puppet::Node::Facts.indirection.stubs(:find).with(nodename, :environment => env).returns(facts)
+          Oregano::Node::Facts.indirection.stubs(:find).with(nodename, :environment => env).returns(facts)
 
-          Puppet.override(:environments => Puppet::Environments::Static.new(env)) do
+          Oregano.override(:environments => Oregano::Environments::Static.new(env)) do
             expect(node_indirection.find(request).environment).to eq(env)
           end
         end
 
         it "should prefer the node's environment to the parent's" do
-          child_env = Puppet::Node::Environment.create(:child, [])
+          child_env = Oregano::Node::Environment.create(:child, [])
           @entry[:parent] = "parent"
           @entry[:environment] = "child"
 
           @parent[:environment] = "parent"
 
-          Puppet::Node::Facts.indirection.stubs(:find).with(nodename, :environment => child_env).returns(facts)
+          Oregano::Node::Facts.indirection.stubs(:find).with(nodename, :environment => child_env).returns(facts)
 
-          Puppet.override(:environments => Puppet::Environments::Static.new(child_env)) do
+          Oregano.override(:environments => Oregano::Environments::Static.new(child_env)) do
 
             expect(node_indirection.find(request).environment).to eq(child_env)
           end
@@ -330,14 +330,14 @@ describe Puppet::Node::Ldap do
 
   describe "when searching for multiple nodes" do
     let(:options) { {:environment => environment} }
-    let(:request) { Puppet::Indirector::Request.new(:node, :find, nodename, nil, options) }
+    let(:request) { Oregano::Indirector::Request.new(:node, :find, nodename, nil, options) }
 
     before :each do
-      Puppet::Node::Facts.indirection.stubs(:terminus_class).returns :yaml
+      Oregano::Node::Facts.indirection.stubs(:terminus_class).returns :yaml
     end
 
     it "should find all nodes if no arguments are provided" do
-      node_indirection.expects(:ldapsearch).with("(objectclass=puppetClient)")
+      node_indirection.expects(:ldapsearch).with("(objectclass=oreganoClient)")
       # LAK:NOTE The search method requires an essentially bogus key.  It's
       # an API problem that I don't really know how to fix.
       node_indirection.search request
@@ -345,7 +345,7 @@ describe Puppet::Node::Ldap do
 
     describe "and a class is specified" do
       it "should find all nodes that are members of that class" do
-        node_indirection.expects(:ldapsearch).with("(&(objectclass=puppetClient)(puppetclass=one))")
+        node_indirection.expects(:ldapsearch).with("(&(objectclass=oreganoClient)(oreganoclass=one))")
 
         options[:class] = "one"
         node_indirection.search request
@@ -354,7 +354,7 @@ describe Puppet::Node::Ldap do
 
     describe "multiple classes are specified" do
       it "should find all nodes that are members of all classes" do
-        node_indirection.expects(:ldapsearch).with("(&(objectclass=puppetClient)(puppetclass=one)(puppetclass=two))")
+        node_indirection.expects(:ldapsearch).with("(&(objectclass=oreganoClient)(oreganoclass=one)(oreganoclass=two))")
         options[:class] = %w{one two}
         node_indirection.search request
       end
@@ -371,7 +371,7 @@ describe Puppet::Node::Ldap do
       node_indirection.expects(:ldapsearch).yields("whatever")
       node_indirection.expects(:entry2hash).with("whatever",nil).returns(:name => nodename)
       result = node_indirection.search(request)
-      expect(result[0]).to be_instance_of(Puppet::Node)
+      expect(result[0]).to be_instance_of(Oregano::Node)
       expect(result[0].name).to eq(nodename)
     end
 
@@ -389,29 +389,29 @@ describe Puppet::Node::Ldap do
     end
   end
 
-  describe Puppet::Node::Ldap, " when developing the search query" do
+  describe Oregano::Node::Ldap, " when developing the search query" do
     it "should return the value of the :ldapclassattrs split on commas as the class attributes" do
-      Puppet[:ldapclassattrs] = "one,two"
+      Oregano[:ldapclassattrs] = "one,two"
       expect(node_indirection.class_attributes).to eq(%w{one two})
     end
 
     it "should return nil as the parent attribute if the :ldapparentattr is set to an empty string" do
-      Puppet[:ldapparentattr] = ""
+      Oregano[:ldapparentattr] = ""
       expect(node_indirection.parent_attribute).to be_nil
     end
 
     it "should return the value of the :ldapparentattr as the parent attribute" do
-      Puppet[:ldapparentattr] = "pere"
+      Oregano[:ldapparentattr] = "pere"
       expect(node_indirection.parent_attribute).to eq("pere")
     end
 
     it "should use the value of the :ldapstring as the search filter" do
-      Puppet[:ldapstring] = "mystring"
+      Oregano[:ldapstring] = "mystring"
       expect(node_indirection.search_filter("testing")).to eq("mystring")
     end
 
     it "should replace '%s' with the node name in the search filter if it is present" do
-      Puppet[:ldapstring] = "my%sstring"
+      Oregano[:ldapstring] = "my%sstring"
       expect(node_indirection.search_filter("testing")).to eq("mytestingstring")
     end
 
@@ -419,26 +419,26 @@ describe Puppet::Node::Ldap do
       filter = mock 'filter'
       filter.expects(:include?).with("%s").returns(true)
       filter.expects(:gsub).with("%s", "testing").returns("mynewstring")
-      Puppet[:ldapstring] = filter
+      Oregano[:ldapstring] = filter
       expect(node_indirection.search_filter("testing")).to eq("mynewstring")
     end
   end
 
-  describe Puppet::Node::Ldap, " when deciding attributes to search for" do
+  describe Oregano::Node::Ldap, " when deciding attributes to search for" do
     it "should use 'nil' if the :ldapattrs setting is 'all'" do
-      Puppet[:ldapattrs] = "all"
+      Oregano[:ldapattrs] = "all"
       expect(node_indirection.search_attributes).to be_nil
     end
 
     it "should split the value of :ldapattrs on commas and use the result as the attribute list" do
-      Puppet[:ldapattrs] = "one,two"
+      Oregano[:ldapattrs] = "one,two"
       node_indirection.stubs(:class_attributes).returns([])
       node_indirection.stubs(:parent_attribute).returns(nil)
       expect(node_indirection.search_attributes).to eq(%w{one two})
     end
 
     it "should add the class attributes to the search attributes if not returning all attributes" do
-      Puppet[:ldapattrs] = "one,two"
+      Oregano[:ldapattrs] = "one,two"
       node_indirection.stubs(:class_attributes).returns(%w{three four})
       node_indirection.stubs(:parent_attribute).returns(nil)
       # Sort them so i don't have to care about return order
@@ -446,14 +446,14 @@ describe Puppet::Node::Ldap do
     end
 
     it "should add the parent attribute to the search attributes if not returning all attributes" do
-      Puppet[:ldapattrs] = "one,two"
+      Oregano[:ldapattrs] = "one,two"
       node_indirection.stubs(:class_attributes).returns([])
       node_indirection.stubs(:parent_attribute).returns("parent")
       expect(node_indirection.search_attributes.sort).to eq(%w{one two parent}.sort)
     end
 
     it "should not add nil parent attributes to the search attributes" do
-      Puppet[:ldapattrs] = "one,two"
+      Oregano[:ldapattrs] = "one,two"
       node_indirection.stubs(:class_attributes).returns([])
       node_indirection.stubs(:parent_attribute).returns(nil)
       expect(node_indirection.search_attributes).to eq(%w{one two})

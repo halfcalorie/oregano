@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/provider/ldap'
+require 'oregano/provider/ldap'
 
-describe Puppet::Provider::Ldap do
+describe Oregano::Provider::Ldap do
   before do
-    @class = Class.new(Puppet::Provider::Ldap)
+    @class = Class.new(Oregano::Provider::Ldap)
   end
 
   it "should be able to define its manager" do
     manager = mock 'manager'
-    Puppet::Util::Ldap::Manager.expects(:new).returns manager
+    Oregano::Util::Ldap::Manager.expects(:new).returns manager
     @class.stubs :mk_resource_methods
     manager.expects(:manages).with(:one)
     expect(@class.manages(:one)).to equal(manager)
@@ -23,7 +23,7 @@ describe Puppet::Provider::Ldap do
 
   it "should create its resource getter/setter methods when the manager is defined" do
     manager = mock 'manager'
-    Puppet::Util::Ldap::Manager.expects(:new).returns manager
+    Oregano::Util::Ldap::Manager.expects(:new).returns manager
     @class.expects :mk_resource_methods
     manager.stubs(:manages)
     expect(@class.manages(:one)).to equal(manager)
@@ -108,13 +108,13 @@ describe Puppet::Provider::Ldap do
 
   describe "when being initialized" do
     it "should fail if no manager has been defined" do
-      expect { @class.new }.to raise_error(Puppet::DevError)
+      expect { @class.new }.to raise_error(Oregano::DevError)
     end
 
     it "should fail if the manager is invalid" do
       manager = stub "manager", :valid? => false
       @class.stubs(:manager).returns manager
-      expect { @class.new }.to raise_error(Puppet::DevError)
+      expect { @class.new }.to raise_error(Oregano::DevError)
     end
 
     describe "with a hash" do
@@ -125,7 +125,7 @@ describe Puppet::Provider::Ldap do
         @resource_class = mock 'resource_class'
         @class.stubs(:resource_type).returns @resource_class
 
-        @property_class = stub 'property_class', :array_matching => :all, :superclass => Puppet::Property
+        @property_class = stub 'property_class', :array_matching => :all, :superclass => Oregano::Property
         @resource_class.stubs(:attrclass).with(:one).returns(@property_class)
         @resource_class.stubs(:valid_parameter?).returns true
       end
@@ -149,7 +149,7 @@ describe Puppet::Provider::Ldap do
 
       it "should only use the first value for attributes that are not properties" do
         # Yay.  hackish, but easier than mocking everything.
-        @resource_class.expects(:attrclass).with(:a).returns Puppet::Type.type(:user).attrclass(:name)
+        @resource_class.expects(:attrclass).with(:a).returns Oregano::Type.type(:user).attrclass(:name)
         @property_class.stubs(:array_matching).returns :all
 
         instance = @class.new(:one => %w{two three}, :a => %w{b c})
@@ -172,7 +172,7 @@ describe Puppet::Provider::Ldap do
       @class.stubs(:manager).returns @manager
       @instance = @class.new
 
-      @property_class = stub 'property_class', :array_matching => :all, :superclass => Puppet::Property
+      @property_class = stub 'property_class', :array_matching => :all, :superclass => Oregano::Property
       @resource_class = stub 'resource_class', :attrclass => @property_class, :valid_parameter? => true, :validproperties => [:one, :two]
       @class.stubs(:resource_type).returns @resource_class
     end

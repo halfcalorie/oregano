@@ -23,7 +23,7 @@ manifest = %Q{
 }
 
   step "Query agent for statefile"
-  on agent, puppet_agent('--configprint statefile') do
+  on agent, oregano_agent('--configprint statefile') do
     statefile=stdout.chomp
 
     step "Remove the statefile on the agent"

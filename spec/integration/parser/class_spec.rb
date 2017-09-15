@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet_spec/language'
+require 'oregano_spec/language'
 
 describe "Class expressions" do
-  extend PuppetSpec::Language
+  extend OreganoSpec::Language
 
   produces(
     "class hi { }"                                       => '!defined(Class[hi])',

@@ -1,15 +1,15 @@
 Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
-Name: Puppet
+Name: Oregano
 Maintainer:
- Michael Stahnke <stahnma@puppetlabs.com>,
+ Michael Stahnke <stahnma@oreganolabs.com>,
  Andrew Pollock <apollock@debian.org>,
  Micah Anderson <micah@debian.org>,
  Nigel Kersten <nigel@explanatorygap.net>,
  Stig Sandbeck Mathisen <ssm@debian.org>
-Source: git://github.com/puppetlabs/puppet.git,
- https://docs.puppetlabs.com/puppet/latest/reference/install_pre.html
+Source: git://github.com/oreganolabs/oregano.git,
+ https://docs.oreganolabs.com/oregano/latest/reference/install_pre.html
 
-Copyright: 2005-2015 Puppet Labs
+Copyright: 2005-2015 Oregano Labs
 License: Apache 2.0
 
 Files: debian/*
@@ -27,11 +27,11 @@ Files: install.rb
 Copyright: Austin Ziegler <ruby-install@halostatue.ca>
 License: GPL-2+
 
-Files: conf/gentoo/init.d/puppet*
+Files: conf/gentoo/init.d/oregano*
 Copyright: Gentoo Foundation
 License: GPL-2
 
-Files: lib/puppet/util/rdoc/generators/template/puppet/puppet.rb
+Files: lib/oregano/util/rdoc/generators/template/oregano/oregano.rb
 Copyright: The FaerieMUD Consortium.
 License: CC-BY-1.0
  This work is licensed under the Creative Commons Attribution License. To view
@@ -57,11 +57,11 @@ License: Apache
  On Debian systems, the full text of the Apache License can be found at
  "/usr/share/common-licenses/Apache-2.0"
 
-Files: lib/puppet/external/event-loop/*
+Files: lib/oregano/external/event-loop/*
 Copyright: Daniel Brockman
 License: GPL-2+
 
-Files: lib/puppet/external/nagios/parser.rb
+Files: lib/oregano/external/nagios/parser.rb
 Copyright: Minero Aoki
 License: other
  This program is free software.
@@ -71,7 +71,7 @@ License: other
  into a Racc output file, you may use that output file
  without restriction.
 
-Files: lib/puppet/network/http_server/mongrel.rb
+Files: lib/oregano/network/http_server/mongrel.rb
 Copyright: Manuel Holtgrewe, Luke Kanies
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining
@@ -94,23 +94,23 @@ License: MIT
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
 
-Files: lib/puppet/provider/augeas/augeas.rb, lib/puppet/type/augeas.rb
+Files: lib/oregano/provider/augeas/augeas.rb, lib/oregano/type/augeas.rb
 Copyright: Red Hat Inc.
 License: GPL-2+
 
-Files: lib/puppet/provider/mcx/mcxcontent.rb
+Files: lib/oregano/provider/mcx/mcxcontent.rb
 Copyright: Jeff McCune <jeff@northstarlabs.net>
 License: GPL-2+
 
-Files: lib/puppet/type/mcx.rb, spec/unit/type/mcx.rb
+Files: lib/oregano/type/mcx.rb, spec/unit/type/mcx.rb
 Copyright: Jeffrey J McCune.
 License: GPL-2+
 
-Files: lib/puppet/provider/nameservice/directoryservice.rb
+Files: lib/oregano/provider/nameservice/directoryservice.rb
 Copyright: Jeff McCune
 License: GPL-2
 
-Files: lib/puppet/provider/package/pkgdmg.rb
+Files: lib/oregano/provider/package/pkgdmg.rb
 Copyright: Jeff McCune Jeff McCune <jeff@northstarlabs.net>
 License: GPL-2
 
@@ -118,7 +118,7 @@ Files: test/ral/providers/service/debian.rb
 Copyright: David Schmitt
 License: missing
 
-Files: examples/modules/sample-module/lib/puppet/parser/functions/hostname_to_dn.rb
+Files: examples/modules/sample-module/lib/oregano/parser/functions/hostname_to_dn.rb
 Copyright: David Schmitt <david@schmitt.edv-bus.at>
 License: BSD
  Redistribution and use in source and binary forms, with or without

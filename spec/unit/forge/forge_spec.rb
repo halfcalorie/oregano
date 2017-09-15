@@ -1,9 +1,9 @@
 # encoding: utf-8
 require 'spec_helper'
 require 'net/http'
-require 'puppet/forge/repository'
+require 'oregano/forge/repository'
 
-describe Puppet::Forge do
+describe Oregano::Forge do
   before(:all) do
     # any local http proxy will break these tests
     ENV['http_proxy'] = nil
@@ -11,8 +11,8 @@ describe Puppet::Forge do
   end
 
   let(:host) { 'fake.com' }
-  let(:forge) { Puppet::Forge.new("http://#{host}") }
-  # creates a repository like Puppet::Forge::Repository.new('http://fake.com', USER_AGENT)
+  let(:forge) { Oregano::Forge.new("http://#{host}") }
+  # creates a repository like Oregano::Forge::Repository.new('http://fake.com', USER_AGENT)
 
   # different UTF-8 widths
   # 1-byte A
@@ -32,9 +32,9 @@ describe Puppet::Forge do
     context "search request" do
 
       it "includes any defined module_groups, ensuring to only encode them once in the URI" do
-        Puppet[:module_groups] = 'base+pe'
+        Oregano[:module_groups] = 'base+pe'
 
-        # ignores Puppet::Forge::Repository#read_response, provides response to search
+        # ignores Oregano::Forge::Repository#read_response, provides response to search
         performs_an_http_request(ok_response) do |http|
           encoded_uri = "/v3/modules?query=#{mixed_utf8_query_param_encoded}&module_groups=base%20pe"
           http.expects(:request).with(responds_with(:path, encoded_uri))
@@ -44,7 +44,7 @@ describe Puppet::Forge do
       end
 
       it "single encodes the search term in the URI" do
-        # ignores Puppet::Forge::Repository#read_response, provides response to search
+        # ignores Oregano::Forge::Repository#read_response, provides response to search
         performs_an_http_request(ok_response) do |http|
           encoded_uri = "/v3/modules?query=#{mixed_utf8_query_param_encoded}"
           http.expects(:request).with(responds_with(:path, encoded_uri))
@@ -57,10 +57,10 @@ describe Puppet::Forge do
     context "fetch request" do
 
       it "includes any defined module_groups, ensuring to only encode them once in the URI" do
-        Puppet[:module_groups] = 'base+pe'
-        module_name = 'puppetlabs-acl'
+        Oregano[:module_groups] = 'base+pe'
+        module_name = 'oreganolabs-acl'
 
-        # ignores Puppet::Forge::Repository#read_response, provides response to fetch
+        # ignores Oregano::Forge::Repository#read_response, provides response to fetch
         performs_an_http_request(ok_response) do |http|
           encoded_uri = "/v3/releases?module=#{module_name}&module_groups=base%20pe"
           http.expects(:request).with(responds_with(:path, encoded_uri))
@@ -70,11 +70,11 @@ describe Puppet::Forge do
       end
 
       it "single encodes the module name term in the URI" do
-        module_name = "puppetlabs-#{mixed_utf8_query_param}"
+        module_name = "oreganolabs-#{mixed_utf8_query_param}"
 
-        # ignores Puppet::Forge::Repository#read_response, provides response to fetch
+        # ignores Oregano::Forge::Repository#read_response, provides response to fetch
         performs_an_http_request(ok_response) do |http|
-          encoded_uri = "/v3/releases?module=puppetlabs-#{mixed_utf8_query_param_encoded}"
+          encoded_uri = "/v3/releases?module=oreganolabs-#{mixed_utf8_query_param_encoded}"
           http.expects(:request).with(responds_with(:path, encoded_uri))
         end
 
@@ -89,8 +89,8 @@ describe Puppet::Forge do
   end
 
   def proxy_settings_of(host, port)
-    Puppet[:http_proxy_host] = host
-    Puppet[:http_proxy_port] = port
+    Oregano[:http_proxy_host] = host
+    Oregano[:http_proxy_port] = port
   end
 
   def mock_proxy(port, proxy_args, result, &block)

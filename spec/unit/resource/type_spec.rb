@@ -1,19 +1,19 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/resource/type'
-require 'puppet/pops'
+require 'oregano/resource/type'
+require 'oregano/pops'
 require 'matchers/json'
 
-describe Puppet::Resource::Type do
+describe Oregano::Resource::Type do
   include JSONMatchers
 
   it "should have a 'name' attribute" do
-    expect(Puppet::Resource::Type.new(:hostclass, "foo").name).to eq("foo")
+    expect(Oregano::Resource::Type.new(:hostclass, "foo").name).to eq("foo")
   end
 
   [:code, :doc, :line, :file, :resource_type_collection].each do |attr|
     it "should have a '#{attr}' attribute" do
-      type = Puppet::Resource::Type.new(:hostclass, "foo")
+      type = Oregano::Resource::Type.new(:hostclass, "foo")
       type.send(attr.to_s + "=", "yay")
       expect(type.send(attr)).to eq("yay")
     end
@@ -21,162 +21,162 @@ describe Puppet::Resource::Type do
 
   [:hostclass, :node, :definition].each do |type|
     it "should know when it is a #{type}" do
-      expect(Puppet::Resource::Type.new(type, "foo").send("#{type}?")).to be_truthy
+      expect(Oregano::Resource::Type.new(type, "foo").send("#{type}?")).to be_truthy
     end
   end
 
   describe "when a node"  do
     it "should allow a regex as its name" do
-      expect { Puppet::Resource::Type.new(:node, /foo/) }.not_to raise_error
+      expect { Oregano::Resource::Type.new(:node, /foo/) }.not_to raise_error
     end
 
     it "should allow an AST::HostName instance as its name" do
-      regex = Puppet::Parser::AST::Regex.new(:value => /foo/)
-      name = Puppet::Parser::AST::HostName.new(:value => regex)
-      expect { Puppet::Resource::Type.new(:node, name) }.not_to raise_error
+      regex = Oregano::Parser::AST::Regex.new(:value => /foo/)
+      name = Oregano::Parser::AST::HostName.new(:value => regex)
+      expect { Oregano::Resource::Type.new(:node, name) }.not_to raise_error
     end
 
     it "should match against the regexp in the AST::HostName when a HostName instance is provided" do
-      regex = Puppet::Parser::AST::Regex.new(:value => /\w/)
-      name = Puppet::Parser::AST::HostName.new(:value => regex)
-      node = Puppet::Resource::Type.new(:node, name)
+      regex = Oregano::Parser::AST::Regex.new(:value => /\w/)
+      name = Oregano::Parser::AST::HostName.new(:value => regex)
+      node = Oregano::Resource::Type.new(:node, name)
 
       expect(node.match("foo")).to be_truthy
     end
 
     it "should return the value of the hostname if provided a string-form AST::HostName instance as the name" do
-      name = Puppet::Parser::AST::HostName.new(:value => "foo")
-      node = Puppet::Resource::Type.new(:node, name)
+      name = Oregano::Parser::AST::HostName.new(:value => "foo")
+      node = Oregano::Resource::Type.new(:node, name)
 
       expect(node.name).to eq("foo")
     end
 
     describe "and the name is a regex" do
       it "should have a method that indicates that this is the case" do
-        expect(Puppet::Resource::Type.new(:node, /w/)).to be_name_is_regex
+        expect(Oregano::Resource::Type.new(:node, /w/)).to be_name_is_regex
       end
 
       it "should set its namespace to ''" do
-        expect(Puppet::Resource::Type.new(:node, /w/).namespace).to eq("")
+        expect(Oregano::Resource::Type.new(:node, /w/).namespace).to eq("")
       end
 
       it "should return the regex converted to a string when asked for its name" do
-        expect(Puppet::Resource::Type.new(:node, /ww/).name).to eq("__node_regexp__ww")
+        expect(Oregano::Resource::Type.new(:node, /ww/).name).to eq("__node_regexp__ww")
       end
 
       it "should downcase the regex when returning the name as a string" do
-        expect(Puppet::Resource::Type.new(:node, /W/).name).to eq("__node_regexp__w")
+        expect(Oregano::Resource::Type.new(:node, /W/).name).to eq("__node_regexp__w")
       end
 
       it "should remove non-alpha characters when returning the name as a string" do
-        expect(Puppet::Resource::Type.new(:node, /w*w/).name).not_to include("*")
+        expect(Oregano::Resource::Type.new(:node, /w*w/).name).not_to include("*")
       end
 
       it "should remove leading dots when returning the name as a string" do
-        expect(Puppet::Resource::Type.new(:node, /.ww/).name).not_to match(/^\./)
+        expect(Oregano::Resource::Type.new(:node, /.ww/).name).not_to match(/^\./)
       end
 
       it "should have a method for matching its regex name against a provided name" do
-        expect(Puppet::Resource::Type.new(:node, /.ww/)).to respond_to(:match)
+        expect(Oregano::Resource::Type.new(:node, /.ww/)).to respond_to(:match)
       end
 
       it "should return true when its regex matches the provided name" do
-        expect(Puppet::Resource::Type.new(:node, /\w/).match("foo")).to be_truthy
+        expect(Oregano::Resource::Type.new(:node, /\w/).match("foo")).to be_truthy
       end
 
       it "should return true when its regex matches the provided name" do
-        expect(Puppet::Resource::Type.new(:node, /\w/).match("foo")).to be_truthy
+        expect(Oregano::Resource::Type.new(:node, /\w/).match("foo")).to be_truthy
       end
 
       it "should return false when its regex does not match the provided name" do
-        expect(!!Puppet::Resource::Type.new(:node, /\d/).match("foo")).to be_falsey
+        expect(!!Oregano::Resource::Type.new(:node, /\d/).match("foo")).to be_falsey
       end
 
       it "should return true when its name, as a string, is matched against an equal string" do
-        expect(Puppet::Resource::Type.new(:node, "foo").match("foo")).to be_truthy
+        expect(Oregano::Resource::Type.new(:node, "foo").match("foo")).to be_truthy
       end
 
       it "should return false when its name is matched against an unequal string" do
-        expect(Puppet::Resource::Type.new(:node, "foo").match("bar")).to be_falsey
+        expect(Oregano::Resource::Type.new(:node, "foo").match("bar")).to be_falsey
       end
 
       it "should match names insensitive to case" do
-        expect(Puppet::Resource::Type.new(:node, "fOo").match("foO")).to be_truthy
+        expect(Oregano::Resource::Type.new(:node, "fOo").match("foO")).to be_truthy
       end
     end
   end
 
   describe "when initializing" do
     it "should require a resource super type" do
-      expect(Puppet::Resource::Type.new(:hostclass, "foo").type).to eq(:hostclass)
+      expect(Oregano::Resource::Type.new(:hostclass, "foo").type).to eq(:hostclass)
     end
 
     it "should fail if provided an invalid resource super type" do
-      expect { Puppet::Resource::Type.new(:nope, "foo") }.to raise_error(ArgumentError)
+      expect { Oregano::Resource::Type.new(:nope, "foo") }.to raise_error(ArgumentError)
     end
 
     it "should set its name to the downcased, stringified provided name" do
-      expect(Puppet::Resource::Type.new(:hostclass, "Foo::Bar".intern).name).to eq("foo::bar")
+      expect(Oregano::Resource::Type.new(:hostclass, "Foo::Bar".intern).name).to eq("foo::bar")
     end
 
     it "should set its namespace to the downcased, stringified qualified name for classes" do
-      expect(Puppet::Resource::Type.new(:hostclass, "Foo::Bar::Baz".intern).namespace).to eq("foo::bar::baz")
+      expect(Oregano::Resource::Type.new(:hostclass, "Foo::Bar::Baz".intern).namespace).to eq("foo::bar::baz")
     end
 
     [:definition, :node].each do |type|
       it "should set its namespace to the downcased, stringified qualified portion of the name for #{type}s" do
-        expect(Puppet::Resource::Type.new(type, "Foo::Bar::Baz".intern).namespace).to eq("foo::bar")
+        expect(Oregano::Resource::Type.new(type, "Foo::Bar::Baz".intern).namespace).to eq("foo::bar")
       end
     end
 
     %w{code line file doc}.each do |arg|
       it "should set #{arg} if provided" do
-        type = Puppet::Resource::Type.new(:hostclass, "foo", arg.to_sym => "something")
+        type = Oregano::Resource::Type.new(:hostclass, "foo", arg.to_sym => "something")
         expect(type.send(arg)).to eq("something")
       end
     end
 
     it "should set any provided arguments with the keys as symbols" do
-      type = Puppet::Resource::Type.new(:hostclass, "foo", :arguments => {:foo => "bar", :baz => "biz"})
+      type = Oregano::Resource::Type.new(:hostclass, "foo", :arguments => {:foo => "bar", :baz => "biz"})
       expect(type).to be_valid_parameter("foo")
       expect(type).to be_valid_parameter("baz")
     end
 
     it "should set any provided arguments with they keys as strings" do
-      type = Puppet::Resource::Type.new(:hostclass, "foo", :arguments => {"foo" => "bar", "baz" => "biz"})
+      type = Oregano::Resource::Type.new(:hostclass, "foo", :arguments => {"foo" => "bar", "baz" => "biz"})
       expect(type).to be_valid_parameter(:foo)
       expect(type).to be_valid_parameter(:baz)
     end
 
     it "should function if provided no arguments" do
-      type = Puppet::Resource::Type.new(:hostclass, "foo")
+      type = Oregano::Resource::Type.new(:hostclass, "foo")
       expect(type).not_to be_valid_parameter(:foo)
     end
   end
 
   describe "when testing the validity of an attribute" do
     it "should return true if the parameter was typed at initialization" do
-      expect(Puppet::Resource::Type.new(:hostclass, "foo", :arguments => {"foo" => "bar"})).to be_valid_parameter("foo")
+      expect(Oregano::Resource::Type.new(:hostclass, "foo", :arguments => {"foo" => "bar"})).to be_valid_parameter("foo")
     end
 
     it "should return true if it is a metaparam" do
-      expect(Puppet::Resource::Type.new(:hostclass, "foo")).to be_valid_parameter("require")
+      expect(Oregano::Resource::Type.new(:hostclass, "foo")).to be_valid_parameter("require")
     end
 
     it "should return true if the parameter is named 'name'" do
-      expect(Puppet::Resource::Type.new(:hostclass, "foo")).to be_valid_parameter("name")
+      expect(Oregano::Resource::Type.new(:hostclass, "foo")).to be_valid_parameter("name")
     end
 
     it "should return false if it is not a metaparam and was not provided at initialization" do
-      expect(Puppet::Resource::Type.new(:hostclass, "foo")).not_to be_valid_parameter("yayness")
+      expect(Oregano::Resource::Type.new(:hostclass, "foo")).not_to be_valid_parameter("yayness")
     end
   end
 
   describe "when setting its parameters in the scope" do
-    let(:parser) { Puppet::Pops::Parser::Parser.new() }
+    let(:parser) { Oregano::Pops::Parser::Parser.new() }
 
     def wrap3x(expression)
-      Puppet::Parser::AST::PopsBridge::Expression.new(:value => expression.model)
+      Oregano::Parser::AST::PopsBridge::Expression.new(:value => expression.model)
     end
 
     def parse_expression(expr_string)
@@ -184,28 +184,28 @@ describe Puppet::Resource::Type do
     end
 
     def number_expression(number)
-      wrap3x(Puppet::Pops::Model::Factory.NUMBER(number))
+      wrap3x(Oregano::Pops::Model::Factory.NUMBER(number))
     end
 
     def variable_expression(name)
-      wrap3x(Puppet::Pops::Model::Factory.QNAME(name).var())
+      wrap3x(Oregano::Pops::Model::Factory.QNAME(name).var())
     end
 
     def matchref_expression(number)
-      wrap3x(Puppet::Pops::Model::Factory.NUMBER(number).var())
+      wrap3x(Oregano::Pops::Model::Factory.NUMBER(number).var())
     end
 
     before(:each) do
-      compiler = Puppet::Parser::Compiler.new(Puppet::Node.new("foo"))
-      @scope = Puppet::Parser::Scope.new(compiler, :source => stub("source"))
-      @resource = Puppet::Parser::Resource.new(:foo, "bar", :scope => @scope)
-      @type = Puppet::Resource::Type.new(:definition, "foo")
+      compiler = Oregano::Parser::Compiler.new(Oregano::Node.new("foo"))
+      @scope = Oregano::Parser::Scope.new(compiler, :source => stub("source"))
+      @resource = Oregano::Parser::Resource.new(:foo, "bar", :scope => @scope)
+      @type = Oregano::Resource::Type.new(:definition, "foo")
       @resource.environment.known_resource_types.add @type
-      Puppet.push_context(:loaders => compiler.loaders)
+      Oregano.push_context(:loaders => compiler.loaders)
     end
 
     after(:each) do
-      Puppet.pop_context
+      Oregano.pop_context
     end
 
     ['module_name', 'name', 'title'].each do |variable|
@@ -271,7 +271,7 @@ describe Puppet::Resource::Type do
           :second => variable_expression('first'),
         })
         expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(
-          Puppet::Error, 'Foo[bar]: expects a value for parameter $first')
+          Oregano::Error, 'Foo[bar]: expects a value for parameter $first')
       end
 
       it 'does not clobber a given value' do
@@ -319,7 +319,7 @@ describe Puppet::Resource::Type do
 
       it 'fails when the default expression is evaluated' do
         @resource[:first] = 1
-        expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Puppet::Error, 'Foo[bar]: default expression for $second tries to illegally access not yet evaluated $third')
+        expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Oregano::Error, 'Foo[bar]: default expression for $second tries to illegally access not yet evaluated $third')
       end
     end
 
@@ -327,7 +327,7 @@ describe Puppet::Resource::Type do
       @type.set_arguments({
         :first => variable_expression('first')
       })
-      expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Puppet::Error, 'Foo[bar]: default expression for $first tries to illegally access not yet evaluated $first')
+      expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Oregano::Error, 'Foo[bar]: default expression for $first tries to illegally access not yet evaluated $first')
     end
 
     context 'when using match scope' do
@@ -389,17 +389,17 @@ describe Puppet::Resource::Type do
       @type.set_arguments :foo => nil
       @resource[:boo] = "baz"
 
-      expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Puppet::ParseError)
+      expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Oregano::ParseError)
     end
 
     it "should evaluate and set its default values as variables for parameters not provided by the resource" do
-      @type.set_arguments :foo => Puppet::Parser::AST::Leaf.new(:value => "something")
+      @type.set_arguments :foo => Oregano::Parser::AST::Leaf.new(:value => "something")
       @type.set_resource_parameters(@resource, @scope)
       expect(@scope['foo']).to eq("something")
     end
 
     it "should set all default values as parameters in the resource" do
-      @type.set_arguments :foo => Puppet::Parser::AST::Leaf.new(:value => "something")
+      @type.set_arguments :foo => Oregano::Parser::AST::Leaf.new(:value => "something")
 
       @type.set_resource_parameters(@resource, @scope)
 
@@ -409,7 +409,7 @@ describe Puppet::Resource::Type do
     it "should fail if the resource does not provide a value for a required argument" do
       @type.set_arguments :foo => nil
 
-      expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Puppet::ParseError)
+      expect { @type.set_resource_parameters(@resource, @scope) }.to raise_error(Oregano::ParseError)
     end
 
     it "should set the resource's title as a variable if not otherwise provided" do
@@ -443,19 +443,19 @@ describe Puppet::Resource::Type do
 
   describe "when describing and managing parent classes" do
     before do
-      environment = Puppet::Node::Environment.create(:testing, [])
+      environment = Oregano::Node::Environment.create(:testing, [])
       @krt = environment.known_resource_types
-      @parent = Puppet::Resource::Type.new(:hostclass, "bar")
+      @parent = Oregano::Resource::Type.new(:hostclass, "bar")
       @krt.add @parent
 
-      @child = Puppet::Resource::Type.new(:hostclass, "foo", :parent => "bar")
+      @child = Oregano::Resource::Type.new(:hostclass, "foo", :parent => "bar")
       @krt.add @child
 
-      @scope = Puppet::Parser::Scope.new(Puppet::Parser::Compiler.new(Puppet::Node.new("foo", :environment => environment)))
+      @scope = Oregano::Parser::Scope.new(Oregano::Parser::Compiler.new(Oregano::Node.new("foo", :environment => environment)))
     end
 
     it "should be able to define a parent" do
-      Puppet::Resource::Type.new(:hostclass, "foo", :parent => "bar")
+      Oregano::Resource::Type.new(:hostclass, "foo", :parent => "bar")
     end
 
     it "should use the code collection to find the parent resource type" do
@@ -463,9 +463,9 @@ describe Puppet::Resource::Type do
     end
 
     it "should be able to find parent nodes" do
-      parent = Puppet::Resource::Type.new(:node, "bar")
+      parent = Oregano::Resource::Type.new(:node, "bar")
       @krt.add parent
-      child = Puppet::Resource::Type.new(:node, "foo", :parent => "bar")
+      child = Oregano::Resource::Type.new(:node, "foo", :parent => "bar")
       @krt.add child
 
       expect(child.parent_type(@scope)).to equal(parent)
@@ -484,7 +484,7 @@ describe Puppet::Resource::Type do
     end
 
     it "should be considered the child of a parent's parent" do
-      @grandchild = Puppet::Resource::Type.new(:hostclass, "baz", :parent => "foo")
+      @grandchild = Oregano::Resource::Type.new(:hostclass, "baz", :parent => "foo")
       @krt.add @grandchild
 
       @child.parent_type(@scope)
@@ -494,7 +494,7 @@ describe Puppet::Resource::Type do
     end
 
     it "should correctly state when it is not another type's child" do
-      @notchild = Puppet::Resource::Type.new(:hostclass, "baz")
+      @notchild = Oregano::Resource::Type.new(:hostclass, "baz")
       @krt.add @notchild
 
       expect(@notchild).not_to be_child_of(@parent)
@@ -503,19 +503,19 @@ describe Puppet::Resource::Type do
 
   describe "when evaluating its code" do
     before do
-      @compiler = Puppet::Parser::Compiler.new(Puppet::Node.new("mynode"))
-      @scope = Puppet::Parser::Scope.new @compiler
-      @resource = Puppet::Parser::Resource.new(:class, "foo", :scope => @scope)
+      @compiler = Oregano::Parser::Compiler.new(Oregano::Node.new("mynode"))
+      @scope = Oregano::Parser::Scope.new @compiler
+      @resource = Oregano::Parser::Resource.new(:class, "foo", :scope => @scope)
 
       # This is so the internal resource lookup works, yo.
       @compiler.catalog.add_resource @resource
 
-      @type = Puppet::Resource::Type.new(:hostclass, "foo")
+      @type = Oregano::Resource::Type.new(:hostclass, "foo")
       @resource.environment.known_resource_types.add @type
     end
 
     it "should add node regex captures to its scope" do
-      @type = Puppet::Resource::Type.new(:node, /f(\w)o(.*)$/)
+      @type = Oregano::Resource::Type.new(:node, /f(\w)o(.*)$/)
       match = @type.match('foo')
 
       code = stub 'code'
@@ -541,7 +541,7 @@ describe Puppet::Resource::Type do
     end
 
     it "should not add defined resource names to the classes list" do
-      @type = Puppet::Resource::Type.new(:definition, "foo")
+      @type = Oregano::Resource::Type.new(:definition, "foo")
       @type.evaluate_code(@resource)
       expect(@compiler.catalog.classes).not_to be_include("foo")
     end
@@ -568,7 +568,7 @@ describe Puppet::Resource::Type do
     end
 
     it "should still create a scope but not store it if the type is a definition" do
-      @type = Puppet::Resource::Type.new(:definition, "foo")
+      @type = Oregano::Resource::Type.new(:definition, "foo")
       @type.evaluate_code(@resource)
       expect(@scope.class_scope(@type)).to be_nil
     end
@@ -576,7 +576,7 @@ describe Puppet::Resource::Type do
     it "should evaluate the AST code if any is provided" do
       code = stub 'code'
       @type.stubs(:code).returns code
-      code.expects(:safeevaluate).with kind_of(Puppet::Parser::Scope)
+      code.expects(:safeevaluate).with kind_of(Oregano::Parser::Scope)
 
       @type.evaluate_code(@resource)
     end
@@ -589,9 +589,9 @@ describe Puppet::Resource::Type do
 
     describe "and it has a parent class" do
       before do
-        @parent_type = Puppet::Resource::Type.new(:hostclass, "parent")
+        @parent_type = Oregano::Resource::Type.new(:hostclass, "parent")
         @type.parent = "parent"
-        @parent_resource = Puppet::Parser::Resource.new(:class, "parent", :scope => @scope)
+        @parent_resource = Oregano::Parser::Resource.new(:class, "parent", :scope => @scope)
 
         @compiler.add_resource @scope, @parent_resource
 
@@ -628,10 +628,10 @@ describe Puppet::Resource::Type do
 
     describe "and it has a parent node" do
       before do
-        @type = Puppet::Resource::Type.new(:node, "foo")
-        @parent_type = Puppet::Resource::Type.new(:node, "parent")
+        @type = Oregano::Resource::Type.new(:node, "foo")
+        @parent_type = Oregano::Resource::Type.new(:node, "parent")
         @type.parent = "parent"
-        @parent_resource = Puppet::Parser::Resource.new(:node, "parent", :scope => @scope)
+        @parent_resource = Oregano::Parser::Resource.new(:node, "parent", :scope => @scope)
 
         @compiler.add_resource @scope, @parent_resource
 
@@ -669,13 +669,13 @@ describe Puppet::Resource::Type do
 
   describe "when creating a resource" do
     before do
-      env = Puppet::Node::Environment.create('env', [])
-      @node = Puppet::Node.new("foo", :environment => env)
-      @compiler = Puppet::Parser::Compiler.new(@node)
-      @scope = Puppet::Parser::Scope.new(@compiler)
+      env = Oregano::Node::Environment.create('env', [])
+      @node = Oregano::Node.new("foo", :environment => env)
+      @compiler = Oregano::Parser::Compiler.new(@node)
+      @scope = Oregano::Parser::Scope.new(@compiler)
 
-      @top = Puppet::Resource::Type.new :hostclass, "top"
-      @middle = Puppet::Resource::Type.new :hostclass, "middle", :parent => "top"
+      @top = Oregano::Resource::Type.new :hostclass, "top"
+      @middle = Oregano::Resource::Type.new :hostclass, "middle", :parent => "top"
 
       @code = env.known_resource_types
       @code.add @top
@@ -683,25 +683,25 @@ describe Puppet::Resource::Type do
     end
 
     it "should create a resource instance" do
-      expect(@top.ensure_in_catalog(@scope)).to be_instance_of(Puppet::Parser::Resource)
+      expect(@top.ensure_in_catalog(@scope)).to be_instance_of(Oregano::Parser::Resource)
     end
 
     it "should set its resource type to 'class' when it is a hostclass" do
-      expect(Puppet::Resource::Type.new(:hostclass, "top").ensure_in_catalog(@scope).type).to eq("Class")
+      expect(Oregano::Resource::Type.new(:hostclass, "top").ensure_in_catalog(@scope).type).to eq("Class")
     end
 
     it "should set its resource type to 'node' when it is a node" do
-      expect(Puppet::Resource::Type.new(:node, "top").ensure_in_catalog(@scope).type).to eq("Node")
+      expect(Oregano::Resource::Type.new(:node, "top").ensure_in_catalog(@scope).type).to eq("Node")
     end
 
     it "should fail when it is a definition" do
-      expect { Puppet::Resource::Type.new(:definition, "top").ensure_in_catalog(@scope) }.to raise_error(ArgumentError)
+      expect { Oregano::Resource::Type.new(:definition, "top").ensure_in_catalog(@scope) }.to raise_error(ArgumentError)
     end
 
     it "should add the created resource to the scope's catalog" do
       @top.ensure_in_catalog(@scope)
 
-      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Puppet::Parser::Resource)
+      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Oregano::Parser::Resource)
     end
 
     it "should add specified parameters to the resource" do
@@ -712,32 +712,32 @@ describe Puppet::Resource::Type do
 
     it "should not require params for a param class" do
       @top.ensure_in_catalog(@scope, {})
-      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Puppet::Parser::Resource)
+      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Oregano::Parser::Resource)
     end
 
     it "should evaluate the parent class if one exists" do
       @middle.ensure_in_catalog(@scope)
 
-      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Puppet::Parser::Resource)
+      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Oregano::Parser::Resource)
     end
 
     it "should evaluate the parent class if one exists" do
       @middle.ensure_in_catalog(@scope, {})
 
-      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Puppet::Parser::Resource)
+      expect(@compiler.catalog.resource(:class, "top")).to be_instance_of(Oregano::Parser::Resource)
     end
 
     it "should fail if you try to create duplicate class resources" do
-      othertop = Puppet::Parser::Resource.new(:class, 'top',:source => @source, :scope => @scope )
+      othertop = Oregano::Parser::Resource.new(:class, 'top',:source => @source, :scope => @scope )
       # add the same class resource to the catalog
       @compiler.catalog.add_resource(othertop)
-      expect { @top.ensure_in_catalog(@scope, {}) }.to raise_error(Puppet::Resource::Catalog::DuplicateResourceError)
+      expect { @top.ensure_in_catalog(@scope, {}) }.to raise_error(Oregano::Resource::Catalog::DuplicateResourceError)
     end
 
     it "should fail to evaluate if a parent class is defined but cannot be found" do
-      othertop = Puppet::Resource::Type.new :hostclass, "something", :parent => "yay"
+      othertop = Oregano::Resource::Type.new :hostclass, "something", :parent => "yay"
       @code.add othertop
-      expect { othertop.ensure_in_catalog(@scope) }.to raise_error(Puppet::ParseError)
+      expect { othertop.ensure_in_catalog(@scope) }.to raise_error(Oregano::ParseError)
     end
 
     it "should not create a new resource if one already exists" do
@@ -778,65 +778,65 @@ describe Puppet::Resource::Type do
 
   describe "when merging code from another instance" do
     def code(str)
-      factory = Puppet::Pops::Model::Factory.literal(str)
+      factory = Oregano::Pops::Model::Factory.literal(str)
     end
 
     it "should fail unless it is a class" do
-      expect { Puppet::Resource::Type.new(:node, "bar").merge("foo") }.to raise_error(Puppet::Error)
+      expect { Oregano::Resource::Type.new(:node, "bar").merge("foo") }.to raise_error(Oregano::Error)
     end
 
     it "should fail unless the source instance is a class" do
-      dest = Puppet::Resource::Type.new(:hostclass, "bar")
-      source = Puppet::Resource::Type.new(:node, "foo")
-      expect { dest.merge(source) }.to raise_error(Puppet::Error)
+      dest = Oregano::Resource::Type.new(:hostclass, "bar")
+      source = Oregano::Resource::Type.new(:node, "foo")
+      expect { dest.merge(source) }.to raise_error(Oregano::Error)
     end
 
     it "should fail if both classes have different parent classes" do
-      code = Puppet::Resource::TypeCollection.new("env")
+      code = Oregano::Resource::TypeCollection.new("env")
       {"a" => "b", "c" => "d"}.each do |parent, child|
-        code.add Puppet::Resource::Type.new(:hostclass, parent)
-        code.add Puppet::Resource::Type.new(:hostclass, child, :parent => parent)
+        code.add Oregano::Resource::Type.new(:hostclass, parent)
+        code.add Oregano::Resource::Type.new(:hostclass, child, :parent => parent)
       end
-      expect { code.hostclass("b").merge(code.hostclass("d")) }.to raise_error(Puppet::Error)
+      expect { code.hostclass("b").merge(code.hostclass("d")) }.to raise_error(Oregano::Error)
     end
 
     it "should fail if it's named 'main' and 'freeze_main' is enabled" do
-      Puppet.settings[:freeze_main] = true
-      code = Puppet::Resource::TypeCollection.new("env")
-      code.add Puppet::Resource::Type.new(:hostclass, "")
-      other = Puppet::Resource::Type.new(:hostclass, "")
-      expect { code.hostclass("").merge(other) }.to raise_error(Puppet::Error)
+      Oregano.settings[:freeze_main] = true
+      code = Oregano::Resource::TypeCollection.new("env")
+      code.add Oregano::Resource::Type.new(:hostclass, "")
+      other = Oregano::Resource::Type.new(:hostclass, "")
+      expect { code.hostclass("").merge(other) }.to raise_error(Oregano::Error)
     end
 
     it "should copy the other class's parent if it has not parent" do
-      dest = Puppet::Resource::Type.new(:hostclass, "bar")
+      dest = Oregano::Resource::Type.new(:hostclass, "bar")
 
-      parent = Puppet::Resource::Type.new(:hostclass, "parent")
-      source = Puppet::Resource::Type.new(:hostclass, "foo", :parent => "parent")
+      parent = Oregano::Resource::Type.new(:hostclass, "parent")
+      source = Oregano::Resource::Type.new(:hostclass, "foo", :parent => "parent")
       dest.merge(source)
 
       expect(dest.parent).to eq("parent")
     end
 
     it "should copy the other class's documentation as its docs if it has no docs" do
-      dest = Puppet::Resource::Type.new(:hostclass, "bar")
-      source = Puppet::Resource::Type.new(:hostclass, "foo", :doc => "yayness")
+      dest = Oregano::Resource::Type.new(:hostclass, "bar")
+      source = Oregano::Resource::Type.new(:hostclass, "foo", :doc => "yayness")
       dest.merge(source)
 
       expect(dest.doc).to eq("yayness")
     end
 
     it "should append the other class's docs to its docs if it has any" do
-      dest = Puppet::Resource::Type.new(:hostclass, "bar", :doc => "fooness")
-      source = Puppet::Resource::Type.new(:hostclass, "foo", :doc => "yayness")
+      dest = Oregano::Resource::Type.new(:hostclass, "bar", :doc => "fooness")
+      source = Oregano::Resource::Type.new(:hostclass, "foo", :doc => "yayness")
       dest.merge(source)
 
       expect(dest.doc).to eq("foonessyayness")
     end
 
     it "should set the other class's code as its code if it has none" do
-      dest = Puppet::Resource::Type.new(:hostclass, "bar")
-      source = Puppet::Resource::Type.new(:hostclass, "foo", :code => code("bar").model)
+      dest = Oregano::Resource::Type.new(:hostclass, "bar")
+      source = Oregano::Resource::Type.new(:hostclass, "foo", :code => code("bar").model)
 
       dest.merge(source)
 
@@ -849,11 +849,11 @@ describe Puppet::Resource::Type do
       # with references to the two original blocks.
       # TODO: fix this when the code merging is changed at the very top in 4x.
       #
-      dcode = Puppet::Parser::AST::BlockExpression.new(:children => [code("dest")])
-      dest = Puppet::Resource::Type.new(:hostclass, "bar", :code => dcode)
+      dcode = Oregano::Parser::AST::BlockExpression.new(:children => [code("dest")])
+      dest = Oregano::Resource::Type.new(:hostclass, "bar", :code => dcode)
 
-      scode = Puppet::Parser::AST::BlockExpression.new(:children => [code("source")])
-      source = Puppet::Resource::Type.new(:hostclass, "foo", :code => scode)
+      scode = Oregano::Parser::AST::BlockExpression.new(:children => [code("source")])
+      source = Oregano::Resource::Type.new(:hostclass, "foo", :code => scode)
 
       dest.merge(source)
       expect(dest.code.children.map { |c| c.value }).to eq(%w{dest source})

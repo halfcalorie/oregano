@@ -1,5 +1,5 @@
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 require File.join(File.dirname(__FILE__), '/../factory_rspec_helper')
 
@@ -15,18 +15,18 @@ module EvaluatorRspecHelper
   # a block that asserts the state of the top scope after the operations.
   #
   def evaluate in_top_scope, scopename="x", in_named_scope = nil, in_top_scope_again = nil, &block
-    node = Puppet::Node.new('localhost')
-    compiler = Puppet::Parser::Compiler.new(node)
+    node = Oregano::Node.new('localhost')
+    compiler = Oregano::Parser::Compiler.new(node)
 
     # compiler creates the top scope if one is not present
     top_scope = compiler.topscope()
-    # top_scope = Puppet::Parser::Scope.new(compiler)
+    # top_scope = Oregano::Parser::Scope.new(compiler)
 
-    evaluator = Puppet::Pops::Evaluator::EvaluatorImpl.new
-    Puppet.override(:loaders => compiler.loaders) do
+    evaluator = Oregano::Pops::Evaluator::EvaluatorImpl.new
+    Oregano.override(:loaders => compiler.loaders) do
       result = evaluator.evaluate(in_top_scope.model, top_scope)
       if in_named_scope
-        other_scope = Puppet::Parser::Scope.new(compiler)
+        other_scope = Oregano::Parser::Scope.new(compiler)
         result = evaluator.evaluate(in_named_scope.model, other_scope)
       end
       if in_top_scope_again
@@ -47,14 +47,14 @@ module EvaluatorRspecHelper
   # a block that asserts the state of the top scope after the operations.
   #
   def evaluate_l in_top_scope, in_local_scope = nil, in_top_scope_again = nil, &block
-    node = Puppet::Node.new('localhost')
-    compiler = Puppet::Parser::Compiler.new(node)
+    node = Oregano::Node.new('localhost')
+    compiler = Oregano::Parser::Compiler.new(node)
 
     # compiler creates the top scope if one is not present
     top_scope = compiler.topscope()
 
-    evaluator = Puppet::Pops::Evaluator::EvaluatorImpl.new
-    Puppet.override(:loaders => compiler.loaders) do
+    evaluator = Oregano::Pops::Evaluator::EvaluatorImpl.new
+    Oregano.override(:loaders => compiler.loaders) do
       result = evaluator.evaluate(in_top_scope.model, top_scope)
       if in_local_scope
         # This is really bad in 3.x scope

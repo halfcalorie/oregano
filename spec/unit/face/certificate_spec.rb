@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/face'
+require 'oregano/face'
 
-require 'puppet/ssl/host'
+require 'oregano/ssl/host'
 
-describe Puppet::Face[:certificate, '0.0.1'] do
-  include PuppetSpec::Files
+describe Oregano::Face[:certificate, '0.0.1'] do
+  include OreganoSpec::Files
 
-  let(:ca) { Puppet::SSL::CertificateAuthority.instance }
+  let(:ca) { Oregano::SSL::CertificateAuthority.instance }
 
   # different UTF-8 widths
   # 1-byte A
@@ -17,15 +17,15 @@ describe Puppet::Face[:certificate, '0.0.1'] do
   let (:mixed_utf8) { "A\u06FF\u16A0\u{2070E}" } # Aۿᚠ܎
 
   before :each do
-    Puppet[:confdir] = tmpdir('conf')
-    Puppet::SSL::CertificateAuthority.stubs(:ca?).returns true
+    Oregano[:confdir] = tmpdir('conf')
+    Oregano::SSL::CertificateAuthority.stubs(:ca?).returns true
 
-    Puppet::SSL::Host.ca_location = :local
+    Oregano::SSL::Host.ca_location = :local
 
     # We can't cache the CA between tests, because each one has its own SSL dir.
-    ca = Puppet::SSL::CertificateAuthority.new
-    Puppet::SSL::CertificateAuthority.stubs(:new).returns ca
-    Puppet::SSL::CertificateAuthority.stubs(:instance).returns ca
+    ca = Oregano::SSL::CertificateAuthority.new
+    Oregano::SSL::CertificateAuthority.stubs(:new).returns ca
+    Oregano::SSL::CertificateAuthority.stubs(:instance).returns ca
   end
 
   it "should have a ca-location option" do
@@ -33,7 +33,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
   end
 
   it "should set the ca location when invoked" do
-    Puppet::SSL::Host.expects(:ca_location=).with(:local)
+    Oregano::SSL::Host.expects(:ca_location=).with(:local)
     ca.expects(:sign).with do |name,options|
       name == "hello, friend"
     end
@@ -42,7 +42,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
   end
 
   it "(#7059) should set the ca location when an inherited action is invoked" do
-    Puppet::SSL::Host.expects(:ca_location=).with(:local)
+    Oregano::SSL::Host.expects(:ca_location=).with(:local)
     subject.indirection.expects(:find)
     subject.find "hello, friend", :ca_location => :local
   end
@@ -61,25 +61,25 @@ describe Puppet::Face[:certificate, '0.0.1'] do
 
   describe "#generate" do
     let(:options) { {:ca_location => 'local'} }
-    let(:host) { Puppet::SSL::Host.new(hostname) }
+    let(:host) { Oregano::SSL::Host.new(hostname) }
     let(:csr) { host.certificate_request }
 
     before :each do
-      Puppet[:autosign] = false
+      Oregano[:autosign] = false
     end
 
     describe "for the current host" do
-      let(:hostname) { Puppet[:certname] }
+      let(:hostname) { Oregano[:certname] }
 
       it "should generate a CSR for this host" do
         subject.generate(hostname, options)
 
-        expect(csr.content.subject.to_s).to eq("/CN=#{Puppet[:certname]}")
-        expect(csr.name).to eq(Puppet[:certname])
+        expect(csr.content.subject.to_s).to eq("/CN=#{Oregano[:certname]}")
+        expect(csr.name).to eq(Oregano[:certname])
       end
 
       it "should add dns_alt_names from the global config if not otherwise specified" do
-        Puppet[:dns_alt_names] = 'from,the,config'
+        Oregano[:dns_alt_names] = 'from,the,config'
 
         subject.generate(hostname, options)
 
@@ -89,7 +89,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
       end
 
       it "should add the provided dns_alt_names if they are specified" do
-        Puppet[:dns_alt_names] = 'from,the,config'
+        Oregano[:dns_alt_names] = 'from,the,config'
 
         subject.generate(hostname, options.merge(:dns_alt_names => "explicit,alt,#{mixed_utf8}"))
 
@@ -101,7 +101,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
     end
 
     describe "for another host" do
-      let(:hostname) { Puppet[:certname] + 'different' }
+      let(:hostname) { Oregano[:certname] + 'different' }
 
       it "should generate a CSR for the specified host" do
         subject.generate(hostname, options)
@@ -119,7 +119,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
       end
 
       it "should add not dns_alt_names from the config file" do
-        Puppet[:dns_alt_names] = 'from,the,config'
+        Oregano[:dns_alt_names] = 'from,the,config'
 
         subject.generate(hostname, options)
 
@@ -127,7 +127,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
       end
 
       it "should add the provided dns_alt_names if they are specified" do
-        Puppet[:dns_alt_names] = 'from,the,config'
+        Oregano[:dns_alt_names] = 'from,the,config'
 
         subject.generate(hostname, options.merge(:dns_alt_names => 'explicit,alt,names'))
 
@@ -137,7 +137,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
       end
       
       it "should use the global setting if set by CLI" do
-        Puppet.settings.patch_value(:dns_alt_names, 'from,the,cli', :cli)
+        Oregano.settings.patch_value(:dns_alt_names, 'from,the,cli', :cli)
         
         subject.generate(hostname, options)
         
@@ -147,7 +147,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
       end
       
       it "should generate an error if both set on CLI" do
-        Puppet.settings.patch_value(:dns_alt_names, 'from,the,cli', :cli)
+        Oregano.settings.patch_value(:dns_alt_names, 'from,the,cli', :cli)
         expect do
           subject.generate(hostname, options.merge(:dns_alt_names => 'explicit,alt,names'))
         end.to raise_error ArgumentError, /Can't specify both/ 
@@ -157,16 +157,16 @@ describe Puppet::Face[:certificate, '0.0.1'] do
 
   describe "#sign" do
     let(:options) { {:ca_location => 'local'} }
-    let(:host) { Puppet::SSL::Host.new(hostname) }
+    let(:host) { Oregano::SSL::Host.new(hostname) }
     let(:hostname) { "foobar" }
 
-    it "should sign the certificate request if one is waiting", :unless => Puppet.features.microsoft_windows? do
+    it "should sign the certificate request if one is waiting", :unless => Oregano.features.microsoft_windows? do
       subject.generate(hostname, options)
 
       subject.sign(hostname, options)
 
       expect(host.certificate_request).to be_nil
-      expect(host.certificate).to be_a(Puppet::SSL::Certificate)
+      expect(host.certificate).to be_a(Oregano::SSL::Certificate)
       expect(host.state).to eq('signed')
     end
 
@@ -176,7 +176,7 @@ describe Puppet::Face[:certificate, '0.0.1'] do
       end.to raise_error(ArgumentError, /Could not find certificate request for #{hostname}/)
     end
 
-    describe "when ca_location is local", :unless => Puppet.features.microsoft_windows? do
+    describe "when ca_location is local", :unless => Oregano.features.microsoft_windows? do
       describe "when the request has dns alt names" do
         before :each do
           subject.generate(hostname, options.merge(:dns_alt_names => 'some,alt,names'))
@@ -185,8 +185,8 @@ describe Puppet::Face[:certificate, '0.0.1'] do
         it "should refuse to sign the request if allow_dns_alt_names is not set" do
           expect do
             subject.sign(hostname, options)
-          end.to raise_error(Puppet::SSL::CertificateAuthority::CertificateSigningError,
-                             /CSR '#{hostname}' contains subject alternative names \(.*?\), which are disallowed. Use `puppet cert --allow-dns-alt-names sign #{hostname}` to sign this request./i)
+          end.to raise_error(Oregano::SSL::CertificateAuthority::CertificateSigningError,
+                             /CSR '#{hostname}' contains subject alternative names \(.*?\), which are disallowed. Use `oregano cert --allow-dns-alt-names sign #{hostname}` to sign this request./i)
 
           expect(host.state).to eq('requested')
         end

@@ -6,7 +6,7 @@
 #
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:service).provider(:runit)
+provider_class = Oregano::Type.type(:service).provider(:runit)
 
 describe provider_class do
 
@@ -96,11 +96,11 @@ describe provider_class do
   end
 
   describe "when enabling" do
-    it "should create a symlink between daemon dir and service dir", :if => Puppet.features.manages_symlinks? do
+    it "should create a symlink between daemon dir and service dir", :if => Oregano.features.manages_symlinks? do
       daemon_path = File.join(@daemondir,"myservice")
       service_path = File.join(@servicedir,"myservice")
-      Puppet::FileSystem.expects(:symlink?).with(service_path).returns(false)
-      Puppet::FileSystem.expects(:symlink).with(daemon_path, File.join(@servicedir,"myservice")).returns(0)
+      Oregano::FileSystem.expects(:symlink?).with(service_path).returns(false)
+      Oregano::FileSystem.expects(:symlink).with(daemon_path, File.join(@servicedir,"myservice")).returns(0)
       @provider.enable
     end
   end
@@ -110,8 +110,8 @@ describe provider_class do
       path = File.join(@servicedir,"myservice")
 #      mocked_file = mock(path, :symlink? => true)
       FileTest.stubs(:directory?).returns(false)
-      Puppet::FileSystem.expects(:symlink?).with(path).returns(true) # mocked_file)
-      Puppet::FileSystem.expects(:unlink).with(path).returns(0)
+      Oregano::FileSystem.expects(:symlink?).with(path).returns(true) # mocked_file)
+      Oregano::FileSystem.expects(:unlink).with(path).returns(0)
       @provider.disable
     end
   end
@@ -124,9 +124,9 @@ describe provider_class do
   end
 
   describe "when checking status" do
-    it "and sv status fails, properly raise a Puppet::Error" do
-      @provider.expects(:sv).with('status',File.join(@daemondir,"myservice")).raises(Puppet::ExecutionFailure, "fail: /etc/sv/myservice: file not found")
-      expect { @provider.status }.to raise_error(Puppet::Error, 'Could not get status for service Service[myservice]: fail: /etc/sv/myservice: file not found')
+    it "and sv status fails, properly raise a Oregano::Error" do
+      @provider.expects(:sv).with('status',File.join(@daemondir,"myservice")).raises(Oregano::ExecutionFailure, "fail: /etc/sv/myservice: file not found")
+      expect { @provider.status }.to raise_error(Oregano::Error, 'Could not get status for service Service[myservice]: fail: /etc/sv/myservice: file not found')
     end
     it "and sv status returns up, then return :running" do
       @provider.expects(:sv).with('status',File.join(@daemondir,"myservice")).returns("run: /etc/sv/myservice: (pid 9029) 6s")

@@ -1,24 +1,24 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/application/apply'
-require 'puppet/file_bucket/dipper'
-require 'puppet/configurer'
+require 'oregano/application/apply'
+require 'oregano/file_bucket/dipper'
+require 'oregano/configurer'
 require 'fileutils'
 
-describe Puppet::Application::Apply do
+describe Oregano::Application::Apply do
   before :each do
-    @apply = Puppet::Application[:apply]
-    Puppet::Util::Log.stubs(:newdestination)
-    Puppet[:reports] = "none"
+    @apply = Oregano::Application[:apply]
+    Oregano::Util::Log.stubs(:newdestination)
+    Oregano[:reports] = "none"
   end
 
   after :each do
-    Puppet::Node::Facts.indirection.reset_terminus_class
-    Puppet::Node::Facts.indirection.cache_class = nil
+    Oregano::Node::Facts.indirection.reset_terminus_class
+    Oregano::Node::Facts.indirection.cache_class = nil
 
-    Puppet::Node.indirection.reset_terminus_class
-    Puppet::Node.indirection.cache_class = nil
+    Oregano::Node.indirection.reset_terminus_class
+    Oregano::Node.indirection.cache_class = nil
   end
 
   [:debug,:loadclasses,:test,:verbose,:use_nodes,:detailed_exitcodes,:catalog, :write_catalog_summary].each do |option|
@@ -40,7 +40,7 @@ describe Puppet::Application::Apply do
   describe "when applying options" do
 
     it "should set the log destination with --logdest" do
-      Puppet::Log.expects(:newdestination).with("console")
+      Oregano::Log.expects(:newdestination).with("console")
 
       @apply.handle_logdest("console")
     end
@@ -54,10 +54,10 @@ describe Puppet::Application::Apply do
 
   describe "during setup" do
     before :each do
-      Puppet::Log.stubs(:newdestination)
-      Puppet::FileBucket::Dipper.stubs(:new)
+      Oregano::Log.stubs(:newdestination)
+      Oregano::FileBucket::Dipper.stubs(:new)
       STDIN.stubs(:read)
-      Puppet::Transaction::Report.indirection.stubs(:cache_class=)
+      Oregano::Transaction::Report.indirection.stubs(:cache_class=)
     end
 
     describe "with --test" do
@@ -74,9 +74,9 @@ describe Puppet::Application::Apply do
         expect(@apply.options[:verbose]).to eq(true)
       end
       it "should set options[:show_diff] to true" do
-        Puppet.settings.override_default(:show_diff, false)
+        Oregano.settings.override_default(:show_diff, false)
         @apply.setup_test
-        expect(Puppet[:show_diff]).to eq(true)
+        expect(Oregano[:show_diff]).to eq(true)
       end
       it "should set options[:detailed_exitcodes] to true" do
         @apply.setup_test
@@ -86,7 +86,7 @@ describe Puppet::Application::Apply do
     end
 
     it "should set console as the log destination if logdest option wasn't provided" do
-      Puppet::Log.expects(:newdestination).with(:console)
+      Oregano::Log.expects(:newdestination).with(:console)
 
       @apply.setup
     end
@@ -100,55 +100,55 @@ describe Puppet::Application::Apply do
     it "should set log level to debug if --debug was passed" do
       @apply.options[:debug] = true
       @apply.setup
-      expect(Puppet::Log.level).to eq(:debug)
+      expect(Oregano::Log.level).to eq(:debug)
     end
 
     it "should set log level to info if --verbose was passed" do
       @apply.options[:verbose] = true
       @apply.setup
-      expect(Puppet::Log.level).to eq(:info)
+      expect(Oregano::Log.level).to eq(:info)
     end
 
-    it "should print puppet config if asked to in Puppet config" do
-      Puppet.settings.stubs(:print_configs?).returns  true
-      Puppet.settings.expects(:print_configs).returns true
+    it "should print oregano config if asked to in Oregano config" do
+      Oregano.settings.stubs(:print_configs?).returns  true
+      Oregano.settings.expects(:print_configs).returns true
       expect { @apply.setup }.to exit_with 0
     end
 
-    it "should exit after printing puppet config if asked to in Puppet config" do
-      Puppet.settings.stubs(:print_configs?).returns(true)
+    it "should exit after printing oregano config if asked to in Oregano config" do
+      Oregano.settings.stubs(:print_configs?).returns(true)
       expect { @apply.setup }.to exit_with 1
     end
 
-    it "should use :main, :puppetd, and :ssl" do
-      Puppet.settings.unstub(:use)
-      Puppet.settings.expects(:use).with(:main, :agent, :ssl)
+    it "should use :main, :oreganod, and :ssl" do
+      Oregano.settings.unstub(:use)
+      Oregano.settings.expects(:use).with(:main, :agent, :ssl)
 
       @apply.setup
     end
 
     it "should tell the report handler to cache locally as yaml" do
-      Puppet::Transaction::Report.indirection.expects(:cache_class=).with(:yaml)
+      Oregano::Transaction::Report.indirection.expects(:cache_class=).with(:yaml)
 
       @apply.setup
     end
 
     it "configures a profiler when profiling is enabled" do
-      Puppet[:profile] = true
+      Oregano[:profile] = true
 
       @apply.setup
 
-      expect(Puppet::Util::Profiler.current).to satisfy do |ps|
-        ps.any? {|p| p.is_a? Puppet::Util::Profiler::WallClock }
+      expect(Oregano::Util::Profiler.current).to satisfy do |ps|
+        ps.any? {|p| p.is_a? Oregano::Util::Profiler::WallClock }
       end
     end
 
     it "does not have a profiler if profiling is disabled" do
-      Puppet[:profile] = false
+      Oregano[:profile] = false
 
       @apply.setup
 
-      expect(Puppet::Util::Profiler.current.length).to be 0
+      expect(Oregano::Util::Profiler.current.length).to be 0
     end
 
     it "should set default_file_terminus to `file_server` to be local" do
@@ -172,52 +172,52 @@ describe Puppet::Application::Apply do
     end
 
     describe "the main command" do
-      include PuppetSpec::Files
+      include OreganoSpec::Files
 
       before :each do
-        Puppet[:prerun_command] = ''
-        Puppet[:postrun_command] = ''
+        Oregano[:prerun_command] = ''
+        Oregano[:postrun_command] = ''
 
-        Puppet::Node::Facts.indirection.terminus_class = :memory
-        Puppet::Node::Facts.indirection.cache_class = :memory
-        Puppet::Node.indirection.terminus_class = :memory
-        Puppet::Node.indirection.cache_class = :memory
+        Oregano::Node::Facts.indirection.terminus_class = :memory
+        Oregano::Node::Facts.indirection.cache_class = :memory
+        Oregano::Node.indirection.terminus_class = :memory
+        Oregano::Node.indirection.cache_class = :memory
 
-        @facts = Puppet::Node::Facts.new(Puppet[:node_name_value])
-        Puppet::Node::Facts.indirection.save(@facts)
+        @facts = Oregano::Node::Facts.new(Oregano[:node_name_value])
+        Oregano::Node::Facts.indirection.save(@facts)
 
-        @node = Puppet::Node.new(Puppet[:node_name_value])
-        Puppet::Node.indirection.save(@node)
+        @node = Oregano::Node.new(Oregano[:node_name_value])
+        Oregano::Node.indirection.save(@node)
 
-        @catalog = Puppet::Resource::Catalog.new("testing", Puppet.lookup(:environments).get(Puppet[:environment]))
+        @catalog = Oregano::Resource::Catalog.new("testing", Oregano.lookup(:environments).get(Oregano[:environment]))
         @catalog.stubs(:to_ral).returns(@catalog)
 
-        Puppet::Resource::Catalog.indirection.stubs(:find).returns(@catalog)
+        Oregano::Resource::Catalog.indirection.stubs(:find).returns(@catalog)
 
         STDIN.stubs(:read)
 
         @transaction = stub('transaction')
         @catalog.stubs(:apply).returns(@transaction)
 
-        Puppet::Util::Storage.stubs(:load)
-        Puppet::Configurer.any_instance.stubs(:save_last_run_summary) # to prevent it from trying to write files
+        Oregano::Util::Storage.stubs(:load)
+        Oregano::Configurer.any_instance.stubs(:save_last_run_summary) # to prevent it from trying to write files
       end
 
       after :each do
-        Puppet::Node::Facts.indirection.reset_terminus_class
-        Puppet::Node::Facts.indirection.cache_class = nil
+        Oregano::Node::Facts.indirection.reset_terminus_class
+        Oregano::Node::Facts.indirection.cache_class = nil
       end
 
       around :each do |example|
-        Puppet.override(:current_environment =>
-                        Puppet::Node::Environment.create(:production, [])) do
+        Oregano.override(:current_environment =>
+                        Oregano::Node::Environment.create(:production, [])) do
           example.run
         end
       end
 
       it "should set the code to run from --code" do
         @apply.options[:code] = "code to run"
-        Puppet.expects(:[]=).with(:code,"code to run")
+        Oregano.expects(:[]=).with(:code,"code to run")
 
         expect { @apply.main }.to exit_with 0
       end
@@ -226,7 +226,7 @@ describe Puppet::Application::Apply do
         @apply.command_line.stubs(:args).returns([])
         STDIN.stubs(:read).returns("code to run")
 
-        Puppet.expects(:[]=).with(:code,"code to run")
+        Oregano.expects(:[]=).with(:code,"code to run")
 
         expect { @apply.main }.to exit_with 0
       end
@@ -257,7 +257,7 @@ describe Puppet::Application::Apply do
       end
 
       it "should raise an error if we can't find the node" do
-        Puppet::Node.indirection.expects(:find).returns(nil)
+        Oregano::Node.indirection.expects(:find).returns(nil)
 
         expect { @apply.main }.to raise_error(RuntimeError, /Could not find node/)
       end
@@ -266,7 +266,7 @@ describe Puppet::Application::Apply do
         @apply.options[:loadclasses] = true
         classfile = tmpfile('classfile')
         File.open(classfile, 'w') { |c| c.puts 'class' }
-        Puppet[:classfile] = classfile
+        Oregano[:classfile] = classfile
 
         @node.expects(:classes=).with(['class'])
 
@@ -274,15 +274,15 @@ describe Puppet::Application::Apply do
       end
 
       it "should compile the catalog" do
-        Puppet::Resource::Catalog.indirection.expects(:find).returns(@catalog)
+        Oregano::Resource::Catalog.indirection.expects(:find).returns(@catalog)
 
         expect { @apply.main }.to exit_with 0
       end
 
-      it 'should make the Puppet::Pops::Loaders available when applying the compiled catalog' do
-        Puppet::Resource::Catalog.indirection.expects(:find).returns(@catalog)
+      it 'should make the Oregano::Pops::Loaders available when applying the compiled catalog' do
+        Oregano::Resource::Catalog.indirection.expects(:find).returns(@catalog)
         @apply.expects(:apply_catalog).with(@catalog) do
-          fail('Loaders not found') unless Puppet.lookup(:loaders) { nil }.is_a?(Puppet::Pops::Loaders)
+          fail('Loaders not found') unless Oregano.lookup(:loaders) { nil }.is_a?(Oregano::Pops::Loaders)
           true
         end.returns(0)
         expect { @apply.main }.to exit_with 0
@@ -317,8 +317,8 @@ describe Puppet::Application::Apply do
       end
 
       it "should call the prerun and postrun commands on a Configurer instance" do
-        Puppet::Configurer.any_instance.expects(:execute_prerun_command).returns(true)
-        Puppet::Configurer.any_instance.expects(:execute_postrun_command).returns(true)
+        Oregano::Configurer.any_instance.expects(:execute_prerun_command).returns(true)
+        Oregano::Configurer.any_instance.expects(:execute_postrun_command).returns(true)
 
         expect { @apply.main }.to exit_with 0
       end
@@ -330,21 +330,21 @@ describe Puppet::Application::Apply do
       end
 
       it "should save the last run summary" do
-        Puppet[:noop] = false
-        report = Puppet::Transaction::Report.new
-        Puppet::Transaction::Report.stubs(:new).returns(report)
+        Oregano[:noop] = false
+        report = Oregano::Transaction::Report.new
+        Oregano::Transaction::Report.stubs(:new).returns(report)
 
-        Puppet::Configurer.any_instance.expects(:save_last_run_summary).with(report)
+        Oregano::Configurer.any_instance.expects(:save_last_run_summary).with(report)
         expect { @apply.main }.to exit_with 0
       end
 
       describe "when using node_name_fact" do
         before :each do
-          @facts = Puppet::Node::Facts.new(Puppet[:node_name_value], 'my_name_fact' => 'other_node_name')
-          Puppet::Node::Facts.indirection.save(@facts)
-          @node = Puppet::Node.new('other_node_name')
-          Puppet::Node.indirection.save(@node)
-          Puppet[:node_name_fact] = 'my_name_fact'
+          @facts = Oregano::Node::Facts.new(Oregano[:node_name_value], 'my_name_fact' => 'other_node_name')
+          Oregano::Node::Facts.indirection.save(@facts)
+          @node = Oregano::Node.new('other_node_name')
+          Oregano::Node.indirection.save(@node)
+          Oregano[:node_name_fact] = 'my_name_fact'
         end
 
         it "should set the facts name based on the node_name_fact" do
@@ -354,7 +354,7 @@ describe Puppet::Application::Apply do
 
         it "should set the node_name_value based on the node_name_fact" do
           expect { @apply.main }.to exit_with 0
-          expect(Puppet[:node_name_value]).to eq('other_node_name')
+          expect(Oregano[:node_name_value]).to eq('other_node_name')
         end
 
         it "should merge in our node the loaded facts" do
@@ -366,7 +366,7 @@ describe Puppet::Application::Apply do
         end
 
         it "should raise an error if we can't find the facts" do
-          Puppet::Node::Facts.indirection.expects(:find).returns(nil)
+          Oregano::Node::Facts.indirection.expects(:find).returns(nil)
 
           expect { @apply.main }.to raise_error(RuntimeError, /Could not find facts/)
         end
@@ -378,21 +378,21 @@ describe Puppet::Application::Apply do
         end
 
         it "should exit with report's computed exit status" do
-          Puppet[:noop] = false
-          Puppet::Transaction::Report.any_instance.stubs(:exit_status).returns(666)
+          Oregano[:noop] = false
+          Oregano::Transaction::Report.any_instance.stubs(:exit_status).returns(666)
 
           expect { @apply.main }.to exit_with 666
         end
 
         it "should exit with report's computed exit status, even if --noop is set" do
-          Puppet[:noop] = true
-          Puppet::Transaction::Report.any_instance.stubs(:exit_status).returns(666)
+          Oregano[:noop] = true
+          Oregano::Transaction::Report.any_instance.stubs(:exit_status).returns(666)
 
           expect { @apply.main }.to exit_with 666
         end
 
         it "should always exit with 0 if option is disabled" do
-          Puppet[:noop] = false
+          Oregano[:noop] = false
           report = stub 'report', :exit_status => 666
           @transaction.stubs(:report).returns(report)
 
@@ -400,7 +400,7 @@ describe Puppet::Application::Apply do
         end
 
         it "should always exit with 0 if --noop" do
-          Puppet[:noop] = true
+          Oregano[:noop] = true
           report = stub 'report', :exit_status => 666
           @transaction.stubs(:report).returns(report)
 
@@ -421,55 +421,55 @@ describe Puppet::Application::Apply do
 
       it "should read the catalog in from disk if a file name is provided" do
         @apply.options[:catalog] = temporary_catalog
-        catalog = Puppet::Resource::Catalog.new("testing", Puppet::Node::Environment::NONE)
-        Puppet::Resource::Catalog.stubs(:convert_from).with(:json,'"something"').returns(catalog)
+        catalog = Oregano::Resource::Catalog.new("testing", Oregano::Node::Environment::NONE)
+        Oregano::Resource::Catalog.stubs(:convert_from).with(:json,'"something"').returns(catalog)
         @apply.apply
       end
 
       it "should read the catalog in from stdin if '-' is provided" do
         @apply.options[:catalog] = "-"
         $stdin.expects(:read).returns '"something"'
-        catalog = Puppet::Resource::Catalog.new("testing", Puppet::Node::Environment::NONE)
-        Puppet::Resource::Catalog.stubs(:convert_from).with(:json,'"something"').returns(catalog)
+        catalog = Oregano::Resource::Catalog.new("testing", Oregano::Node::Environment::NONE)
+        Oregano::Resource::Catalog.stubs(:convert_from).with(:json,'"something"').returns(catalog)
         @apply.apply
       end
 
       it "should deserialize the catalog from the default format" do
         @apply.options[:catalog] = temporary_catalog
-        Puppet::Resource::Catalog.stubs(:default_format).returns :rot13_piglatin
-        catalog = Puppet::Resource::Catalog.new("testing", Puppet::Node::Environment::NONE)
-        Puppet::Resource::Catalog.stubs(:convert_from).with(:rot13_piglatin,'"something"').returns(catalog)
+        Oregano::Resource::Catalog.stubs(:default_format).returns :rot13_piglatin
+        catalog = Oregano::Resource::Catalog.new("testing", Oregano::Node::Environment::NONE)
+        Oregano::Resource::Catalog.stubs(:convert_from).with(:rot13_piglatin,'"something"').returns(catalog)
         @apply.apply
       end
 
       it "should fail helpfully if deserializing fails" do
         @apply.options[:catalog] = temporary_catalog('something syntactically invalid')
-        expect { @apply.apply }.to raise_error(Puppet::Error)
+        expect { @apply.apply }.to raise_error(Oregano::Error)
       end
 
       it "should convert the catalog to a RAL catalog and use a Configurer instance to apply it" do
         @apply.options[:catalog] = temporary_catalog
-        catalog = Puppet::Resource::Catalog.new("testing", Puppet::Node::Environment::NONE)
-        Puppet::Resource::Catalog.stubs(:convert_from).with(:json,'"something"').returns catalog
+        catalog = Oregano::Resource::Catalog.new("testing", Oregano::Node::Environment::NONE)
+        Oregano::Resource::Catalog.stubs(:convert_from).with(:json,'"something"').returns catalog
         catalog.expects(:to_ral).returns "mycatalog"
 
         configurer = stub 'configurer'
-        Puppet::Configurer.expects(:new).returns configurer
+        Oregano::Configurer.expects(:new).returns configurer
         configurer.expects(:run).
           with(:catalog => "mycatalog", :pluginsync => false)
 
         @apply.apply
       end
 
-      it 'should make the Puppet::Pops::Loaders available when applying a catalog' do
+      it 'should make the Oregano::Pops::Loaders available when applying a catalog' do
         @apply.options[:catalog] = temporary_catalog
-        catalog = Puppet::Resource::Catalog.new("testing", Puppet::Node::Environment::NONE)
+        catalog = Oregano::Resource::Catalog.new("testing", Oregano::Node::Environment::NONE)
         @apply.expects(:read_catalog).with('something') do
-          fail('Loaders not found') unless Puppet.lookup(:loaders) { nil }.is_a?(Puppet::Pops::Loaders)
+          fail('Loaders not found') unless Oregano.lookup(:loaders) { nil }.is_a?(Oregano::Pops::Loaders)
           true
         end.returns(catalog)
         @apply.expects(:apply_catalog).with(catalog) do
-          fail('Loaders not found') unless Puppet.lookup(:loaders) { nil }.is_a?(Puppet::Pops::Loaders)
+          fail('Loaders not found') unless Oregano.lookup(:loaders) { nil }.is_a?(Oregano::Pops::Loaders)
           true
         end
         expect { @apply.apply }.not_to raise_error
@@ -480,24 +480,24 @@ describe Puppet::Application::Apply do
   describe "apply_catalog" do
     it "should call the configurer with the catalog" do
       catalog = "I am a catalog"
-      Puppet::Configurer.any_instance.expects(:run).
+      Oregano::Configurer.any_instance.expects(:run).
         with(:catalog => catalog, :pluginsync => false)
       @apply.send(:apply_catalog, catalog)
     end
   end
 
   it "should honor the catalog_cache_terminus setting" do
-    Puppet.settings[:catalog_cache_terminus] = "json"
-    Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(:json)
+    Oregano.settings[:catalog_cache_terminus] = "json"
+    Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(:json)
 
     @apply.initialize_app_defaults
     @apply.setup
   end
 
   it "should set catalog cache class to nil during a noop run" do
-    Puppet[:catalog_cache_terminus] = "json"
-    Puppet[:noop] = true
-    Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(nil)
+    Oregano[:catalog_cache_terminus] = "json"
+    Oregano[:noop] = true
+    Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(nil)
 
     @apply.initialize_app_defaults
     @apply.setup

@@ -1,15 +1,15 @@
 # encoding: UTF-8
 
-test_name "puppet module install (with modulepath)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (with modulepath)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
     'audit:refactor'   # Master is not required for this test. Replace with agents.each
                        # Wrap steps in blocks in accordance with Beaker style guide
 
-codedir = master.puppet('master')['codedir']
+codedir = master.oregano('master')['codedir']
 module_author = "pmtacceptance"
 module_name   = "nginx"
 module_dependencies = []
@@ -28,7 +28,7 @@ stub_forge_on(master)
 on master, "mkdir -p #{codedir}/modules2"
 
 step "Install a module with relative modulepath"
-on master, "cd #{codedir}/modules2 && puppet module install #{module_author}-#{module_name} --modulepath=." do
+on master, "cd #{codedir}/modules2 && oregano module install #{module_author}-#{module_name} --modulepath=." do
   assert_module_installed_ui(stdout, module_author, module_name)
   assert_match(/#{codedir}\/modules2/, stdout,
         "Notice of non default install path was not displayed")
@@ -37,7 +37,7 @@ assert_module_installed_on_disk(master, module_name, "#{codedir}/modules2")
 
 step "Install a module with absolute modulepath"
 on master, "test -d #{codedir}/modules2/#{module_name} && rm -rf #{codedir}/modules2/#{module_name}"
-on master, puppet("module install #{module_author}-#{module_name} --modulepath=#{codedir}/modules2") do
+on master, oregano("module install #{module_author}-#{module_name} --modulepath=#{codedir}/modules2") do
   assert_module_installed_ui(stdout, module_author, module_name)
   assert_match(/#{codedir}\/modules2/, stdout,
         "Notice of non default install path was not displayed")

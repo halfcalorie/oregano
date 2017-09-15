@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/user_attr'
+require 'oregano/util/user_attr'
 
 describe UserAttr do
   before do

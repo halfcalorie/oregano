@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Puppet::Type.type(:yumrepo).provider(:inifile) do
+describe Oregano::Type.type(:yumrepo).provider(:inifile) do
 
   after(:each) do
     described_class.clear
@@ -31,14 +31,14 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
 
     before do
       described_class.clear
-      Puppet::Util::IniConfig::FileCollection.expects(:new).returns collection
+      Oregano::Util::IniConfig::FileCollection.expects(:new).returns collection
     end
 
     it "reads all files in the directories specified by self.repofiles" do
       described_class.expects(:repofiles).returns(files)
 
       files.each do |file|
-        Puppet::FileSystem.stubs(:file?).with(file).returns true
+        Oregano::FileSystem.stubs(:file?).with(file).returns true
         collection.expects(:read).with(file)
       end
       described_class.virtual_inifile
@@ -47,9 +47,9 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
     it "ignores repofile entries that are not files" do
       described_class.expects(:repofiles).returns(files)
 
-      Puppet::FileSystem.stubs(:file?).with('/etc/yum.repos.d/first.repo').returns true
-      Puppet::FileSystem.stubs(:file?).with('/etc/yum.repos.d/second.repo').returns false
-      Puppet::FileSystem.stubs(:file?).with('/etc/yum.conf').returns true
+      Oregano::FileSystem.stubs(:file?).with('/etc/yum.repos.d/first.repo').returns true
+      Oregano::FileSystem.stubs(:file?).with('/etc/yum.repos.d/second.repo').returns false
+      Oregano::FileSystem.stubs(:file?).with('/etc/yum.conf').returns true
 
       collection.expects(:read).with('/etc/yum.repos.d/first.repo').once
       collection.expects(:read).with('/etc/yum.repos.d/second.repo').never
@@ -66,7 +66,7 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
     end
 
     let(:main_section) do
-      sect = Puppet::Util::IniConfig::Section.new('main', '/some/imaginary/file')
+      sect = Oregano::Util::IniConfig::Section.new('main', '/some/imaginary/file')
       sect.entries << ['distroverpkg', 'centos-release']
       sect.entries << ['plugins', '1']
 
@@ -74,7 +74,7 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
     end
 
     let(:updates_section) do
-      sect = Puppet::Util::IniConfig::Section.new('updates', '/some/imaginary/file')
+      sect = Oregano::Util::IniConfig::Section.new('updates', '/some/imaginary/file')
       sect.entries << ['name', 'Some long description of the repo']
       sect.entries << ['enabled', '1']
 
@@ -146,14 +146,14 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
   describe "setting and getting properties" do
 
     let(:type_instance) do
-      Puppet::Type.type(:yumrepo).new(
-        :name     => 'puppetlabs-products',
+      Oregano::Type.type(:yumrepo).new(
+        :name     => 'oreganolabs-products',
         :ensure   => :present,
-        :baseurl  => 'http://yum.puppetlabs.com/el/6/products/$basearch',
-        :descr    => 'Puppet Labs Products El 6 - $basearch',
+        :baseurl  => 'http://yum.oreganolabs.com/el/6/products/$basearch',
+        :descr    => 'Oregano Labs Products El 6 - $basearch',
         :enabled  => '1',
         :gpgcheck => '1',
-        :gpgkey   => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puppetlabs'
+        :gpgkey   => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oreganolabs'
       )
     end
 
@@ -162,21 +162,21 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
     end
 
     let(:section) do
-      stub('inifile puppetlabs section', :name => 'puppetlabs-products')
+      stub('inifile oreganolabs section', :name => 'oreganolabs-products')
     end
 
     before do
       type_instance.provider = provider
-      described_class.stubs(:section).with('puppetlabs-products').returns(section)
+      described_class.stubs(:section).with('oreganolabs-products').returns(section)
     end
 
     describe "methods used by ensurable" do
       it "#create sets the yumrepo properties on the according section" do
-        section.expects(:[]=).with('baseurl', 'http://yum.puppetlabs.com/el/6/products/$basearch')
-        section.expects(:[]=).with('name', 'Puppet Labs Products El 6 - $basearch')
+        section.expects(:[]=).with('baseurl', 'http://yum.oreganolabs.com/el/6/products/$basearch')
+        section.expects(:[]=).with('name', 'Oregano Labs Products El 6 - $basearch')
         section.expects(:[]=).with('enabled', '1')
         section.expects(:[]=).with('gpgcheck', '1')
-        section.expects(:[]=).with('gpgkey', 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puppetlabs')
+        section.expects(:[]=).with('gpgkey', 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-oreganolabs')
 
         provider.create
       end
@@ -233,8 +233,8 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
     let(:defaults) { ['/etc/yum.repos.d', '/etc/yum/repos.d'] }
 
     before do
-      Puppet::FileSystem.stubs(:exist?).with('/etc/yum.repos.d').returns(true)
-      Puppet::FileSystem.stubs(:exist?).with('/etc/yum/repos.d').returns(true)
+      Oregano::FileSystem.stubs(:exist?).with('/etc/yum.repos.d').returns(true)
+      Oregano::FileSystem.stubs(:exist?).with('/etc/yum/repos.d').returns(true)
     end
 
     it "returns the default directories if yum.conf doesn't contain a `reposdir` entry" do
@@ -243,41 +243,41 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
     end
 
     it "includes the directory specified by the yum.conf 'reposdir' entry when the directory is present" do
-      Puppet::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(true)
+      Oregano::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(true)
 
       described_class.expects(:find_conf_value).with('reposdir', '/etc/yum.conf').returns "/etc/yum/extra.repos.d"
       expect(described_class.reposdir('/etc/yum.conf')).to include("/etc/yum/extra.repos.d")
     end
 
     it "includes the directory if the value is split by whitespace" do
-      Puppet::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(true)
-      Puppet::FileSystem.expects(:exist?).with("/etc/yum/misc.repos.d").returns(true)
+      Oregano::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(true)
+      Oregano::FileSystem.expects(:exist?).with("/etc/yum/misc.repos.d").returns(true)
 
       described_class.expects(:find_conf_value).with('reposdir', '/etc/yum.conf').returns "/etc/yum/extra.repos.d /etc/yum/misc.repos.d"
       expect(described_class.reposdir('/etc/yum.conf')).to include("/etc/yum/extra.repos.d", "/etc/yum/misc.repos.d")
     end
 
     it "includes the directory if the value is split by new lines" do
-      Puppet::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(true)
-      Puppet::FileSystem.expects(:exist?).with("/etc/yum/misc.repos.d").returns(true)
+      Oregano::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(true)
+      Oregano::FileSystem.expects(:exist?).with("/etc/yum/misc.repos.d").returns(true)
 
       described_class.expects(:find_conf_value).with('reposdir', '/etc/yum.conf').returns "/etc/yum/extra.repos.d\n/etc/yum/misc.repos.d"
       expect(described_class.reposdir('/etc/yum.conf')).to include("/etc/yum/extra.repos.d", "/etc/yum/misc.repos.d")
     end
 
     it "doesn't include the directory specified by the yum.conf 'reposdir' entry when the directory is absent" do
-      Puppet::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(false)
+      Oregano::FileSystem.expects(:exist?).with("/etc/yum/extra.repos.d").returns(false)
 
       described_class.expects(:find_conf_value).with('reposdir', '/etc/yum.conf').returns "/etc/yum/extra.repos.d"
       expect(described_class.reposdir('/etc/yum.conf')).not_to include("/etc/yum/extra.repos.d")
     end
 
     it "logs a warning and returns an empty array if none of the specified repo directories exist" do
-      Puppet::FileSystem.unstub(:exist?)
-      Puppet::FileSystem.stubs(:exist?).returns false
+      Oregano::FileSystem.unstub(:exist?)
+      Oregano::FileSystem.stubs(:exist?).returns false
 
       described_class.stubs(:find_conf_value).with('reposdir', '/etc/yum.conf')
-      Puppet.expects(:debug).with('No yum directories were found on the local filesystem')
+      Oregano.expects(:debug).with('No yum directories were found on the local filesystem')
       expect(described_class.reposdir('/etc/yum.conf')).to be_empty
     end
   end
@@ -285,7 +285,7 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
   describe "looking up a conf value" do
     describe "and the file doesn't exist" do
       it "returns nil" do
-        Puppet::FileSystem.stubs(:exist?).returns false
+        Oregano::FileSystem.stubs(:exist?).returns false
         expect(described_class.find_conf_value('reposdir')).to be_nil
       end
     end
@@ -295,8 +295,8 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile) do
       let(:sect) { stub('ini section') }
 
       before do
-        Puppet::FileSystem.stubs(:exist?).with('/etc/yum.conf').returns true
-        Puppet::Util::IniConfig::PhysicalFile.stubs(:new).with('/etc/yum.conf').returns pfile
+        Oregano::FileSystem.stubs(:exist?).with('/etc/yum.conf').returns true
+        Oregano::Util::IniConfig::PhysicalFile.stubs(:new).with('/etc/yum.conf').returns pfile
         pfile.expects(:read)
       end
 

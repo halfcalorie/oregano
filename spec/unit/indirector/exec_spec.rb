@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/exec'
+require 'oregano/indirector/exec'
 
-describe Puppet::Indirector::Exec do
+describe Oregano::Indirector::Exec do
   before :all do
     @indirection = stub 'indirection', :name => :testing
-    Puppet::Indirector::Indirection.expects(:instance).with(:testing).returns(@indirection)
+    Oregano::Indirector::Indirection.expects(:instance).with(:testing).returns(@indirection)
     module Testing; end
-    @exec_class = class Testing::MyTesting < Puppet::Indirector::Exec
+    @exec_class = class Testing::MyTesting < Oregano::Indirector::Exec
       attr_accessor :command
       self
     end
@@ -26,7 +26,7 @@ describe Puppet::Indirector::Exec do
 
   it "should throw an exception if the command is not an array" do
     @searcher.command = path
-    expect { @searcher.find(@request) }.to raise_error(Puppet::DevError)
+    expect { @searcher.find(@request) }.to raise_error(Oregano::DevError)
   end
 
   it "should throw an exception if the command is not fully qualified" do
@@ -50,9 +50,9 @@ describe Puppet::Indirector::Exec do
   end
 
   it "should raise an exception if there's an execution failure" do
-    @searcher.expects(:execute).with([path, 'foo'], arguments).raises(Puppet::ExecutionFailure.new("message"))
+    @searcher.expects(:execute).with([path, 'foo'], arguments).raises(Oregano::ExecutionFailure.new("message"))
     expect {
       @searcher.find(@request)
-    }.to raise_exception(Puppet::Error, 'Failed to find foo via exec: message')
+    }.to raise_exception(Oregano::Error, 'Failed to find foo via exec: message')
   end
 end

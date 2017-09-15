@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 require 'fileutils'
-require 'puppet/type'
+require 'oregano/type'
 
-describe Puppet::Type.type(:k5login), :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:k5login), :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   context "the type class" do
     subject { described_class }
@@ -46,7 +46,7 @@ describe Puppet::Type.type(:k5login), :unless => Puppet.features.microsoft_windo
 
       it "should create the file when synced" do
         resource(:ensure => 'present').parameter(:ensure).sync
-        expect(Puppet::FileSystem.exist?(path)).to be_truthy
+        expect(Oregano::FileSystem.exist?(path)).to be_truthy
       end
     end
 
@@ -83,7 +83,7 @@ describe Puppet::Type.type(:k5login), :unless => Puppet.features.microsoft_windo
 
       it "should remove the file ensure is absent" do
         resource(:ensure => 'absent').property(:ensure).sync
-        expect(Puppet::FileSystem.exist?(path)).to be_falsey
+        expect(Oregano::FileSystem.exist?(path)).to be_falsey
       end
 
       it "should write one principal to the file" do
@@ -106,7 +106,7 @@ describe Puppet::Type.type(:k5login), :unless => Puppet.features.microsoft_windo
           it "should update the mode to #{mode}" do
             resource(:mode => mode).property(:mode).sync
 
-            expect((Puppet::FileSystem.stat(path).mode & 07777).to_s(8)).to eq(mode)
+            expect((Oregano::FileSystem.stat(path).mode & 07777).to_s(8)).to eq(mode)
           end
         end
       end

@@ -1,8 +1,8 @@
-test_name "puppet module upgrade (that was installed twice)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
-require 'puppet/acceptance/environment_utils'
-extend Puppet::Acceptance::EnvironmentUtils
+test_name "oregano module upgrade (that was installed twice)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
+require 'oregano/acceptance/environment_utils'
+extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -20,10 +20,10 @@ step 'Setup'
 
 stub_forge_on(master)
 
-on master, puppet("module install pmtacceptance-java --version 1.7.0 --modulepath #{prod_env_modulepath}")
-on master, puppet("module install pmtacceptance-java --version 1.6.0 --modulepath #{master['distmoduledir']}")
+on master, oregano("module install pmtacceptance-java --version 1.7.0 --modulepath #{prod_env_modulepath}")
+on master, oregano("module install pmtacceptance-java --version 1.6.0 --modulepath #{master['distmoduledir']}")
 
-on master, puppet("module list") do |result|
+on master, oregano("module list") do |result|
   pattern = Regexp.new([
     "#{prod_env_modulepath}",
     "├── pmtacceptance-java \\(.*v1.7.0.*\\)",
@@ -36,7 +36,7 @@ on master, puppet("module list") do |result|
 end
 
 step "Try to upgrade a module that exists multiple locations in the module path"
-on master, puppet("module upgrade pmtacceptance-java"), :acceptable_exit_codes => [1] do |result|
+on master, oregano("module upgrade pmtacceptance-java"), :acceptable_exit_codes => [1] do |result|
   pattern = Regexp.new([
     ".*Notice: Preparing to upgrade 'pmtacceptance-java' .*",
     ".*Error: Could not upgrade module 'pmtacceptance-java'",
@@ -49,11 +49,11 @@ on master, puppet("module upgrade pmtacceptance-java"), :acceptable_exit_codes =
 end
 
 step "Upgrade a module that exists multiple locations by restricting the --modulepath"
-on master, puppet("module upgrade pmtacceptance-java --modulepath #{master['distmoduledir']}") do
+on master, oregano("module upgrade pmtacceptance-java --modulepath #{master['distmoduledir']}") do
   pattern = Regexp.new([
     ".*Notice: Preparing to upgrade 'pmtacceptance-java' .*",
     ".*Notice: Found 'pmtacceptance-java' \\(.*v1.6.0.*\\) in #{master['distmoduledir']} .*",
-    ".*Notice: Downloading from https://forgeapi.puppet(labs)?.com .*",
+    ".*Notice: Downloading from https://forgeapi.oregano(labs)?.com .*",
     ".*Notice: Upgrading -- do not interrupt .*",
     "#{master['distmoduledir']}",
     "└── pmtacceptance-java \\(.*v1.6.0 -> v1.7.1.*\\)",

@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-require 'puppet/face'
+require 'oregano/face'
 
-describe Puppet::Face[:epp, :current] do
-  include PuppetSpec::Files
+describe Oregano::Face[:epp, :current] do
+  include OreganoSpec::Files
 
-  let(:eppface) { Puppet::Face[:epp, :current] }
+  let(:eppface) { Oregano::Face[:epp, :current] }
 
   context "validate" do
     context "from an interactive terminal" do
@@ -18,7 +18,7 @@ describe Puppet::Face[:epp, :current] do
         template_name = 'template1.epp'
         dir = dir_containing('templates', { template_name => "<%= |$a $b |%>" })
         template = File.join(dir, template_name)
-        expect { eppface.validate(template) }.to raise_exception(Puppet::Error, /Errors while validating epp/)
+        expect { eppface.validate(template) }.to raise_exception(Oregano::Error, /Errors while validating epp/)
       end
 
       it "runs error free when there are no validation errors from an absolute file" do
@@ -31,7 +31,7 @@ describe Puppet::Face[:epp, :current] do
       it "reports missing files" do
         expect do
           eppface.validate("missing.epp")
-        end.to raise_error(Puppet::Error, /One or more file\(s\) specified did not exist.*missing\.epp/m)
+        end.to raise_error(Oregano::Error, /One or more file\(s\) specified did not exist.*missing\.epp/m)
       end
 
       context "in an environment with templates" do
@@ -51,9 +51,9 @@ describe Puppet::Face[:epp, :current] do
         end
 
         around(:each) do |example|
-          Puppet.settings.initialize_global_settings
-          loader = Puppet::Environments::Directories.new(dir, [])
-          Puppet.override(:environments => loader) do
+          Oregano.settings.initialize_global_settings
+          loader = Oregano::Environments::Directories.new(dir, [])
+          Oregano.override(:environments => loader) do
             example.run
           end
         end
@@ -64,25 +64,25 @@ describe Puppet::Face[:epp, :current] do
         end
 
         it "finds errors in supplied template file in the context of a directory environment" do
-          expect { eppface.validate('m1/broken.epp') }.to raise_exception(Puppet::Error, /Errors while validating epp/)
+          expect { eppface.validate('m1/broken.epp') }.to raise_exception(Oregano::Error, /Errors while validating epp/)
           expect(@logs.join).to match(/Syntax error at 'b'/)
         end
 
         it "stops on first error by default" do
-          expect { eppface.validate('m1/broken.epp', 'm1/broken2.epp') }.to raise_exception(Puppet::Error, /Errors while validating epp/)
+          expect { eppface.validate('m1/broken.epp', 'm1/broken2.epp') }.to raise_exception(Oregano::Error, /Errors while validating epp/)
           expect(@logs.join).to match(/Syntax error at 'b'.*broken\.epp/)
           expect(@logs.join).to_not match(/Syntax error at 'b'.*broken2\.epp/)
         end
 
         it "continues after error when --continue_on_error is given" do
-          expect { eppface.validate('m1/broken.epp', 'm1/broken2.epp', :continue_on_error => true) }.to raise_exception(Puppet::Error, /Errors while validating epp/)
+          expect { eppface.validate('m1/broken.epp', 'm1/broken2.epp', :continue_on_error => true) }.to raise_exception(Oregano::Error, /Errors while validating epp/)
           expect(@logs.join).to match(/Syntax error at 'b'.*broken\.epp/)
           expect(@logs.join).to match(/Syntax error at 'b'.*broken2\.epp/)
         end
 
         it "validates all templates in the environment" do
           pending "NOT IMPLEMENTED YET"
-          expect { eppface.validate(:continue_on_error => true) }.to raise_exception(Puppet::Error, /Errors while validating epp/)
+          expect { eppface.validate(:continue_on_error => true) }.to raise_exception(Oregano::Error, /Errors while validating epp/)
           expect(@logs.join).to match(/Syntax error at 'b'.*broken\.epp/)
           expect(@logs.join).to match(/Syntax error at 'b'.*broken2\.epp/)
           expect(@logs.join).to match(/Syntax error at 'b'.*broken3\.epp/)
@@ -92,7 +92,7 @@ describe Puppet::Face[:epp, :current] do
 
     it "validates the contents of STDIN when no files given and STDIN is not a tty" do
       from_a_piped_input_of("<% | $a $oh_no | %> I am broken")
-      expect { eppface.validate() }.to raise_exception(Puppet::Error, /Errors while validating epp/)
+      expect { eppface.validate() }.to raise_exception(Oregano::Error, /Errors while validating epp/)
       expect(@logs.join).to match(/Syntax error at 'oh_no'/)
     end
 
@@ -160,7 +160,7 @@ describe Puppet::Face[:epp, :current] do
 
     it "informs the user of files that don't exist" do
       expected_message = /One or more file\(s\) specified did not exist:\n\s*does_not_exist_here\.epp/m
-      expect { eppface.dump('does_not_exist_here.epp') }.to raise_exception(Puppet::Error, expected_message)
+      expect { eppface.dump('does_not_exist_here.epp') }.to raise_exception(Oregano::Error, expected_message)
     end
 
     it "dumps the AST of STDIN when no files given and STDIN is not a tty" do
@@ -197,15 +197,15 @@ describe Puppet::Face[:epp, :current] do
       expect(eppface.render(:e => '<% $x = "mr X"%>hello <%= $x %>')).to eq("hello mr X")
     end
 
-    it "adds values given in a puppet hash given on command line with --values" do
+    it "adds values given in a oregano hash given on command line with --values" do
       expect(eppface.render(:e => 'hello <%= $x %>', :values => '{x => "mr X"}')).to eq("hello mr X")
     end
 
-    it "adds values given in a puppet hash given on command line with --values" do
+    it "adds values given in a oregano hash given on command line with --values" do
       expect(eppface.render(:e => 'hello <%= $x %>', :values => '{x => "mr X"}')).to eq("hello mr X")
     end
 
-    it "adds values given in a puppet hash produced by a .pp file given with --values_file" do
+    it "adds values given in a oregano hash produced by a .pp file given with --values_file" do
       file_name = 'values.pp'
       dir = dir_containing('values', { file_name => '{x => "mr X"}' })
       values_file = File.join(dir, file_name)
@@ -280,9 +280,9 @@ describe Puppet::Face[:epp, :current] do
       end
 
       around(:each) do |example|
-        Puppet.settings.initialize_global_settings
-        loader = Puppet::Environments::Directories.new(dir, [])
-        Puppet.override(:environments => loader) do
+        Oregano.settings.initialize_global_settings
+        loader = Oregano::Environments::Directories.new(dir, [])
+        Oregano.override(:environments => loader) do
           example.run
         end
       end

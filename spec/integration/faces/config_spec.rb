@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/face'
+require 'oregano/face'
 
-describe Puppet::Face[:config, '0.0.1'] do
-  include PuppetSpec::Files
+describe Oregano::Face[:config, '0.0.1'] do
+  include OreganoSpec::Files
 
   # different UTF-8 widths
   # 1-byte A
@@ -12,10 +12,10 @@ describe Puppet::Face[:config, '0.0.1'] do
   # 4-byte 𠜎 - http://www.fileformat.info/info/unicode/char/2070E/index.htm - 0xF0 0xA0 0x9C 0x8E / 240 160 156 142
   MIXED_UTF8 = "A\u06FF\u16A0\u{2070E}" # Aۿᚠ𠜎
   let (:tmp_environment_path) { tmpdir('envpath') }
-  let (:tmp_config) { tmpfile('puppet.conf') }
+  let (:tmp_config) { tmpfile('oregano.conf') }
 
   def load_settings(path)
-    test_settings = Puppet::Settings.new
+    test_settings = Oregano::Settings.new
 
     test_settings.define_settings(:main,
       :config => {
@@ -64,13 +64,13 @@ rando_key=foobar
         value = "value#{MIXED_UTF8.reverse}value"
 
         # needed for the subject.set to write to correct file
-        Puppet.settings.stubs(:which_configuration_file).returns(tmp_config)
+        Oregano.settings.stubs(:which_configuration_file).returns(tmp_config)
         subject.set(key, value)
 
         # make sure subject.print looks at the newly modified settings
         test_settings = load_settings(tmp_config)
-        # instead of the default Puppet.settings (implementation detail)
-        Puppet.stubs(:settings).returns(test_settings)
+        # instead of the default Oregano.settings (implementation detail)
+        Oregano.stubs(:settings).returns(test_settings)
 
         expect { subject.print() }.to have_printed("#{key} = #{value}")
         expect { subject.print(key, :section => 'main') }.to have_printed("#{value}")

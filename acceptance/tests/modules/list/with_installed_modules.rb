@@ -1,4 +1,4 @@
-test_name "puppet module list (with installed modules)"
+test_name "oregano module list (with installed modules)"
 
 tag 'audit:low',
     'audit:unit'
@@ -74,7 +74,7 @@ on master, "[ -d #{master['distmoduledir']}/thelock ]"
 on master, "[ -d #{master['sitemoduledir']}/crick ]"
 
 step "List the installed modules"
-on master, puppet("module list --modulepath #{master['distmoduledir']}") do
+on master, oregano("module list --modulepath #{master['distmoduledir']}") do
   assert_equal <<-STDOUT, stdout
 #{master['distmoduledir']}
 ├── jimmy-appleseed (\e[0;36mv1.1.0\e[0m)
@@ -83,14 +83,14 @@ on master, puppet("module list --modulepath #{master['distmoduledir']}") do
 STDOUT
 end
 
-on master, puppet("module list --modulepath #{master['sitemoduledir']}") do |res|
+on master, oregano("module list --modulepath #{master['sitemoduledir']}") do |res|
   assert_match( /jimmy-crick/,
                 res.stdout,
                 'Did not find module jimmy-crick in module site path')
 end
 
 step "List the installed modules as a dependency tree"
-on master, puppet("module list --tree --modulepath #{master['distmoduledir']}") do
+on master, oregano("module list --tree --modulepath #{master['distmoduledir']}") do
   assert_equal <<-STDOUT, stdout
 #{master['distmoduledir']}
 └─┬ jimmy-thelock (\e[0;36mv1.0.0\e[0m)
@@ -99,7 +99,7 @@ on master, puppet("module list --tree --modulepath #{master['distmoduledir']}") 
 STDOUT
 end
 
-on master, puppet("module list --tree --modulepath #{master['sitemoduledir']}") do |res|
+on master, oregano("module list --tree --modulepath #{master['sitemoduledir']}") do |res|
   assert_match( /jimmy-crakorn/,
                 res.stdout,
                 'Did not find module jimmy-crakorn in module site path')

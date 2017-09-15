@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:content), :uses_checksums => true do
+  include OreganoSpec::Files
   include_context 'with supported checksum types'
 
   let(:filename) { tmpfile('testfile') }
-  let(:environment) { Puppet::Node::Environment.create(:testing, []) }
-  let(:catalog) { Puppet::Resource::Catalog.new(:test, environment) }
-  let(:resource) { Puppet::Type.type(:file).new :path => filename, :catalog => catalog }
+  let(:environment) { Oregano::Node::Environment.create(:testing, []) }
+  let(:catalog) { Oregano::Resource::Catalog.new(:test, environment) }
+  let(:resource) { Oregano::Type.type(:file).new :path => filename, :catalog => catalog }
 
   before do
     File.open(filename, 'w') {|f| f.write "initial file content"}
@@ -16,7 +16,7 @@ describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true d
   end
 
   around do |example|
-    Puppet.override(:environments => Puppet::Environments::Static.new(environment)) do
+    Oregano.override(:environments => Oregano::Environments::Static.new(environment)) do
       example.run
     end
   end
@@ -297,7 +297,7 @@ describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true d
     CHECKSUM_TYPES_TO_TRY.each do |checksum_type, checksum|
       describe "sync with checksum type #{checksum_type} and the file exists" do
         before do
-          @new_resource = Puppet::Type.type(:file).new :ensure => :file, :path => filename, :catalog => catalog,
+          @new_resource = Oregano::Type.type(:file).new :ensure => :file, :path => filename, :catalog => catalog,
             :content => CHECKSUM_PLAINTEXT, :checksum => checksum_type
           @new_resource.stubs(:stat).returns mock('stat')
         end
@@ -317,7 +317,7 @@ describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true d
     let(:content) { described_class.new(:resource => resource) }
 
     before do
-      Puppet[:show_diff] = true
+      Oregano[:show_diff] = true
       resource[:show_diff] = true
     end
 
@@ -330,7 +330,7 @@ describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true d
     end
 
     it "is false if show_diff is globally disabled" do
-      Puppet[:show_diff] = false
+      Oregano[:show_diff] = false
       expect(content.show_diff?(false)).to be_falsey
     end
 
@@ -400,7 +400,7 @@ describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true d
       it "should fail if a file bucket cannot be retrieved" do
         content.should = "{md5}foo"
         content.resource.expects(:bucket).returns nil
-        expect { content.write(fh) }.to raise_error(Puppet::Error)
+        expect { content.write(fh) }.to raise_error(Oregano::Error)
       end
 
       it "should fail if the file bucket cannot find any content" do
@@ -408,7 +408,7 @@ describe Puppet::Type.type(:file).attrclass(:content), :uses_checksums => true d
         bucket = stub 'bucket'
         content.resource.expects(:bucket).returns bucket
         bucket.expects(:getfile).with("foo").raises "foobar"
-        expect { content.write(fh) }.to raise_error(Puppet::Error)
+        expect { content.write(fh) }.to raise_error(Oregano::Error)
       end
 
       it "should write the returned content to the file" do

@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/terminal'
+require 'oregano/util/terminal'
 
-describe Puppet::Util::Terminal do
+describe Oregano::Util::Terminal do
   describe '.width' do
-    before { Puppet.features.stubs(:posix?).returns(true) }
+    before { Oregano.features.stubs(:posix?).returns(true) }
 
     it 'should invoke `stty` and return the width' do
       height, width = 100, 200
@@ -35,7 +35,7 @@ describe Puppet::Util::Terminal do
 
     it 'should default to 80 columns if not in a POSIX environment' do
       width = 80
-      Puppet.features.stubs(:posix?).returns(false)
+      Oregano.features.stubs(:posix?).returns(false)
       expect(subject.width).to eq(width)
     end
   end

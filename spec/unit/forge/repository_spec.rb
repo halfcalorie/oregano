@@ -1,19 +1,19 @@
 # encoding: utf-8
 require 'spec_helper'
 require 'net/http'
-require 'puppet/forge/repository'
-require 'puppet/forge/cache'
-require 'puppet/forge/errors'
+require 'oregano/forge/repository'
+require 'oregano/forge/cache'
+require 'oregano/forge/errors'
 
-describe Puppet::Forge::Repository do
+describe Oregano::Forge::Repository do
   before(:all) do
     # any local http proxy will break these tests
     ENV['http_proxy'] = nil
     ENV['HTTP_PROXY'] = nil
   end
   let(:agent) { "Test/1.0" }
-  let(:repository) { Puppet::Forge::Repository.new('http://fake.com', agent) }
-  let(:ssl_repository) { Puppet::Forge::Repository.new('https://fake.com', agent) }
+  let(:repository) { Oregano::Forge::Repository.new('http://fake.com', agent) }
+  let(:ssl_repository) { Oregano::Forge::Repository.new('https://fake.com', agent) }
 
   it "retrieve accesses the cache" do
     path = '/module/foo.tar.gz'
@@ -27,7 +27,7 @@ describe Puppet::Forge::Repository do
     path = '/module/foo.tar.gz'
     uri  = [ host, path ].join('')
 
-    repository = Puppet::Forge::Repository.new(host, agent)
+    repository = Oregano::Forge::Repository.new(host, agent)
     repository.cache.expects(:retrieve).with(uri)
 
     repository.retrieve(path)
@@ -55,7 +55,7 @@ describe Puppet::Forge::Repository do
         http.expects(:request).with(responds_with(:path, "/test/the_path/"))
       end
 
-      repository = Puppet::Forge::Repository.new('http://fake.com/test', agent)
+      repository = Oregano::Forge::Repository.new('http://fake.com/test', agent)
       expect(repository.make_http_request("/the_path/")).to eq(result)
     end
 
@@ -66,7 +66,7 @@ describe Puppet::Forge::Repository do
         http.expects(:request).with(responds_with(:path, "/test/the_path"))
       end
 
-      repository = Puppet::Forge::Repository.new('http://fake.com/test/', agent)
+      repository = Oregano::Forge::Repository.new('http://fake.com/test/', agent)
       expect(repository.make_http_request("/the_path")).to eq(result)
     end
 
@@ -84,7 +84,7 @@ describe Puppet::Forge::Repository do
         http.expects(:request).with(responds_with(:path, "the_path")).raises OpenSSL::SSL::SSLError.new("certificate verify failed")
       end
 
-      expect { ssl_repository.make_http_request("the_path") }.to raise_error Puppet::Forge::Errors::SSLVerifyError, 'Unable to verify the SSL certificate at https://fake.com'
+      expect { ssl_repository.make_http_request("the_path") }.to raise_error Oregano::Forge::Errors::SSLVerifyError, 'Unable to verify the SSL certificate at https://fake.com'
     end
 
     it 'return a valid exception when there is a communication problem' do
@@ -93,7 +93,7 @@ describe Puppet::Forge::Repository do
       end
 
       expect { repository.make_http_request("the_path") }.
-        to raise_error Puppet::Forge::Errors::CommunicationError,
+        to raise_error Oregano::Forge::Errors::CommunicationError,
         'Unable to connect to the server at http://fake.com. Detail: SocketError.'
     end
 
@@ -103,20 +103,20 @@ describe Puppet::Forge::Repository do
       request = repository.get_request_object(path)
 
       expect(request['User-Agent']).to match(/\b#{agent}\b/)
-      expect(request['User-Agent']).to match(/\bPuppet\b/)
+      expect(request['User-Agent']).to match(/\bOregano\b/)
       expect(request['User-Agent']).to match(/\bRuby\b/)
     end
 
     it "Does not set Authorization header by default" do
-      Puppet.features.stubs(:pe_license?).returns(false)
-      Puppet[:forge_authorization] = nil
+      Oregano.features.stubs(:pe_license?).returns(false)
+      Oregano[:forge_authorization] = nil
       request = repository.get_request_object("the_path")
       expect(request['Authorization']).to eq(nil)
     end
 
     it "Sets Authorization header from config" do
       token = 'bearer some token'
-      Puppet[:forge_authorization] = token
+      Oregano[:forge_authorization] = token
       request = repository.get_request_object("the_path")
       expect(request['Authorization']).to eq(token)
     end
@@ -124,7 +124,7 @@ describe Puppet::Forge::Repository do
     it "encodes the received URI" do
       unescaped_uri = "héllo world !! ç à"
       performs_an_http_request do |http|
-        http.expects(:request).with(responds_with(:path, Puppet::Util.uri_encode(unescaped_uri)))
+        http.expects(:request).with(responds_with(:path, Oregano::Util.uri_encode(unescaped_uri)))
       end
 
       repository.make_http_request(unescaped_uri)
@@ -174,7 +174,7 @@ describe Puppet::Forge::Repository do
         http.expects(:request).with(responds_with(:path, "the_path")).raises OpenSSL::SSL::SSLError.new("certificate verify failed")
       end
 
-      expect { ssl_repository.make_http_request("the_path") }.to raise_error Puppet::Forge::Errors::SSLVerifyError, 'Unable to verify the SSL certificate at https://fake.com'
+      expect { ssl_repository.make_http_request("the_path") }.to raise_error Oregano::Forge::Errors::SSLVerifyError, 'Unable to verify the SSL certificate at https://fake.com'
     end
 
     it 'return a valid exception when there is a communication problem' do
@@ -183,7 +183,7 @@ describe Puppet::Forge::Repository do
       end
 
       expect { repository.make_http_request("the_path") }.
-        to raise_error Puppet::Forge::Errors::CommunicationError,
+        to raise_error Oregano::Forge::Errors::CommunicationError,
         'Unable to connect to the server at http://fake.com. Detail: SocketError.'
     end
 
@@ -193,14 +193,14 @@ describe Puppet::Forge::Repository do
       request = repository.get_request_object(path)
 
       expect(request['User-Agent']).to match(/\b#{agent}\b/)
-      expect(request['User-Agent']).to match(/\bPuppet\b/)
+      expect(request['User-Agent']).to match(/\bOregano\b/)
       expect(request['User-Agent']).to match(/\bRuby\b/)
     end
 
     it "encodes the received URI" do
       unescaped_uri = "héllo world !! ç à"
       performs_an_authenticated_http_request do |http|
-        http.expects(:request).with(responds_with(:path, Puppet::Util.uri_encode(unescaped_uri)))
+        http.expects(:request).with(responds_with(:path, Oregano::Util.uri_encode(unescaped_uri)))
       end
 
       repository.make_http_request(unescaped_uri)
@@ -221,15 +221,15 @@ describe Puppet::Forge::Repository do
   end
 
   def proxy_settings_of(host, port)
-    Puppet[:http_proxy_host] = host
-    Puppet[:http_proxy_port] = port
+    Oregano[:http_proxy_host] = host
+    Oregano[:http_proxy_port] = port
   end
 
   def authenticated_proxy_settings_of(host, port, user, password)
-    Puppet[:http_proxy_host] = host
-    Puppet[:http_proxy_port] = port
-    Puppet[:http_proxy_user] = user
-    Puppet[:http_proxy_password] = password
+    Oregano[:http_proxy_host] = host
+    Oregano[:http_proxy_port] = port
+    Oregano[:http_proxy_user] = user
+    Oregano[:http_proxy_password] = password
   end
 
   def mock_proxy(port, proxy_args, result, &block)

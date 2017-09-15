@@ -2,11 +2,11 @@
 require 'spec_helper'
 require 'etc'
 
-provider_class = Puppet::Type.type(:user).provider(:hpuxuseradd)
+provider_class = Oregano::Type.type(:user).provider(:hpuxuseradd)
 
-describe provider_class, :unless => Puppet.features.microsoft_windows? do
+describe provider_class, :unless => Oregano.features.microsoft_windows? do
   let :resource do
-    Puppet::Type.type(:user).new(
+    Oregano::Type.type(:user).new(
       :title => 'testuser',
       :comment => 'Test J. User',
       :provider => :hpuxuseradd

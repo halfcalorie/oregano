@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/indirection'
+require 'oregano/indirector/indirection'
 
 shared_examples_for "Indirection Delegator" do
   it "should create a request object with the appropriate method name and all of the passed arguments" do
-    request = Puppet::Indirector::Request.new(:indirection, :find, "me", nil)
+    request = Oregano::Indirector::Request.new(:indirection, :find, "me", nil)
 
     @indirection.expects(:request).with(@method, "mystuff", nil, :one => :two).returns request
 
@@ -23,7 +23,7 @@ shared_examples_for "Indirection Delegator" do
   end
 
   it "should let the appropriate terminus perform the lookup" do
-    @terminus.expects(@method).with { |r| r.is_a?(Puppet::Indirector::Request) }
+    @terminus.expects(@method).with { |r| r.is_a?(Oregano::Indirector::Request) }
     @indirection.send(@method, "me")
   end
 end
@@ -47,7 +47,7 @@ shared_examples_for "Delegation Authorizer" do
   end
 
   it "should pass the request to the terminus's authorization method" do
-    @terminus.expects(:authorized?).with { |r| r.is_a?(Puppet::Indirector::Request) }.returns(true)
+    @terminus.expects(:authorized?).with { |r| r.is_a?(Oregano::Indirector::Request) }.returns(true)
     @terminus.stubs(@method)
 
     @indirection.send(@method, "/my/key", :node => "mynode")
@@ -68,42 +68,42 @@ end
 
 shared_examples_for "Request validator" do
   it "asks the terminus to validate the request" do
-    @terminus.expects(:validate).raises(Puppet::Indirector::ValidationError, "Invalid")
+    @terminus.expects(:validate).raises(Oregano::Indirector::ValidationError, "Invalid")
     @terminus.expects(@method).never
     expect {
       @indirection.send(@method, "key")
-    }.to raise_error Puppet::Indirector::ValidationError
+    }.to raise_error Oregano::Indirector::ValidationError
   end
 end
 
-describe Puppet::Indirector::Indirection do
+describe Oregano::Indirector::Indirection do
   describe "when initializing" do
     # (LAK) I've no idea how to test this, really.
     it "should store a reference to itself before it consumes its options" do
-      expect { @indirection = Puppet::Indirector::Indirection.new(Object.new, :testingness, :not_valid_option) }.to raise_error(NoMethodError, /undefined method/)
-      expect(Puppet::Indirector::Indirection.instance(:testingness)).to be_instance_of(Puppet::Indirector::Indirection)
-      Puppet::Indirector::Indirection.instance(:testingness).delete
+      expect { @indirection = Oregano::Indirector::Indirection.new(Object.new, :testingness, :not_valid_option) }.to raise_error(NoMethodError, /undefined method/)
+      expect(Oregano::Indirector::Indirection.instance(:testingness)).to be_instance_of(Oregano::Indirector::Indirection)
+      Oregano::Indirector::Indirection.instance(:testingness).delete
     end
 
     it "should keep a reference to the indirecting model" do
       model = mock 'model'
-      @indirection = Puppet::Indirector::Indirection.new(model, :myind)
+      @indirection = Oregano::Indirector::Indirection.new(model, :myind)
       expect(@indirection.model).to equal(model)
     end
 
     it "should set the name" do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :myind)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :myind)
       expect(@indirection.name).to eq(:myind)
     end
 
     it "should require indirections to have unique names" do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
-      expect { Puppet::Indirector::Indirection.new(:test) }.to raise_error(ArgumentError)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
+      expect { Oregano::Indirector::Indirection.new(:test) }.to raise_error(ArgumentError)
     end
 
     it "should extend itself with any specified module" do
       mod = Module.new
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test, :extend => mod)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test, :extend => mod)
       expect(@indirection.singleton_class.included_modules).to include(mod)
     end
 
@@ -120,10 +120,10 @@ describe Puppet::Indirector::Indirection do
       @terminus_class.stubs(:new).returns(@terminus)
       @cache = stub 'cache', :name => "mycache"
       @cache_class = mock 'cache_class'
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :cache_terminus).returns(@cache_class)
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :test_terminus).returns(@terminus_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :cache_terminus).returns(@cache_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :test_terminus).returns(@terminus_class)
 
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
       @indirection.terminus_class = :test_terminus
 
       @instance = stub 'instance', :expiration => nil, :expiration= => nil, :name => "whatever"
@@ -139,7 +139,7 @@ describe Puppet::Indirector::Indirection do
     end
 
     it "should default to the :runinterval setting, converted to an integer, for its ttl" do
-      Puppet[:runinterval] = 1800
+      Oregano[:runinterval] = 1800
       expect(@indirection.ttl).to eq(1800)
     end
 
@@ -156,28 +156,28 @@ describe Puppet::Indirector::Indirection do
 
     describe "creates a request" do
       it "should create it with its name as the request's indirection name" do
-        Puppet::Indirector::Request.expects(:new).with { |name, *other| @indirection.name == name }
+        Oregano::Indirector::Request.expects(:new).with { |name, *other| @indirection.name == name }
         @indirection.request(:funtest, "yayness")
       end
 
       it "should require a method and key" do
-        Puppet::Indirector::Request.expects(:new).with { |name, method, key, *other| method == :funtest and key == "yayness" }
+        Oregano::Indirector::Request.expects(:new).with { |name, method, key, *other| method == :funtest and key == "yayness" }
         @indirection.request(:funtest, "yayness")
       end
 
       it "should support optional arguments" do
-        Puppet::Indirector::Request.expects(:new).with { |name, method, key, other| other == {:one => :two} }
+        Oregano::Indirector::Request.expects(:new).with { |name, method, key, other| other == {:one => :two} }
         @indirection.request(:funtest, "yayness", :one => :two)
       end
 
       it "should not pass options if none are supplied" do
-        Puppet::Indirector::Request.expects(:new).with { |*args| args.length < 4 }
+        Oregano::Indirector::Request.expects(:new).with { |*args| args.length < 4 }
         @indirection.request(:funtest, "yayness")
       end
 
       it "should return the request" do
         request = mock 'request'
-        Puppet::Indirector::Request.expects(:new).returns request
+        Oregano::Indirector::Request.expects(:new).returns request
         expect(@indirection.request(:funtest, "yayness")).to equal(request)
       end
     end
@@ -297,7 +297,7 @@ describe Puppet::Indirector::Indirection do
         end
 
         it "should send a debug log if it is using the cached object" do
-          Puppet.expects(:debug)
+          Oregano.expects(:debug)
           @cache.stubs(:find).returns @instance
 
           @indirection.find("/my/key")
@@ -312,7 +312,7 @@ describe Puppet::Indirector::Indirection do
         end
 
         it "should send an info log if it is using the cached object" do
-          Puppet.expects(:info)
+          Oregano.expects(:info)
           @instance.stubs(:expired?).returns true
 
           @cache.stubs(:find).returns @instance
@@ -354,7 +354,7 @@ describe Puppet::Indirector::Indirection do
           @terminus.stubs(:find).returns(@instance)
           @cache.stubs(:save)
 
-          Puppet.expects(:info)
+          Oregano.expects(:info)
 
           @indirection.find("/my/key")
         end
@@ -365,7 +365,7 @@ describe Puppet::Indirector::Indirection do
           @terminus.stubs(:find).returns(@instance)
           @cache.stubs(:save).raises RuntimeError
 
-          Puppet.expects(:log_exception)
+          Oregano.expects(:log_exception)
 
           expect { @indirection.find("/my/key") }.to raise_error RuntimeError
         end
@@ -426,7 +426,7 @@ describe Puppet::Indirector::Indirection do
         end
 
         it "should send a debug log if it is using the cached object" do
-          Puppet.expects(:debug)
+          Oregano.expects(:debug)
           @cache.stubs(:find).returns @instance
 
           @indirection.head("/my/key")
@@ -584,7 +584,7 @@ describe Puppet::Indirector::Indirection do
         end
 
         it "should use a request to find within the cache" do
-          @cache.expects(:find).with { |r| r.is_a?(Puppet::Indirector::Request) and r.method == :find }
+          @cache.expects(:find).with { |r| r.is_a?(Oregano::Indirector::Request) and r.method == :find }
           @indirection.expire("/my/key")
         end
 
@@ -598,7 +598,7 @@ describe Puppet::Indirector::Indirection do
           @cache.expects(:find).returns @cached
           @cache.stubs(:save)
 
-          Puppet.expects(:info)
+          Oregano.expects(:info)
 
           @indirection.expire("/my/key")
         end
@@ -627,7 +627,7 @@ describe Puppet::Indirector::Indirection do
 
           @cached.expects(:expiration=).with { |t| t < Time.now }
 
-          @cache.expects(:save).with { |r| r.is_a?(Puppet::Indirector::Request) and r.instance == @cached and r.method == :save }.returns(@cached)
+          @cache.expects(:save).with { |r| r.is_a?(Oregano::Indirector::Request) and r.instance == @cached and r.method == :save }.returns(@cached)
 
           @indirection.expire("/my/key")
         end
@@ -642,22 +642,22 @@ describe Puppet::Indirector::Indirection do
 
   describe "when managing indirection instances" do
     it "should allow an indirection to be retrieved by name" do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
-      expect(Puppet::Indirector::Indirection.instance(:test)).to equal(@indirection)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
+      expect(Oregano::Indirector::Indirection.instance(:test)).to equal(@indirection)
     end
 
     it "should return nil when the named indirection has not been created" do
-      expect(Puppet::Indirector::Indirection.instance(:test)).to be_nil
+      expect(Oregano::Indirector::Indirection.instance(:test)).to be_nil
     end
 
     it "should allow an indirection's model to be retrieved by name" do
       mock_model = mock('model')
-      @indirection = Puppet::Indirector::Indirection.new(mock_model, :test)
-      expect(Puppet::Indirector::Indirection.model(:test)).to equal(mock_model)
+      @indirection = Oregano::Indirector::Indirection.new(mock_model, :test)
+      expect(Oregano::Indirector::Indirection.model(:test)).to equal(mock_model)
     end
 
     it "should return nil when no model matches the requested name" do
-      expect(Puppet::Indirector::Indirection.model(:test)).to be_nil
+      expect(Oregano::Indirector::Indirection.model(:test)).to be_nil
     end
 
     after do
@@ -667,14 +667,14 @@ describe Puppet::Indirector::Indirection do
 
   describe "when routing to the correct the terminus class" do
     before do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
       @terminus = mock 'terminus'
       @terminus_class = stub 'terminus class', :new => @terminus
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :default).returns(@terminus_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :default).returns(@terminus_class)
     end
 
     it "should fail if no terminus class can be picked" do
-      expect { @indirection.terminus_class }.to raise_error(Puppet::DevError)
+      expect { @indirection.terminus_class }.to raise_error(Oregano::DevError)
     end
 
     it "should choose the default terminus class if one is specified" do
@@ -682,15 +682,15 @@ describe Puppet::Indirector::Indirection do
       expect(@indirection.terminus_class).to equal(:default)
     end
 
-    it "should use the provided Puppet setting if told to do so" do
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :my_terminus).returns(mock("terminus_class2"))
-      Puppet[:node_terminus] = :my_terminus
+    it "should use the provided Oregano setting if told to do so" do
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :my_terminus).returns(mock("terminus_class2"))
+      Oregano[:node_terminus] = :my_terminus
       @indirection.terminus_setting = :node_terminus
       expect(@indirection.terminus_class).to equal(:my_terminus)
     end
 
     it "should fail if the provided terminus class is not valid" do
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :nosuchclass).returns(nil)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :nosuchclass).returns(nil)
       expect { @indirection.terminus_class = :nosuchclass }.to raise_error(ArgumentError)
     end
 
@@ -701,7 +701,7 @@ describe Puppet::Indirector::Indirection do
 
   describe "when specifying the terminus class to use" do
     before do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
       @terminus = mock 'terminus'
       @terminus.stubs(:validate)
       @terminus_class = stub 'terminus class', :new => @terminus
@@ -712,7 +712,7 @@ describe Puppet::Indirector::Indirection do
     end
 
     it "should fail to redirect if no terminus type has been specified" do
-      expect { @indirection.find("blah") }.to raise_error(Puppet::DevError)
+      expect { @indirection.find("blah") }.to raise_error(Oregano::DevError)
     end
 
     it "should fail when the terminus class name is an empty string" do
@@ -724,17 +724,17 @@ describe Puppet::Indirector::Indirection do
     end
 
     it "should fail when the specified terminus class cannot be found" do
-      Puppet::Indirector::Terminus.expects(:terminus_class).with(:test, :foo).returns(nil)
+      Oregano::Indirector::Terminus.expects(:terminus_class).with(:test, :foo).returns(nil)
       expect { @indirection.terminus_class = :foo }.to raise_error(ArgumentError)
     end
 
     it "should select the specified terminus class if a terminus class name is provided" do
-      Puppet::Indirector::Terminus.expects(:terminus_class).with(:test, :foo).returns(@terminus_class)
+      Oregano::Indirector::Terminus.expects(:terminus_class).with(:test, :foo).returns(@terminus_class)
       expect(@indirection.terminus(:foo)).to equal(@terminus)
     end
 
     it "should use the configured terminus class if no terminus name is specified" do
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :foo).returns(@terminus_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :foo).returns(@terminus_class)
       @indirection.terminus_class = :foo
       expect(@indirection.terminus).to equal(@terminus)
     end
@@ -746,10 +746,10 @@ describe Puppet::Indirector::Indirection do
 
   describe "when managing terminus instances" do
     before do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
       @terminus = mock 'terminus'
       @terminus_class = mock 'terminus class'
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :foo).returns(@terminus_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :foo).returns(@terminus_class)
     end
 
     it "should create an instance of the chosen terminus class" do
@@ -765,8 +765,8 @@ describe Puppet::Indirector::Indirection do
     end
 
     it "should not create a terminus instance until one is actually needed" do
-      Puppet::Indirector.expects(:terminus).never
-      indirection = Puppet::Indirector::Indirection.new(mock('model'), :lazytest)
+      Oregano::Indirector.expects(:terminus).never
+      indirection = Oregano::Indirector::Indirection.new(mock('model'), :lazytest)
     end
 
     after do
@@ -776,11 +776,11 @@ describe Puppet::Indirector::Indirection do
 
   describe "when deciding whether to cache" do
     before do
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
       @terminus = mock 'terminus'
       @terminus_class = mock 'terminus class'
       @terminus_class.stubs(:new).returns(@terminus)
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :foo).returns(@terminus_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :foo).returns(@terminus_class)
       @indirection.terminus_class = :foo
     end
 
@@ -789,7 +789,7 @@ describe Puppet::Indirector::Indirection do
     end
 
     it "should fail to cache if no cache type has been specified" do
-      expect { @indirection.cache }.to raise_error(Puppet::DevError)
+      expect { @indirection.cache }.to raise_error(Oregano::DevError)
     end
 
     it "should fail to set the cache class when the cache class name is an empty string" do
@@ -802,7 +802,7 @@ describe Puppet::Indirector::Indirection do
     end
 
     it "should fail to set the cache class when the specified cache class cannot be found" do
-      Puppet::Indirector::Terminus.expects(:terminus_class).with(:test, :foo).returns(nil)
+      Oregano::Indirector::Terminus.expects(:terminus_class).with(:test, :foo).returns(nil)
       expect { @indirection.cache_class = :foo }.to raise_error(ArgumentError)
     end
 
@@ -818,9 +818,9 @@ describe Puppet::Indirector::Indirection do
       @terminus_class.stubs(:new).returns(@terminus)
       @cache = mock 'cache'
       @cache_class = mock 'cache_class'
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :cache_terminus).returns(@cache_class)
-      Puppet::Indirector::Terminus.stubs(:terminus_class).with(:test, :test_terminus).returns(@terminus_class)
-      @indirection = Puppet::Indirector::Indirection.new(mock('model'), :test)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :cache_terminus).returns(@cache_class)
+      Oregano::Indirector::Terminus.stubs(:terminus_class).with(:test, :test_terminus).returns(@terminus_class)
+      @indirection = Oregano::Indirector::Indirection.new(mock('model'), :test)
       @indirection.terminus_class = :test_terminus
     end
 

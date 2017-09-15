@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/confiner'
+require 'oregano/confiner'
 
-describe Puppet::Confiner do
+describe Oregano::Confiner do
   before do
     @object = Object.new
-    @object.extend(Puppet::Confiner)
+    @object.extend(Oregano::Confiner)
   end
 
   it "should have a method for defining confines" do
@@ -29,7 +29,7 @@ describe Puppet::Confiner do
   end
 
   it "should create a new confine collection if one does not exist" do
-    Puppet::ConfineCollection.expects(:new).with("mylabel").returns "mycoll"
+    Oregano::ConfineCollection.expects(:new).with("mylabel").returns "mycoll"
     @object.expects(:to_s).returns "mylabel"
     expect(@object.confine_collection).to eq("mycoll")
   end

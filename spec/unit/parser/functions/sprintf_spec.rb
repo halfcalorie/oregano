@@ -3,17 +3,17 @@ require 'spec_helper'
 
 describe "the sprintf function" do
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
   before :each do
-    node     = Puppet::Node.new('localhost')
-    compiler = Puppet::Parser::Compiler.new(node)
-    @scope   = Puppet::Parser::Scope.new(compiler)
+    node     = Oregano::Node.new('localhost')
+    compiler = Oregano::Parser::Compiler.new(node)
+    @scope   = Oregano::Parser::Scope.new(compiler)
   end
 
   it "should exist" do
-    expect(Puppet::Parser::Functions.function("sprintf")).to eq("function_sprintf")
+    expect(Oregano::Parser::Functions.function("sprintf")).to eq("function_sprintf")
   end
 
   it "should raise an ArgumentError if there is less than 1 argument" do

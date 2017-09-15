@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/package'
+require 'oregano/util/package'
 
-provider_class = Puppet::Type.type(:augeas).provider(:augeas)
+provider_class = Oregano::Type.type(:augeas).provider(:augeas)
 
 describe provider_class do
   before(:each) do
-    @resource = Puppet::Type.type(:augeas).new(
+    @resource = Oregano::Type.type(:augeas).new(
       :name     => "test",
       :root     => my_fixture_dir,
       :provider => :augeas
@@ -422,11 +422,11 @@ describe provider_class do
     end
 
     [true, false].product([true, false]) do |cfg, param|
-      describe "and Puppet[:show_diff] is #{cfg} and show_diff => #{param}" do
+      describe "and Oregano[:show_diff] is #{cfg} and show_diff => #{param}" do
         let(:file) { "/some/random/file" }
 
         before(:each) do
-          Puppet[:show_diff] = cfg
+          Oregano[:show_diff] = cfg
           @resource[:show_diff] = param
 
           @resource[:root] = ""
@@ -463,7 +463,7 @@ describe provider_class do
     # Ticket 2728 (diff files)
     describe "and configured to show diffs" do
       before(:each) do
-        Puppet[:show_diff] = true
+        Oregano[:show_diff] = true
         @resource[:show_diff] = true
 
         @resource[:root] = ""
@@ -597,7 +597,7 @@ describe provider_class do
 
         @provider.expects(:diff).never()
         @provider.expects(:print_put_errors)
-        expect { @provider.need_to_run? }.to raise_error(Puppet::Error)
+        expect { @provider.need_to_run? }.to raise_error(Oregano::Error)
       end
     end
   end
@@ -803,35 +803,35 @@ describe provider_class do
       @augeas.expects(:save).returns(false)
       @provider.expects(:print_put_errors)
       @augeas.expects(:match).returns([])
-      expect { @provider.execute_changes }.to raise_error(Puppet::Error)
+      expect { @provider.execute_changes }.to raise_error(Oregano::Error)
     end
   end
 
-  describe "when making changes", :if => Puppet.features.augeas? do
-    include PuppetSpec::Files
+  describe "when making changes", :if => Oregano.features.augeas? do
+    include OreganoSpec::Files
 
     it "should not clobber the file if it's a symlink" do
-      Puppet::Util::Storage.stubs(:store)
+      Oregano::Util::Storage.stubs(:store)
 
       link = tmpfile('link')
       target = tmpfile('target')
       FileUtils.touch(target)
-      Puppet::FileSystem.symlink(target, link)
+      Oregano::FileSystem.symlink(target, link)
 
-      resource = Puppet::Type.type(:augeas).new(
+      resource = Oregano::Type.type(:augeas).new(
         :name => 'test',
         :incl => link,
         :lens => 'Sshd.lns',
         :changes => "set PermitRootLogin no"
       )
 
-      catalog = Puppet::Resource::Catalog.new
+      catalog = Oregano::Resource::Catalog.new
       catalog.add_resource resource
 
       catalog.apply
 
       expect(File.ftype(link)).to eq('link')
-      expect(Puppet::FileSystem.readlink(link)).to eq(target)
+      expect(Oregano::FileSystem.readlink(link)).to eq(target)
       expect(File.read(target)).to match(/PermitRootLogin no/)
     end
   end
@@ -896,7 +896,7 @@ describe provider_class do
   # Run initialisation tests of the real Augeas library to test our open_augeas
   # method.  This relies on Augeas and ruby-augeas on the host to be
   # functioning.
-  describe "augeas lib initialisation", :if => Puppet.features.augeas? do
+  describe "augeas lib initialisation", :if => Oregano.features.augeas? do
     # Expect lenses for fstab and hosts
     it "should have loaded standard files by default" do
       aug = @provider.open_augeas
@@ -936,7 +936,7 @@ describe provider_class do
     end
 
     it "should also load lenses from pluginsync'd path" do
-      Puppet[:libdir] = my_fixture_dir
+      Oregano[:libdir] = my_fixture_dir
 
       aug = @provider.open_augeas
       expect(aug).not_to eq(nil)
@@ -946,7 +946,7 @@ describe provider_class do
     end
 
     # Optimisations added for Augeas 0.8.2 or higher is available, see #7285
-    describe ">= 0.8.2 optimisations", :if => Puppet.features.augeas? && Facter.value(:augeasversion) && Puppet::Util::Package.versioncmp(Facter.value(:augeasversion), "0.8.2") >= 0 do
+    describe ">= 0.8.2 optimisations", :if => Oregano.features.augeas? && Facter.value(:augeasversion) && Oregano::Util::Package.versioncmp(Facter.value(:augeasversion), "0.8.2") >= 0 do
       it "should only load one file if relevant context given" do
         @resource[:context] = "/files/etc/fstab"
 
@@ -1012,12 +1012,12 @@ describe provider_class do
     end
 
     it "should offer pluginsync augeas/lenses subdir" do
-      Puppet[:libdir] = my_fixture_dir
+      Oregano[:libdir] = my_fixture_dir
       expect(@provider.get_load_path(@resource)).to eq("#{my_fixture_dir}/augeas/lenses")
     end
 
     it "should offer both pluginsync and load_path paths" do
-      Puppet[:libdir] = my_fixture_dir
+      Oregano[:libdir] = my_fixture_dir
       @resource[:load_path] = ["/foo", "/bar", "/baz"]
       expect(@provider.get_load_path(@resource)).to eq("/foo:/bar:/baz:#{my_fixture_dir}/augeas/lenses")
     end

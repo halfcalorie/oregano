@@ -13,7 +13,7 @@ agents.each do |agent|
   on agent, "printf '127.0.0.8 test alias\n' > #{file}"
 
   step "modify the resource"
-  on(agent, puppet_resource('host', 'test', "target=#{file}",
+  on(agent, oregano_resource('host', 'test', "target=#{file}",
               'ensure=present', 'ip=127.0.0.8', 'host_aliases=banzai'))
 
   step "verify that the content was updated"

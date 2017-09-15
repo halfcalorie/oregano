@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/application/filebucket'
-require 'puppet/file_bucket/dipper'
+require 'oregano/application/filebucket'
+require 'oregano/file_bucket/dipper'
 
-describe Puppet::Application::Filebucket do
+describe Oregano::Application::Filebucket do
   before :each do
-    @filebucket = Puppet::Application[:filebucket]
+    @filebucket = Oregano::Application[:filebucket]
   end
 
   it "should declare a get command" do
@@ -43,15 +43,15 @@ describe Puppet::Application::Filebucket do
   describe "during setup" do
 
     before :each do
-      Puppet::Log.stubs(:newdestination)
-      Puppet.stubs(:settraps)
-      Puppet::FileBucket::Dipper.stubs(:new)
+      Oregano::Log.stubs(:newdestination)
+      Oregano.stubs(:settraps)
+      Oregano::FileBucket::Dipper.stubs(:new)
       @filebucket.options.stubs(:[]).with(any_parameters)
     end
 
 
     it "should set console as the log destination" do
-      Puppet::Log.expects(:newdestination).with(:console)
+      Oregano::Log.expects(:newdestination).with(:console)
 
       @filebucket.setup
     end
@@ -65,23 +65,23 @@ describe Puppet::Application::Filebucket do
     it "should set log level to debug if --debug was passed" do
       @filebucket.options.stubs(:[]).with(:debug).returns(true)
       @filebucket.setup
-      expect(Puppet::Log.level).to eq(:debug)
+      expect(Oregano::Log.level).to eq(:debug)
     end
 
     it "should set log level to info if --verbose was passed" do
       @filebucket.options.stubs(:[]).with(:verbose).returns(true)
       @filebucket.setup
-      expect(Puppet::Log.level).to eq(:info)
+      expect(Oregano::Log.level).to eq(:info)
     end
 
-    it "should print puppet config if asked to in Puppet config" do
-      Puppet.settings.stubs(:print_configs?).returns(true)
-      Puppet.settings.expects(:print_configs).returns(true)
+    it "should print oregano config if asked to in Oregano config" do
+      Oregano.settings.stubs(:print_configs?).returns(true)
+      Oregano.settings.expects(:print_configs).returns(true)
       expect { @filebucket.setup }.to exit_with 0
     end
 
-    it "should exit after printing puppet config if asked to in Puppet config" do
-      Puppet.settings.stubs(:print_configs?).returns(true)
+    it "should exit after printing oregano config if asked to in Oregano config" do
+      Oregano.settings.stubs(:print_configs?).returns(true)
       expect { @filebucket.setup }.to exit_with 1
     end
 
@@ -93,9 +93,9 @@ describe Puppet::Application::Filebucket do
       end
 
       it "should create a client with the default bucket if none passed" do
-        Puppet[:bucketdir] = path
+        Oregano[:bucketdir] = path
 
-        Puppet::FileBucket::Dipper.expects(:new).with { |h| h[:Path] == path }
+        Oregano::FileBucket::Dipper.expects(:new).with { |h| h[:Path] == path }
 
         @filebucket.setup
       end
@@ -103,7 +103,7 @@ describe Puppet::Application::Filebucket do
       it "should create a local Dipper with the given bucket" do
         @filebucket.options.stubs(:[]).with(:bucket).returns(path)
 
-        Puppet::FileBucket::Dipper.expects(:new).with { |h| h[:Path] == path }
+        Oregano::FileBucket::Dipper.expects(:new).with { |h| h[:Path] == path }
 
         @filebucket.setup
       end
@@ -113,9 +113,9 @@ describe Puppet::Application::Filebucket do
     describe "with remote bucket" do
 
       it "should create a remote Client to the configured server" do
-        Puppet[:server] = "puppet.reductivelabs.com"
+        Oregano[:server] = "oregano.reductivelabs.com"
 
-        Puppet::FileBucket::Dipper.expects(:new).with { |h| h[:Server] == "puppet.reductivelabs.com" }
+        Oregano::FileBucket::Dipper.expects(:new).with { |h| h[:Server] == "oregano.reductivelabs.com" }
 
         @filebucket.setup
       end
@@ -127,13 +127,13 @@ describe Puppet::Application::Filebucket do
   describe "when running" do
 
     before :each do
-      Puppet::Log.stubs(:newdestination)
-      Puppet.stubs(:settraps)
-      Puppet::FileBucket::Dipper.stubs(:new)
+      Oregano::Log.stubs(:newdestination)
+      Oregano.stubs(:settraps)
+      Oregano::FileBucket::Dipper.stubs(:new)
       @filebucket.options.stubs(:[]).with(any_parameters)
 
       @client = stub 'client'
-      Puppet::FileBucket::Dipper.stubs(:new).returns(@client)
+      Oregano::FileBucket::Dipper.stubs(:new).returns(@client)
 
       @filebucket.setup
     end
@@ -186,7 +186,7 @@ describe Puppet::Application::Filebucket do
 
       it "should call the client backup method for each given parameter" do
         @filebucket.stubs(:puts)
-        Puppet::FileSystem.stubs(:exist?).returns(true)
+        Oregano::FileSystem.stubs(:exist?).returns(true)
         FileTest.stubs(:readable?).returns(true)
         @filebucket.stubs(:args).returns(["file1", "file2"])
 
@@ -213,7 +213,7 @@ describe Puppet::Application::Filebucket do
       it "should call the client diff method with 2 given checksums" do
         md5a="DEADBEEF"
         md5b="BEEF"
-        Puppet::FileSystem.stubs(:exist?).returns(false)
+        Oregano::FileSystem.stubs(:exist?).returns(false)
         @filebucket.stubs(:args).returns([md5a, md5b])
 
         @client.expects(:diff).with(md5a,md5b, nil, nil)
@@ -224,8 +224,8 @@ describe Puppet::Application::Filebucket do
       it "should call the clien diff with a path if the second argument is a file" do
         md5a="DEADBEEF"
         md5b="BEEF"
-        Puppet::FileSystem.stubs(:exist?).with(md5a).returns(false)
-        Puppet::FileSystem.stubs(:exist?).with(md5b).returns(true)
+        Oregano::FileSystem.stubs(:exist?).with(md5a).returns(false)
+        Oregano::FileSystem.stubs(:exist?).with(md5b).returns(true)
         @filebucket.stubs(:args).returns([md5a, md5b])
 
         @client.expects(:diff).with(md5a, nil, nil, md5b)
@@ -236,8 +236,8 @@ describe Puppet::Application::Filebucket do
       it "should call the clien diff with a path if the first argument is a file" do
         md5a="DEADBEEF"
         md5b="BEEF"
-        Puppet::FileSystem.stubs(:exist?).with(md5a).returns(true)
-        Puppet::FileSystem.stubs(:exist?).with(md5b).returns(false)
+        Oregano::FileSystem.stubs(:exist?).with(md5a).returns(true)
+        Oregano::FileSystem.stubs(:exist?).with(md5b).returns(false)
         @filebucket.stubs(:args).returns([md5a, md5b])
 
         @client.expects(:diff).with(nil, md5b, md5a, nil)
@@ -248,8 +248,8 @@ describe Puppet::Application::Filebucket do
       it "should call the clien diff with paths if the both arguments are files" do
         md5a="DEADBEEF"
         md5b="BEEF"
-        Puppet::FileSystem.stubs(:exist?).with(md5a).returns(true)
-        Puppet::FileSystem.stubs(:exist?).with(md5b).returns(true)
+        Oregano::FileSystem.stubs(:exist?).with(md5a).returns(true)
+        Oregano::FileSystem.stubs(:exist?).with(md5b).returns(true)
         @filebucket.stubs(:args).returns([md5a, md5b])
 
         @client.expects(:diff).with(nil, nil, md5a, md5b)
@@ -261,7 +261,7 @@ describe Puppet::Application::Filebucket do
         md5a="DEADBEEF"
         @filebucket.stubs(:args).returns([md5a])
 
-        expect { @filebucket.diff }.to raise_error Puppet::Error
+        expect { @filebucket.diff }.to raise_error Oregano::Error
       end
     end
     describe "the command list" do

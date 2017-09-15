@@ -154,7 +154,7 @@ end
 def release_hosts(hosts = nil)
   my_vmpooler_token = vmpooler_token
   hosts.each do |h|
-    hostname = h.match(/\w{15}\.delivery\.puppetlabs\.net/)[0]
+    hostname = h.match(/\w{15}\.delivery\.oreganolabs\.net/)[0]
     puts "Releasing '#{hostname}'"
     shh_curl = 'curl --silent --show-error'
     if my_vmpooler_token
@@ -162,7 +162,7 @@ def release_hosts(hosts = nil)
     else
       token_header = ''
     end
-    vcloud_url = "http://vcloud.delivery.puppetlabs.net/vm/#{hostname}"
+    vcloud_url = "http://vcloud.delivery.oreganolabs.net/vm/#{hostname}"
     puts `#{shh_curl} -X DELETE --url #{vcloud_url} #{token_header}`
   end
 end
@@ -183,23 +183,23 @@ def sha
 end
 
 def get_test_sample
-  # This set represents a reasonable sample of puppet acceptance tests,
+  # This set represents a reasonable sample of oregano acceptance tests,
   # covering a wide range of features and code susceptible to regressions.
-  tests = [ 'tests/direct_puppet/cached_catalog_remediate_local_drift.rb',
+  tests = [ 'tests/direct_oregano/cached_catalog_remediate_local_drift.rb',
             'tests/resource/file/content_attribute.rb',
             'tests/environment/environment_scenario-default.rb',
-            'tests/puppet_apply_basics.rb',
+            'tests/oregano_apply_basics.rb',
             'tests/modules/install/basic_install.rb',
             'tests/face/loadable_from_modules.rb',
-            'tests/language/functions_in_puppet_language.rb',
+            'tests/language/functions_in_oregano_language.rb',
             'tests/node/check_woy_cache_works.rb',
             'tests/parser_functions/calling_all_functions.rb',
             'tests/ticket_4622_filebucket_diff_test.rb',
             'tests/pluginsync/4420_pluginfacts_should_be_resolvable_on_agent.rb',
-            'tests/ssl/puppet_cert_generate_and_autosign.rb',
+            'tests/ssl/oregano_cert_generate_and_autosign.rb',
             'tests/resource/package/yum.rb',
             'tests/resource/service/ticket_5024_systemd_enabling_masked_service.rb',
-            'tests/resource/service/puppet_mcollective_service_management.rb'
+            'tests/resource/service/oregano_mcollective_service_management.rb'
           ]
 
   # Add any tests modified within the last two weeks to the list, excluding
@@ -264,14 +264,14 @@ or specify TEST_TARGET in a form beaker-hostgenerator accepts, e.g. ubuntu1504-6
 You may override the default master test target by specifying MASTER_TEST_TARGET.
 You may set TESTS=path/to/test,and/more/tests.
 You may set additional Beaker OPTIONS='--more --options'
-If testing from git checkouts, you may optionally set the github fork to checkout from using PUPPET_FORK='some-other-puppet-fork' (you may change the HIERA_FORK and FACTER_FORK as well if you wish).
+If testing from git checkouts, you may optionally set the github fork to checkout from using PUPPET_FORK='some-other-oregano-fork' (you may change the HIERA_FORK and FACTER_FORK as well if you wish).
 You may also optionally set the git server to checkout repos from using GIT_SERVER='some.git.mirror'.
 Or you may set PUPPET_GIT_SERVER='my.host.with.git.daemon', specifically, if you have set up a `git daemon` to pull local commits from.  (You will need to allow the git daemon to serve the repo (see `git help daemon` and the docs/acceptance_tests.md for more details)).
 If there is a Beaker options hash in a ./local_options.rb, it will be included.  Commandline options set through the above environment variables will override settings in this file.
 EOS
 
     desc <<-EOS
-Run a limited but representative subset of acceptance tests through Beaker and install packages as part of the AIO puppet-agent installation. This task is intended to reduce testing time on a per-commit basis.
+Run a limited but representative subset of acceptance tests through Beaker and install packages as part of the AIO oregano-agent installation. This task is intended to reduce testing time on a per-commit basis.
 
   $ env SHA=<full sha> bundle exec rake ci:test:quick
 EOS
@@ -282,7 +282,7 @@ EOS
   end
 
     desc <<-EOS
-Run the acceptance tests through Beaker and install packages as part of the AIO puppet-agent installation.
+Run the acceptance tests through Beaker and install packages as part of the AIO oregano-agent installation.
 #{USAGE}
 EOS
     task :aio => ['ci:check_env', 'ci:gen_hosts'] do
@@ -290,7 +290,7 @@ EOS
     end
 
     desc <<-EOS
-Install puppet as a gem on a predefined set of hosts using Beaker, and run a basic smoke test.
+Install oregano as a gem on a predefined set of hosts using Beaker, and run a basic smoke test.
 
   $ env SHA=<full sha> bundle exec rake:ci:gem
 EOS

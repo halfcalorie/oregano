@@ -16,11 +16,11 @@ group2 = "#{user}n"
 
 agents.each do |host|
   step "ensure that the groups both exist"
-  on(host, puppet_resource('group', group1, 'ensure=present'))
-  on(host, puppet_resource('group', group2, 'ensure=present'))
+  on(host, oregano_resource('group', group1, 'ensure=present'))
+  on(host, oregano_resource('group', group2, 'ensure=present'))
 
   step "ensure the user exists and has the old group"
-  on(host, puppet_resource('user', user, 'ensure=present', "gid=#{group1}"))
+  on(host, oregano_resource('user', user, 'ensure=present', "gid=#{group1}"))
 
   step "verify that the user has the correct gid"
   group_gid1 = host.group_gid(group1)
@@ -36,7 +36,7 @@ agents.each do |host|
   end
 
   step "modify the GID of the user"
-  on(host, puppet_resource('user', user, 'ensure=present', "gid=#{group2}"))
+  on(host, oregano_resource('user', user, 'ensure=present', "gid=#{group2}"))
 
   step "verify that the user has the updated gid"
   group_gid2 = host.group_gid(group2)
@@ -52,7 +52,7 @@ agents.each do |host|
   end
 
   step "ensure that we remove the things we made"
-  on(host, puppet_resource('user',  user,   'ensure=absent'))
-  on(host, puppet_resource('group', group1, 'ensure=absent'))
-  on(host, puppet_resource('group', group2, 'ensure=absent'))
+  on(host, oregano_resource('user',  user,   'ensure=absent'))
+  on(host, oregano_resource('group', group1, 'ensure=absent'))
+  on(host, oregano_resource('group', group2, 'ensure=absent'))
 end

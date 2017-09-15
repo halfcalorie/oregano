@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/metric'
+require 'oregano/util/metric'
 
-describe Puppet::Util::Metric do
+describe Oregano::Util::Metric do
   before do
-    @metric = Puppet::Util::Metric.new("foo")
+    @metric = Oregano::Util::Metric.new("foo")
   end
 
   [:type, :name, :value, :label].each do |name|
@@ -16,19 +16,19 @@ describe Puppet::Util::Metric do
   end
 
   it "should require a name at initialization" do
-    expect { Puppet::Util::Metric.new }.to raise_error(ArgumentError)
+    expect { Oregano::Util::Metric.new }.to raise_error(ArgumentError)
   end
 
   it "should always convert its name to a string" do
-    expect(Puppet::Util::Metric.new(:foo).name).to eq("foo")
+    expect(Oregano::Util::Metric.new(:foo).name).to eq("foo")
   end
 
   it "should support a label" do
-    expect(Puppet::Util::Metric.new("foo", "mylabel").label).to eq("mylabel")
+    expect(Oregano::Util::Metric.new("foo", "mylabel").label).to eq("mylabel")
   end
 
   it "should autogenerate a label if none is provided" do
-    expect(Puppet::Util::Metric.new("foo_bar").label).to eq("Foo bar")
+    expect(Oregano::Util::Metric.new("foo_bar").label).to eq("Foo bar")
   end
 
   it "should have a method for adding values" do
@@ -70,14 +70,14 @@ describe Puppet::Util::Metric do
   end
 
   let(:metric) do
-    metric = Puppet::Util::Metric.new("foo", "mylabel")
+    metric = Oregano::Util::Metric.new("foo", "mylabel")
     metric.newvalue("v1", 10.1, "something")
     metric.newvalue("v2", 20, "something else")
     metric
   end
 
   it "should round trip through json" do
-    tripped = Puppet::Util::Metric.from_data_hash(JSON.parse(metric.to_json))
+    tripped = Oregano::Util::Metric.from_data_hash(JSON.parse(metric.to_json))
 
     expect(tripped.name).to eq(metric.name)
     expect(tripped.label).to eq(metric.label)
@@ -85,6 +85,6 @@ describe Puppet::Util::Metric do
   end
 
   it 'to_data_hash returns value that is instance of to Data' do
-    expect(Puppet::Pops::Types::TypeFactory.data.instance?(metric.to_data_hash)).to be_truthy
+    expect(Oregano::Pops::Types::TypeFactory.data.instance?(metric.to_data_hash)).to be_truthy
   end
 end

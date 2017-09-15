@@ -1,21 +1,21 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http'
-require 'puppet/util/http_proxy'
+require 'oregano/network/http'
+require 'oregano/util/http_proxy'
 
-describe Puppet::Network::HTTP::Factory do
+describe Oregano::Network::HTTP::Factory do
   before(:all) do
     ENV['http_proxy'] = nil
     ENV['HTTP_PROXY'] = nil
   end
   before :each do
-    Puppet::SSL::Key.indirection.terminus_class = :memory
-    Puppet::SSL::CertificateRequest.indirection.terminus_class = :memory
+    Oregano::SSL::Key.indirection.terminus_class = :memory
+    Oregano::SSL::CertificateRequest.indirection.terminus_class = :memory
   end
 
-  let(:site) { Puppet::Network::HTTP::Site.new('https', 'www.example.com', 443) }
+  let(:site) { Oregano::Network::HTTP::Site.new('https', 'www.example.com', 443) }
   def create_connection(site)
-    factory = Puppet::Network::HTTP::Factory.new
+    factory = Oregano::Network::HTTP::Factory.new
 
     factory.create_connection(site)
   end
@@ -45,17 +45,17 @@ describe Puppet::Network::HTTP::Factory do
     let(:proxy_port) { 432 }
 
     it "should not set a proxy if the value is 'none'" do
-      Puppet[:http_proxy_host] = 'none'
-      Puppet::Util::HttpProxy.expects(:no_proxy?).returns false
+      Oregano[:http_proxy_host] = 'none'
+      Oregano::Util::HttpProxy.expects(:no_proxy?).returns false
       conn = create_connection(site)
 
       expect(conn.proxy_address).to be_nil
     end
 
     it 'should not set a proxy if a no_proxy env var matches the destination' do
-      Puppet[:http_proxy_host] = proxy_host
-      Puppet[:http_proxy_port] = proxy_port
-      Puppet::Util::HttpProxy.expects(:no_proxy?).returns true
+      Oregano[:http_proxy_host] = proxy_host
+      Oregano[:http_proxy_port] = proxy_port
+      Oregano::Util::HttpProxy.expects(:no_proxy?).returns true
       conn = create_connection(site)
 
       expect(conn.proxy_address).to be_nil
@@ -63,17 +63,17 @@ describe Puppet::Network::HTTP::Factory do
     end
 
     it 'sets proxy_address' do
-      Puppet[:http_proxy_host] = proxy_host
-      Puppet::Util::HttpProxy.expects(:no_proxy?).returns false
+      Oregano[:http_proxy_host] = proxy_host
+      Oregano::Util::HttpProxy.expects(:no_proxy?).returns false
       conn = create_connection(site)
 
       expect(conn.proxy_address).to eq(proxy_host)
     end
 
     it 'sets proxy address and port' do
-      Puppet[:http_proxy_host] = proxy_host
-      Puppet[:http_proxy_port] = proxy_port
-      Puppet::Util::HttpProxy.expects(:no_proxy?).returns false
+      Oregano[:http_proxy_host] = proxy_host
+      Oregano[:http_proxy_port] = proxy_port
+      Oregano::Util::HttpProxy.expects(:no_proxy?).returns false
       conn = create_connection(site)
 
       expect(conn.proxy_port).to eq(proxy_port)
@@ -81,14 +81,14 @@ describe Puppet::Network::HTTP::Factory do
 
     context 'socket timeouts' do
       it 'sets open timeout' do
-        Puppet[:http_connect_timeout] = "10s"
+        Oregano[:http_connect_timeout] = "10s"
         conn = create_connection(site)
 
         expect(conn.open_timeout).to eq(10)
       end
 
       it 'sets read timeout' do
-        Puppet[:http_read_timeout] = "2m"
+        Oregano[:http_read_timeout] = "2m"
         conn = create_connection(site)
 
         expect(conn.read_timeout).to eq(120)

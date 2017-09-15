@@ -1,25 +1,25 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/parser/templatewrapper'
+require 'oregano/parser/templatewrapper'
 
-describe Puppet::Parser::TemplateWrapper do
-  let(:known_resource_types) { Puppet::Resource::TypeCollection.new("env") }
+describe Oregano::Parser::TemplateWrapper do
+  let(:known_resource_types) { Oregano::Resource::TypeCollection.new("env") }
   let(:scope) do
-    compiler = Puppet::Parser::Compiler.new(Puppet::Node.new("mynode"))
+    compiler = Oregano::Parser::Compiler.new(Oregano::Node.new("mynode"))
     compiler.environment.stubs(:known_resource_types).returns known_resource_types
-    Puppet::Parser::Scope.new compiler
+    Oregano::Parser::Scope.new compiler
   end
 
-  let(:tw) { Puppet::Parser::TemplateWrapper.new(scope) }
+  let(:tw) { Oregano::Parser::TemplateWrapper.new(scope) }
 
   it "fails if a template cannot be found" do
-    Puppet::Parser::Files.expects(:find_template).returns nil
+    Oregano::Parser::Files.expects(:find_template).returns nil
 
-    expect { tw.file = "fake_template" }.to raise_error(Puppet::ParseError)
+    expect { tw.file = "fake_template" }.to raise_error(Oregano::ParseError)
   end
 
   it "stringifies as template[<filename>] for a file based template" do
-    Puppet::Parser::Files.stubs(:find_template).returns("/tmp/fake_template")
+    Oregano::Parser::Files.stubs(:find_template).returns("/tmp/fake_template")
     tw.file = "fake_template"
     expect(tw.to_s).to eql("template[/tmp/fake_template]")
   end
@@ -91,10 +91,10 @@ describe Puppet::Parser::TemplateWrapper do
 
   def given_a_template_file(name, contents)
     full_name = "/full/path/to/#{name}"
-    Puppet::Parser::Files.stubs(:find_template).
+    Oregano::Parser::Files.stubs(:find_template).
       with(name, anything()).
       returns(full_name)
-    Puppet::FileSystem.stubs(:read_preserve_line_endings).with(full_name).returns(contents)
+    Oregano::FileSystem.stubs(:read_preserve_line_endings).with(full_name).returns(contents)
 
     full_name
   end

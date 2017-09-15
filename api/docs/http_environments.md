@@ -10,7 +10,7 @@ Get
 
 Get the list of known environments.
 
-    GET /puppet/v3/environments
+    GET /oregano/v3/environments
 
 ### Supported Response Formats
 
@@ -22,18 +22,18 @@ None
 
 ### Example Request & Response
 
-    GET /puppet/v3/environments
+    GET /oregano/v3/environments
 
     HTTP 200 OK
     Content-Type: application/json
 
     {
-      "search_paths": ["/etc/puppetlabs/code/environments"]
+      "search_paths": ["/etc/oreganolabs/code/environments"]
       "environments": {
         "production": {
           "settings": {
-            "modulepath": ["/etc/puppetlabs/code/environments/production/modules", "/etc/puppetlabs/code/environments/development/modules"],
-            "manifest": ["/etc/puppetlabs/code/environments/production/manifests"]
+            "modulepath": ["/etc/oreganolabs/code/environments/production/modules", "/etc/oreganolabs/code/environments/development/modules"],
+            "manifest": ["/etc/oreganolabs/code/environments/production/manifests"]
             "environment_timeout": 180,
             "config_version": "/version/of/config"
           }

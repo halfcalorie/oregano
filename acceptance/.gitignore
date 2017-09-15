@@ -1,7 +1,7 @@
 .vagrant
 local_options.rb
-pl-puppet-build.repo
-pl-puppet-repos.rpm
+pl-oregano-build.repo
+pl-oregano-repos.rpm
 repos.tar
 repo-configs
 log

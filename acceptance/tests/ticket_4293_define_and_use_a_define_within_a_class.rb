@@ -1,4 +1,4 @@
-# 2010-07-22 Jeff McCune <jeff@puppetlabs.com>
+# 2010-07-22 Jeff McCune <jeff@oreganolabs.com>
 #
 # AffectedVersion: 2.6.0rc4
 # FixedVersion: 2.6.0

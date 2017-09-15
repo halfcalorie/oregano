@@ -1,9 +1,9 @@
-# Rakefile for Puppet -*- ruby -*-
+# Rakefile for Oregano -*- ruby -*-
 RAKE_ROOT = File.dirname(__FILE__)
 
-# We need access to the Puppet.version method
+# We need access to the Oregano.version method
 $LOAD_PATH.unshift(File.expand_path("lib"))
-require 'puppet/version'
+require 'oregano/version'
 
 $LOAD_PATH << File.join(RAKE_ROOT, 'tasks')
 
@@ -92,7 +92,7 @@ task(:commits) do
       raise "\n\n\n\tThis commit summary didn't match CONTRIBUTING.md guidelines:\n" \
         "\n\t\t#{commit_summary}\n" \
         "\tThe commit summary (i.e. the first line of the commit message) should start with one of:\n"  \
-        "\t\t(PUP-<digits>) # this is most common and should be a ticket at tickets.puppet.com\n" \
+        "\t\t(PUP-<digits>) # this is most common and should be a ticket at tickets.oregano.com\n" \
         "\t\t(docs)\n" \
         "\t\t(docs)(DOCUMENT-<digits>)\n" \
         "\t\t(maint)\n" \

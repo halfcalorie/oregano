@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/files'
-require 'puppet_spec/scope'
+require 'oregano_spec/files'
+require 'oregano_spec/scope'
 require 'matchers/resource'
 
-describe Puppet::Node::Environment do
-  include PuppetSpec::Files
+describe Oregano::Node::Environment do
+  include OreganoSpec::Files
   include Matchers::Resource
 
   def a_module_in(name, dir)
@@ -29,7 +29,7 @@ describe Puppet::Node::Environment do
       mods["mod#{num}"] = a_module_in("mod#{num}", dir)
     end
 
-    environment = Puppet::Node::Environment.create(:foo, dirs)
+    environment = Oregano::Node::Environment.create(:foo, dirs)
 
     environment.modules.each do |mod|
       expect(mod.environment).to eq(environment)
@@ -38,10 +38,10 @@ describe Puppet::Node::Environment do
   end
 
   it "should expand 8.3 paths on Windows when creating an environment",
-    :if => Puppet::Util::Platform.windows? do
+    :if => Oregano::Util::Platform.windows? do
 
     # asking for short names only works on paths that exist
-    base = Puppet::Util::Windows::File.get_short_pathname(tmpdir("env_modules"))
+    base = Oregano::Util::Windows::File.get_short_pathname(tmpdir("env_modules"))
     parent_modules_dir = File.join(base, 'testmoduledir')
 
     # make sure the paths have ~ in them, indicating unexpanded 8.3 paths
@@ -50,12 +50,12 @@ describe Puppet::Node::Environment do
     module_dir = a_module_in('testmodule', parent_modules_dir)
 
     # create the environment with unexpanded 8.3 paths
-    environment = Puppet::Node::Environment.create(:foo, [parent_modules_dir])
+    environment = Oregano::Node::Environment.create(:foo, [parent_modules_dir])
 
     # and expect fully expanded paths inside the environment
     # necessary for comparing module paths internally by the parser
-    expect(environment.modulepath).to eq([Puppet::FileSystem.expand_path(parent_modules_dir)])
-    expect(environment.modules.first.path).to eq(Puppet::FileSystem.expand_path(module_dir))
+    expect(environment.modulepath).to eq([Oregano::FileSystem.expand_path(parent_modules_dir)])
+    expect(environment.modules.first.path).to eq(Oregano::FileSystem.expand_path(module_dir))
   end
 
   it "should not yield the same module from different module paths" do
@@ -70,7 +70,7 @@ describe Puppet::Node::Environment do
       a_module_in("mod", dir)
     end
 
-    environment = Puppet::Node::Environment.create(:foo, dirs)
+    environment = Oregano::Node::Environment.create(:foo, dirs)
 
     mods = environment.modules
     expect(mods.length).to eq(1)
@@ -80,7 +80,7 @@ describe Puppet::Node::Environment do
   shared_examples_for "the environment's initial import" do |settings|
     it "a manifest referring to a directory invokes parsing of all its files in sorted order" do
       settings.each do |name, value|
-        Puppet[name] = value
+        Oregano[name] = value
       end
 
       # fixture has three files 00_a.pp, 01_b.pp, and 02_c.pp. The 'b' file
@@ -90,10 +90,10 @@ describe Puppet::Node::Environment do
       dirname = my_fixture('sitedir')
 
       # Set the manifest to the directory to make it parse and combine them when compiling
-      node = Puppet::Node.new('testnode',
-                              :environment => Puppet::Node::Environment.create(:testing, [], dirname))
+      node = Oregano::Node.new('testnode',
+                              :environment => Oregano::Node::Environment.create(:testing, [], dirname))
 
-      catalog = Puppet::Parser::Compiler.compile(node)
+      catalog = Oregano::Parser::Compiler.compile(node)
 
       expect(catalog).to have_resource('Class[A]')
       expect(catalog).to have_resource('Class[B]')
@@ -104,7 +104,7 @@ describe Puppet::Node::Environment do
   shared_examples_for "the environment's initial import in 4x" do |settings|
     it "a manifest referring to a directory invokes recursive parsing of all its files in sorted order" do
       settings.each do |name, value|
-        Puppet[name] = value
+        Oregano[name] = value
       end
 
       # fixture has three files 00_a.pp, 01_b.pp, and 02_c.pp. The 'b' file
@@ -114,10 +114,10 @@ describe Puppet::Node::Environment do
       dirname = my_fixture('sitedir2')
 
       # Set the manifest to the directory to make it parse and combine them when compiling
-      node = Puppet::Node.new('testnode',
-                              :environment => Puppet::Node::Environment.create(:testing, [], dirname))
+      node = Oregano::Node.new('testnode',
+                              :environment => Oregano::Node::Environment.create(:testing, [], dirname))
 
-      catalog = Puppet::Parser::Compiler.compile(node)
+      catalog = Oregano::Parser::Compiler.compile(node)
 
       expect(catalog).to have_resource('Class[A]')
       expect(catalog).to have_resource('Class[B]')
@@ -141,15 +141,15 @@ describe Puppet::Node::Environment do
       :strict_variables => true
   end
 
-  describe "#extralibs on Windows", :if => Puppet.features.microsoft_windows? do
+  describe "#extralibs on Windows", :if => Oregano.features.microsoft_windows? do
 
     describe "with UTF8 characters in PUPPETLIB" do
       let(:rune_utf8) { "\u16A0\u16C7\u16BB\u16EB\u16D2\u16E6\u16A6\u16EB\u16A0\u16B1\u16A9\u16A0\u16A2\u16B1\u16EB\u16A0\u16C1\u16B1\u16AA\u16EB\u16B7\u16D6\u16BB\u16B9\u16E6\u16DA\u16B3\u16A2\u16D7" }
 
-      before { Puppet::Util::Windows::Process.set_environment_variable('PUPPETLIB', rune_utf8) }
+      before { Oregano::Util::Windows::Process.set_environment_variable('PUPPETLIB', rune_utf8) }
 
       it "should use UTF8 characters in PUPPETLIB environment variable" do
-        expect(Puppet::Node::Environment.extralibs()).to eq([rune_utf8])
+        expect(Oregano::Node::Environment.extralibs()).to eq([rune_utf8])
       end
     end
   end

@@ -3,13 +3,13 @@ require 'spec_helper'
 
 describe "the regsubst function" do
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
   before :each do
-    node     = Puppet::Node.new('localhost')
-    compiler = Puppet::Parser::Compiler.new(node)
-    @scope   = Puppet::Parser::Scope.new(compiler)
+    node     = Oregano::Node.new('localhost')
+    compiler = Oregano::Parser::Compiler.new(node)
+    @scope   = Oregano::Parser::Scope.new(compiler)
   end
 
   it 'should raise an ParseError' do
@@ -19,6 +19,6 @@ describe "the regsubst function" do
         'b[an]*a',
         'coconut'
       ])
-    end.to raise_error(Puppet::ParseError, /can only be called using the 4.x function API/)
+    end.to raise_error(Oregano::ParseError, /can only be called using the 4.x function API/)
   end
 end

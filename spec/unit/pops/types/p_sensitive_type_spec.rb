@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'Sensitive Type' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   context 'as a type' do
     it 'can be created without a parameter with the type factory' do
@@ -24,7 +24,7 @@ describe 'Sensitive Type' do
       expect(PSensitiveType::DEFAULT.to_s).to eql('Sensitive')
     end
 
-    context 'when used in Puppet expressions' do
+    context 'when used in Oregano expressions' do
       it 'is equal to itself only' do
         code = <<-CODE
           $t = Sensitive
@@ -100,7 +100,7 @@ describe 'Sensitive Type' do
       CODE
       expect {
         eval_and_collect_notices(code)
-      }.to raise_error(Puppet::Error, /expects a Sensitive\[String\[10, 20\]\] value, got Sensitive\[String\[7, 7\]\]/)
+      }.to raise_error(Oregano::Error, /expects a Sensitive\[String\[10, 20\]\] value, got Sensitive\[String\[7, 7\]\]/)
     end
 
     it 'does not match an inappropriate parameterized type' do
@@ -166,7 +166,7 @@ describe 'Sensitive Type' do
     CODE
     expect {
       expect(eval_and_collect_notices(code))
-    }.to raise_error(Puppet::Error, /expects a String\[4, 8\], got String/)
+    }.to raise_error(Oregano::Error, /expects a String\[4, 8\], got String/)
   end
 end
 end

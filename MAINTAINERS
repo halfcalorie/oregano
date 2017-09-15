@@ -1,32 +1,32 @@
 {
   "version": 1,
-  "file_format": "This MAINTAINERS file format is described at https://github.com/puppetlabs/maintainers",
-  "issues": "https://tickets.puppet.com/browse/PUP",
-  "internal_list": "https://groups.google.com/a/puppet.com/forum/?hl=en#!forum/discuss-puppet-maintainers",
+  "file_format": "This MAINTAINERS file format is described at https://github.com/oreganolabs/maintainers",
+  "issues": "https://tickets.oregano.com/browse/PUP",
+  "internal_list": "https://groups.google.com/a/oregano.com/forum/?hl=en#!forum/discuss-oregano-maintainers",
   "people": [
     {
       "github": "hlindberg",
-      "email": "henrik.lindberg@puppet.com",
+      "email": "henrik.lindberg@oregano.com",
       "name": "Henrik Lindberg"
     },
     {
       "github": "joshcooper",
-      "email": "josh@puppet.com",
+      "email": "josh@oregano.com",
       "name": "Josh Cooper"
     },
     {
       "github": "MikaelSmith",
-      "email": "michael.smith@puppet.com",
+      "email": "michael.smith@oregano.com",
       "name": "Michael Smith"
     },
     {
       "github": "thallgren",
-      "email": "thomas.hallgren@puppet.com",
+      "email": "thomas.hallgren@oregano.com",
       "name": "Thomas Hallgren"
     },
     {
       "github": "branan",
-      "email": "branan@puppet.com",
+      "email": "branan@oregano.com",
       "name": "Branan Riley"
     },
     {
@@ -35,17 +35,17 @@
     },
     {
       "github": "HAIL9000",
-      "email": "hailee@puppet.com",
+      "email": "hailee@oregano.com",
       "name": "Hailee Kenney"
     },
     {
       "github": "er0ck",
-      "email": "eric.thompson@puppet.com",
+      "email": "eric.thompson@oregano.com",
       "name": "Eric Thompson"
     },
     {
       "github": "johnduarte",
-      "email": "john.duarte@puppet.com",
+      "email": "john.duarte@oregano.com",
       "name": "John Duarte"
     },
     {
@@ -54,12 +54,12 @@
     },
     {
       "github": "jtappa",
-      "email": "jorie@puppet.com",
+      "email": "jorie@oregano.com",
       "name": "Jorie Tappa"
     },
     {
       "github": "MosesMendoza",
-      "email": "moses@puppet.com",
+      "email": "moses@oregano.com",
       "name": "Moses Mendoza"
     }
   ]

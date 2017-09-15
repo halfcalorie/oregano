@@ -1,31 +1,31 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/certificate/rest'
+require 'oregano/indirector/certificate/rest'
 
-describe Puppet::SSL::Certificate::Rest do
+describe Oregano::SSL::Certificate::Rest do
   before do
-    @searcher = Puppet::SSL::Certificate::Rest.new
+    @searcher = Oregano::SSL::Certificate::Rest.new
   end
 
-  it "should be a sublcass of Puppet::Indirector::REST" do
-    expect(Puppet::SSL::Certificate::Rest.superclass).to equal(Puppet::Indirector::REST)
+  it "should be a sublcass of Oregano::Indirector::REST" do
+    expect(Oregano::SSL::Certificate::Rest.superclass).to equal(Oregano::Indirector::REST)
   end
 
   it "should set server_setting to :ca_server" do
-    expect(Puppet::SSL::Certificate::Rest.server_setting).to eq(:ca_server)
+    expect(Oregano::SSL::Certificate::Rest.server_setting).to eq(:ca_server)
   end
 
   it "should set port_setting to :ca_port" do
-    expect(Puppet::SSL::Certificate::Rest.port_setting).to eq(:ca_port)
+    expect(Oregano::SSL::Certificate::Rest.port_setting).to eq(:ca_port)
   end
 
   it "should use the :ca SRV service" do
-    expect(Puppet::SSL::Certificate::Rest.srv_service).to eq(:ca)
+    expect(Oregano::SSL::Certificate::Rest.srv_service).to eq(:ca)
   end
 
   it "should make sure found certificates have their names set to the search string" do
-    terminus = Puppet::SSL::Certificate::Rest.new
+    terminus = Oregano::SSL::Certificate::Rest.new
 
     # This has 'boo.com' in the CN
     cert_string = "-----BEGIN CERTIFICATE-----
@@ -51,11 +51,11 @@ rn/G
     response = stub 'response', :code => "200", :body => cert_string
     response.stubs(:[]).with('content-type').returns "text/plain"
     response.stubs(:[]).with('content-encoding')
-    response.stubs(:[]).with(Puppet::Network::HTTP::HEADER_PUPPET_VERSION).returns(Puppet.version)
+    response.stubs(:[]).with(Oregano::Network::HTTP::HEADER_PUPPET_VERSION).returns(Oregano.version)
     network.stubs(:verify_callback=)
     network.expects(:get).returns response
 
-    request = Puppet::Indirector::Request.new(:certificate, :find, "foo.com", nil)
+    request = Oregano::Indirector::Request.new(:certificate, :find, "foo.com", nil)
     result = terminus.find(request)
     expect(result).not_to be_nil
     expect(result.name).to eq("foo.com")

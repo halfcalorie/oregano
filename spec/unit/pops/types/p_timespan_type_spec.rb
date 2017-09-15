@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'Timespan type' do
   it 'is normalized in a Variant' do
@@ -11,8 +11,8 @@ describe 'Timespan type' do
     expect(t).to eql(TypeFactory.timespan('10:00:00', '17:00:00'))
   end
 
-  context 'when used in Puppet expressions' do
-    include PuppetSpec::Compiler
+  context 'when used in Oregano expressions' do
+    include OreganoSpec::Compiler
     it 'is equal to itself only' do
       code = <<-CODE
           $t = Timespan
@@ -111,7 +111,7 @@ describe 'Timespan type' do
         code = <<-CODE
             notice(Timespan('1d11h23m13s', []))
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /parameter 'format' variant 1 expects size to be at least 1, got 0/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /parameter 'format' variant 1 expects size to be at least 1, got 0/)
       end
 
       it 'can be created from a integer that represents seconds since epoch' do
@@ -285,7 +285,7 @@ describe 'Timespan type' do
         code = <<-CODE
             notice(Timespan(3) < Timestamp())
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Timespans are only comparable to Timespans, Integers, and Floats/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Timespans are only comparable to Timespans, Integers, and Floats/)
       end
     end
   end

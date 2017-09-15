@@ -13,7 +13,7 @@ agents.each do |agent|
   agent.group_present(name)
 
   step "query for the resource and verify it was found"
-  on(agent, puppet_resource('group', name)) do
+  on(agent, oregano_resource('group', name)) do
     fail_test "didn't find the group #{name}" unless stdout.include? 'present'
   end
 

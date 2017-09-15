@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/node/rest'
+require 'oregano/indirector/node/rest'
 
-describe Puppet::Node::Rest do
+describe Oregano::Node::Rest do
   before do
-    @searcher = Puppet::Node::Rest.new
+    @searcher = Oregano::Node::Rest.new
   end
 
 

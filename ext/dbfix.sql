@@ -1,7 +1,7 @@
 -- MySQL DB consistency check/fix
 --
 -- Usage:
--- cat dbfix.sql | mysql -u user -p puppet
+-- cat dbfix.sql | mysql -u user -p oregano
 --
 -- WARNING: perform a database backup before running this script
 
@@ -69,39 +69,39 @@ FROM param_names AS bad_rows
 DELETE bad_rows.*
 FROM resource_tags AS bad_rows
   INNER JOIN (
-    SELECT resource_id,puppet_tag_id, MAX(id) as max_id
+    SELECT resource_id,oregano_tag_id, MAX(id) as max_id
     FROM resource_tags
-    GROUP BY resource_id,puppet_tag_id
+    GROUP BY resource_id,oregano_tag_id
     HAVING count(*) > 1
   ) AS good_rows
   ON
     good_rows.resource_id = bad_rows.resource_id AND
-    good_rows.puppet_tag_id = bad_rows.puppet_tag_id AND
+    good_rows.oregano_tag_id = bad_rows.oregano_tag_id AND
     good_rows.max_id <> bad_rows.id;
 
--- rewrite resource_tags that points to duplicated puppet_tags
--- to point to the highest puppet_tags id.
+-- rewrite resource_tags that points to duplicated oregano_tags
+-- to point to the highest oregano_tags id.
 UPDATE
   resource_tags v
   INNER JOIN
-  puppet_tags n
-  ON n.id = v.puppet_tag_id
+  oregano_tags n
+  ON n.id = v.oregano_tag_id
   INNER JOIN
   (
     SELECT name, MAX(id) as max_id
-    FROM puppet_tags
+    FROM oregano_tags
     GROUP BY name
     HAVING count(*) > 1
   ) nmax ON n.name = nmax.name
 SET
-  v.puppet_tag_id = nmax.max_id;
+  v.oregano_tag_id = nmax.max_id;
 
--- Remove duplicate puppet_tags, and keep the highest one
+-- Remove duplicate oregano_tags, and keep the highest one
 DELETE bad_rows.*
-FROM puppet_tags AS bad_rows
+FROM oregano_tags AS bad_rows
   INNER JOIN (
     SELECT name, MAX(id) as max_id
-    FROM puppet_tags
+    FROM oregano_tags
     GROUP BY name
     HAVING count(*) > 1
   ) AS good_rows

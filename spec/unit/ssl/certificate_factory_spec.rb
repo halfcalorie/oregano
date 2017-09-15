@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_factory'
+require 'oregano/ssl/certificate_factory'
 
-describe Puppet::SSL::CertificateFactory do
+describe Oregano::SSL::CertificateFactory do
   let :serial    do OpenSSL::BN.new('12') end
   let :name      do "example.local" end
   let :x509_name do OpenSSL::X509::Name.new([['CN', name]]) end
-  let :key       do Puppet::SSL::Key.new(name).generate end
+  let :key       do Oregano::SSL::Key.new(name).generate end
   let :csr       do
-    csr = Puppet::SSL::CertificateRequest.new(name)
+    csr = Oregano::SSL::CertificateRequest.new(name)
     csr.generate(key)
     csr
   end
   let :issuer do
-    cert = Puppet::SSL::CertificateAuthority.new
+    cert = Oregano::SSL::CertificateAuthority.new
     cert.generate_ca_certificate
     cert.host.certificate.content
   end
@@ -57,7 +57,7 @@ describe Puppet::SSL::CertificateFactory do
     end
 
     it "should set the default TTL of the certificate to the `ca_ttl` setting" do
-      Puppet[:ca_ttl] = 12
+      Oregano[:ca_ttl] = 12
       now = Time.now.utc
       Time.expects(:now).at_least_once.returns(now)
       cert = subject.build(:server, csr, issuer, serial)
@@ -83,7 +83,7 @@ describe Puppet::SSL::CertificateFactory do
         { "oid"      => "nsComment",
           # Note that this output is due to a bug in OpenSSL::X509::Extensions
           # where the values of some extensions are not properly decoded
-          "value"    => ".(Puppet Ruby/OpenSSL Internal Certificate",
+          "value"    => ".(Oregano Ruby/OpenSSL Internal Certificate",
           "critical" => false }
       )
     end
@@ -109,7 +109,7 @@ describe Puppet::SSL::CertificateFactory do
     # subjectAltName is set if the CSR has it, but *not* if it is set when the
     # certificate is built!
     it "should not add subjectAltNames from dns_alt_names" do
-      Puppet[:dns_alt_names] = 'one, two'
+      Oregano[:dns_alt_names] = 'one, two'
       # Verify the CSR still has no extReq, just in case...
       expect(csr.request_extensions).to eq([])
       cert = subject.build(:server, csr, issuer, serial)
@@ -118,11 +118,11 @@ describe Puppet::SSL::CertificateFactory do
     end
 
     it "should add subjectAltName when the CSR requests them" do
-      Puppet[:dns_alt_names] = ''
+      Oregano[:dns_alt_names] = ''
 
       expect = %w{one two} + [name]
 
-      csr = Puppet::SSL::CertificateRequest.new(name)
+      csr = Oregano::SSL::CertificateRequest.new(name)
       csr.generate(key, :dns_alt_names => expect.join(', '))
 
       expect(csr.request_extensions).not_to be_nil
@@ -137,7 +137,7 @@ describe Puppet::SSL::CertificateFactory do
     end
 
     it "can add custom extension requests" do
-      csr = Puppet::SSL::CertificateRequest.new(name)
+      csr = Oregano::SSL::CertificateRequest.new(name)
       csr.generate(key)
 
       csr.stubs(:request_extensions).returns([
@@ -148,14 +148,14 @@ describe Puppet::SSL::CertificateFactory do
       cert = subject.build(:client, csr, issuer, serial)
 
       # The cert must be signed before being later DER-decoding
-      signer = Puppet::SSL::CertificateSigner.new
+      signer = Oregano::SSL::CertificateSigner.new
       signer.sign(cert, key)
-      wrapped_cert = Puppet::SSL::Certificate.from_instance cert
+      wrapped_cert = Oregano::SSL::Certificate.from_instance cert
 
       priv_ext = wrapped_cert.custom_extensions.find {|ext| ext['oid'] == '1.3.6.1.4.1.34380.1.2.1'}
       uuid_ext = wrapped_cert.custom_extensions.find {|ext| ext['oid'] == 'pp_uuid'}
 
-      # The expected results should be DER encoded, the Puppet cert wrapper will turn
+      # The expected results should be DER encoded, the Oregano cert wrapper will turn
       # these into normal strings.
       expect(priv_ext['value']).to eq 'some-value'
       expect(uuid_ext['value']).to eq 'some-uuid'

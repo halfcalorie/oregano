@@ -1,6 +1,6 @@
 test_name 'C97760: Bignum in reduce() should not cause exception' do
-  require 'puppet/acceptance/environment_utils'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils'
+  extend Oregano::Acceptance::EnvironmentUtils
 
   tag 'audit:medium',
       'audit:unit'
@@ -53,9 +53,9 @@ $data_reduced = $data.reduce({}) |$m, $r|{
 SITEPP
   end
 
-  with_puppet_running_on(master, {}) do
+  with_oregano_running_on(master, {}) do
     agents.each do |agent|
-      on(agent, puppet("agent -t --environment #{tmp_environment} --server #{master.hostname}"))
+      on(agent, oregano("agent -t --environment #{tmp_environment} --server #{master.hostname}"))
     end
   end
 

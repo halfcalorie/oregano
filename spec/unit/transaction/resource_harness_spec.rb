@@ -1,31 +1,31 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/transaction/resource_harness'
+require 'oregano/transaction/resource_harness'
 
-describe Puppet::Transaction::ResourceHarness do
-  include PuppetSpec::Files
+describe Oregano::Transaction::ResourceHarness do
+  include OreganoSpec::Files
 
   before do
-    @mode_750 = Puppet.features.microsoft_windows? ? '644' : '750'
-    @mode_755 = Puppet.features.microsoft_windows? ? '644' : '755'
+    @mode_750 = Oregano.features.microsoft_windows? ? '644' : '750'
+    @mode_755 = Oregano.features.microsoft_windows? ? '644' : '755'
     path = make_absolute("/my/file")
 
-    @transaction = Puppet::Transaction.new(Puppet::Resource::Catalog.new, nil, nil)
-    @resource = Puppet::Type.type(:file).new :path => path
-    @harness = Puppet::Transaction::ResourceHarness.new(@transaction)
-    @current_state = Puppet::Resource.new(:file, path)
+    @transaction = Oregano::Transaction.new(Oregano::Resource::Catalog.new, nil, nil)
+    @resource = Oregano::Type.type(:file).new :path => path
+    @harness = Oregano::Transaction::ResourceHarness.new(@transaction)
+    @current_state = Oregano::Resource.new(:file, path)
     @resource.stubs(:retrieve).returns @current_state
   end
 
   it "should accept a transaction at initialization" do
-    harness = Puppet::Transaction::ResourceHarness.new(@transaction)
+    harness = Oregano::Transaction::ResourceHarness.new(@transaction)
     expect(harness.transaction).to equal(@transaction)
   end
 
   it "should delegate to the transaction for its relationship graph" do
     @transaction.expects(:relationship_graph).returns "relgraph"
-    expect(Puppet::Transaction::ResourceHarness.new(@transaction).relationship_graph).to eq("relgraph")
+    expect(Oregano::Transaction::ResourceHarness.new(@transaction).relationship_graph).to eq("relgraph")
   end
 
   describe "when evaluating a resource" do
@@ -75,7 +75,7 @@ describe Puppet::Transaction::ResourceHarness do
   end
 
   def make_stub_provider
-    stubProvider = Class.new(Puppet::Type)
+    stubProvider = Class.new(Oregano::Type)
     stubProvider.instance_eval do
       initvars
 
@@ -162,7 +162,7 @@ describe Puppet::Transaction::ResourceHarness do
 
   context "interaction of ensure with other properties" do
     def an_ensurable_resource_reacting_as(behaviors)
-      stub_type = Class.new(Puppet::Type)
+      stub_type = Class.new(Oregano::Type)
       stub_type.class_eval do
         initvars
         ensurable do
@@ -343,7 +343,7 @@ describe Puppet::Transaction::ResourceHarness do
     it "should be able to audit a file's group" do # see bug #5710
       test_file = tmpfile('foo')
       File.open(test_file, 'w').close
-      resource = Puppet::Type.type(:file).new :path => test_file, :audit => ['group'], :backup => false
+      resource = Oregano::Type.type(:file).new :path => test_file, :audit => ['group'], :backup => false
       resource.expects(:err).never # make sure no exceptions get swallowed
 
       status = @harness.evaluate(resource)
@@ -356,7 +356,7 @@ describe Puppet::Transaction::ResourceHarness do
     it "should not ignore microseconds when auditing a file's mtime" do
       test_file = tmpfile('foo')
       File.open(test_file, 'w').close
-      resource = Puppet::Type.type(:file).new :path => test_file, :audit => ['mtime'], :backup => false
+      resource = Oregano::Type.type(:file).new :path => test_file, :audit => ['mtime'], :backup => false
 
       # construct a property hash with nanosecond resolution as would be
       # found on an ext4 file system
@@ -371,7 +371,7 @@ describe Puppet::Transaction::ResourceHarness do
       # brittle, so this might need to be adjusted if the
       # resource_harness logic changes
       resource.expects(:retrieve).returns(current_from_filesystem)
-      Puppet::Util::Storage.stubs(:cache).with(resource).
+      Oregano::Util::Storage.stubs(:cache).with(resource).
         returns(historical_from_state_yaml).then.
         returns(current_from_filesystem).then.
         returns(current_from_filesystem)
@@ -388,7 +388,7 @@ describe Puppet::Transaction::ResourceHarness do
     it "should ignore nanoseconds when auditing a file's mtime" do
       test_file = tmpfile('foo')
       File.open(test_file, 'w').close
-      resource = Puppet::Type.type(:file).new :path => test_file, :audit => ['mtime'], :backup => false
+      resource = Oregano::Type.type(:file).new :path => test_file, :audit => ['mtime'], :backup => false
 
       # construct a property hash with nanosecond resolution as would be
       # found on an ext4 file system
@@ -404,7 +404,7 @@ describe Puppet::Transaction::ResourceHarness do
       # brittle, so this might need to be adjusted if the
       # resource_harness logic changes
       resource.expects(:retrieve).returns(current_from_filesystem)
-      Puppet::Util::Storage.stubs(:cache).with(resource).
+      Oregano::Util::Storage.stubs(:cache).with(resource).
         returns(historical_from_state_yaml).then.
         returns(current_from_filesystem).then.
         returns(current_from_filesystem)
@@ -427,7 +427,7 @@ describe Puppet::Transaction::ResourceHarness do
       end
 
       let(:resource) do
-        Puppet::Type.type(:file).new(:path => test_file, :backup => false, :content => "hello world").tap do |r|
+        Oregano::Type.type(:file).new(:path => test_file, :backup => false, :content => "hello world").tap do |r|
           r.parameter(:content).sensitive = true
         end
       end
@@ -463,14 +463,14 @@ describe Puppet::Transaction::ResourceHarness do
         end
 
         it "redacts event messages for sensitive properties" do
-          Puppet::Util::Storage.stubs(:cache).with(resource).returns({:content => "historical world"})
+          Oregano::Util::Storage.stubs(:cache).with(resource).returns({:content => "historical world"})
           status = @harness.evaluate(resource)
           sync_event = status.events[0]
           expect(sync_event.message).to eq 'changed [redacted] to [redacted] (previously recorded value was [redacted])'
         end
 
         it "redacts audit event messages for sensitive properties when simulating noop changes" do
-          Puppet::Util::Storage.stubs(:cache).with(resource).returns({:content => "historical world"})
+          Oregano::Util::Storage.stubs(:cache).with(resource).returns({:content => "historical world"})
           resource[:noop] = true
           status = @harness.evaluate(resource)
           sync_event = status.events[0]
@@ -478,7 +478,7 @@ describe Puppet::Transaction::ResourceHarness do
         end
 
         it "redacts event contents for sensitive properties" do
-          Puppet::Util::Storage.stubs(:cache).with(resource).returns({:content => "historical world"})
+          Oregano::Util::Storage.stubs(:cache).with(resource).returns({:content => "historical world"})
           status = @harness.evaluate(resource)
           sync_event = status.events[0]
           expect(sync_event.historical_value).to eq '[redacted]'
@@ -511,7 +511,7 @@ describe Puppet::Transaction::ResourceHarness do
 
   describe "when finding the schedule" do
     before do
-      @catalog = Puppet::Resource::Catalog.new
+      @catalog = Oregano::Resource::Catalog.new
       @resource.catalog = @catalog
     end
 
@@ -533,7 +533,7 @@ describe Puppet::Transaction::ResourceHarness do
     end
 
     it "should return the named schedule if it exists" do
-      sched = Puppet::Type.type(:schedule).new(:name => "sched")
+      sched = Oregano::Type.type(:schedule).new(:name => "sched")
       @catalog.add_resource(sched)
       @resource[:schedule] = "sched"
       expect(@harness.schedule(@resource).to_s).to eq(sched.to_s)
@@ -542,12 +542,12 @@ describe Puppet::Transaction::ResourceHarness do
 
   describe "when determining if a resource is scheduled" do
     before do
-      @catalog = Puppet::Resource::Catalog.new
+      @catalog = Oregano::Resource::Catalog.new
       @resource.catalog = @catalog
     end
 
     it "should return true if 'ignoreschedules' is set" do
-      Puppet[:ignoreschedules] = true
+      Oregano[:ignoreschedules] = true
       @resource[:schedule] = "meh"
       expect(@harness).to be_scheduled(@resource)
     end
@@ -560,7 +560,7 @@ describe Puppet::Transaction::ResourceHarness do
       t = Time.now
       @harness.expects(:cached).with(@resource, :checked).returns(t)
 
-      sched = Puppet::Type.type(:schedule).new(:name => "sched")
+      sched = Oregano::Type.type(:schedule).new(:name => "sched")
       @catalog.add_resource(sched)
       @resource[:schedule] = "sched"
 
@@ -572,7 +572,7 @@ describe Puppet::Transaction::ResourceHarness do
 
   it "should be able to cache data in the Storage module" do
     data = {}
-    Puppet::Util::Storage.expects(:cache).with(@resource).returns data
+    Oregano::Util::Storage.expects(:cache).with(@resource).returns data
     @harness.cache(@resource, :foo, "something")
 
     expect(data[:foo]).to eq("something")
@@ -580,7 +580,7 @@ describe Puppet::Transaction::ResourceHarness do
 
   it "should be able to retrieve data from the cache" do
     data = {:foo => "other"}
-    Puppet::Util::Storage.expects(:cache).with(@resource).returns data
+    Oregano::Util::Storage.expects(:cache).with(@resource).returns data
     expect(@harness.cached(@resource, :foo)).to eq("other")
   end
 end

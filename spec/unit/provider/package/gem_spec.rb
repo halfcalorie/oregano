@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:gem)
+provider_class = Oregano::Type.type(:package).provider(:gem)
 
 context 'installing myresource' do
   describe provider_class do
     let(:resource) do
-      Puppet::Type.type(:package).new(
+      Oregano::Type.type(:package).new(
         :name     => 'myresource',
         :ensure   => :installed
       )
@@ -75,20 +75,20 @@ context 'installing myresource' do
             provider.install
           end
         end
-        describe "as a puppet url" do
+        describe "as a oregano url" do
           it "should fail" do
-            resource[:source] = "puppet://my/file"
-            expect { provider.install }.to raise_error(Puppet::Error)
+            resource[:source] = "oregano://my/file"
+            expect { provider.install }.to raise_error(Oregano::Error)
           end
         end
-        describe "as a non-file and non-puppet url" do
+        describe "as a non-file and non-oregano url" do
           it "should treat the source as a gem repository" do
             resource[:source] = "http://host/my/file"
             provider.expects(:execute).with { |args| args[2..4] == ["--source", "http://host/my/file", "myresource"] }.returns ""
             provider.install
           end
         end
-        describe "as a windows path on windows", :if => Puppet.features.microsoft_windows? do
+        describe "as a windows path on windows", :if => Oregano.features.microsoft_windows? do
           it "should treat the source as a local path" do
             resource[:source] = "c:/this/is/a/path/to/a/gem.gem"
             provider.expects(:execute).with { |args| args[2] == "c:/this/is/a/path/to/a/gem.gem" }.returns ""
@@ -99,7 +99,7 @@ context 'installing myresource' do
           it "should fail" do
             URI.expects(:parse).raises(ArgumentError)
             resource[:source] = "http:::::uppet:/:/my/file"
-            expect { provider.install }.to raise_error(Puppet::Error)
+            expect { provider.install }.to raise_error(Oregano::Error)
           end
         end
       end
@@ -268,7 +268,7 @@ end
 context 'uninstalling myresource' do
   describe provider_class do
     let(:resource) do
-      Puppet::Type.type(:package).new(
+      Oregano::Type.type(:package).new(
         :name     => 'myresource',
         :ensure   => :absent
       )

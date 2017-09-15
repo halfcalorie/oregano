@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/scheduler'
+require 'oregano/scheduler'
 
-describe Puppet::Scheduler::Job do
+describe Oregano::Scheduler::Job do
   let(:run_interval) { 10 }
   let(:job) { described_class.new(run_interval) }
 
   it "has a minimum run interval of 0" do
-    expect(Puppet::Scheduler::Job.new(-1).run_interval).to eq(0)
+    expect(Oregano::Scheduler::Job.new(-1).run_interval).to eq(0)
   end
 
   describe "when not run yet" do
@@ -69,7 +69,7 @@ describe Puppet::Scheduler::Job do
 
   it "has the job instance as a parameter" do
     passed_job = nil
-    job = Puppet::Scheduler::Job.new(run_interval) do |j|
+    job = Oregano::Scheduler::Job.new(run_interval) do |j|
       passed_job = j
     end
     job.run(5)

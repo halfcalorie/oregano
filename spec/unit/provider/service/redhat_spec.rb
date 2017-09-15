@@ -4,12 +4,12 @@
 #
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:service).provider(:redhat)
+provider_class = Oregano::Type.type(:service).provider(:redhat)
 
-describe provider_class, :if => Puppet.features.posix? do
+describe provider_class, :if => Oregano.features.posix? do
 
   before :each do
-    @class = Puppet::Type.type(:service).provider(:redhat)
+    @class = Oregano::Type.type(:service).provider(:redhat)
     @resource = stub 'resource'
     @resource.stubs(:[]).returns(nil)
     @resource.stubs(:[]).with(:name).returns "myservice"

@@ -1,4 +1,4 @@
-test_name "Puppet applies resources without dependencies in file order over the network"
+test_name "Oregano applies resources without dependencies in file order over the network"
 
 tag 'audit:medium',
     'audit:integration',
@@ -10,8 +10,8 @@ apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
   File {
     ensure => directory,
     mode => "0750",
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
   }
   file {
     '#{testdir}':;
@@ -40,9 +40,9 @@ master_opts = {
    }
 }
 
-with_puppet_running_on(master, master_opts) do
+with_oregano_running_on(master, master_opts) do
   agents.each do |agent|
-    on(agent, puppet('agent', "--no-daemonize --onetime --verbose --server #{master} --ordering manifest"))
+    on(agent, oregano('agent', "--no-daemonize --onetime --verbose --server #{master} --ordering manifest"))
     if stdout !~ /Notice: first.*Notice: second.*Notice: third.*Notice: fourth.*Notice: fifth.*Notice: sixth.*Notice: seventh.*Notice: eighth/m
       fail_test "Output did not include the notify resources in the correct order"
     end

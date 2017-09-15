@@ -1,8 +1,8 @@
 test_name 'C100296: can auto-load defined types using a Resource statement' do
   tag 'risk:medium'
 
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
 
   app_type               = File.basename(__FILE__, '.*')
   tmp_environment        = mk_tmp_environment_with_teardown(master, app_type)
@@ -37,12 +37,12 @@ test_name 'C100296: can auto-load defined types using a Resource statement' do
 
   on(master, "chmod -R 755 /tmp/#{tmp_environment}")
 
-  with_puppet_running_on(master, {}) do
+  with_oregano_running_on(master, {}) do
     agents.each do |agent|
-      on(agent, puppet("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
-         :acceptable_exit_codes => 2) do |puppet_result|
-        assert_match(/Notice: tst1: Define found one::tst1/, puppet_result.stdout, 'Expected to see output from define notify')
-        assert_match(/Notice: tst2: Define found one::tst2/, puppet_result.stdout, 'Expected to see output from define notify')
+      on(agent, oregano("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
+         :acceptable_exit_codes => 2) do |oregano_result|
+        assert_match(/Notice: tst1: Define found one::tst1/, oregano_result.stdout, 'Expected to see output from define notify')
+        assert_match(/Notice: tst2: Define found one::tst2/, oregano_result.stdout, 'Expected to see output from define notify')
       end
     end
   end

@@ -2,12 +2,12 @@
 require 'spec_helper'
 require 'stringio'
 
-describe Puppet::Type.type(:package).provider(:pacman) do
+describe Oregano::Type.type(:package).provider(:pacman) do
   let(:no_extra_options) { { :failonfail => true, :combine => true, :custom_environment => {} } }
-  let(:executor) { Puppet::Util::Execution }
-  let(:resolver) { Puppet::Util }
+  let(:executor) { Oregano::Util::Execution }
+  let(:resolver) { Oregano::Util }
 
-  let(:resource) { Puppet::Type.type(:package).new(:name => 'package', :provider => 'pacman') }
+  let(:resource) { Oregano::Type.type(:package).new(:name => 'package', :provider => 'pacman') }
   let(:provider) { described_class.new(resource) }
 
   before do
@@ -39,24 +39,24 @@ describe Puppet::Type.type(:package).provider(:pacman) do
       provider.install
     end
 
-    it "should raise an Puppet::Error if the installation failed" do
+    it "should raise an Oregano::Error if the installation failed" do
       executor.stubs(:execute).returns("")
       provider.expects(:query).returns(nil)
 
       expect {
         provider.install
-      }.to raise_exception(Puppet::Error, /Could not find package/)
+      }.to raise_exception(Oregano::Error, /Could not find package/)
     end
 
-    it "should raise an Puppet::Error when trying to install a group and allow_virtual is false" do
+    it "should raise an Oregano::Error when trying to install a group and allow_virtual is false" do
       described_class.stubs(:group?).returns(true)
       resource[:allow_virtual] = false
       expect {
         provider.install
-      }.to raise_error(Puppet::Error, /Refusing to install package group/)
+      }.to raise_error(Oregano::Error, /Refusing to install package group/)
     end
 
-    it "should not raise an Puppet::Error when trying to install a group and allow_virtual is true" do
+    it "should not raise an Oregano::Error when trying to install a group and allow_virtual is true" do
       described_class.stubs(:group?).returns(true)
       resource[:allow_virtual] = true
       executor.stubs(:execute).returns("")
@@ -134,15 +134,15 @@ describe Puppet::Type.type(:package).provider(:pacman) do
         end
       end
 
-      context "as a puppet URL" do
+      context "as a oregano URL" do
         before do
-          resource[:source] = "puppet://server/whatever"
+          resource[:source] = "oregano://server/whatever"
         end
 
         it "should fail" do
           expect {
             provider.install
-          }.to raise_error(Puppet::Error, /puppet:\/\/ URL is not supported/)
+          }.to raise_error(Oregano::Error, /oregano:\/\/ URL is not supported/)
         end
       end
 
@@ -154,7 +154,7 @@ describe Puppet::Type.type(:package).provider(:pacman) do
         it "should fail" do
           expect {
             provider.install
-          }.to raise_error(Puppet::Error, /Source blah:\/\/foo\.com is not supported/)
+          }.to raise_error(Oregano::Error, /Source blah:\/\/foo\.com is not supported/)
         end
       end
     end
@@ -222,7 +222,7 @@ EOF
     end
 
     it "should raise an error if execpipe fails" do
-      executor.expects(:execpipe).raises(Puppet::ExecutionFailure.new("ERROR!"))
+      executor.expects(:execpipe).raises(Oregano::ExecutionFailure.new("ERROR!"))
 
       expect { provider.query }.to raise_error(RuntimeError)
     end
@@ -340,7 +340,7 @@ EOF
     end
 
     it "should return nil on error" do
-      described_class.expects(:execpipe).raises(Puppet::ExecutionFailure.new("ERROR!"))
+      described_class.expects(:execpipe).raises(Oregano::ExecutionFailure.new("ERROR!"))
       expect { described_class.instances }.to raise_error(RuntimeError)
     end
 
@@ -417,7 +417,7 @@ EOF
     end
 
     it 'should return false on non-zero pacman exit' do
-      executor.stubs(:execute).with(['/usr/bin/pacman', '-Sg', 'git'], {:failonfail => true, :combine => true, :custom_environment => {}}).raises(Puppet::ExecutionFailure, 'error')
+      executor.stubs(:execute).with(['/usr/bin/pacman', '-Sg', 'git'], {:failonfail => true, :combine => true, :custom_environment => {}}).raises(Oregano::ExecutionFailure, 'error')
       expect(described_class.group?('git')).to eq(false)
     end
 
@@ -438,13 +438,13 @@ EOF
 
     it 'should raise an error on non-zero pacman exit without a filter' do
       executor.expects(:open).with('| /usr/bin/pacman -Sgg 2>&1').returns 'error!'
-      Puppet::Util::Execution.expects(:exitstatus).returns 1
-      expect { described_class.get_installed_groups(installed_packages) }.to raise_error(Puppet::ExecutionFailure, 'error!')
+      Oregano::Util::Execution.expects(:exitstatus).returns 1
+      expect { described_class.get_installed_groups(installed_packages) }.to raise_error(Oregano::ExecutionFailure, 'error!')
     end
 
     it 'should return empty groups on non-zero pacman exit with a filter' do
       executor.expects(:open).with('| /usr/bin/pacman -Sgg git 2>&1').returns ''
-      Puppet::Util::Execution.expects(:exitstatus).returns 1
+      Oregano::Util::Execution.expects(:exitstatus).returns 1
       expect(described_class.get_installed_groups(installed_packages, 'git')).to eq({})
     end
 
@@ -452,7 +452,7 @@ EOF
       pipe = stub()
       pipe.expects(:each_line)
       executor.expects(:open).with('| /usr/bin/pacman -Sgg 2>&1').yields(pipe).returns ''
-      Puppet::Util::Execution.expects(:exitstatus).returns 0
+      Oregano::Util::Execution.expects(:exitstatus).returns 0
       expect(described_class.get_installed_groups(installed_packages)).to eq({})
     end
 
@@ -460,7 +460,7 @@ EOF
       pipe = stub()
       pipe.expects(:each_line).multiple_yields(*groups)
       executor.expects(:open).with('| /usr/bin/pacman -Sgg 2>&1').yields(pipe).returns ''
-      Puppet::Util::Execution.expects(:exitstatus).returns 0
+      Oregano::Util::Execution.expects(:exitstatus).returns 0
       expect(described_class.get_installed_groups(installed_packages)).to eq({'foo' => 'package1 1.0, package2 2.0'})
     end
   end

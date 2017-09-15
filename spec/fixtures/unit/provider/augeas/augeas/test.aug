@@ -1,10 +1,10 @@
 (*
-Simple lens, written to be distributed with Puppet unit tests.
+Simple lens, written to be distributed with Oregano unit tests.
 
 Author: Dominic Cleal <dcleal@redhat.com>
 
 About: License:
-  This file is licensed under the Apache 2.0 licence, like the rest of Puppet.
+  This file is licensed under the Apache 2.0 licence, like the rest of Oregano.
 *)
 
 module Test = autoload xfm

@@ -1,24 +1,24 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/loaders'
+require 'oregano/pops'
+require 'oregano/loaders'
 
 describe 'the split function' do
 
   before(:all) do
-    loaders = Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, []))
-    Puppet.push_context({:loaders => loaders}, "test-examples")
+    loaders = Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, []))
+    Oregano.push_context({:loaders => loaders}, "test-examples")
   end
 
   after(:all) do
-    Puppet::Pops::Loaders.clear
-    Puppet::pop_context()
+    Oregano::Pops::Loaders.clear
+    Oregano::pop_context()
   end
 
   def split(*args)
-    Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'split').call({}, *args)
+    Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'split').call({}, *args)
   end
 
-  let(:type_parser) { Puppet::Pops::Types::TypeParser.singleton }
+  let(:type_parser) { Oregano::Pops::Types::TypeParser.singleton }
 
   it 'should raise an Error if there is less than 2 arguments' do
     expect { split('a,b') }.to raise_error(/'split' expects 2 arguments, got 1/)

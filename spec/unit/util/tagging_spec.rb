@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/tagging'
+require 'oregano/util/tagging'
 
-describe Puppet::Util::Tagging do
-  let(:tagger) { Object.new.extend(Puppet::Util::Tagging) }
+describe Oregano::Util::Tagging do
+  let(:tagger) { Object.new.extend(Oregano::Util::Tagging) }
 
   it "should add tags to the returned tag list" do
     tagger.tag("one")
@@ -25,19 +25,19 @@ describe Puppet::Util::Tagging do
   end
 
   it "should fail on tags containing '*' characters" do
-    expect { tagger.tag("bad*tag") }.to raise_error(Puppet::ParseError)
+    expect { tagger.tag("bad*tag") }.to raise_error(Oregano::ParseError)
   end
 
   it "should fail on tags starting with '-' characters" do
-    expect { tagger.tag("-badtag") }.to raise_error(Puppet::ParseError)
+    expect { tagger.tag("-badtag") }.to raise_error(Oregano::ParseError)
   end
 
   it "should fail on tags containing ' ' characters" do
-    expect { tagger.tag("bad tag") }.to raise_error(Puppet::ParseError)
+    expect { tagger.tag("bad tag") }.to raise_error(Oregano::ParseError)
   end
 
   it "should fail on tags containing newline characters" do
-    expect { tagger.tag("bad\ntag") }.to raise_error(Puppet::ParseError)
+    expect { tagger.tag("bad\ntag") }.to raise_error(Oregano::ParseError)
   end
 
   it "should allow alpha tags" do
@@ -98,7 +98,7 @@ describe Puppet::Util::Tagging do
     "'",
   ].each do |char|
     it "should not allow UTF-8 punctuation characters" do
-      expect { tagger.tag(char) }.to raise_error(Puppet::ParseError)
+      expect { tagger.tag(char) }.to raise_error(Oregano::ParseError)
     end
   end
 

@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/indirector/envelope'
+require 'oregano/indirector/envelope'
 
-describe Puppet::Indirector::Envelope do
+describe Oregano::Indirector::Envelope do
   before do
     @instance = Object.new
-    @instance.extend(Puppet::Indirector::Envelope)
+    @instance.extend(Oregano::Indirector::Envelope)
   end
 
   describe "when testing if it is expired" do

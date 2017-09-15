@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/posix'
+require 'oregano/util/posix'
 
 class PosixTest
-  include Puppet::Util::POSIX
+  include Oregano::Util::POSIX
 end
 
-describe Puppet::Util::POSIX do
+describe Oregano::Util::POSIX do
   before do
     @posix = PosixTest.new
   end
@@ -46,13 +46,13 @@ describe Puppet::Util::POSIX do
     end
 
     it "should fail if no id was passed" do
-      expect { @posix.get_posix_field("asdf", "bar", nil) }.to raise_error(Puppet::DevError)
+      expect { @posix.get_posix_field("asdf", "bar", nil) }.to raise_error(Oregano::DevError)
     end
 
     describe "and the id is an integer" do
       it "should log an error and return nil if the specified id is greater than the maximum allowed ID" do
-        Puppet[:maximum_uid] = 100
-        Puppet.expects(:err)
+        Oregano[:maximum_uid] = 100
+        Oregano.expects(:err)
 
         expect(@posix.get_posix_field("asdf", "bar", 200)).to be_nil
       end

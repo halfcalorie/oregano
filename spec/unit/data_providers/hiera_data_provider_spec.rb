@@ -1,28 +1,28 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe "when using a hiera data provider" do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   # There is a fully configured 'sample' environment in fixtures at this location
   let(:environmentpath) { parent_fixture('environments') }
 
-  let(:facts) { Puppet::Node::Facts.new("facts", {}) }
+  let(:facts) { Oregano::Node::Facts.new("facts", {}) }
 
   around(:each) do |example|
     # Initialize settings to get a full compile as close as possible to a real
     # environment load
-    Puppet.settings.initialize_global_settings
+    Oregano.settings.initialize_global_settings
     # Initialize loaders based on the environmentpath. It does not work to
     # just set the setting environmentpath for some reason - this achieves the same:
     # - first a loader is created, loading directory environments from the fixture (there is
     # one environment, 'sample', which will be loaded since the node references this
     # environment by name).
-    # - secondly, the created env loader is set as 'environments' in the puppet context.
+    # - secondly, the created env loader is set as 'environments' in the oregano context.
     #
-    loader = Puppet::Environments::Directories.new(environmentpath, [])
-    Puppet.override(:environments => loader) do
+    loader = Oregano::Environments::Directories.new(environmentpath, [])
+    Oregano.override(:environments => loader) do
       example.run
     end
   end
@@ -32,9 +32,9 @@ describe "when using a hiera data provider" do
   end
 
   def compile(environment, code = nil)
-    Puppet[:code] = code if code
-    node = Puppet::Node.new("testnode", :facts => facts, :environment => environment)
-    compiler = Puppet::Parser::Compiler.new(node)
+    Oregano[:code] = code if code
+    node = Oregano::Node.new("testnode", :facts => facts, :environment => environment)
+    compiler = Oregano::Parser::Compiler.new(node)
     compiler.topscope['domain'] = 'example.com'
     block_given? ? compiler.compile { |catalog| yield(compiler); catalog } : compiler.compile
   end
@@ -93,7 +93,7 @@ describe "when using a hiera data provider" do
   end
 
   it "will not find 'lookup_options' as a regular value" do
-    expect { compile_and_get_notifications('hiera_misc', '$r = lookup("lookup_options")') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value/)
+    expect { compile_and_get_notifications('hiera_misc', '$r = lookup("lookup_options")') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value/)
   end
 
   it 'does find unqualified keys in the environment' do
@@ -104,7 +104,7 @@ describe "when using a hiera data provider" do
   it 'does not find unqualified keys in the module' do
     expect do
       compile_and_get_notifications('hiera_misc', 'notify{lookup(ukey2):}')
-    end.to raise_error(Puppet::ParseError, /did not find a value for the name 'ukey2'/)
+    end.to raise_error(Oregano::ParseError, /did not find a value for the name 'ukey2'/)
   end
 
   it 'can use interpolation lookup method "alias"' do
@@ -153,25 +153,25 @@ describe "when using a hiera data provider" do
   end
 
   it 'uses compiler lifecycle for caching' do
-    Puppet[:code] = 'notify{lookup(one::my_var):}'
-    node = Puppet::Node.new('testnode', :facts => facts, :environment => 'hiera_module_config')
+    Oregano[:code] = 'notify{lookup(one::my_var):}'
+    node = Oregano::Node.new('testnode', :facts => facts, :environment => 'hiera_module_config')
 
-    compiler = Puppet::Parser::Compiler.new(node)
+    compiler = Oregano::Parser::Compiler.new(node)
     compiler.topscope['my_fact'] = 'server1'
     expect(extract_notifications(compiler.compile)).to include('server1')
 
-    compiler = Puppet::Parser::Compiler.new(node)
+    compiler = Oregano::Parser::Compiler.new(node)
     compiler.topscope['my_fact'] = 'server2'
     expect(extract_notifications(compiler.compile)).to include('server2')
 
-    compiler = Puppet::Parser::Compiler.new(node)
+    compiler = Oregano::Parser::Compiler.new(node)
     expect(extract_notifications(compiler.compile)).to include('In name.yaml')
   end
 
   it 'traps endless interpolate recursion' do
     expect do
       compile_and_get_notifications('hiera_misc', '$r1 = "%{r2}" $r2 = "%{r1}" notify{lookup(recursive):}')
-    end.to raise_error(Puppet::DataBinding::RecursiveLookupError, /detected in \[recursive, scope:r1, scope:r2\]/)
+    end.to raise_error(Oregano::DataBinding::RecursiveLookupError, /detected in \[recursive, scope:r1, scope:r2\]/)
   end
 
   it 'does not consider use of same key in the lookup and scope namespaces as recursion' do
@@ -182,26 +182,26 @@ describe "when using a hiera data provider" do
   it 'traps bad alias declarations' do
     expect do
       compile_and_get_notifications('hiera_misc', "$r1 = 'Alias within string %{alias(\"r2\")}' $r2 = '%{r1}' notify{lookup(recursive):}")
-    end.to raise_error(Puppet::DataBinding::LookupError, /'alias' interpolation is only permitted if the expression is equal to the entire string/)
+    end.to raise_error(Oregano::DataBinding::LookupError, /'alias' interpolation is only permitted if the expression is equal to the entire string/)
   end
 
   it 'reports syntax errors for JSON files' do
     expect do
       compile_and_get_notifications('hiera_bad_syntax_json')
-    end.to raise_error(Puppet::DataBinding::LookupError, /Unable to parse \(#{environmentpath}[^)]+\):/)
+    end.to raise_error(Oregano::DataBinding::LookupError, /Unable to parse \(#{environmentpath}[^)]+\):/)
   end
 
   it 'reports syntax errors for YAML files' do
     expect do
       compile_and_get_notifications('hiera_bad_syntax_yaml')
-    end.to raise_error(Puppet::DataBinding::LookupError, /Unable to parse \(#{environmentpath}[^)]+\):/)
+    end.to raise_error(Oregano::DataBinding::LookupError, /Unable to parse \(#{environmentpath}[^)]+\):/)
   end
 
   describe 'when using explain' do
     it 'will report config path (original and resolved), data path (original and resolved), and interpolation (before and after)' do
       compile('hiera_misc', '$target_scope = "with scope"') do |compiler|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
-        value = Puppet::Pops::Lookup.lookup('km_scope', nil, nil, nil, nil, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
+        value = Oregano::Pops::Lookup.lookup('km_scope', nil, nil, nil, nil, lookup_invocation)
         expect(lookup_invocation.explainer.explain).to include(<<-EOS)
       Path "#{environmentpath}/hiera_misc/data/common.yaml"
         Original path: "common.yaml"
@@ -215,16 +215,16 @@ describe "when using a hiera data provider" do
 
     it 'will report that merge options was found in the lookup_options hash' do
       compile('hiera_misc', '$target_scope = "with scope"') do |compiler|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
-        value = Puppet::Pops::Lookup.lookup('one::loptsm_test::hash', nil, nil, nil, nil, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
+        value = Oregano::Pops::Lookup.lookup('one::loptsm_test::hash', nil, nil, nil, nil, lookup_invocation)
         expect(lookup_invocation.explainer.explain).to include("Using merge options from \"lookup_options\" hash")
       end
     end
 
     it 'will report lookup_options details in combination with details of found value' do
       compile('hiera_misc', '$target_scope = "with scope"') do |compiler|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, Puppet::Pops::Lookup::Explainer.new(true))
-        value = Puppet::Pops::Lookup.lookup('one::loptsm_test::hash', nil, nil, nil, nil, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, Oregano::Pops::Lookup::Explainer.new(true))
+        value = Oregano::Pops::Lookup.lookup('one::loptsm_test::hash', nil, nil, nil, nil, lookup_invocation)
         expect(lookup_invocation.explainer.explain).to eq(<<EOS)
 Searching for "lookup_options"
   Global Data Provider (hiera configuration version 5)
@@ -313,8 +313,8 @@ EOS
 
     it 'will report config path (original and resolved), data path (original and resolved), and interpolation (before and after)' do
       compile('hiera_misc', '$target_scope = "with scope"') do |compiler|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, Puppet::Pops::Lookup::Explainer.new(true, true))
-        value = Puppet::Pops::Lookup.lookup('one::loptsm_test::hash', nil, nil, nil, nil, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, Oregano::Pops::Lookup::Explainer.new(true, true))
+        value = Oregano::Pops::Lookup.lookup('one::loptsm_test::hash', nil, nil, nil, nil, lookup_invocation)
         expect(lookup_invocation.explainer.explain).to eq(<<EOS)
 Merge strategy hash
   Global Data Provider (hiera configuration version 5)

@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/watcher'
+require 'oregano/util/watcher'
 
-describe Puppet::Util::Watcher do
+describe Oregano::Util::Watcher do
   describe "the common file ctime watcher" do
     FakeStat = Struct.new(:ctime)
 
@@ -14,7 +14,7 @@ describe Puppet::Util::Watcher do
     let(:filename) { "fake" }
 
     def after_reading_the_sequence(initial, *results)
-      expectation = Puppet::FileSystem.expects(:stat).with(filename).at_least(1)
+      expectation = Oregano::FileSystem.expects(:stat).with(filename).at_least(1)
       ([initial] + results).each do |result|
         expectation = if result.is_a? Class
                         expectation.raises(result)
@@ -23,7 +23,7 @@ describe Puppet::Util::Watcher do
                       end.then
       end
 
-      watcher = Puppet::Util::Watcher::Common.file_ctime_change_watcher(filename)
+      watcher = Oregano::Util::Watcher::Common.file_ctime_change_watcher(filename)
       results.size.times { watcher = watcher.next_reading }
 
       watcher

@@ -1,6 +1,6 @@
-test_name 'puppet module install (with environment)'
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name 'oregano module install (with environment)'
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -21,10 +21,10 @@ step 'Setup'
 
 stub_forge_on(master)
 
-puppet_conf = generate_base_directory_environments(tmpdir)
+oregano_conf = generate_base_directory_environments(tmpdir)
 
 check_module_install_in = lambda do |environment_path, module_install_args|
-  on(master, puppet("module install #{module_author}-#{module_name} --config=#{puppet_conf} #{module_install_args}")) do
+  on(master, oregano("module install #{module_author}-#{module_name} --config=#{oregano_conf} #{module_install_args}")) do
     assert_module_installed_ui(stdout, module_author, module_name)
     assert_match(/#{environment_path}/, stdout,
           "Notice of non default install path was not displayed")
@@ -47,7 +47,7 @@ apply_manifest_on(master, <<-MANIFEST , :catch_failures => true)
     ]:
 
     ensure => directory,
-    owner => #{master.puppet['user']},
+    owner => #{master.oregano['user']},
   }
 MANIFEST
 
@@ -56,7 +56,7 @@ step "Install a module into --modulepath #{modulepath_dir} despite the implicit 
 end
 
 step "Uninstall so we can try a different scenario" do
-  on(master, puppet("module uninstall #{module_author}-#{module_name} --config=#{puppet_conf} --modulepath=#{modulepath_dir}"))
+  on(master, oregano("module uninstall #{module_author}-#{module_name} --config=#{oregano_conf} --modulepath=#{modulepath_dir}"))
 end
 
 step "Install a module into --modulepath #{modulepath_dir} with a directory env specified" do

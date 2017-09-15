@@ -1,8 +1,8 @@
 test_name "the $libdir setting hook is called on startup"
 
-require 'puppet/acceptance/temp_file_utils'
+require 'oregano/acceptance/temp_file_utils'
 
-extend Puppet::Acceptance::TempFileUtils
+extend Oregano::Acceptance::TempFileUtils
 
 initialize_temp_dirs()
 all_tests_passed = false
@@ -28,14 +28,14 @@ app_output = "Hello from the #{app_name} %s"
 master_module_file_content = {}
 
 master_module_face_content = <<-HERE
-Puppet::Face.define(:#{app_name}, '0.0.1') do
-  copyright "Puppet Labs", 2011
+Oregano::Face.define(:#{app_name}, '0.0.1') do
+  copyright "Oregano Labs", 2011
   license   "Apache 2 license; see COPYING"
 
   summary "#{app_desc % "face"}"
 
   action(:foo) do
-    summary "a test action defined in the test face in the main puppet lib dir"
+    summary "a test action defined in the test face in the main oregano lib dir"
 
     default
     when_invoked do |*args|
@@ -47,9 +47,9 @@ end
 HERE
 
 master_module_app_content = <<-HERE
-require 'puppet/application/face_base'
+require 'oregano/application/face_base'
 
-class Puppet::Application::#{app_name.capitalize} < Puppet::Application::FaceBase
+class Oregano::Application::#{app_name.capitalize} < Oregano::Application::FaceBase
 end
 
 HERE
@@ -60,11 +60,11 @@ begin
 
   # here we create a custom app, which basically doesn't do anything except for
   # print a hello-world message
-  agent_module_face_file = "#{agent_lib_dir}/puppet/face/#{app_name}.rb"
-  master_module_face_file = "#{master_module_dir}/#{app_name}/lib/puppet/face/#{app_name}.rb"
+  agent_module_face_file = "#{agent_lib_dir}/oregano/face/#{app_name}.rb"
+  master_module_face_file = "#{master_module_dir}/#{app_name}/lib/oregano/face/#{app_name}.rb"
 
-  agent_module_app_file = "#{agent_lib_dir}/puppet/application/#{app_name}.rb"
-  master_module_app_file = "#{master_module_dir}/#{app_name}/lib/puppet/application/#{app_name}.rb"
+  agent_module_app_file = "#{agent_lib_dir}/oregano/application/#{app_name}.rb"
+  master_module_app_file = "#{master_module_dir}/#{app_name}/lib/oregano/application/#{app_name}.rb"
 
   # copy all the files to the master
   step "write our simple module out to the master" do
@@ -95,7 +95,7 @@ begin
       },
     }
 
-    with_puppet_running_on master, master_opts do
+    with_oregano_running_on master, master_opts do
 
       # the module files shouldn't exist on the agent yet because they haven't been synced
       step "verify that the module files don't exist on the agent path" do
@@ -112,10 +112,10 @@ begin
       step "run the agent" do
         agents.each do |agent|
 
-          step "capture the existing ssldir, in case the default package puppet.conf sets it within vardir (rhel...)"
-          agent_ssldir = on(agent, puppet('agent --configprint ssldir')).stdout.chomp
+          step "capture the existing ssldir, in case the default package oregano.conf sets it within vardir (rhel...)"
+          agent_ssldir = on(agent, oregano('agent --configprint ssldir')).stdout.chomp
 
-          on(agent, puppet('agent',
+          on(agent, oregano('agent',
                            "--vardir=\"#{get_test_file_path(agent, agent_var_dir)}\" ",
                            "--ssldir=\"#{agent_ssldir}\" ",
                            "--trace  --test --server #{master}")
@@ -139,7 +139,7 @@ begin
 
   step "verify that the application shows up in help" do
     agents.each do |agent|
-      on(agent, PuppetCommand.new(:help, "--vardir=\"#{get_test_file_path(agent, agent_var_dir)}\"")) do
+      on(agent, OreganoCommand.new(:help, "--vardir=\"#{get_test_file_path(agent, agent_var_dir)}\"")) do
         assert_match(/^\s+#{app_name}\s+#{app_desc % "face"}/, result.stdout)
       end
     end
@@ -147,7 +147,7 @@ begin
 
   step "verify that we can run the application" do
     agents.each do |agent|
-      on(agent, PuppetCommand.new(:"#{app_name}", "--vardir=\"#{get_test_file_path(agent, agent_var_dir)}\"")) do
+      on(agent, OreganoCommand.new(:"#{app_name}", "--vardir=\"#{get_test_file_path(agent, agent_var_dir)}\"")) do
         assert_match(/^#{app_output % "face"}/, result.stdout)
       end
     end

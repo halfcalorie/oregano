@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:service).provider(:freebsd)
+provider_class = Oregano::Type.type(:service).provider(:freebsd)
 
 describe provider_class do
   before :each do
@@ -79,13 +79,13 @@ OUTPUT
   end
 
   it "should enable only the selected service" do
-    Puppet::FileSystem.stubs(:exist?).with('/etc/rc.conf').returns(true)
+    Oregano::FileSystem.stubs(:exist?).with('/etc/rc.conf').returns(true)
     File.stubs(:read).with('/etc/rc.conf').returns("openntpd_enable=\"NO\"\nntpd_enable=\"NO\"\n")
     fh = stub 'fh'
     File.stubs(:open).with('/etc/rc.conf', File::WRONLY).yields(fh)
     fh.expects(:<<).with("openntpd_enable=\"NO\"\nntpd_enable=\"YES\"\n")
-    Puppet::FileSystem.stubs(:exist?).with('/etc/rc.conf.local').returns(false)
-    Puppet::FileSystem.stubs(:exist?).with('/etc/rc.conf.d/ntpd').returns(false)
+    Oregano::FileSystem.stubs(:exist?).with('/etc/rc.conf.local').returns(false)
+    Oregano::FileSystem.stubs(:exist?).with('/etc/rc.conf.d/ntpd').returns(false)
 
     @provider.rc_replace('ntpd', 'ntpd', 'YES')
   end

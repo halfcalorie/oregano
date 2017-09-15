@@ -6,10 +6,10 @@ test_name "#5224: exec resources should unset user-related environment variables
 #
 # This test depends on the following pull requests:
 #
-#  https://github.com/puppetlabs/puppet-acceptance/pull/123
+#  https://github.com/oreganolabs/oregano-acceptance/pull/123
 #
 # because it needs to be able to set some environment variables for the duration of
-# the puppet commands.  Shouldn't be moved out of 'pending' until after that has been
+# the oregano commands.  Shouldn't be moved out of 'pending' until after that has been
 # merged.
 #
 #######################################################################################
@@ -19,7 +19,7 @@ temp_file_name = "/tmp/5224_exec_should_unset_user_env_vars.txt"
 sentinel_string = "Abracadabra"
 
 
-# these should match up with the value of Puppet::Util::POSIX_USER_ENV_VARS,
+# these should match up with the value of Oregano::Util::POSIX_USER_ENV_VARS,
 # but I don't have access to that from here, so this is unfortunately hard-coded
 # (cprice 2012-01-27)
 POSIX_USER_ENV_VARS = ['HOME', 'USER', 'LOGNAME']
@@ -39,14 +39,14 @@ exec {"print %s environment variable":
 }
 HERE
 
-# loop over the vars that we care about; these should match up with the value of Puppet::Util::POSIX_USER_ENV_VARS,
+# loop over the vars that we care about; these should match up with the value of Oregano::Util::POSIX_USER_ENV_VARS,
 # but I don't have access to that from here, so this is unfortunately hard-coded (cprice 2012-01-27)
 POSIX_USER_ENV_VARS.each do |var|
 
   # apply the manifest.
   #
   # note that we are passing in an extra :environment argument, which will cause the
-  # framework to temporarily set this variable before executing the puppet command.
+  # framework to temporarily set this variable before executing the oregano command.
   # this lets us know what value we should be looking for as the output of the exec.
 
   apply_manifest_on agents, test_printenv_manifest % [var, var], :environment => {var => sentinel_string}
@@ -80,7 +80,7 @@ POSIX_USER_ENV_VARS.each do |var|
   # apply the manifest.
   #
   # note that we are passing in an extra :environment argument, which will cause the
-  # framework to temporarily set this variable before executing the puppet command.
+  # framework to temporarily set this variable before executing the oregano command.
   # this lets us know what value we should be looking for as the output of the exec.
 
   apply_manifest_on agents, test_printenv_with_env_overrides_manifest % [var, var, var],

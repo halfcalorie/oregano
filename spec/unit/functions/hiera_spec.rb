@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet/pops'
+require 'oregano_spec/compiler'
+require 'oregano/pops'
 
 describe 'when calling' do
-  include PuppetSpec::Compiler
-  include PuppetSpec::Files
+  include OreganoSpec::Compiler
+  include OreganoSpec::Files
 
   let(:global_dir) { tmpdir('global') }
   let(:env_config) { {} }
@@ -152,15 +152,15 @@ describe 'when calling' do
   let(:logs) { [] }
   let(:warnings) { logs.select { |log| log.level == :warning }.map { |log| log.message } }
   let(:env_dir) { File.join(global_dir, 'environments') }
-  let(:env) { Puppet::Node::Environment.create(:test, [File.join(env_dir, 'test', 'modules')]) }
-  let(:environments) { Puppet::Environments::Directories.new(env_dir, []) }
-  let(:node) { Puppet::Node.new('test_hiera', :environment => env) }
-  let(:compiler) { Puppet::Parser::Compiler.new(node) }
-  let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera') }
+  let(:env) { Oregano::Node::Environment.create(:test, [File.join(env_dir, 'test', 'modules')]) }
+  let(:environments) { Oregano::Environments::Directories.new(env_dir, []) }
+  let(:node) { Oregano::Node.new('test_hiera', :environment => env) }
+  let(:compiler) { Oregano::Parser::Compiler.new(node) }
+  let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera') }
 
   before(:each) do
-    Puppet.settings[:codedir] = global_dir
-    Puppet.settings[:hiera_config] = File.join(global_dir, 'hiera.yaml')
+    Oregano.settings[:codedir] = global_dir
+    Oregano.settings[:hiera_config] = File.join(global_dir, 'hiera.yaml')
   end
 
   around(:each) do |example|
@@ -169,7 +169,7 @@ describe 'when calling' do
     dir_contained_in(global_dir, global_files)
     $LOAD_PATH.unshift(File.join(global_dir, 'ruby_stuff'))
     begin
-      Puppet.override(:environments => environments, :current_environment => env) do
+      Oregano.override(:environments => environments, :current_environment => env) do
         example.run
       end
     ensure
@@ -180,8 +180,8 @@ describe 'when calling' do
 
   def with_scope(code = 'undef')
     result = nil
-    Puppet[:code] = 'undef'
-    Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+    Oregano[:code] = 'undef'
+    Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
       compiler.topscope['environment'] = 'test'
       compiler.compile do |catalog|
         result = yield(compiler.topscope)
@@ -201,7 +201,7 @@ describe 'when calling' do
     end
 
     it 'should raise a useful error when nil is returned' do
-      expect { func('badkey') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
+      expect { func('badkey') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
     end
 
     it 'should use the "first" merge strategy' do
@@ -295,20 +295,20 @@ describe 'when calling' do
     end
 
     it 'should not be disabled by data_binding_terminus setting' do
-      Puppet[:data_binding_terminus] = 'none'
+      Oregano[:data_binding_terminus] = 'none'
       expect(func('a')).to eql('first a')
     end
   end
 
   context 'hiera_array' do
-    let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera_array') }
+    let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera_array') }
 
     it 'should require a key argument' do
       expect { func([]) }.to raise_error(ArgumentError)
     end
 
     it 'should raise a useful error when nil is returned' do
-      expect { func('badkey') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
+      expect { func('badkey') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
     end
 
     it 'should log deprecation errors' do
@@ -334,14 +334,14 @@ describe 'when calling' do
   end
 
   context 'hiera_hash' do
-    let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera_hash') }
+    let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera_hash') }
 
     it 'should require a key argument' do
       expect { func([]) }.to raise_error(ArgumentError)
     end
 
     it 'should raise a useful error when nil is returned' do
-      expect { func('badkey') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
+      expect { func('badkey') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
     end
 
     it 'should use the hash resolution_type' do
@@ -371,14 +371,14 @@ describe 'when calling' do
   end
 
   context 'hiera_include' do
-    let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera_include') }
+    let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera_include') }
 
     it 'should require a key argument' do
       expect { func([]) }.to raise_error(ArgumentError)
     end
 
     it 'should raise a useful error when nil is returned' do
-      expect { func('badkey') }.to raise_error(Puppet::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
+      expect { func('badkey') }.to raise_error(Oregano::DataBinding::LookupError, /did not find a value for the name 'badkey'/)
     end
 
     it 'should use the array resolution_type to include classes' do
@@ -462,7 +462,7 @@ describe 'when calling' do
     end
 
     context 'hiera_hash' do
-      let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera_hash') }
+      let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera_hash') }
 
       context "using 'deeper'" do
         it 'declared merge_behavior is honored' do
@@ -489,7 +489,7 @@ describe 'when calling' do
           expect {func('da')}.to raise_error(/expects a Hash value/)
         end
 
-        it 'honors option :unpack_arrays: (unsupported by puppet)' do
+        it 'honors option :unpack_arrays: (unsupported by oregano)' do
           expect(func('hash')).to eql({'array' => %w(x3 x4 x1 x2)})
         end
       end
@@ -497,14 +497,14 @@ describe 'when calling' do
       context "using 'deep'" do
         let(:merge_behavior) { 'deep' }
 
-        it 'honors option :unpack_arrays: (unsupported by puppet)' do
+        it 'honors option :unpack_arrays: (unsupported by oregano)' do
           expect(func('hash')).to eql({'array' => %w(x1 x2 x3 x4)})
         end
       end
     end
 
     context 'hiera_array' do
-      let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera_array') }
+      let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera_array') }
 
       it 'declared merge_behavior is ignored' do
         expect(func('da')).to eql(['da 0', 'da 1', 'da 2,da 3'])
@@ -516,7 +516,7 @@ describe 'when calling' do
     end
 
     context 'hiera' do
-      let(:the_func) { Puppet.lookup(:loaders).puppet_system_loader.load(:function, 'hiera') }
+      let(:the_func) { Oregano.lookup(:loaders).oregano_system_loader.load(:function, 'hiera') }
 
       it 'declared merge_behavior is ignored' do
         expect(func('da')).to eql(['da 0', 'da 1'])

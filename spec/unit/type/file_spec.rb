@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:file) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file) do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('file_testing') }
   let(:file) { described_class.new(:path => path, :catalog => catalog) }
   let(:provider) { file.provider }
-  let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:catalog) { Oregano::Resource::Catalog.new }
 
   before do
-    Puppet.features.stubs("posix?").returns(true)
+    Oregano.features.stubs("posix?").returns(true)
   end
 
   describe "the path parameter" do
-    describe "on POSIX systems", :if => Puppet.features.posix? do
+    describe "on POSIX systems", :if => Oregano.features.posix? do
       it "should remove trailing slashes" do
         file[:path] = "/foo/bar/baz/"
         expect(file[:path]).to eq("/foo/bar/baz")
@@ -51,7 +51,7 @@ describe Puppet::Type.type(:file) do
       end
     end
 
-    describe "on Windows systems", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows systems", :if => Oregano.features.microsoft_windows? do
       it "should remove trailing slashes" do
         file[:path] = "X:/foo/bar/baz/"
         expect(file[:path]).to eq("X:/foo/bar/baz")
@@ -76,7 +76,7 @@ describe Puppet::Type.type(:file) do
         expect { file[:path] = "X:" }.to raise_error(/File paths must be fully qualified/)
       end
 
-      describe "when using UNC filenames", :if => Puppet.features.microsoft_windows? do
+      describe "when using UNC filenames", :if => Oregano.features.microsoft_windows? do
         it "should remove trailing slashes" do
           file[:path] = "//localhost/foo/bar/baz/"
           expect(file[:path]).to eq("//localhost/foo/bar/baz")
@@ -113,10 +113,10 @@ describe Puppet::Type.type(:file) do
       end
     end
 
-    [true, 'true', '.puppet-bak'].each do |value|
-      it "should use .puppet-bak if the value is #{value.inspect}" do
+    [true, 'true', '.oregano-bak'].each do |value|
+      it "should use .oregano-bak if the value is #{value.inspect}" do
         file[:backup] = value
-        expect(file[:backup]).to eq('.puppet-bak')
+        expect(file[:backup]).to eq('.oregano-bak')
       end
     end
 
@@ -128,7 +128,7 @@ describe Puppet::Type.type(:file) do
     it "should fail if backup is set to anything else" do
       expect do
         file[:backup] = 97
-      end.to raise_error(Puppet::Error, /Invalid backup type 97/)
+      end.to raise_error(Oregano::Error, /Invalid backup type 97/)
     end
   end
 
@@ -146,7 +146,7 @@ describe Puppet::Type.type(:file) do
 
     it "should not allow numbers" do
       expect { file[:recurse] = 10 }.to raise_error(
-        Puppet::Error, /Parameter recurse failed on File\[[^\]]+\]: Invalid recurse value 10/)
+        Oregano::Error, /Parameter recurse failed on File\[[^\]]+\]: Invalid recurse value 10/)
     end
 
     [false, "false"].each do |value|
@@ -171,7 +171,7 @@ describe Puppet::Type.type(:file) do
     it "should fail if given a non-number" do
       expect do
         file[:recurselimit] = 'twelve'
-      end.to raise_error(Puppet::Error, /Invalid value "twelve"/)
+      end.to raise_error(Oregano::Error, /Invalid value "twelve"/)
     end
   end
 
@@ -209,8 +209,8 @@ describe Puppet::Type.type(:file) do
       expect(file.bucket).to eq(nil)
     end
 
-    it "should return the default filebucket if using the 'puppet' filebucket" do
-      file[:backup] = 'puppet'
+    it "should return the default filebucket if using the 'oregano' filebucket" do
+      file[:backup] = 'oregano'
       bucket = stub('bucket')
       file.stubs(:default_bucket).returns bucket
 
@@ -221,18 +221,18 @@ describe Puppet::Type.type(:file) do
       file.catalog = nil
       file[:backup] = 'my_bucket'
 
-      expect { file.bucket }.to raise_error(Puppet::Error, "Can not find filebucket for backups without a catalog")
+      expect { file.bucket }.to raise_error(Oregano::Error, "Can not find filebucket for backups without a catalog")
     end
 
     it "should fail if the specified filebucket isn't in the catalog" do
       file[:backup] = 'my_bucket'
 
-      expect { file.bucket }.to raise_error(Puppet::Error, "Could not find filebucket my_bucket specified in backup")
+      expect { file.bucket }.to raise_error(Oregano::Error, "Could not find filebucket my_bucket specified in backup")
     end
 
     it "should use the specified filebucket if it is in the catalog" do
       file[:backup] = 'my_bucket'
-      filebucket = Puppet::Type.type(:filebucket).new(:name => 'my_bucket')
+      filebucket = Oregano::Type.type(:filebucket).new(:name => 'my_bucket')
       catalog.add_resource(filebucket)
 
       expect(file.bucket).to eq(filebucket.bucket)
@@ -243,7 +243,7 @@ describe Puppet::Type.type(:file) do
     before :each do
       # Mocha won't let me just stub SUIDManager.asuser to yield and return,
       # but it will do exactly that if we're not root.
-      Puppet::Util::SUIDManager.stubs(:root?).returns false
+      Oregano::Util::SUIDManager.stubs(:root?).returns false
     end
 
     it "should return the desired owner if they can write to the parent directory" do
@@ -366,7 +366,7 @@ describe Puppet::Type.type(:file) do
 
     describe "marking parameters as sensitive" do
       it "marks sensitive, content, and ensure as sensitive when source is sensitive" do
-        resource = Puppet::Resource.new(:file, make_absolute("/tmp/foo"), :parameters => {:source => make_absolute('/tmp/bar')}, :sensitive_parameters => [:source])
+        resource = Oregano::Resource.new(:file, make_absolute("/tmp/foo"), :parameters => {:source => make_absolute('/tmp/bar')}, :sensitive_parameters => [:source])
         file = described_class.new(resource)
         expect(file.parameter(:source).sensitive).to eq true
         expect(file.property(:content).sensitive).to eq true
@@ -374,7 +374,7 @@ describe Puppet::Type.type(:file) do
       end
 
       it "marks ensure as sensitive when content is sensitive" do
-        resource = Puppet::Resource.new(:file, make_absolute("/tmp/foo"), :parameters => {:content => 'hello world!'}, :sensitive_parameters => [:content])
+        resource = Oregano::Resource.new(:file, make_absolute("/tmp/foo"), :parameters => {:content => 'hello world!'}, :sensitive_parameters => [:content])
         file = described_class.new(resource)
         expect(file.property(:ensure).sensitive).to eq true
       end
@@ -477,7 +477,7 @@ describe Puppet::Type.type(:file) do
   describe "#recurse" do
     before do
       file[:recurse] = true
-      @metadata = Puppet::FileServing::Metadata
+      @metadata = Oregano::FileServing::Metadata
     end
 
     describe "and a source is set" do
@@ -673,7 +673,7 @@ describe Puppet::Type.type(:file) do
 
     it "should set checksum_type to none if this file checksum is none" do
       file[:checksum] = :none
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |path,params| params[:checksum_type] == :none }.returns [@metadata]
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |path,params| params[:checksum_type] == :none }.returns [@metadata]
       file.expects(:newchild).with("my/file").returns "fiebar"
       file.recurse_local
     end
@@ -683,10 +683,10 @@ describe Puppet::Type.type(:file) do
     let(:my) { File.expand_path('/my') }
 
     before do
-      file[:source] = "puppet://foo/bar"
+      file[:source] = "oregano://foo/bar"
 
-      @first = Puppet::FileServing::Metadata.new(my, :relative_path => "first")
-      @second = Puppet::FileServing::Metadata.new(my, :relative_path => "second")
+      @first = Oregano::FileServing::Metadata.new(my, :relative_path => "first")
+      @second = Oregano::FileServing::Metadata.new(my, :relative_path => "second")
       @first.stubs(:ftype).returns "directory"
       @second.stubs(:ftype).returns "directory"
 
@@ -695,22 +695,22 @@ describe Puppet::Type.type(:file) do
     end
 
     it "should pass its source to the :perform_recursion method" do
-      data = Puppet::FileServing::Metadata.new(File.expand_path("/whatever"), :relative_path => "foobar")
-      file.expects(:perform_recursion).with("puppet://foo/bar").returns [data]
+      data = Oregano::FileServing::Metadata.new(File.expand_path("/whatever"), :relative_path => "foobar")
+      file.expects(:perform_recursion).with("oregano://foo/bar").returns [data]
       file.stubs(:newchild).returns @resource
       file.recurse_remote({})
     end
 
     it "should not recurse when the remote file is not a directory" do
-      data = Puppet::FileServing::Metadata.new(File.expand_path("/whatever"), :relative_path => ".")
+      data = Oregano::FileServing::Metadata.new(File.expand_path("/whatever"), :relative_path => ".")
       data.stubs(:ftype).returns "file"
-      file.expects(:perform_recursion).with("puppet://foo/bar").returns [data]
+      file.expects(:perform_recursion).with("oregano://foo/bar").returns [data]
       file.expects(:newchild).never
       file.recurse_remote({})
     end
 
     it "should set the source of each returned file to the searched-for URI plus the found relative path" do
-      @first.expects(:source=).with File.join("puppet://foo/bar", @first.relative_path)
+      @first.expects(:source=).with File.join("oregano://foo/bar", @first.relative_path)
       file.expects(:perform_recursion).returns [@first]
       file.stubs(:newchild).returns @resource
       file.recurse_remote({})
@@ -731,7 +731,7 @@ describe Puppet::Type.type(:file) do
     it "should set the source of each resource to the source of the metadata" do
       file.stubs(:perform_recursion).returns [@first]
       @resource.stubs(:[]=)
-      @resource.expects(:[]=).with(:source, File.join("puppet://foo/bar", @first.relative_path))
+      @resource.expects(:[]=).with(:source, File.join("oregano://foo/bar", @first.relative_path))
       file.recurse_remote("first" => @resource)
     end
 
@@ -783,14 +783,14 @@ describe Puppet::Type.type(:file) do
       let(:sources) do
         h = {}
         %w{/a /b /c /d}.each do |key|
-          h[key] = URI.unescape(Puppet::Util.path_to_uri(File.expand_path(key)).to_s)
+          h[key] = URI.unescape(Oregano::Util.path_to_uri(File.expand_path(key)).to_s)
         end
         h
       end
 
       describe "and :sourceselect is set to :first" do
         it "should create file instances for the results for the first source to return any values" do
-          data = Puppet::FileServing::Metadata.new(File.expand_path("/whatever"), :relative_path => "foobar")
+          data = Oregano::FileServing::Metadata.new(File.expand_path("/whatever"), :relative_path => "foobar")
           file[:source] = sources.keys.sort.map { |key| File.expand_path(key) }
           file.expects(:perform_recursion).with(sources['/a']).returns nil
           file.expects(:perform_recursion).with(sources['/b']).returns []
@@ -807,7 +807,7 @@ describe Puppet::Type.type(:file) do
         end
 
         it "should return every found file that is not in a previous source" do
-          klass = Puppet::FileServing::Metadata
+          klass = Oregano::FileServing::Metadata
 
           file[:source] = abs_path = %w{/a /b /c /d}.map {|f| File.expand_path(f) }
           file.stubs(:newchild).returns @resource
@@ -834,54 +834,54 @@ describe Puppet::Type.type(:file) do
 
   describe "#perform_recursion", :uses_checksums => true do
     it "should use Metadata to do its recursion" do
-      Puppet::FileServing::Metadata.indirection.expects(:search)
+      Oregano::FileServing::Metadata.indirection.expects(:search)
       file.perform_recursion(file[:path])
     end
 
     it "should use the provided path as the key to the search" do
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| key == "/foo" }
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| key == "/foo" }
       file.perform_recursion("/foo")
     end
 
     it "should return the results of the metadata search" do
-      Puppet::FileServing::Metadata.indirection.expects(:search).returns "foobar"
+      Oregano::FileServing::Metadata.indirection.expects(:search).returns "foobar"
       expect(file.perform_recursion(file[:path])).to eq("foobar")
     end
 
     it "should pass its recursion value to the search" do
       file[:recurse] = true
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:recurse] == true }
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:recurse] == true }
       file.perform_recursion(file[:path])
     end
 
     it "should pass true if recursion is remote" do
       file[:recurse] = :remote
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:recurse] == true }
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:recurse] == true }
       file.perform_recursion(file[:path])
     end
 
     it "should pass its recursion limit value to the search" do
       file[:recurselimit] = 10
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:recurselimit] == 10 }
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:recurselimit] == 10 }
       file.perform_recursion(file[:path])
     end
 
     it "should configure the search to ignore or manage links" do
       file[:links] = :manage
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:links] == :manage }
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:links] == :manage }
       file.perform_recursion(file[:path])
     end
 
     it "should pass its 'ignore' setting to the search if it has one" do
       file[:ignore] = %w{.svn CVS}
-      Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:ignore] == %w{.svn CVS} }
+      Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:ignore] == %w{.svn CVS} }
       file.perform_recursion(file[:path])
     end
 
     with_digest_algorithms do
       it "it should pass its 'checksum' setting #{metadata[:digest_algorithm]} to the search" do
         file[:source] = File.expand_path('/foo')
-        Puppet::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:checksum_type] == digest_algorithm.intern }
+        Oregano::FileServing::Metadata.indirection.expects(:search).with { |key, options| options[:checksum_type] == digest_algorithm.intern }
         file.perform_recursion(file[:path])
       end
     end
@@ -897,7 +897,7 @@ describe Puppet::Type.type(:file) do
       file.stubs(:stat).returns stub('stat', :ftype => 'file')
       file.stubs(:perform_backup).returns false
 
-      expect { file.remove_existing(:file) }.to raise_error(Puppet::Error, /Could not back up; will not remove/)
+      expect { file.remove_existing(:file) }.to raise_error(Oregano::Error, /Could not back up; will not remove/)
     end
 
     describe "backing up directories" do
@@ -954,7 +954,7 @@ describe Puppet::Type.type(:file) do
 
       expect(file.remove_existing(:directory)).to eq(true)
 
-      expect(Puppet::FileSystem.exist?(file[:path])).to eq(false)
+      expect(Oregano::FileSystem.exist?(file[:path])).to eq(false)
     end
 
     it "should remove an existing link", :if => described_class.defaultprovider.feature?(:manages_symlinks) do
@@ -962,19 +962,19 @@ describe Puppet::Type.type(:file) do
 
       target = tmpfile('link_target')
       FileUtils.touch(target)
-      Puppet::FileSystem.symlink(target, path)
+      Oregano::FileSystem.symlink(target, path)
       file[:target] = target
 
       expect(file.remove_existing(:directory)).to eq(true)
 
-      expect(Puppet::FileSystem.exist?(file[:path])).to eq(false)
+      expect(Oregano::FileSystem.exist?(file[:path])).to eq(false)
     end
 
     it "should fail if the file is not a directory, link, file, fifo, socket, or is unknown" do
       file.stubs(:stat).returns stub('stat', :ftype => 'blockSpecial')
 
       file.expects(:warning).with("Could not back up file of type blockSpecial")
-      expect { file.remove_existing(:file) }.to raise_error(Puppet::Error, /Could not remove files of type blockSpecial/)
+      expect { file.remove_existing(:file) }.to raise_error(Oregano::Error, /Could not remove files of type blockSpecial/)
     end
 
     it "should invalidate the existing stat of the file" do
@@ -982,7 +982,7 @@ describe Puppet::Type.type(:file) do
       file.stat
       file.stubs(:stat).returns stub('stat', :ftype => 'file')
 
-      Puppet::FileSystem.stubs(:unlink)
+      Oregano::FileSystem.stubs(:unlink)
 
       expect(file.remove_existing(:directory)).to eq(true)
       expect(file.instance_variable_get(:@stat)).to eq(:needs_stat)
@@ -1044,7 +1044,7 @@ describe Puppet::Type.type(:file) do
     before do
       target = tmpfile('link_target')
       FileUtils.touch(target)
-      Puppet::FileSystem.symlink(target, path)
+      Oregano::FileSystem.symlink(target, path)
 
       file[:target] = target
       file[:links] = :manage # so we always use :lstat
@@ -1113,7 +1113,7 @@ describe Puppet::Type.type(:file) do
         property = stub('content_property', :actual_content => "something", :length => "something".length, :write => 'checksum_a')
         file.stubs(:property).with(:content).returns(property)
 
-        expect { file.write property }.to raise_error(Puppet::Error)
+        expect { file.write property }.to raise_error(Oregano::Error)
       end
     end
 
@@ -1140,13 +1140,13 @@ describe Puppet::Type.type(:file) do
 
         it "should convert symbolic mode to int" do
           file[:mode] = 'oga=r'
-          Puppet::Util.expects(:replace_file).with(file[:path], 0444)
+          Oregano::Util.expects(:replace_file).with(file[:path], 0444)
           file.write
         end
 
         it "should support int modes" do
           file[:mode] = '0444'
-          Puppet::Util.expects(:replace_file).with(file[:path], 0444)
+          Oregano::Util.expects(:replace_file).with(file[:path], 0444)
           file.write
         end
       end
@@ -1156,7 +1156,7 @@ describe Puppet::Type.type(:file) do
 
         it "should set a umask of 0" do
           file[:mode] = 'oga=r'
-          Puppet::Util.expects(:withumask).with(0)
+          Oregano::Util.expects(:withumask).with(0)
           file.write
         end
 
@@ -1186,11 +1186,11 @@ describe Puppet::Type.type(:file) do
       end
 
       context "and no content is supplied" do
-        it "should use puppet's default umask of 022" do
+        it "should use oregano's default umask of 022" do
           file = described_class.new(:path => path)
 
           umask_from_the_user = 0777
-          Puppet::Util.withumask(umask_from_the_user) do
+          Oregano::Util.withumask(umask_from_the_user) do
             file.write
           end
 
@@ -1207,7 +1207,7 @@ describe Puppet::Type.type(:file) do
           parameter(:checksum).stubs(:sum_file).returns('wrong!!')
           fail_if_checksum_is_wrong(self[:path], 'anything!')
         end
-      end.to raise_error(Puppet::Error, /File written to disk did not match checksum/)
+      end.to raise_error(Oregano::Error, /File written to disk did not match checksum/)
     end
 
     it "should not fail if the checksum is correct" do
@@ -1334,7 +1334,7 @@ describe Puppet::Type.type(:file) do
         expect(file.autorequire).to be_empty
       end
 
-      describe "on Windows systems", :if => Puppet.features.microsoft_windows? do
+      describe "on Windows systems", :if => Oregano.features.microsoft_windows? do
         describe "when using UNC filenames" do
           it "should autorequire its parent directory" do
             file[:path] = '//localhost/foo/bar/baz'
@@ -1376,7 +1376,7 @@ describe Puppet::Type.type(:file) do
     end
   end
 
-  describe "when managing links", :if => Puppet.features.manages_symlinks? do
+  describe "when managing links", :if => Oregano.features.manages_symlinks? do
     require 'tempfile'
 
     before :each do
@@ -1397,7 +1397,7 @@ describe Puppet::Type.type(:file) do
       catalog.add_resource @link_resource
 
       # to prevent the catalog from trying to write state.yaml
-      Puppet::Util::Storage.stubs(:store)
+      Oregano::Util::Storage.stubs(:store)
     end
 
     it "should preserve the original file mode and ignore the one set by the link" do
@@ -1405,17 +1405,17 @@ describe Puppet::Type.type(:file) do
       catalog.apply
 
       # I convert them to strings so they display correctly if there's an error.
-      expect((Puppet::FileSystem.stat(@target).mode & 007777).to_s(8)).to eq('644')
+      expect((Oregano::FileSystem.stat(@target).mode & 007777).to_s(8)).to eq('644')
     end
 
     it "should manage the mode of the followed link" do
-      if Puppet.features.microsoft_windows?
+      if Oregano.features.microsoft_windows?
         skip "Windows cannot presently manage the mode when following symlinks"
       else
         @link_resource[:links] = :follow
         catalog.apply
 
-        expect((Puppet::FileSystem.stat(@target).mode & 007777).to_s(8)).to eq('755')
+        expect((Oregano::FileSystem.stat(@target).mode & 007777).to_s(8)).to eq('755')
       end
     end
   end
@@ -1430,13 +1430,13 @@ describe Puppet::Type.type(:file) do
 
     it 'should allow UTF-8 characters and return a UTF-8 uri' do
       filename = "/bar #{mixed_utf8}"
-      source = "puppet://foo#{filename}"
+      source = "oregano://foo#{filename}"
       file[:source] = source
 
       # intercept the indirector call to provide back mocked metadata for the given URI
       metadata = stub 'metadata', :source => source
       metadata.expects(:source=)
-      Puppet::FileServing::Metadata.indirection.expects(:find).with do |path, opts|
+      Oregano::FileServing::Metadata.indirection.expects(:find).with do |path, opts|
         path == source
       end.returns metadata
 
@@ -1447,16 +1447,16 @@ describe Puppet::Type.type(:file) do
 
     it 'should allow UTF-8 characters inside the indirector / terminus code' do
       filename = "/bar #{mixed_utf8}"
-      source = "puppet://foo#{filename}"
+      source = "oregano://foo#{filename}"
       file[:source] = source
 
       # for this test to properly trigger previously errant behavior, the code for
-      # Puppet::FileServing::Metadata.indirection.find must run and produce an
-      # instance of Puppet::Indirector::FileMetadata::Rest that can be amended
+      # Oregano::FileServing::Metadata.indirection.find must run and produce an
+      # instance of Oregano::Indirector::FileMetadata::Rest that can be amended
       metadata = stub 'metadata', :source => source
       metadata.expects(:source=)
-      require 'puppet/indirector/file_metadata/rest'
-      Puppet::Indirector::FileMetadata::Rest.any_instance.expects(:find).with do |req|
+      require 'oregano/indirector/file_metadata/rest'
+      Oregano::Indirector::FileMetadata::Rest.any_instance.expects(:find).with do |req|
         req.key == filename[1..-1]
       end.returns(metadata)
 
@@ -1481,7 +1481,7 @@ describe Puppet::Type.type(:file) do
       }
     end
 
-    Puppet::Type::File::ParameterChecksum.value_collection.values.reject {|v| v == :none}.each do |checksum_type|
+    Oregano::Type::File::ParameterChecksum.value_collection.values.reject {|v| v == :none}.each do |checksum_type|
       describe "with checksum '#{checksum_type}'" do
         before do
           file[:checksum] = checksum_type
@@ -1493,7 +1493,7 @@ describe Puppet::Type.type(:file) do
 
         it 'should fail on an invalid checksum_value' do
           file[:checksum_value] = ''
-          expect { file.validate }.to raise_error(Puppet::Error, "Checksum value '' is not a valid checksum type #{checksum_type}")
+          expect { file.validate }.to raise_error(Oregano::Error, "Checksum value '' is not a valid checksum type #{checksum_type}")
         end
 
         it 'should validate a valid checksum_value' do
@@ -1505,7 +1505,7 @@ describe Puppet::Type.type(:file) do
 
     describe "on Windows when source_permissions is `use`" do
       before :each do
-        Puppet.features.stubs(:microsoft_windows?).returns true
+        Oregano.features.stubs(:microsoft_windows?).returns true
         file[:source_permissions] = "use"
       end
       let(:err_message) { "Copying owner/mode/group from the" <<
@@ -1572,7 +1572,7 @@ describe Puppet::Type.type(:file) do
       }
     end
 
-    (Puppet::Type::File::ParameterChecksum.value_collection.values - SOURCE_ONLY_CHECKSUMS).each do |checksum_type|
+    (Oregano::Type::File::ParameterChecksum.value_collection.values - SOURCE_ONLY_CHECKSUMS).each do |checksum_type|
       describe "with checksum '#{checksum_type}'" do
         before do
           file[:checksum] = checksum_type
@@ -1584,7 +1584,7 @@ describe Puppet::Type.type(:file) do
 
         it 'should fail on an invalid checksum_value' do
           file[:checksum_value] = ''
-          expect { file.validate }.to raise_error(Puppet::Error, "Checksum value '' is not a valid checksum type #{checksum_type}")
+          expect { file.validate }.to raise_error(Oregano::Error, "Checksum value '' is not a valid checksum type #{checksum_type}")
         end
 
         it 'should validate a valid checksum_value' do
@@ -1616,7 +1616,7 @@ describe Puppet::Type.type(:file) do
 
     it 'should fail on an invalid checksum_value' do
       file[:checksum_value] = 'boo'
-      expect { file.validate }.to raise_error(Puppet::Error, "Checksum value 'boo' is not a valid checksum type none")
+      expect { file.validate }.to raise_error(Oregano::Error, "Checksum value 'boo' is not a valid checksum type none")
     end
 
     it 'should validate a valid checksum_value' do
@@ -1628,7 +1628,7 @@ describe Puppet::Type.type(:file) do
   describe "when auditing" do
     before :each do
       # to prevent the catalog from trying to write state.yaml
-      Puppet::Util::Storage.stubs(:store)
+      Oregano::Util::Storage.stubs(:store)
     end
 
     it "should not fail if creating a new file if group is not set" do
@@ -1648,7 +1648,7 @@ describe Puppet::Type.type(:file) do
 
       catalog.apply
 
-      expect(Puppet::FileSystem.exist?(path)).to be_truthy
+      expect(Oregano::FileSystem.exist?(path)).to be_truthy
       expect(@logs).not_to be_any { |l|
         # the audit metaparameter is deprecated and logs a warning
         l.level != :notice
@@ -1679,7 +1679,7 @@ describe Puppet::Type.type(:file) do
           file[prop2] = "prop2 value"
         expect do
           file.validate
-        end.to raise_error(Puppet::Error, /You cannot specify more than one of/)
+        end.to raise_error(Oregano::Error, /You cannot specify more than one of/)
       end
     end
   end

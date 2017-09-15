@@ -1,7 +1,7 @@
 ---
 :backends:
   - yaml
-  - puppet
+  - oregano
 
 :hierarchy:
   - "%{location}"
@@ -11,5 +11,5 @@
 :yaml:
   :datadir: etc/hieradb
 
-:puppet:
+:oregano:
   :datasource: data

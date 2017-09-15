@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Resource
-describe "Puppet::Pops::Resource" do
-  include PuppetSpec::Compiler
+describe "Oregano::Pops::Resource" do
+  include OreganoSpec::Compiler
 
   let!(:pp_parser) { Parser::EvaluatingParser.new }
   let(:loader) { Loader::BaseLoader.new(nil, 'type_parser_unit_test_loader') }
@@ -18,8 +18,8 @@ describe "Puppet::Pops::Resource" do
 
     it 'can create an instance of a ResourceType' do
       code = <<-CODE
-        $rt = Puppet::Resource::ResourceType3.new('notify', [], [Puppet::Resource::Param.new(String, 'message')])
-        assert_type(Puppet::Resource::ResourceType3, $rt)
+        $rt = Oregano::Resource::ResourceType3.new('notify', [], [Oregano::Resource::Param.new(String, 'message')])
+        assert_type(Oregano::Resource::ResourceType3, $rt)
         notice('looks like we made it')
       CODE
       rt = nil
@@ -36,7 +36,7 @@ describe "Puppet::Pops::Resource" do
 
 
   context 'when used with capability resource with producers/consumers' do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     let!(:env_name) { 'spec' }
     let!(:env_dir) { tmpdir('environments') }
@@ -44,10 +44,10 @@ describe "Puppet::Pops::Resource" do
       dir_contained_in(env_dir, env_name => {
         '.resource_types' => {
           'capability.pp' => <<-PUPPET
-            Puppet::Resource::ResourceType3.new(
+            Oregano::Resource::ResourceType3.new(
               'capability',
               [],
-              [Puppet::Resource::Param(Any, 'name', true)],
+              [Oregano::Resource::Param(Any, 'name', true)],
               { /(.*)/ => ['name'] },
               true,
               true)
@@ -56,11 +56,11 @@ describe "Puppet::Pops::Resource" do
         'modules' => {
           'test' => {
             'lib' => {
-              'puppet' => {
+              'oregano' => {
                 'type' => { 'capability.rb' => <<-RUBY
-                  Puppet::Type.newtype(:capability, :is_capability => true) do
+                  Oregano::Type.newtype(:capability, :is_capability => true) do
                     newparam :name, :namevar => true
-                    raise Puppet::Error, 'Ruby resource was loaded'
+                    raise Oregano::Error, 'Ruby resource was loaded'
                   end
                 RUBY
                 }
@@ -89,15 +89,15 @@ describe "Puppet::Pops::Resource" do
       consumer {y: require => Capability[cap]}
     PUPPET
 
-    let(:environments) { Puppet::Environments::Directories.new(populated_env_dir, []) }
-    let(:env) { Puppet::Node::Environment.create(:'spec', [File.join(env_dir, 'spec', 'modules')]) }
-    let(:node) { Puppet::Node.new('test', :environment => env) }
+    let(:environments) { Oregano::Environments::Directories.new(populated_env_dir, []) }
+    let(:env) { Oregano::Node::Environment.create(:'spec', [File.join(env_dir, 'spec', 'modules')]) }
+    let(:node) { Oregano::Node.new('test', :environment => env) }
     around(:each) do |example|
-      Puppet[:environment] = env_name
-      Puppet.override(:environments => environments, :current_environment => env) do
+      Oregano[:environment] = env_name
+      Oregano.override(:environments => environments, :current_environment => env) do
         example.run
       end
-      Puppet::Type.rmtype(:capability)
+      Oregano::Type.rmtype(:capability)
     end
 
     it 'does not load the Ruby resource' do

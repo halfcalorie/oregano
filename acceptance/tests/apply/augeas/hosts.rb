@@ -3,7 +3,7 @@ test_name "Augeas hosts file" do
 tag 'risk:medium',
     'audit:medium',
     'audit:acceptance',
-    'audit:refactor' # move to puppet types test directory, this is not testing puppet apply
+    'audit:refactor' # move to oregano types test directory, this is not testing oregano apply
                      # reduce to a single manifest and apply
 
 skip_test 'requires augeas which is included in AIO' if @options[:type] != 'aio'
@@ -36,7 +36,7 @@ augeas { 'add_hosts_entry':
   ]
 }
 EOF
-      on hosts, puppet_apply('--verbose'), :stdin => manifest
+      on hosts, oregano_apply('--verbose'), :stdin => manifest
       on hosts, "fgrep '192.168.0.1\tpigiron.example.com pigiron piggy' /etc/hosts"
     end
 
@@ -52,7 +52,7 @@ augeas { 'mod_hosts_entry':
 }
 EOF
 
-      on hosts, puppet_apply('--verbose'), :stdin => manifest
+      on hosts, oregano_apply('--verbose'), :stdin => manifest
       on hosts, "fgrep '192.168.0.1\tpigiron.example.com pigiron piggy oinker' /etc/hosts"
     end
 
@@ -68,7 +68,7 @@ augeas { 'del_hosts_entry':
 }
 EOF
 
-      on hosts, puppet_apply('--verbose'), :stdin => manifest
+      on hosts, oregano_apply('--verbose'), :stdin => manifest
       on hosts, "fgrep 'pigiron.example.com' /etc/hosts", :acceptable_exit_codes => [1]
     end
 

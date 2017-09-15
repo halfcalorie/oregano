@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-zpool = Puppet::Type.type(:zpool)
+zpool = Oregano::Type.type(:zpool)
 
 describe zpool do
   before do
@@ -13,7 +13,7 @@ describe zpool do
 
   properties.each do |property|
     it "should have a #{property} property" do
-      expect(zpool.attrclass(property).ancestors).to be_include(Puppet::Property)
+      expect(zpool.attrclass(property).ancestors).to be_include(Oregano::Property)
     end
   end
 
@@ -21,12 +21,12 @@ describe zpool do
 
   parameters.each do |parameter|
     it "should have a #{parameter} parameter" do
-      expect(zpool.attrclass(parameter).ancestors).to be_include(Puppet::Parameter)
+      expect(zpool.attrclass(parameter).ancestors).to be_include(Oregano::Parameter)
     end
   end
 end
 
-vdev_property = Puppet::Property::VDev
+vdev_property = Oregano::Property::VDev
 
 describe vdev_property do
   before do
@@ -61,7 +61,7 @@ describe vdev_property do
   end
 end
 
-multi_vdev_property = Puppet::Property::MultiVDev
+multi_vdev_property = Oregano::Property::MultiVDev
 
 describe multi_vdev_property do
   before do

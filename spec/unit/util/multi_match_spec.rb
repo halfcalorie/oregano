@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/multi_match'
+require 'oregano/util/multi_match'
 
-describe "The Puppet::Util::MultiMatch" do
-  let(:not_nil) { Puppet::Util::MultiMatch::NOT_NIL }
-  let(:mm) { Puppet::Util::MultiMatch }
+describe "The Oregano::Util::MultiMatch" do
+  let(:not_nil) { Oregano::Util::MultiMatch::NOT_NIL }
+  let(:mm) { Oregano::Util::MultiMatch }
 
   it "matches against not nil" do
     expect(not_nil === 3).to be(true)

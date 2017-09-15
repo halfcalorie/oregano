@@ -6,7 +6,7 @@ describe 'up2date package provider' do
   # This sets the class itself as the subject rather than
   # an instance of the class.
   subject do
-    Puppet::Type.type(:package).provider(:up2date)
+    Oregano::Type.type(:package).provider(:up2date)
   end
 
   osfamilies = [ 'redhat' ]

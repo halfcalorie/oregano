@@ -1,36 +1,36 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/server'
+require 'oregano/network/server'
 
-describe Puppet::Network::Server do
+describe Oregano::Network::Server do
   let(:port) { 8140 }
   let(:address) { '0.0.0.0' }
-  let(:server) { Puppet::Network::Server.new(address, port) }
+  let(:server) { Oregano::Network::Server.new(address, port) }
 
   before do
     @mock_http_server = mock('http server')
-    Puppet.settings.stubs(:use)
-    Puppet::Network::HTTP::WEBrick.stubs(:new).returns(@mock_http_server)
+    Oregano.settings.stubs(:use)
+    Oregano::Network::HTTP::WEBrick.stubs(:new).returns(@mock_http_server)
   end
 
   describe "when initializing" do
     before do
-      Puppet[:masterport] = ''
+      Oregano[:masterport] = ''
     end
 
     it "should not be listening after initialization" do
-      expect(Puppet::Network::Server.new(address, port)).not_to be_listening
+      expect(Oregano::Network::Server.new(address, port)).not_to be_listening
     end
 
     it "should use the :main setting section" do
-      Puppet.settings.expects(:use).with { |*args| args.include?(:main) }
-      Puppet::Network::Server.new(address, port)
+      Oregano.settings.expects(:use).with { |*args| args.include?(:main) }
+      Oregano::Network::Server.new(address, port)
     end
 
     it "should use the :application setting section" do
-      Puppet.settings.expects(:use).with { |*args| args.include?(:application) }
+      Oregano.settings.expects(:use).with { |*args| args.include?(:application) }
 
-      Puppet::Network::Server.new(address, port)
+      Oregano::Network::Server.new(address, port)
     end
   end
 
@@ -74,7 +74,7 @@ describe Puppet::Network::Server do
 
   describe "when server is being started" do
     it "should cause the HTTP server to listen" do
-      server = Puppet::Network::Server.new(address, port)
+      server = Oregano::Network::Server.new(address, port)
       @mock_http_server.expects(:listen).with(address, port)
       server.start
     end

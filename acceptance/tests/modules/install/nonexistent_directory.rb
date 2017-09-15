@@ -1,6 +1,6 @@
-test_name "puppet module install (nonexistent directory)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (nonexistent directory)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -28,7 +28,7 @@ apply_manifest_on master, <<-PP
 PP
 
 step "Try to install a module to a non-existent directory"
-on master, puppet("module install #{module_author}-#{module_name} --target-dir /tmp/modules") do
+on master, oregano("module install #{module_author}-#{module_name} --target-dir /tmp/modules") do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 assert_module_installed_on_disk(master, module_name, '/tmp/modules')
@@ -36,7 +36,7 @@ assert_module_installed_on_disk(master, module_name, '/tmp/modules')
 step "Try to install a module to a non-existent implicit directory"
 # This test relies on destroying the default module directory...
 on master, "mv #{default_moduledir} #{default_moduledir}-bak"
-on master, puppet("module install #{module_author}-#{module_name}") do
+on master, oregano("module install #{module_author}-#{module_name}") do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 assert_module_installed_on_disk(master, module_name, default_moduledir)

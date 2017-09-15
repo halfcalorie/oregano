@@ -47,7 +47,7 @@ shared_context('with supported checksum types') do
         let(:checksum_file) { File.join(env_path, file) }
 
         def digest(content)
-          Puppet::Util::Checksums.send(checksum_type, content)
+          Oregano::Util::Checksums.send(checksum_type, content)
         end
 
         before(:each) do

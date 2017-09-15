@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/scheduler'
+require 'oregano/scheduler'
 
-describe Puppet::Scheduler::SplayJob do
+describe Oregano::Scheduler::SplayJob do
   let(:run_interval) { 10 }
   let(:last_run) { 50 }
   let(:splay_limit) { 5 }

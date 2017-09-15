@@ -1,27 +1,27 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/loaders'
+require 'oregano/pops'
+require 'oregano/loaders'
 
 describe 'the static loader' do
   it 'has no parent' do
-    expect(Puppet::Pops::Loader::StaticLoader.new.parent).to be(nil)
+    expect(Oregano::Pops::Loader::StaticLoader.new.parent).to be(nil)
   end
 
   it 'identifies itself in string form' do
-    expect(Puppet::Pops::Loader::StaticLoader.new.to_s).to be_eql('(StaticLoader)')
+    expect(Oregano::Pops::Loader::StaticLoader.new.to_s).to be_eql('(StaticLoader)')
   end
 
   it 'support the Loader API' do
     # it may produce things later, this is just to test that calls work as they should - now all lookups are nil.
-    loader = Puppet::Pops::Loader::StaticLoader.new()
+    loader = Oregano::Pops::Loader::StaticLoader.new()
     a_typed_name = typed_name(:function, 'foo')
     expect(loader[a_typed_name]).to be(nil)
     expect(loader.load_typed(a_typed_name)).to be(nil)
     expect(loader.find(a_typed_name)).to be(nil)
   end
 
-  context 'provides access to resource types built into puppet' do
-    let(:loader) { loader = Puppet::Pops::Loader::StaticLoader.new() }
+  context 'provides access to resource types built into oregano' do
+    let(:loader) { loader = Oregano::Pops::Loader::StaticLoader.new() }
 
     %w{
       Auegas
@@ -81,9 +81,9 @@ describe 'the static loader' do
     end
   end
 
-  context 'provides access to app-management specific resource types built into puppet' do
+  context 'provides access to app-management specific resource types built into oregano' do
 
-    let(:loader) { loader = Puppet::Pops::Loader::StaticLoader.new() }
+    let(:loader) { loader = Oregano::Pops::Loader::StaticLoader.new() }
 
     it "such that Node is available" do
       expect(loader.load(:type, 'node')).to be_the_type(resource_type('Node'))
@@ -91,15 +91,15 @@ describe 'the static loader' do
   end
 
   def typed_name(type, name)
-    Puppet::Pops::Loader::TypedName.new(type, name)
+    Oregano::Pops::Loader::TypedName.new(type, name)
   end
 
   def resource_type(name)
-    Puppet::Pops::Types::TypeFactory.resource(name)
+    Oregano::Pops::Types::TypeFactory.resource(name)
   end
 
   matcher :be_the_type do |type|
-    calc = Puppet::Pops::Types::TypeCalculator.new
+    calc = Oregano::Pops::Types::TypeCalculator.new
 
     match do |actual|
       calc.assignable?(actual, type) && calc.assignable?(type, actual)

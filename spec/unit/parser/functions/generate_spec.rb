@@ -2,18 +2,18 @@
 require 'spec_helper'
 
 describe "the generate function" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
-  let :node     do Puppet::Node.new('localhost') end
-  let :compiler do Puppet::Parser::Compiler.new(node) end
-  let :scope    do Puppet::Parser::Scope.new(compiler) end
+  let :node     do Oregano::Node.new('localhost') end
+  let :compiler do Oregano::Parser::Compiler.new(node) end
+  let :scope    do Oregano::Parser::Scope.new(compiler) end
 
   it "should exist" do
-    expect(Puppet::Parser::Functions.function("generate")).to eq("function_generate")
+    expect(Oregano::Parser::Functions.function("generate")).to eq("function_generate")
   end
 
   it "accept a fully-qualified path as a command" do
@@ -23,20 +23,20 @@ describe "the generate function" do
   end
 
   it "should not accept a relative path as a command" do
-    expect { scope.function_generate(["command"]) }.to raise_error(Puppet::ParseError)
+    expect { scope.function_generate(["command"]) }.to raise_error(Oregano::ParseError)
   end
 
   it "should not accept a command containing illegal characters" do
-    expect { scope.function_generate([File.expand_path('/##/command')]) }.to raise_error(Puppet::ParseError)
+    expect { scope.function_generate([File.expand_path('/##/command')]) }.to raise_error(Oregano::ParseError)
   end
 
   it "should not accept a command containing spaces" do
-    expect { scope.function_generate([File.expand_path('/com mand')]) }.to raise_error(Puppet::ParseError)
+    expect { scope.function_generate([File.expand_path('/com mand')]) }.to raise_error(Oregano::ParseError)
   end
 
   it "should not accept a command containing '..'" do
     command = File.expand_path("/command/../")
-    expect { scope.function_generate([command]) }.to raise_error(Puppet::ParseError)
+    expect { scope.function_generate([command]) }.to raise_error(Oregano::ParseError)
   end
 
   it "should execute the generate script with the correct working directory" do
@@ -45,7 +45,7 @@ describe "the generate function" do
     expect(scope.function_generate([command])).to eq('yay')
   end
 
-  describe "on Windows", :if => Puppet.features.microsoft_windows? do
+  describe "on Windows", :if => Oregano.features.microsoft_windows? do
     it "should accept the tilde in the path" do
       command = "C:/DOCUME~1/ADMINI~1/foo.bat"
       Dir.expects(:chdir).with(File.dirname(command)).returns("yay")
@@ -71,17 +71,17 @@ describe "the generate function" do
     end
 
     it "should reject colons when not part of the drive letter" do
-      expect { scope.function_generate(['C:/com:mand']) }.to raise_error(Puppet::ParseError)
+      expect { scope.function_generate(['C:/com:mand']) }.to raise_error(Oregano::ParseError)
     end
 
     it "should reject root drives" do
-      expect { scope.function_generate(['C:/']) }.to raise_error(Puppet::ParseError)
+      expect { scope.function_generate(['C:/']) }.to raise_error(Oregano::ParseError)
     end
   end
 
-  describe "on POSIX", :if => Puppet.features.posix? do
+  describe "on POSIX", :if => Oregano.features.posix? do
     it "should reject backslashes" do
-      expect { scope.function_generate(['/com\\mand']) }.to raise_error(Puppet::ParseError)
+      expect { scope.function_generate(['/com\\mand']) }.to raise_error(Oregano::ParseError)
     end
 
     it "should accept plus and dash" do
@@ -98,7 +98,7 @@ describe "the generate function" do
   end
 
   after :each do
-    File.delete(command) if Puppet::FileSystem.exist?(command)
+    File.delete(command) if Oregano::FileSystem.exist?(command)
   end
 
   it "returns the output as a String" do
@@ -118,10 +118,10 @@ describe "the generate function" do
   end
 
   it "should fail if generator is not absolute" do
-    expect { scope.function_generate(['boo']) }.to raise_error(Puppet::ParseError)
+    expect { scope.function_generate(['boo']) }.to raise_error(Oregano::ParseError)
   end
 
   it "should fail if generator fails" do
-    expect { scope.function_generate(['/boo']) }.to raise_error(Puppet::ParseError)
+    expect { scope.function_generate(['/boo']) }.to raise_error(Oregano::ParseError)
   end
 end

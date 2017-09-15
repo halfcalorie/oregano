@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'puppet/module_tool/applications'
-require 'puppet_spec/files'
+require 'oregano/module_tool/applications'
+require 'oregano_spec/files'
 require 'pathname'
 
-describe Puppet::ModuleTool::Applications::Checksummer do
+describe Oregano::ModuleTool::Applications::Checksummer do
   let(:tmpdir) do
-    Pathname.new(PuppetSpec::Files.tmpdir('checksummer'))
+    Pathname.new(OreganoSpec::Files.tmpdir('checksummer'))
   end
 
-  let(:checksums) { Puppet::ModuleTool::Checksums.new(tmpdir).data }
+  let(:checksums) { Oregano::ModuleTool::Checksums.new(tmpdir).data }
 
   subject do
     described_class.run(tmpdir)

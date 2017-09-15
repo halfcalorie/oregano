@@ -1,23 +1,23 @@
 require 'spec_helper'
 
-describe Puppet::FileSystem::Uniquefile do
+describe Oregano::FileSystem::Uniquefile do
   it "makes the name of the file available" do
-    Puppet::FileSystem::Uniquefile.open_tmp('foo') do |file|
+    Oregano::FileSystem::Uniquefile.open_tmp('foo') do |file|
       expect(file.path).to match(/foo/)
     end
   end
 
   it "provides a writeable file" do
-    Puppet::FileSystem::Uniquefile.open_tmp('foo') do |file|
+    Oregano::FileSystem::Uniquefile.open_tmp('foo') do |file|
       file.write("stuff")
       file.flush
 
-      expect(Puppet::FileSystem.read(file.path)).to eq("stuff")
+      expect(Oregano::FileSystem.read(file.path)).to eq("stuff")
     end
   end
 
   it "returns the value of the block" do
-    the_value = Puppet::FileSystem::Uniquefile.open_tmp('foo') do |file|
+    the_value = Oregano::FileSystem::Uniquefile.open_tmp('foo') do |file|
       "my value"
     end
 
@@ -25,46 +25,46 @@ describe Puppet::FileSystem::Uniquefile do
   end
 
   it "unlinks the temporary file" do
-    filename = Puppet::FileSystem::Uniquefile.open_tmp('foo') do |file|
+    filename = Oregano::FileSystem::Uniquefile.open_tmp('foo') do |file|
       file.path
     end
 
-    expect(Puppet::FileSystem.exist?(filename)).to be_falsey
+    expect(Oregano::FileSystem.exist?(filename)).to be_falsey
   end
 
   it "unlinks the temporary file even if the block raises an error" do
     filename = nil
 
     begin
-      Puppet::FileSystem::Uniquefile.open_tmp('foo') do |file|
+      Oregano::FileSystem::Uniquefile.open_tmp('foo') do |file|
         filename = file.path
         raise "error!"
       end
     rescue
     end
 
-    expect(Puppet::FileSystem.exist?(filename)).to be_falsey
+    expect(Oregano::FileSystem.exist?(filename)).to be_falsey
   end
 
   it "propagates lock creation failures" do
     # use an arbitrary exception so as not accidentally collide
     # with the ENOENT that occurs when trying to call rmdir
-    Puppet::FileSystem::Uniquefile.stubs(:mkdir).raises 'arbitrary failure'
-    Puppet::FileSystem::Uniquefile.expects(:rmdir).never
+    Oregano::FileSystem::Uniquefile.stubs(:mkdir).raises 'arbitrary failure'
+    Oregano::FileSystem::Uniquefile.expects(:rmdir).never
 
     expect {
-      Puppet::FileSystem::Uniquefile.open_tmp('foo') { |tmp| }
+      Oregano::FileSystem::Uniquefile.open_tmp('foo') { |tmp| }
     }.to raise_error('arbitrary failure')
   end
 
   it "only removes lock files that exist" do
     # prevent the .lock directory from being created
-    Puppet::FileSystem::Uniquefile.stubs(:mkdir) { }
+    Oregano::FileSystem::Uniquefile.stubs(:mkdir) { }
 
     # and expect cleanup to be skipped
-    Puppet::FileSystem::Uniquefile.expects(:rmdir).never
+    Oregano::FileSystem::Uniquefile.expects(:rmdir).never
 
-    Puppet::FileSystem::Uniquefile.open_tmp('foo') { |tmp| }
+    Oregano::FileSystem::Uniquefile.open_tmp('foo') { |tmp| }
   end
 
   context "Ruby 1.9.3 Tempfile tests" do
@@ -73,7 +73,7 @@ describe Puppet::FileSystem::Uniquefile do
     # see: https://github.com/ruby/ruby/blob/v1_9_3_547/test/test_tempfile.rb
 
     def tempfile(*args, &block)
-      t = Puppet::FileSystem::Uniquefile.new(*args, &block)
+      t = Oregano::FileSystem::Uniquefile.new(*args, &block)
       @tempfile = (t unless block)
     end
 
@@ -149,7 +149,7 @@ describe Puppet::FileSystem::Uniquefile do
       expect(File.exist?(path)).to eq(false)
     end
 
-    context "on unix platforms", :unless => Puppet.features.microsoft_windows? do
+    context "on unix platforms", :unless => Oregano.features.microsoft_windows? do
       it "close doesn't unlink if already unlinked" do
         t = tempfile("foo")
         path = t.path
@@ -173,7 +173,7 @@ describe Puppet::FileSystem::Uniquefile do
       expect(File.exist?(path)).to eq(false)
     end
 
-    context "on unix platforms", :unless => Puppet.features.microsoft_windows? do
+    context "on unix platforms", :unless => Oregano.features.microsoft_windows? do
       it "close! doesn't unlink if already unlinked" do
         t = tempfile("foo")
         path = t.path

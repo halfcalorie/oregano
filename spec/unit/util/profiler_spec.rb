@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/util/profiler'
+require 'oregano/util/profiler'
 
-describe Puppet::Util::Profiler do
+describe Oregano::Util::Profiler do
   let(:profiler) { TestProfiler.new() }
 
   it "supports adding profilers" do

@@ -1,23 +1,23 @@
 #!/bin/bash
-# puppet        Init script for running the puppet client daemon
+# oregano        Init script for running the oregano client daemon
 #
 # Author:       Duane Griffin <d.griffin@psenterprise.com>
 #               David Lutterkort <dlutter@redhat.com>
 #
 # chkconfig: - 98 02
 #
-# description: Enables periodic system configuration checks through puppet.
-# processname: puppet
-# config: /etc/sysconfig/puppet
+# description: Enables periodic system configuration checks through oregano.
+# processname: oregano
+# config: /etc/sysconfig/oregano
 
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-[ -f /etc/sysconfig/puppet ] && . /etc/sysconfig/puppet
-lockfile=/var/lock/subsys/puppet
-piddir=/var/run/puppetlabs
+[ -f /etc/sysconfig/oregano ] && . /etc/sysconfig/oregano
+lockfile=/var/lock/subsys/oregano
+piddir=/var/run/oreganolabs
 pidfile=${piddir}/agent.pid
-puppetd=/opt/puppetlabs/puppet/bin/puppet
+oreganod=/opt/oreganolabs/oregano/bin/oregano
 pid=$(cat $pidfile 2> /dev/null)
 RETVAL=0
 
@@ -37,9 +37,9 @@ fi
 ##[ -n "$INIT_VERSION" ] && PUPPET_OPTS="${PUPPET_OPTS} --fullrun"
 
 start() {
-    echo -n $"Starting puppet agent: "
+    echo -n $"Starting oregano agent: "
     mkdir -p $piddir
-    daemon $daemonopts $puppetd ${PUPPET_OPTS} ${PUPPET_EXTRA_OPTS}
+    daemon $daemonopts $oreganod ${PUPPET_OPTS} ${PUPPET_EXTRA_OPTS}
     RETVAL=$?
     echo
         [ $RETVAL = 0 ] && touch ${lockfile}
@@ -47,9 +47,9 @@ start() {
 }
 
 stop() {
-    echo -n $"Stopping puppet agent: "
+    echo -n $"Stopping oregano agent: "
     if [ "$USEINITFUNCTIONS" = "true" ]; then
-      killproc $pidopts $puppetd
+      killproc $pidopts $oreganod
       RETVAL=$?
     else
       if [ -n "${pid}" ]; then
@@ -63,9 +63,9 @@ stop() {
 }
 
 reload() {
-    echo -n $"Reloading puppet agent: "
+    echo -n $"Reloading oregano agent: "
     if [ "$USEINITFUNCTIONS" = "true" ]; then
-      killproc $pidopts $puppetd -HUP
+      killproc $pidopts $oreganod -HUP
       RETVAL=$?
     else
       if [ -n "${pid}" ]; then
@@ -80,8 +80,8 @@ reload() {
 }
 
 rotate() {
-    echo -n $"Reopening log files for puppet agent: "
-    killproc $pidopts $puppetd -USR2
+    echo -n $"Reopening log files for oregano agent: "
+    killproc $pidopts $oreganod -USR2
     RETVAL=$?
     echo
     return $RETVAL
@@ -93,9 +93,9 @@ restart() {
 }
 
 rh_status() {
-    base=puppet
+    base=oregano
     if [ "$USEINITFUNCTIONS" = "true" ]; then
-      status $pidopts $puppetd
+      status $pidopts $oreganod
       RETVAL=$?
       return $RETVAL
     else
@@ -127,8 +127,8 @@ rh_status_q() {
 }
 
 genconfig() {
-    echo -n $"Generate puppet agent configuration: "
-    $puppetd ${PUPPET_OPTS} ${PUPPET_EXTRA_OPTS} --genconfig
+    echo -n $"Generate oregano agent configuration: "
+    $oreganod ${PUPPET_OPTS} ${PUPPET_EXTRA_OPTS} --genconfig
 }
 
 case "$1" in
@@ -156,7 +156,7 @@ case "$1" in
     ;;
     once)
         shift
-        $puppetd ${PUPPET_OPTS} --onetime ${PUPPET_EXTRA_OPTS} $@
+        $oreganod ${PUPPET_OPTS} --onetime ${PUPPET_EXTRA_OPTS} $@
         ;;
     genconfig)
         genconfig

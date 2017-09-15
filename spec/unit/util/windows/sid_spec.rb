@@ -1,13 +1,13 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows? do
-  if Puppet.features.microsoft_windows?
-    require 'puppet/util/windows'
+describe "Oregano::Util::Windows::SID", :if => Oregano.features.microsoft_windows? do
+  if Oregano.features.microsoft_windows?
+    require 'oregano/util/windows'
   end
 
-  let(:subject)      { Puppet::Util::Windows::SID }
-  let(:sid)          { Puppet::Util::Windows::SID::LocalSystem }
+  let(:subject)      { Oregano::Util::Windows::SID }
+  let(:sid)          { Oregano::Util::Windows::SID::LocalSystem }
   let(:invalid_sid)  { 'bogus' }
   let(:unknown_sid)  { 'S-0-0-0' }
   let(:null_sid)     { 'S-1-0-0' }
@@ -18,7 +18,7 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
       bytes = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       converted = subject.octet_string_to_sid_object(bytes)
 
-      expect(converted).to be_an_instance_of Puppet::Util::Windows::SID::Principal
+      expect(converted).to be_an_instance_of Oregano::Util::Windows::SID::Principal
       expect(converted.sid_bytes).to eq(bytes)
       expect(converted.sid).to eq(null_sid)
 
@@ -29,13 +29,13 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
     it "should raise an error for non-array input" do
       expect {
         subject.octet_string_to_sid_object(invalid_sid)
-      }.to raise_error(Puppet::Error, /Octet string must be an array of bytes/)
+      }.to raise_error(Oregano::Error, /Octet string must be an array of bytes/)
     end
 
     it "should raise an error for an empty byte array" do
       expect {
         subject.octet_string_to_sid_object([])
-      }.to raise_error(Puppet::Error, /Octet string must be an array of bytes/)
+      }.to raise_error(Oregano::Error, /Octet string must be an array of bytes/)
     end
 
     it "should raise an error for a valid byte array with no mapping to a user" do
@@ -44,7 +44,7 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
         valid_octet_invalid_user =[1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0]
         subject.octet_string_to_sid_object(valid_octet_invalid_user)
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
         expect(error.code).to eq(1332) # ERROR_NONE_MAPPED
       end
     end
@@ -54,7 +54,7 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
         invalid_octet = [2]
         subject.octet_string_to_sid_object(invalid_octet)
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
         expect(error.code).to eq(87) # ERROR_INVALID_PARAMETER
       end
     end
@@ -105,13 +105,13 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
       let(:username) { SecureRandom.uuid.to_s.gsub(/\-/, '')[0..13] + UMLAUT }
 
       after(:each) {
-        Puppet::Util::Windows::ADSI::User.delete(username)
+        Oregano::Util::Windows::ADSI::User.delete(username)
       }
 
       it "should properly resolve a username with an umlaut" do
         # Ruby seems to use the local codepage when making COM calls
         # if this fails, might want to use Windows API directly instead to ensure bytes
-        user = Puppet::Util::Windows::ADSI.create(username, 'user')
+        user = Oregano::Util::Windows::ADSI.create(username, 'user')
         user.SetPassword('PUPPET_RULeZ_123!')
         user.SetInfo()
 
@@ -120,7 +120,7 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
         sid_string = ''
         FFI::MemoryPointer.new(:byte, sid_bytes.length) do |sid_byte_ptr|
           sid_byte_ptr.write_array_of_uchar(sid_bytes)
-          sid_string = Puppet::Util::Windows::SID.sid_ptr_to_string(sid_byte_ptr)
+          sid_string = Oregano::Util::Windows::SID.sid_ptr_to_string(sid_byte_ptr)
         end
 
         expect(subject.name_to_sid(username)).to eq(sid_string)
@@ -133,8 +133,8 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
       expect(subject.name_to_sid_object(unknown_name)).to be_nil
     end
 
-    it "should return a Puppet::Util::Windows::SID::Principal instance for any valid sid" do
-      expect(subject.name_to_sid_object(sid)).to be_an_instance_of(Puppet::Util::Windows::SID::Principal)
+    it "should return a Oregano::Util::Windows::SID::Principal instance for any valid sid" do
+      expect(subject.name_to_sid_object(sid)).to be_an_instance_of(Oregano::Util::Windows::SID::Principal)
     end
 
     it "should accept unqualified account name" do
@@ -179,7 +179,7 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
     it "should raise if given an invalid sid" do
       expect {
         subject.sid_ptr_to_string(nil)
-      }.to raise_error(Puppet::Error, /Invalid SID/)
+      }.to raise_error(Oregano::Error, /Invalid SID/)
     end
 
     it "should yield a valid sid pointer" do
@@ -203,7 +203,7 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
     it "should raise on an invalid sid" do
       expect {
         subject.string_to_sid_ptr(invalid_sid)
-      }.to raise_error(Puppet::Error, /Failed to convert string SID/)
+      }.to raise_error(Oregano::Error, /Failed to convert string SID/)
     end
   end
 
@@ -218,11 +218,11 @@ describe "Puppet::Util::Windows::SID", :if => Puppet.features.microsoft_windows?
 
     it "should raise if the conversion fails" do
       subject.expects(:string_to_sid_ptr).with(sid).
-        raises(Puppet::Util::Windows::Error.new("Failed to convert string SID: #{sid}", Puppet::Util::Windows::Error::ERROR_ACCESS_DENIED))
+        raises(Oregano::Util::Windows::Error.new("Failed to convert string SID: #{sid}", Oregano::Util::Windows::Error::ERROR_ACCESS_DENIED))
 
       expect {
         subject.string_to_sid_ptr(sid) {|ptr| }
-      }.to raise_error(Puppet::Util::Windows::Error, /Failed to convert string SID: #{sid}/)
+      }.to raise_error(Oregano::Util::Windows::Error, /Failed to convert string SID: #{sid}/)
     end
   end
 end

@@ -2,7 +2,7 @@
 
 # = Synopsis
 # This is an external node classifier script, after
-# https://docs.puppetlabs.com/guides/external_nodes.html
+# https://docs.oreganolabs.com/guides/external_nodes.html
 #
 # = Usage
 # regexp_nodes.rb <host>
@@ -13,7 +13,7 @@
 # finds.  Each file's contents are a regexp-per-line which, if they match the 
 # hostname passed to the program as ARGV[0], sets a class, parameter value 
 # or environment named the same thing as the file itself. At the end, the
-# resultant data structure is returned back to the puppet master process as 
+# resultant data structure is returned back to the oregano master process as 
 # yaml.
 #
 # = Caveats
@@ -24,7 +24,7 @@
 #
 # Unmatched hostnames in any of the environment/ files will cause 'production'
 # to be emitted; be aware of the complexity surrounding the interaction between
-# ENC and environments as discussed in https://projects.puppetlabs.com/issues/3910
+# ENC and environments as discussed in https://projects.oreganolabs.com/issues/3910
 #
 # = Examples
 # Based on the example files in the classes/ and parameters/ subdirectories
@@ -105,7 +105,7 @@ class ExternalNode
   def parse_argv(hostname)
     if hostname =~ /^([-\w]+?)\.([-\w\.]+)/  # non-greedy up to the first . is hostname
       @hostname = $1
-    elsif hostname =~ /^([-\w]+)$/     # sometimes puppet's @name is just a name
+    elsif hostname =~ /^([-\w]+)$/     # sometimes oregano's @name is just a name
       @hostname = hostname
       log("got shortname for [#{hostname}]")
     else
@@ -115,7 +115,7 @@ class ExternalNode
   end
 
   # to_yaml massages a copy of the object and outputs clean yaml so we don't
-  # feed weird things back to puppet []<
+  # feed weird things back to oregano []<
   def to_yaml
     classes = self.classes.to_a
     if self.parameters.empty? # otherwise to_yaml prints "parameters: {}"

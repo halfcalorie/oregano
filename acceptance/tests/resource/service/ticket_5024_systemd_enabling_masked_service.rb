@@ -1,5 +1,5 @@
-require 'puppet/acceptance/service_utils'
-extend Puppet::Acceptance::ServiceUtils
+require 'oregano/acceptance/service_utils'
+extend Oregano::Acceptance::ServiceUtils
 
 test_name 'Systemd masked services are unmasked before attempting to start'
 
@@ -9,7 +9,7 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-skip_test "requires AIO install to require 'puppet'" if @options[:type] != 'aio'
+skip_test "requires AIO install to require 'oregano'" if @options[:type] != 'aio'
 
 # This test in intended to ensure that a service which was previously marked
 # as masked and then set to enabled will first be unmasked.
@@ -77,7 +77,7 @@ agents.each do |agent|
 
   step "Masking the #{package_name[platform]} service"
   apply_manifest_on(agent, manifest_service_masked, :catch_failures => true)
-  on(agent, puppet_resource('service', package_name[platform])) do
+  on(agent, oregano_resource('service', package_name[platform])) do
     assert_match(/ensure => 'stopped'/, stdout, "Expected #{package_name[platform]} service to be stopped")
     assert_match(/enable => 'false'/, stdout, "Expected #{package_name[platform]} service to be masked")
     on(agent, "readlink #{masked_symlink_systemd}") do
@@ -87,7 +87,7 @@ agents.each do |agent|
 
   step "Enabling the #{package_name[platform]} service"
   apply_manifest_on(agent, manifest_service_enabled, :catch_failures => true)
-  on(agent, puppet_resource('service', package_name[platform])) do
+  on(agent, oregano_resource('service', package_name[platform])) do
     assert_match(/ensure => 'running'/, stdout, "Expected #{package_name[platform]} service to be running")
     assert_match(/enable => 'true'/, stdout, "Expected #{package_name[platform]} service to be enabled")
     on(agent, "readlink #{symlink_systemd}") do

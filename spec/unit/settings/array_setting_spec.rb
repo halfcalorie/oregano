@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-require 'puppet/settings'
-require 'puppet/settings/array_setting'
+require 'oregano/settings'
+require 'oregano/settings/array_setting'
 
-describe Puppet::Settings::ArraySetting do
+describe Oregano::Settings::ArraySetting do
   subject { described_class.new(:settings => stub('settings'), :desc => "test") }
 
   it "is of type :array" do

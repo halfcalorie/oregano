@@ -6,16 +6,16 @@ require 'win32/dir'
 require 'win32/process'
 
 # This file defines utilities for logging to eventlog. While it lives inside
-# Puppet, it is completely independent and loads no other parts of Puppet, so we
+# Oregano, it is completely independent and loads no other parts of Oregano, so we
 # can safely require *just* it.
-require 'puppet/util/windows/eventlog'
+require 'oregano/util/windows/eventlog'
 
 class WindowsDaemon < Win32::Daemon
   CREATE_NEW_CONSOLE          = 0x00000010
 
   @run_thread = nil
   @LOG_TO_FILE = false
-  LOG_FILE =  File.expand_path(File.join(Dir::COMMON_APPDATA, 'PuppetLabs', 'puppet', 'var', 'log', 'windows.log'))
+  LOG_FILE =  File.expand_path(File.join(Dir::COMMON_APPDATA, 'OreganoLabs', 'oregano', 'var', 'log', 'windows.log'))
   LEVELS = [:debug, :info, :notice, :warning, :err, :alert, :emerg, :crit]
   LEVELS.each do |level|
     define_method("log_#{level}") do |msg|
@@ -39,43 +39,43 @@ class WindowsDaemon < Win32::Daemon
     end
     basedir = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 
-    # The puppet installer registers a 'Puppet' event source.  For the moment events will be logged with this key, but
-    # it may be a good idea to split the Service and Puppet events later so it's easier to read in the windows Event Log.
+    # The oregano installer registers a 'Oregano' event source.  For the moment events will be logged with this key, but
+    # it may be a good idea to split the Service and Oregano events later so it's easier to read in the windows Event Log.
     #
     # Example code to register an event source;
-    # eventlogdll =  File.expand_path(File.join(basedir, 'puppet', 'ext', 'windows', 'eventlog', 'puppetres.dll'))
+    # eventlogdll =  File.expand_path(File.join(basedir, 'oregano', 'ext', 'windows', 'eventlog', 'oreganores.dll'))
     # if (File.exists?(eventlogdll))
     #   Win32::EventLog.add_event_source(
     #      'source' => "Application",
-    #      'key_name' => "Puppet Agent",
+    #      'key_name' => "Oregano Agent",
     #      'category_count' => 3,
     #      'event_message_file' => eventlogdll,
     #      'category_message_file' => eventlogdll
     #   )
     # end
 
-    puppet = File.join(basedir, 'bin', 'puppet.bat')
-    unless File.exists?(puppet)
-      log_err("File not found: '#{puppet}'")
+    oregano = File.join(basedir, 'bin', 'oregano.bat')
+    unless File.exists?(oregano)
+      log_err("File not found: '#{oregano}'")
       return
     end
-    log_debug("Using '#{puppet}'")
+    log_debug("Using '#{oregano}'")
 
     cmdline_debug = argsv.index('--debug') ? :debug : nil
-    @loglevel = parse_log_level(puppet, cmdline_debug)
+    @loglevel = parse_log_level(oregano, cmdline_debug)
     log_notice('Service started')
 
     service = self
     @run_thread = Thread.new do
       begin
         while service.running? do
-          runinterval = service.parse_runinterval(puppet)
+          runinterval = service.parse_runinterval(oregano)
           if service.state == RUNNING or service.state == IDLE
             service.log_notice("Executing agent with arguments: #{args}")
-            pid = Process.create(:command_line => "\"#{puppet}\" agent --onetime #{args}", :creation_flags => CREATE_NEW_CONSOLE).process_id
+            pid = Process.create(:command_line => "\"#{oregano}\" agent --onetime #{args}", :creation_flags => CREATE_NEW_CONSOLE).process_id
             service.log_debug("Process created: #{pid}")
           else
-            service.log_debug("Service is paused.  Not invoking Puppet agent")
+            service.log_debug("Service is paused.  Not invoking Oregano agent")
           end
 
           service.log_debug("Service worker thread waiting for #{runinterval} seconds")
@@ -125,10 +125,10 @@ class WindowsDaemon < Win32::Daemon
     if LEVELS.index(level) >= @loglevel
       if (@LOG_TO_FILE)
         # without this change its possible that we get Encoding errors trying to write UTF-8 messages in current codepage
-        File.open(LOG_FILE, 'a:UTF-8') { |f| f.puts("#{Time.now} Puppet (#{level}): #{msg}") }
+        File.open(LOG_FILE, 'a:UTF-8') { |f| f.puts("#{Time.now} Oregano (#{level}): #{msg}") }
       end
 
-      native_type, native_id = Puppet::Util::Windows::EventLog.to_native(level)
+      native_type, native_id = Oregano::Util::Windows::EventLog.to_native(level)
       report_windows_event(native_type, native_id, msg.to_s)
     end
   end
@@ -136,7 +136,7 @@ class WindowsDaemon < Win32::Daemon
   def report_windows_event(type,id,message)
     begin
       eventlog = nil
-      eventlog = Puppet::Util::Windows::EventLog.open("Puppet")
+      eventlog = Oregano::Util::Windows::EventLog.open("Oregano")
       eventlog.report_event(
         :event_type  => type,   # EVENTLOG_ERROR_TYPE, etc
         :event_id    => id,     # 0x01 or 0x02, 0x03 etc.
@@ -151,9 +151,9 @@ class WindowsDaemon < Win32::Daemon
     end
   end
 
-  def parse_runinterval(puppet_path)
+  def parse_runinterval(oregano_path)
     begin
-      runinterval = %x{ "#{puppet_path}" agent --configprint runinterval }.to_i
+      runinterval = %x{ "#{oregano_path}" agent --configprint runinterval }.to_i
       if runinterval == 0
         runinterval = 1800
         log_err("Failed to determine runinterval, defaulting to #{runinterval} seconds")
@@ -166,9 +166,9 @@ class WindowsDaemon < Win32::Daemon
     runinterval
   end
 
-  def parse_log_level(puppet_path,cmdline_debug)
+  def parse_log_level(oregano_path,cmdline_debug)
     begin
-      loglevel = %x{ "#{puppet_path}" agent --configprint log_level}.chomp
+      loglevel = %x{ "#{oregano_path}" agent --configprint log_level}.chomp
       unless loglevel
         loglevel = :notice
         log_err("Failed to determine loglevel, defaulting to #{loglevel}")

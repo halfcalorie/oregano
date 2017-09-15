@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
-describe 'Puppet Type System' do
-  include PuppetSpec::Compiler
+describe 'Oregano Type System' do
+  include OreganoSpec::Compiler
 
   let(:tf) { TypeFactory }
   context 'Integer type' do
@@ -351,13 +351,13 @@ describe 'Puppet Type System' do
       expect(tf.runtime('ruby', 'Hash').to_s).to eq("Runtime[ruby, 'Hash']")
     end
 
-    it 'can be created with a runtime and, puppet name pattern, and runtime replacement' do
+    it 'can be created with a runtime and, oregano name pattern, and runtime replacement' do
       expect(tf.runtime('ruby', [/^MyPackage::(.*)$/, 'MyModule::\1']).to_s).to eq("Runtime[ruby, [/^MyPackage::(.*)$/, 'MyModule::\\1']]")
     end
 
-    it 'will map a Puppet name to a runtime type' do
+    it 'will map a Oregano name to a runtime type' do
       t = tf.runtime('ruby', [/^MyPackage::(.*)$/, 'MyModule::\1'])
-      expect(t.from_puppet_name('MyPackage::MyType').to_s).to eq("Runtime[ruby, 'MyModule::MyType']")
+      expect(t.from_oregano_name('MyPackage::MyType').to_s).to eq("Runtime[ruby, 'MyModule::MyType']")
     end
 
     it 'with parameters is assignable to the default Runtime type' do
@@ -407,7 +407,7 @@ describe 'Puppet Type System' do
       type Bar = Fee
       notice(0 =~ Bar)
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Type alias 'Bar' cannot be resolved to a real type/)
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Type alias 'Bar' cannot be resolved to a real type/)
     end
 
     it 'will not allow an alias chain that contains nothing but aliases and variants' do
@@ -417,7 +417,7 @@ describe 'Puppet Type System' do
       type Bar = Variant[Fee,Foo]
       notice(0 =~ Bar)
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Type alias 'Bar' cannot be resolved to a real type/)
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Type alias 'Bar' cannot be resolved to a real type/)
     end
 
     it 'will not allow an alias to directly reference itself' do
@@ -425,7 +425,7 @@ describe 'Puppet Type System' do
       type Foo = Foo
       notice(0 =~ Foo)
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Type alias 'Foo' cannot be resolved to a real type/)
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Type alias 'Foo' cannot be resolved to a real type/)
     end
 
     it 'will allow an alias to directly reference itself in a variant with other types' do
@@ -502,7 +502,7 @@ describe 'Puppet Type System' do
       type Foo = Enum[$facts[os][family]]
       notice(Foo)
       CODE
-      expect{ eval_and_collect_notices(code) }.to raise_error(Puppet::Error,
+      expect{ eval_and_collect_notices(code) }.to raise_error(Oregano::Error,
         /The expression <\$facts\[os\]\[family\]> is not a valid type specification/)
     end
   end
@@ -511,7 +511,7 @@ describe 'Puppet Type System' do
     it 'can register a singe type mapping' do
       source = <<-CODE
         type MyModule::ImplementationRegistry = Object[{}]
-        type Runtime[ruby, 'Puppet::Pops::Types::ImplementationRegistry'] = MyModule::ImplementationRegistry
+        type Runtime[ruby, 'Oregano::Pops::Types::ImplementationRegistry'] = MyModule::ImplementationRegistry
         notice(true)
       CODE
       collect_notices(source) do |compiler|
@@ -527,7 +527,7 @@ describe 'Puppet Type System' do
     it 'can register a regexp based mapping' do
       source = <<-CODE
         type MyModule::TypeMismatchDescriber = Object[{}]
-        type Runtime[ruby, [/^Puppet::Pops::Types::(\\w+)$/, 'MyModule::\\1']] = [/^MyModule::(\\w+)$/, 'Puppet::Pops::Types::\\1']
+        type Runtime[ruby, [/^Oregano::Pops::Types::(\\w+)$/, 'MyModule::\\1']] = [/^MyModule::(\\w+)$/, 'Oregano::Pops::Types::\\1']
         notice(true)
       CODE
       collect_notices(source) do |compiler|
@@ -543,7 +543,7 @@ describe 'Puppet Type System' do
     it 'a type mapping affects type inference' do
       source = <<-CODE
         type MyModule::ImplementationRegistry = Object[{}]
-        type Runtime[ruby, 'Puppet::Pops::Types::ImplementationRegistry'] = MyModule::ImplementationRegistry
+        type Runtime[ruby, 'Oregano::Pops::Types::ImplementationRegistry'] = MyModule::ImplementationRegistry
         notice(true)
       CODE
       collect_notices(source) do |compiler|
@@ -563,7 +563,7 @@ describe 'Puppet Type System' do
         type Integer = String
         notice 'hello' =~ Integer
       CODE
-      expect{ eval_and_collect_notices(code) }.to raise_error(/Attempt to redefine entity 'http:\/\/puppet\.com\/2016\.1\/runtime\/type\/integer'. Originally set by Puppet-Type-System\/Static-Loader/)
+      expect{ eval_and_collect_notices(code) }.to raise_error(/Attempt to redefine entity 'http:\/\/oregano\.com\/2016\.1\/runtime\/type\/integer'. Originally set by Oregano-Type-System\/Static-Loader/)
     end
   end
 
@@ -572,19 +572,19 @@ describe 'Puppet Type System' do
     it 'Integer' do
       func_class = tf.integer.new_function
       expect(func_class).to be_a(Class)
-      expect(func_class.superclass).to be(Puppet::Functions::Function)
+      expect(func_class.superclass).to be(Oregano::Functions::Function)
     end
 
     it 'Optional[Integer]' do
       func_class = tf.optional(tf.integer).new_function
       expect(func_class).to be_a(Class)
-      expect(func_class.superclass).to be(Puppet::Functions::Function)
+      expect(func_class.superclass).to be(Oregano::Functions::Function)
     end
 
     it 'Regexp' do
       func_class = tf.regexp.new_function
       expect(func_class).to be_a(Class)
-      expect(func_class.superclass).to be(Puppet::Functions::Function)
+      expect(func_class.superclass).to be(Oregano::Functions::Function)
     end
   end
 
@@ -601,7 +601,7 @@ describe 'Puppet Type System' do
 
   context 'instantiation via ruby create function' do
     around(:each) do |example|
-      Puppet.override(:loaders => Loaders.new(Puppet::Node::Environment.create(:testing, []))) do
+      Oregano.override(:loaders => Loaders.new(Oregano::Node::Environment.create(:testing, []))) do
         example.run
       end
     end
@@ -630,7 +630,7 @@ describe 'Puppet Type System' do
 
   context 'creation of parameterized type via ruby create function on class' do
     around(:each) do |example|
-      Puppet.override(:loaders => Loaders.new(Puppet::Node::Environment.create(:testing, []))) do
+      Oregano.override(:loaders => Loaders.new(Oregano::Node::Environment.create(:testing, []))) do
         example.run
       end
     end

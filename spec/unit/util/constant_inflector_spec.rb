@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/constant_inflector'
+require 'oregano/util/constant_inflector'
 
-describe Puppet::Util::ConstantInflector, "when converting file names to constants" do
+describe Oregano::Util::ConstantInflector, "when converting file names to constants" do
   it "should capitalize terms" do
     expect(subject.file2constant("file")).to eq("File")
   end
@@ -29,21 +29,21 @@ describe Puppet::Util::ConstantInflector, "when converting file names to constan
   end
 end
 
-describe Puppet::Util::ConstantInflector, "when converting constnats to file names" do
+describe Oregano::Util::ConstantInflector, "when converting constnats to file names" do
   it "should convert them to a string if necessary" do
-    expect(subject.constant2file(Puppet::Util::ConstantInflector)).to be_instance_of(String)
+    expect(subject.constant2file(Oregano::Util::ConstantInflector)).to be_instance_of(String)
   end
 
   it "should accept string inputs" do
-    expect(subject.constant2file("Puppet::Util::ConstantInflector")).to be_instance_of(String)
+    expect(subject.constant2file("Oregano::Util::ConstantInflector")).to be_instance_of(String)
   end
 
   it "should downcase all terms" do
-    expect(subject.constant2file("Puppet")).to eq("puppet")
+    expect(subject.constant2file("Oregano")).to eq("oregano")
   end
 
   it "should convert '::' to '/'" do
-    expect(subject.constant2file("Puppet::Util::Constant")).to eq("puppet/util/constant")
+    expect(subject.constant2file("Oregano::Util::Constant")).to eq("oregano/util/constant")
   end
 
   it "should convert mid-word capitalization to an underscore" do

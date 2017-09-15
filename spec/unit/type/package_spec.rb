@@ -1,58 +1,58 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package) do
+describe Oregano::Type.type(:package) do
   before do
     Process.stubs(:euid).returns 0
-    Puppet::Util::Storage.stubs(:store)
+    Oregano::Util::Storage.stubs(:store)
   end
 
   it "should have a :reinstallable feature that requires the :reinstall method" do
-    expect(Puppet::Type.type(:package).provider_feature(:reinstallable).methods).to eq([:reinstall])
+    expect(Oregano::Type.type(:package).provider_feature(:reinstallable).methods).to eq([:reinstall])
   end
 
   it "should have an :installable feature that requires the :install method" do
-    expect(Puppet::Type.type(:package).provider_feature(:installable).methods).to eq([:install])
+    expect(Oregano::Type.type(:package).provider_feature(:installable).methods).to eq([:install])
   end
 
   it "should have an :uninstallable feature that requires the :uninstall method" do
-    expect(Puppet::Type.type(:package).provider_feature(:uninstallable).methods).to eq([:uninstall])
+    expect(Oregano::Type.type(:package).provider_feature(:uninstallable).methods).to eq([:uninstall])
   end
 
   it "should have an :upgradeable feature that requires :update and :latest methods" do
-    expect(Puppet::Type.type(:package).provider_feature(:upgradeable).methods).to eq([:update, :latest])
+    expect(Oregano::Type.type(:package).provider_feature(:upgradeable).methods).to eq([:update, :latest])
   end
 
   it "should have a :purgeable feature that requires the :purge latest method" do
-    expect(Puppet::Type.type(:package).provider_feature(:purgeable).methods).to eq([:purge])
+    expect(Oregano::Type.type(:package).provider_feature(:purgeable).methods).to eq([:purge])
   end
 
   it "should have a :versionable feature" do
-    expect(Puppet::Type.type(:package).provider_feature(:versionable)).not_to be_nil
+    expect(Oregano::Type.type(:package).provider_feature(:versionable)).not_to be_nil
   end
 
   it "should have a :package_settings feature that requires :package_settings_insync?, :package_settings and :package_settings=" do
-    expect(Puppet::Type.type(:package).provider_feature(:package_settings).methods).to eq([:package_settings_insync?, :package_settings, :package_settings=])
+    expect(Oregano::Type.type(:package).provider_feature(:package_settings).methods).to eq([:package_settings_insync?, :package_settings, :package_settings=])
   end
 
   it "should default to being installed" do
-    pkg = Puppet::Type.type(:package).new(:name => "yay", :provider => :apt)
+    pkg = Oregano::Type.type(:package).new(:name => "yay", :provider => :apt)
     expect(pkg.should(:ensure)).to eq(:present)
   end
 
   describe "when validating attributes" do
     [:name, :source, :instance, :status, :adminfile, :responsefile, :configfiles, :category, :platform, :root, :vendor, :description, :allowcdrom, :allow_virtual, :reinstall_on_refresh].each do |param|
       it "should have a #{param} parameter" do
-        expect(Puppet::Type.type(:package).attrtype(param)).to eq(:param)
+        expect(Oregano::Type.type(:package).attrtype(param)).to eq(:param)
       end
     end
 
     it "should have an ensure property" do
-      expect(Puppet::Type.type(:package).attrtype(:ensure)).to eq(:property)
+      expect(Oregano::Type.type(:package).attrtype(:ensure)).to eq(:property)
     end
 
     it "should have a package_settings property" do
-      expect(Puppet::Type.type(:package).attrtype(:package_settings)).to eq(:property)
+      expect(Oregano::Type.type(:package).attrtype(:package_settings)).to eq(:property)
     end
   end
 
@@ -60,68 +60,68 @@ describe Puppet::Type.type(:package) do
     before :each do
       @provider = stub(
         'provider',
-        :class           => Puppet::Type.type(:package).defaultprovider,
+        :class           => Oregano::Type.type(:package).defaultprovider,
         :clear           => nil,
         :validate_source => nil
       )
-      Puppet::Type.type(:package).defaultprovider.stubs(:new).returns(@provider)
+      Oregano::Type.type(:package).defaultprovider.stubs(:new).returns(@provider)
     end
 
     after :each do
-      Puppet::Type.type(:package).defaultprovider = nil
+      Oregano::Type.type(:package).defaultprovider = nil
     end
 
     it "should support :present as a value to :ensure" do
-      Puppet::Type.type(:package).new(:name => "yay", :ensure => :present)
+      Oregano::Type.type(:package).new(:name => "yay", :ensure => :present)
     end
 
     it "should alias :installed to :present as a value to :ensure" do
-      pkg = Puppet::Type.type(:package).new(:name => "yay", :ensure => :installed)
+      pkg = Oregano::Type.type(:package).new(:name => "yay", :ensure => :installed)
       expect(pkg.should(:ensure)).to eq(:present)
     end
 
     it "should support :absent as a value to :ensure" do
-      Puppet::Type.type(:package).new(:name => "yay", :ensure => :absent)
+      Oregano::Type.type(:package).new(:name => "yay", :ensure => :absent)
     end
 
     it "should support :purged as a value to :ensure if the provider has the :purgeable feature" do
       @provider.expects(:satisfies?).with([:purgeable]).returns(true)
-      Puppet::Type.type(:package).new(:name => "yay", :ensure => :purged)
+      Oregano::Type.type(:package).new(:name => "yay", :ensure => :purged)
     end
 
     it "should not support :purged as a value to :ensure if the provider does not have the :purgeable feature" do
       @provider.expects(:satisfies?).with([:purgeable]).returns(false)
-      expect { Puppet::Type.type(:package).new(:name => "yay", :ensure => :purged) }.to raise_error(Puppet::Error)
+      expect { Oregano::Type.type(:package).new(:name => "yay", :ensure => :purged) }.to raise_error(Oregano::Error)
     end
 
     it "should support :latest as a value to :ensure if the provider has the :upgradeable feature" do
       @provider.expects(:satisfies?).with([:upgradeable]).returns(true)
-      Puppet::Type.type(:package).new(:name => "yay", :ensure => :latest)
+      Oregano::Type.type(:package).new(:name => "yay", :ensure => :latest)
     end
 
     it "should not support :latest as a value to :ensure if the provider does not have the :upgradeable feature" do
       @provider.expects(:satisfies?).with([:upgradeable]).returns(false)
-      expect { Puppet::Type.type(:package).new(:name => "yay", :ensure => :latest) }.to raise_error(Puppet::Error)
+      expect { Oregano::Type.type(:package).new(:name => "yay", :ensure => :latest) }.to raise_error(Oregano::Error)
     end
 
     it "should support version numbers as a value to :ensure if the provider has the :versionable feature" do
       @provider.expects(:satisfies?).with([:versionable]).returns(true)
-      Puppet::Type.type(:package).new(:name => "yay", :ensure => "1.0")
+      Oregano::Type.type(:package).new(:name => "yay", :ensure => "1.0")
     end
 
     it "should not support version numbers as a value to :ensure if the provider does not have the :versionable feature" do
       @provider.expects(:satisfies?).with([:versionable]).returns(false)
-      expect { Puppet::Type.type(:package).new(:name => "yay", :ensure => "1.0") }.to raise_error(Puppet::Error)
+      expect { Oregano::Type.type(:package).new(:name => "yay", :ensure => "1.0") }.to raise_error(Oregano::Error)
     end
 
     it "should accept any string as an argument to :source" do
-      expect { Puppet::Type.type(:package).new(:name => "yay", :source => "stuff") }.to_not raise_error
+      expect { Oregano::Type.type(:package).new(:name => "yay", :source => "stuff") }.to_not raise_error
     end
 
     it "should not accept a non-string name" do
       expect do
-        Puppet::Type.type(:package).new(:name => ["error"])
-      end.to raise_error(Puppet::ResourceError, /Name must be a String/)
+        Oregano::Type.type(:package).new(:name => ["error"])
+      end.to raise_error(Oregano::ResourceError, /Name must be a String/)
     end
   end
 
@@ -131,25 +131,25 @@ describe Puppet::Type.type(:package) do
     end
   end
 
-  describe Puppet::Type.type(:package) do
+  describe Oregano::Type.type(:package) do
     before :each do
       @provider = stub(
         'provider',
-        :class           => Puppet::Type.type(:package).defaultprovider,
+        :class           => Oregano::Type.type(:package).defaultprovider,
         :clear           => nil,
         :satisfies?      => true,
         :name            => :mock,
         :validate_source => nil
       )
-      Puppet::Type.type(:package).defaultprovider.stubs(:new).returns(@provider)
-      Puppet::Type.type(:package).defaultprovider.stubs(:instances).returns([])
-      @package = Puppet::Type.type(:package).new(:name => "yay")
+      Oregano::Type.type(:package).defaultprovider.stubs(:new).returns(@provider)
+      Oregano::Type.type(:package).defaultprovider.stubs(:instances).returns([])
+      @package = Oregano::Type.type(:package).new(:name => "yay")
 
-      @catalog = Puppet::Resource::Catalog.new
+      @catalog = Oregano::Resource::Catalog.new
       @catalog.add_resource(@package)
     end
 
-    describe Puppet::Type.type(:package), "when it should be purged" do
+    describe Oregano::Type.type(:package), "when it should be purged" do
       include PackageEvaluationTesting
 
       before { @package[:ensure] = :purged }
@@ -168,7 +168,7 @@ describe Puppet::Type.type(:package) do
       end
     end
 
-    describe Puppet::Type.type(:package), "when it should be absent" do
+    describe Oregano::Type.type(:package), "when it should be absent" do
       include PackageEvaluationTesting
 
       before { @package[:ensure] = :absent }
@@ -189,7 +189,7 @@ describe Puppet::Type.type(:package) do
       end
     end
 
-    describe Puppet::Type.type(:package), "when it should be present" do
+    describe Oregano::Type.type(:package), "when it should be present" do
       include PackageEvaluationTesting
 
       before { @package[:ensure] = :present }
@@ -210,7 +210,7 @@ describe Puppet::Type.type(:package) do
       end
     end
 
-    describe Puppet::Type.type(:package), "when it should be latest" do
+    describe Oregano::Type.type(:package), "when it should be latest" do
       include PackageEvaluationTesting
 
       before { @package[:ensure] = :latest }
@@ -245,7 +245,7 @@ describe Puppet::Type.type(:package) do
       end
     end
 
-    describe Puppet::Type.type(:package), "when it should be a specific version" do
+    describe Oregano::Type.type(:package), "when it should be a specific version" do
       include PackageEvaluationTesting
 
       before { @package[:ensure] = "1.0" }
@@ -306,21 +306,21 @@ describe Puppet::Type.type(:package) do
       end
     end
 
-    describe Puppet::Type.type(:package), "when responding to refresh" do
+    describe Oregano::Type.type(:package), "when responding to refresh" do
       include PackageEvaluationTesting
 
       it "should support :true as a value to :reinstall_on_refresh" do
-        srv = Puppet::Type.type(:package).new(:name => "yay", :reinstall_on_refresh => :true)
+        srv = Oregano::Type.type(:package).new(:name => "yay", :reinstall_on_refresh => :true)
         expect(srv[:reinstall_on_refresh]).to eq(:true)
       end
 
       it "should support :false as a value to :reinstall_on_refresh" do
-        srv = Puppet::Type.type(:package).new(:name => "yay", :reinstall_on_refresh => :false)
+        srv = Oregano::Type.type(:package).new(:name => "yay", :reinstall_on_refresh => :false)
         expect(srv[:reinstall_on_refresh]).to eq(:false)
       end
 
       it "should specify :false as the default value of :reinstall_on_refresh" do
-        srv = Puppet::Type.type(:package).new(:name => "yay")
+        srv = Oregano::Type.type(:package).new(:name => "yay")
         expect(srv[:reinstall_on_refresh]).to eq(:false)
       end
 
@@ -362,12 +362,12 @@ describe Puppet::Type.type(:package) do
 
   describe "allow_virtual" do
     it "defaults to true on platforms that support virtual packages" do
-      pkg = Puppet::Type.type(:package).new(:name => 'yay', :provider => :yum)
+      pkg = Oregano::Type.type(:package).new(:name => 'yay', :provider => :yum)
       expect(pkg[:allow_virtual]).to eq true
     end
 
     it "defaults to false on platforms that do not support virtual packages" do
-      pkg = Puppet::Type.type(:package).new(:name => 'yay', :provider => :apple)
+      pkg = Oregano::Type.type(:package).new(:name => 'yay', :provider => :apple)
       expect(pkg[:allow_virtual]).to be_nil
     end
   end

@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/module_tool'
+require 'oregano/module_tool'
 
-describe Puppet::ModuleTool::Metadata do
+describe Oregano::ModuleTool::Metadata do
   let(:data) { {} }
-  let(:metadata) { Puppet::ModuleTool::Metadata.new }
+  let(:metadata) { Oregano::ModuleTool::Metadata.new }
 
   describe 'property lookups' do
     subject { metadata }
@@ -170,7 +170,7 @@ describe Puppet::ModuleTool::Metadata do
     end
 
     context "with a valid dependency" do
-      let(:data) { {'dependencies' => [{'name' => 'puppetlabs-goodmodule'}] }}
+      let(:data) { {'dependencies' => [{'name' => 'oreganolabs-goodmodule'}] }}
 
       it "adds the dependency" do
         expect(subject.dependencies.size).to eq(1)
@@ -178,7 +178,7 @@ describe Puppet::ModuleTool::Metadata do
     end
 
     context "with a invalid dependency name" do
-      let(:data) { {'dependencies' => [{'name' => 'puppetlabsbadmodule'}] }}
+      let(:data) { {'dependencies' => [{'name' => 'oreganolabsbadmodule'}] }}
 
       it "raises an exception" do
         expect { subject }.to raise_error(ArgumentError)
@@ -186,7 +186,7 @@ describe Puppet::ModuleTool::Metadata do
     end
 
     context "with a valid dependency version range" do
-      let(:data) { {'dependencies' => [{'name' => 'puppetlabs-badmodule', 'version_requirement' => '>= 2.0.0'}] }}
+      let(:data) { {'dependencies' => [{'name' => 'oreganolabs-badmodule', 'version_requirement' => '>= 2.0.0'}] }}
 
       it "adds the dependency" do
         expect(subject.dependencies.size).to eq(1)
@@ -194,7 +194,7 @@ describe Puppet::ModuleTool::Metadata do
     end
 
     context "with a invalid version range" do
-      let(:data) { {'dependencies' => [{'name' => 'puppetlabsbadmodule', 'version_requirement' => '>= banana'}] }}
+      let(:data) { {'dependencies' => [{'name' => 'oreganolabsbadmodule', 'version_requirement' => '>= banana'}] }}
 
       it "raises an exception" do
         expect { subject }.to raise_error(ArgumentError)
@@ -202,8 +202,8 @@ describe Puppet::ModuleTool::Metadata do
     end
 
     context "with duplicate dependencies" do
-      let(:data) { {'dependencies' => [{'name' => 'puppetlabs-dupmodule', 'version_requirement' => '1.0.0'},
-        {'name' => 'puppetlabs-dupmodule', 'version_requirement' => '0.0.1'}] }
+      let(:data) { {'dependencies' => [{'name' => 'oreganolabs-dupmodule', 'version_requirement' => '1.0.0'},
+        {'name' => 'oreganolabs-dupmodule', 'version_requirement' => '0.0.1'}] }
       }
 
       it "raises an exception" do
@@ -212,15 +212,15 @@ describe Puppet::ModuleTool::Metadata do
     end
 
     context "adding a duplicate dependency" do
-      let(:data) { {'dependencies' => [{'name' => 'puppetlabs-origmodule', 'version_requirement' => '1.0.0'}] }}
+      let(:data) { {'dependencies' => [{'name' => 'oreganolabs-origmodule', 'version_requirement' => '1.0.0'}] }}
 
       it "with a different version raises an exception" do
-        metadata.add_dependency('puppetlabs-origmodule', '>= 0.0.1')
+        metadata.add_dependency('oreganolabs-origmodule', '>= 0.0.1')
         expect { subject }.to raise_error(ArgumentError)
       end
 
       it "with the same version does not add another dependency" do
-        metadata.add_dependency('puppetlabs-origmodule', '1.0.0')
+        metadata.add_dependency('oreganolabs-origmodule', '1.0.0')
         expect(subject.dependencies.size).to eq(1)
       end
     end

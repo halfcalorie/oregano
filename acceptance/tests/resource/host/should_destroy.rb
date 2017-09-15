@@ -14,7 +14,7 @@ agents.each do |agent|
   on agent, "printf '#{line}\n' > #{file}"
 
   step "delete the resource from the file"
-  on(agent, puppet_resource('host', 'test1', "target=#{file}",
+  on(agent, oregano_resource('host', 'test1', "target=#{file}",
               'ensure=absent', 'ip=127.0.0.7'))
 
   step "verify that the content was removed"

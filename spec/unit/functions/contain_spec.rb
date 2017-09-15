@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet/parser/functions'
+require 'oregano_spec/compiler'
+require 'oregano/parser/functions'
 require 'matchers/containment_matchers'
 require 'matchers/resource'
 require 'matchers/include_in_order'
@@ -9,13 +9,13 @@ require 'unit/functions/shared'
 
 
 describe 'The "contain" function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include ContainmentMatchers
   include Matchers::Resource
 
   before(:each) do
-    compiler  = Puppet::Parser::Compiler.new(Puppet::Node.new("foo"))
-    @scope = Puppet::Parser::Scope.new(compiler)
+    compiler  = Oregano::Parser::Compiler.new(Oregano::Node.new("foo"))
+    @scope = Oregano::Parser::Scope.new(compiler)
   end
 
   it "includes the class" do
@@ -171,7 +171,7 @@ describe 'The "contain" function' do
       MANIFEST
 
       expect { apply_compiled_manifest(manifest) }.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         /One or more resource dependency cycles detected in graph/
       )
     end

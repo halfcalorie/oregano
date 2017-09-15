@@ -1,7 +1,7 @@
-Committing changes to Puppet
+Committing changes to Oregano
 ====
 
-We would like to make it easier for community members to contribute to Puppet
+We would like to make it easier for community members to contribute to Oregano
 using pull requests, even if it makes the task of reviewing and committing
 these changes a little harder.  Pull requests are only ever based on a single
 branch, however, we maintain more than one active branch.  As a result
@@ -36,12 +36,12 @@ Terminology
 Many of these terms have more than one meaning.  For the purposes of this
 document, the following terms refer to specific things.
 
-**contributor** - A person who makes a change to Puppet and submits a change
+**contributor** - A person who makes a change to Oregano and submits a change
 set in the form of a pull request.
 
 **change set** - A set of discrete patches which combined together form a
 contribution.  A change set takes the form of Git commits and is submitted to
-Puppet in the form of a pull request.
+Oregano in the form of a pull request.
 
 **committer** - A person responsible for reviewing a pull request and then
 making the decision what base branch to merge the change set into.
@@ -60,14 +60,14 @@ release candidate are merged.
 **security** - Where critical security fixes are merged.  These change sets
 will then be merged into release branches independently from one another. (i.e.
 no merging up).  Please do not submit pull requests against the security branch
-and instead report all security related issues to security@puppetlabs.com as
+and instead report all security related issues to security@oreganolabs.com as
 per our security policy published at
-[https://puppetlabs.com/security/](https://puppetlabs.com/security/).
+[https://oreganolabs.com/security/](https://oreganolabs.com/security/).
 
 Committer Guide
 ====
 
-This section provides a guide to follow while committing change sets to Puppet
+This section provides a guide to follow while committing change sets to Oregano
 base branches.
 
 How to decide what release(s) should be patched
@@ -89,10 +89,10 @@ to limit the number of active base branches that must be managed.
 Security patches are handled as a special case.  Security patches may be
 applied to earlier minor releases of a major release, but the patches should
 first be merged into the `security` branch.  Security patches should be merged
-by Puppet Labs staff members.  Pull requests should not be submitted with the
+by Oregano Labs staff members.  Pull requests should not be submitted with the
 security branch as the base branch.  Please send all security related
-information or patches to security@puppetlabs.com as per our [Security
-Policy](https://puppetlabs.com/security/).
+information or patches to security@oreganolabs.com as per our [Security
+Policy](https://oreganolabs.com/security/).
 
 The CI systems are configured to run against `master` and `stable`.  Over time,
 these branches will refer to different versions, but their name will remain
@@ -157,12 +157,12 @@ This section aims to provide guidelines for being a good commit citizen by
 paying attention to our automated build tools.
 
  * Don’t push on a broken build.  (A broken build is defined as a failing job
-   in the [Puppet FOSS](https://jenkins.puppetlabs.com/view/Puppet%20FOSS/)
+   in the [Oregano FOSS](https://jenkins.oreganolabs.com/view/Oregano%20FOSS/)
    page.)
  * Watch the build until your changes have gone through green
  * Update the ticket status and target version.  The target version field in
-   our issue tracker should be updated to be the next release of Puppet.  For
-   example, if the most recent release of Puppet is 3.1.1 and you merge a
+   our issue tracker should be updated to be the next release of Oregano.  For
+   example, if the most recent release of Oregano is 3.1.1 and you merge a
    backwards compatible change set into master, then the target version should
    be 3.2.0 in the issue tracker.)
  * Ensure the pull request is closed (Hint: amend your merge commit to contain
@@ -177,8 +177,8 @@ branch, then merge into the base branch and up through all active base
 branches.
 
 Suppose a contributor submits a pull request based on master.  The change set
-fixes a bug reported against Puppet 3.1.1 which is the most recently released
-version of Puppet.
+fixes a bug reported against Oregano 3.1.1 which is the most recently released
+version of Oregano.
 
 In this example the committer should rebase the change set onto the `stable`
 branch since this is a bug rather than new functionality.
@@ -187,7 +187,7 @@ First, the committer pulls down the branch using the `hub` gem.  This tool
 automates the process of adding the remote repository and creating a local
 branch to track the remote branch.
 
-    $ hub checkout https://github.com/puppetlabs/puppet/pull/1234
+    $ hub checkout https://github.com/oreganolabs/oregano/pull/1234
     Branch jeffmccune-fix_foo_error set up to track remote branch fix_foo_error from jeffmccune.
     Switched to a new branch 'jeffmccune-fix_foo_error'
 
@@ -237,8 +237,8 @@ It's helpful to make sure your local branches are up to date to avoid one of
 the branches failing to fast forward while the other succeeds.  Both the
 `stable` and `master` branches are being pushed at the same time.
 
-    $ git push puppetlabs master:master stable:stable
+    $ git push oreganolabs master:master stable:stable
 
 That's it!  The committer then updates the pull request, updates the issue in
 our issue tracker, and keeps an eye on the [build
-status](http://jenkins.puppetlabs.com).
+status](http://jenkins.oreganolabs.com).

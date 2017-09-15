@@ -3,19 +3,19 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:service).provider(:launchd) do
-  let (:plistlib) { Puppet::Util::Plist }
+describe Oregano::Type.type(:service).provider(:launchd) do
+  let (:plistlib) { Oregano::Util::Plist }
   let (:joblabel) { "com.foo.food" }
   let (:provider) { subject.class }
-  let (:resource) { Puppet::Type.type(:service).new(:name => joblabel, :provider => :launchd) }
+  let (:resource) { Oregano::Type.type(:service).new(:name => joblabel, :provider => :launchd) }
   let (:launchd_overrides_6_9) { '/var/db/launchd.db/com.apple.launchd/overrides.plist' }
   let (:launchd_overrides_10_) { '/var/db/com.apple.xpc.launchd/disabled.plist' }
   subject { resource.provider }
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   end
 
   describe "the type interface" do
@@ -292,7 +292,7 @@ describe Puppet::Type.type(:service).provider(:launchd) do
         provider.expects(:launchd_paths).returns(['/Library/LaunchAgents'])
         provider.expects(:return_globbed_list_of_file_paths).with('/Library/LaunchAgents').returns([busted_plist_path])
         plistlib.expects(:read_plist_file).with(busted_plist_path).returns(plist_without_label)
-        Puppet.expects(:warning).with("The #{busted_plist_path} plist does not contain a 'label' key; Puppet is skipping it")
+        Oregano.expects(:warning).with("The #{busted_plist_path} plist does not contain a 'label' key; Oregano is skipping it")
         provider.make_label_to_path_map
       end
     end
@@ -321,7 +321,7 @@ describe Puppet::Type.type(:service).provider(:launchd) do
   end
 
   describe "jobsearch" do
-    let(:map) { {"org.mozilla.puppet" => "/path/to/puppet.plist",
+    let(:map) { {"org.mozilla.oregano" => "/path/to/oregano.plist",
                  "org.mozilla.python" => "/path/to/python.plist"} }
     it "returns the entire map with no args" do
       provider.expects(:make_label_to_path_map).returns(map)
@@ -329,17 +329,17 @@ describe Puppet::Type.type(:service).provider(:launchd) do
     end
     it "returns a singleton hash when given a label" do
       provider.expects(:make_label_to_path_map).returns(map)
-      expect(provider.jobsearch("org.mozilla.puppet")).to eq({ "org.mozilla.puppet" => "/path/to/puppet.plist" })
+      expect(provider.jobsearch("org.mozilla.oregano")).to eq({ "org.mozilla.oregano" => "/path/to/oregano.plist" })
     end
     it "refreshes the label_to_path_map when label is not found" do
       provider.expects(:make_label_to_path_map).with().returns({})
       provider.expects(:make_label_to_path_map).with(true).returns(map)
-      expect(provider.jobsearch("org.mozilla.puppet")).to eq({ "org.mozilla.puppet" => "/path/to/puppet.plist" })
+      expect(provider.jobsearch("org.mozilla.oregano")).to eq({ "org.mozilla.oregano" => "/path/to/oregano.plist" })
     end
-    it "raises Puppet::Error when the label is still not found" do
+    it "raises Oregano::Error when the label is still not found" do
       provider.expects(:make_label_to_path_map).with().returns(map)
       provider.expects(:make_label_to_path_map).with(true).returns(map)
-      expect { provider.jobsearch("NOSUCH") }.to raise_error(Puppet::Error)
+      expect { provider.jobsearch("NOSUCH") }.to raise_error(Oregano::Error)
     end
   end
 end

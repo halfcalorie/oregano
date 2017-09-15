@@ -1,22 +1,22 @@
 require 'spec_helper'
 
-require 'puppet/graph'
+require 'oregano/graph'
 
-describe Puppet::Graph::Key do
+describe Oregano::Graph::Key do
   it "produces the next in the sequence" do
-    key = Puppet::Graph::Key.new
+    key = Oregano::Graph::Key.new
 
     expect(key.next).to be > key
   end
 
   it "produces a key after itself but before next" do
-    key = Puppet::Graph::Key.new
+    key = Oregano::Graph::Key.new
     expect(key.down).to be > key
     expect(key.down).to be < key.next
   end
 
   it "downward keys of the same group are in sequence" do
-    key = Puppet::Graph::Key.new
+    key = Oregano::Graph::Key.new
 
     first = key.down
     middle = key.down.next
@@ -28,7 +28,7 @@ describe Puppet::Graph::Key do
   end
 
   it "downward keys in sequential groups are in sequence" do
-    key = Puppet::Graph::Key.new
+    key = Oregano::Graph::Key.new
 
     first = key.down
     middle = key.next

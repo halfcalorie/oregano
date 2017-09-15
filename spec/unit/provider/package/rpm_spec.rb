@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:rpm)
+provider_class = Oregano::Type.type(:package).provider(:rpm)
 
 describe provider_class do
 
@@ -19,7 +19,7 @@ describe provider_class do
 
   let(:resource_name) { 'myresource' }
   let(:resource) do
-    Puppet::Type.type(:package).new(
+    Oregano::Type.type(:package).new(
       :name     => resource_name,
       :ensure   => :installed,
       :provider => 'rpm'
@@ -39,11 +39,11 @@ describe provider_class do
   let(:rpm_version) { "RPM version 5.0.0\n" }
 
   before(:each) do
-    Puppet::Util.stubs(:which).with("rpm").returns("/bin/rpm")
+    Oregano::Util.stubs(:which).with("rpm").returns("/bin/rpm")
     provider_class.stubs(:which).with("rpm").returns("/bin/rpm")
     provider_class.instance_variable_set("@current_version", nil)
-    Puppet::Type::Package::ProviderRpm.expects(:execute).with(["/bin/rpm", "--version"]).returns(rpm_version).at_most_once
-    Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "--version"], execute_options).returns(rpm_version).at_most_once
+    Oregano::Type::Package::ProviderRpm.expects(:execute).with(["/bin/rpm", "--version"]).returns(rpm_version).at_most_once
+    Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "--version"], execute_options).returns(rpm_version).at_most_once
   end
 
   describe 'provider features' do
@@ -56,7 +56,7 @@ describe provider_class do
   describe "self.instances" do
     describe "with a modern version of RPM" do
       it "includes all the modern flags" do
-        Puppet::Util::Execution.expects(:execpipe).with("/bin/rpm -qa --nosignature --nodigest --qf '#{nevra_format}'").yields(packages)
+        Oregano::Util::Execution.expects(:execpipe).with("/bin/rpm -qa --nosignature --nodigest --qf '#{nevra_format}'").yields(packages)
 
         installed_packages = provider_class.instances
       end
@@ -65,7 +65,7 @@ describe provider_class do
     describe "with a version of RPM < 4.1" do
       let(:rpm_version) { "RPM version 4.0.2\n" }
       it "excludes the --nosignature flag" do
-        Puppet::Util::Execution.expects(:execpipe).with("/bin/rpm -qa  --nodigest --qf '#{nevra_format}'").yields(packages)
+        Oregano::Util::Execution.expects(:execpipe).with("/bin/rpm -qa  --nodigest --qf '#{nevra_format}'").yields(packages)
 
         installed_packages = provider_class.instances
       end
@@ -74,14 +74,14 @@ describe provider_class do
     describe "with a version of RPM < 4.0.2" do
       let(:rpm_version) { "RPM version 3.0.5\n" }
       it "excludes the --nodigest flag" do
-        Puppet::Util::Execution.expects(:execpipe).with("/bin/rpm -qa   --qf '#{nevra_format}'").yields(packages)
+        Oregano::Util::Execution.expects(:execpipe).with("/bin/rpm -qa   --qf '#{nevra_format}'").yields(packages)
 
         installed_packages = provider_class.instances
       end
     end
 
     it "returns an array of packages" do
-      Puppet::Util::Execution.expects(:execpipe).with("/bin/rpm -qa --nosignature --nodigest --qf '#{nevra_format}'").yields(packages)
+      Oregano::Util::Execution.expects(:execpipe).with("/bin/rpm -qa --nosignature --nodigest --qf '#{nevra_format}'").yields(packages)
 
       installed_packages = provider_class.instances
 
@@ -156,7 +156,7 @@ describe provider_class do
 
   describe "#install" do
     let(:resource) do
-      Puppet::Type.type(:package).new(
+      Oregano::Type.type(:package).new(
         :name     => 'myresource',
         :ensure   => :installed,
         :source   => '/path/to/package'
@@ -165,14 +165,14 @@ describe provider_class do
 
     describe "when not already installed" do
       it "only includes the '-i' flag" do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", ["-i"], '/path/to/package'], execute_options)
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", ["-i"], '/path/to/package'], execute_options)
         provider.install
       end
     end
 
     describe "when installed with options" do
       let(:resource) do
-        Puppet::Type.type(:package).new(
+        Oregano::Type.type(:package).new(
           :name            => resource_name,
           :ensure          => :installed,
           :provider        => 'rpm',
@@ -182,7 +182,7 @@ describe provider_class do
       end
 
       it "includes the options" do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", ["-i", "-D", "--test=value", "-Q"], '/path/to/package'], execute_options)
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", ["-i", "-D", "--test=value", "-Q"], '/path/to/package'], execute_options)
         provider.install
       end
     end
@@ -195,7 +195,7 @@ describe provider_class do
       end
 
       it "includes the '-U --oldpackage' flags" do
-         Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", ["-U", "--oldpackage"], '/path/to/package'], execute_options)
+         Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", ["-U", "--oldpackage"], '/path/to/package'], execute_options)
          provider.install
       end
     end
@@ -204,23 +204,23 @@ describe provider_class do
   describe "#latest" do
     it "retrieves version string after querying rpm for version from source file" do
       resource.expects(:[]).with(:source).returns('source-string')
-      Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "--qf", "'#{nevra_format}'", "-p", "source-string"]).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
+      Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "--qf", "'#{nevra_format}'", "-p", "source-string"]).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
       expect(provider.latest).to eq("1.2.3.4-5.el4")
     end
 
     it "raises an error if the rpm command fails" do
       resource.expects(:[]).with(:source).returns('source-string')
-      Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "--qf", "'#{nevra_format}'", "-p", "source-string"]).raises(Puppet::ExecutionFailure, 'rpm command failed')
+      Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "--qf", "'#{nevra_format}'", "-p", "source-string"]).raises(Oregano::ExecutionFailure, 'rpm command failed')
 
       expect {
         provider.latest
-      }.to raise_error(Puppet::Error, 'rpm command failed')
+      }.to raise_error(Oregano::Error, 'rpm command failed')
     end
   end
 
   describe "#uninstall" do
     let(:resource) do
-      Puppet::Type.type(:package).new(
+      Oregano::Type.type(:package).new(
         :name     => 'myresource',
         :ensure   => :installed
       )
@@ -228,37 +228,37 @@ describe provider_class do
 
     describe "on a modern RPM" do
       before(:each) do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "myresource", '--nosignature', '--nodigest', "--qf", "'#{nevra_format}'"], execute_options).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "myresource", '--nosignature', '--nodigest', "--qf", "'#{nevra_format}'"], execute_options).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
       end
 
       let(:rpm_version) { "RPM version 4.10.0\n" }
 
       it "includes the architecture in the package name" do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", ["-e"], 'myresource-1.2.3.4-5.el4.noarch'], execute_options).returns('').at_most_once
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", ["-e"], 'myresource-1.2.3.4-5.el4.noarch'], execute_options).returns('').at_most_once
         provider.uninstall
       end
     end
 
     describe "on an ancient RPM" do
       before(:each) do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "myresource", '', '', '--qf', "'#{nevra_format}'"], execute_options).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "myresource", '', '', '--qf', "'#{nevra_format}'"], execute_options).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
       end
 
       let(:rpm_version) { "RPM version 3.0.6\n" }
 
       it "excludes the architecture from the package name" do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", ["-e"], 'myresource-1.2.3.4-5.el4'], execute_options).returns('').at_most_once
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", ["-e"], 'myresource-1.2.3.4-5.el4'], execute_options).returns('').at_most_once
         provider.uninstall
       end
     end
 
     describe "when uninstalled with options" do
       before(:each) do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "myresource", '--nosignature', '--nodigest', "--qf", "'#{nevra_format}'"], execute_options).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", "myresource", '--nosignature', '--nodigest', "--qf", "'#{nevra_format}'"], execute_options).returns("myresource 0 1.2.3.4 5.el4 noarch\n")
       end
 
       let(:resource) do
-        Puppet::Type.type(:package).new(
+        Oregano::Type.type(:package).new(
           :name              => resource_name,
           :ensure            => :absent,
           :provider          => 'rpm',
@@ -267,7 +267,7 @@ describe provider_class do
       end
 
       it "includes the options" do
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", ["-e", "--nodeps"], 'myresource-1.2.3.4-5.el4.noarch'], execute_options)
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", ["-e", "--nodeps"], 'myresource-1.2.3.4-5.el4.noarch'], execute_options)
         provider.uninstall
       end
     end
@@ -275,8 +275,8 @@ describe provider_class do
 
   describe "parsing" do
     def parser_test(rpm_output_string, gold_hash, number_of_debug_logs = 0)
-      Puppet.expects(:debug).times(number_of_debug_logs)
-      Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", resource_name, "--nosignature", "--nodigest", "--qf", "'#{nevra_format}'"], execute_options).returns(rpm_output_string)
+      Oregano.expects(:debug).times(number_of_debug_logs)
+      Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "-q", resource_name, "--nosignature", "--nodigest", "--qf", "'#{nevra_format}'"], execute_options).returns(rpm_output_string)
       expect(provider.query).to eq(gold_hash)
     end
 
@@ -315,9 +315,9 @@ describe provider_class do
 
     describe "when the package is not found" do
       before do
-        Puppet.expects(:debug).never
+        Oregano.expects(:debug).never
         expected_args = ["/bin/rpm", "-q", resource_name, "--nosignature", "--nodigest", "--qf", "'#{nevra_format}'"]
-        Puppet::Util::Execution.expects(:execute).with(expected_args, execute_options).raises Puppet::ExecutionFailure.new("package #{resource_name} is not installed")
+        Oregano::Util::Execution.expects(:execute).with(expected_args, execute_options).raises Oregano::ExecutionFailure.new("package #{resource_name} is not installed")
       end
 
       it "does not log or fail if allow_virtual is false" do
@@ -328,7 +328,7 @@ describe provider_class do
       it "does not log or fail if allow_virtual is true" do
         resource[:allow_virtual] = true
         expected_args = ['/bin/rpm', '-q', resource_name, '--nosignature', '--nodigest', '--qf', "'#{nevra_format}'", '--whatprovides']
-        Puppet::Util::Execution.expects(:execute).with(expected_args, execute_options).raises Puppet::ExecutionFailure.new("package #{resource_name} is not provided")
+        Oregano::Util::Execution.expects(:execute).with(expected_args, execute_options).raises Oregano::ExecutionFailure.new("package #{resource_name} is not provided")
         expect(provider.query).to be_nil
       end
     end
@@ -336,8 +336,8 @@ describe provider_class do
     it "parses virtual package" do
       provider.resource[:allow_virtual] = true
       expected_args = ["/bin/rpm", "-q", resource_name, "--nosignature", "--nodigest", "--qf", "'#{nevra_format}'"]
-      Puppet::Util::Execution.expects(:execute).with(expected_args, execute_options).raises Puppet::ExecutionFailure.new("package #{resource_name} is not installed")
-      Puppet::Util::Execution.expects(:execute).with(expected_args + ["--whatprovides"], execute_options).returns "myresource 0 1.2.3.4 5.el4 noarch\n"
+      Oregano::Util::Execution.expects(:execute).with(expected_args, execute_options).raises Oregano::ExecutionFailure.new("package #{resource_name} is not installed")
+      Oregano::Util::Execution.expects(:execute).with(expected_args + ["--whatprovides"], execute_options).returns "myresource 0 1.2.3.4 5.el4 noarch\n"
       expect(provider.query).to eq({
         :name     => "myresource",
         :epoch    => "0",
@@ -361,8 +361,8 @@ describe provider_class do
     end
 
     it "returns multiple install_options when set" do
-      provider.resource[:install_options] = ['-L', '/opt/puppet']
-      expect(provider.install_options).to eq(['-L', '/opt/puppet'])
+      provider.resource[:install_options] = ['-L', '/opt/oregano']
+      expect(provider.install_options).to eq(['-L', '/opt/oregano'])
     end
 
     it 'returns install_options when set as hash' do
@@ -387,8 +387,8 @@ describe provider_class do
     end
 
     it "returns multiple uninstall_options when set" do
-      provider.resource[:uninstall_options] = ['-L', '/opt/puppet']
-      expect(provider.uninstall_options).to eq(['-L', '/opt/puppet'])
+      provider.resource[:uninstall_options] = ['-L', '/opt/oregano']
+      expect(provider.uninstall_options).to eq(['-L', '/opt/oregano'])
     end
 
     it 'returns uninstall_options when set as hash' do

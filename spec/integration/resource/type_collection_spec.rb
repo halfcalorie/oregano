@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/files'
-require 'puppet/resource/type_collection'
+require 'oregano_spec/files'
+require 'oregano/resource/type_collection'
 
-describe Puppet::Resource::TypeCollection do
+describe Oregano::Resource::TypeCollection do
   describe "when autoloading from modules" do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     before do
       @dir = tmpfile("autoload_testing")
@@ -18,9 +18,9 @@ describe Puppet::Resource::TypeCollection do
 
       loaders = Object.new
       loaders.expects(:runtime3_type_loader).at_most_once.returns loader
-      Puppet::Pops::Loaders.expects(:loaders).at_most_once.returns loaders
+      Oregano::Pops::Loaders.expects(:loaders).at_most_once.returns loaders
 
-      environment = Puppet::Node::Environment.create(:env, [@dir])
+      environment = Oregano::Node::Environment.create(:env, [@dir])
       @code = environment.known_resource_types
     end
 

@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'Semantic Versions' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   context 'the SemVer type' do
     it 'is normalized in a Variant' do
@@ -20,12 +20,12 @@ describe 'Semantic Versions' do
       end
 
       it 'returns its argument when the argument is a version' do
-        v = SemanticPuppet::Version.new(1,0,0)
+        v = SemanticOregano::Version.new(1,0,0)
         expect(PSemVerType.convert(v)).to equal(v)
       end
 
       it 'converts a valid version string argument to a version' do
-        v = SemanticPuppet::Version.new(1,0,0)
+        v = SemanticOregano::Version.new(1,0,0)
         expect(PSemVerType.convert('1.0.0')).to eq(v)
       end
 
@@ -42,12 +42,12 @@ describe 'Semantic Versions' do
       end
 
       it 'returns its argument when the argument is a version range' do
-        vr = SemanticPuppet::VersionRange.parse('1.x')
+        vr = SemanticOregano::VersionRange.parse('1.x')
         expect(PSemVerRangeType.convert(vr)).to equal(vr)
       end
 
       it 'converts a valid version string argument to a version range' do
-        vr = SemanticPuppet::VersionRange.parse('1.x')
+        vr = SemanticOregano::VersionRange.parse('1.x')
         expect(PSemVerRangeType.convert('1.x')).to eq(vr)
       end
 
@@ -57,7 +57,7 @@ describe 'Semantic Versions' do
     end
   end
 
-  context 'when used in Puppet expressions' do
+  context 'when used in Oregano expressions' do
 
     context 'the SemVer type' do
       it 'can have multiple range arguments' do

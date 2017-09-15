@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:user).provider(:openbsd) do
+describe Oregano::Type.type(:user).provider(:openbsd) do
 
   before :each do
     described_class.stubs(:command).with(:password).returns '/usr/sbin/passwd'
@@ -11,7 +11,7 @@ describe Puppet::Type.type(:user).provider(:openbsd) do
   end
 
   let(:resource) do
-    Puppet::Type.type(:user).new(
+    Oregano::Type.type(:user).new(
       :name       => 'myuser',
       :managehome => :false,
       :system     => :false,
@@ -23,7 +23,7 @@ describe Puppet::Type.type(:user).provider(:openbsd) do
   let(:provider) { described_class.new(:name => 'myuser') }
 
   let(:shadow_entry) {
-    return unless Puppet.features.libshadow?
+    return unless Oregano.features.libshadow?
     entry = Struct::PasswdEntry.new
     entry[:sp_namp]   = 'myuser' # login name
     entry[:sp_loginclass] = 'staff' # login class
@@ -57,18 +57,18 @@ describe Puppet::Type.type(:user).provider(:openbsd) do
       resource
     end
 
-    it "should return the loginclass if set", :if => Puppet.features.libshadow? do
+    it "should return the loginclass if set", :if => Oregano.features.libshadow? do
       Shadow::Passwd.expects(:getspnam).with('myuser').returns shadow_entry
       provider.send(:loginclass).should == 'staff'
     end
 
-    it "should return the empty string when loginclass isn't set", :if => Puppet.features.libshadow? do
+    it "should return the empty string when loginclass isn't set", :if => Oregano.features.libshadow? do
       shadow_entry[:sp_loginclass] = ''
       Shadow::Passwd.expects(:getspnam).with('myuser').returns shadow_entry
       provider.send(:loginclass).should == ''
     end
 
-    it "should return nil when loginclass isn't available", :if => Puppet.features.libshadow? do
+    it "should return nil when loginclass isn't available", :if => Oregano.features.libshadow? do
       shadow_entry[:sp_loginclass] = nil
       Shadow::Passwd.expects(:getspnam).with('myuser').returns shadow_entry
       provider.send(:loginclass).should be_nil

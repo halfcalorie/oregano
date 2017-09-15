@@ -2,8 +2,8 @@ test_name "Setup environment"
 
 step "Ensure Git and Ruby"
 
-require 'puppet/acceptance/install_utils'
-extend Puppet::Acceptance::InstallUtils
+require 'oregano/acceptance/install_utils'
+extend Oregano::Acceptance::InstallUtils
 require 'beaker/dsl/install_utils'
 extend Beaker::DSL::InstallUtils
 
@@ -46,10 +46,10 @@ PACKAGES = {
 hosts.each do |host|
   platform = host['platform'] =~ /windows/ ? 'windows' : 'unix'
 
-  host['puppetbindir'] = '/usr/bin' if platform == 'windows'
+  host['oreganobindir'] = '/usr/bin' if platform == 'windows'
 
   # Beakers add_aio_defaults_on helper is not appropriate here as it
-  # also alters puppetbindir / privatebindir to use package installed
+  # also alters oreganobindir / privatebindir to use package installed
   # paths rather than git installed paths
   host['distmoduledir'] = AIO_DEFAULTS[platform]['distmoduledir']
   host['sitemoduledir'] = AIO_DEFAULTS[platform]['sitemoduledir']
@@ -113,13 +113,13 @@ hosts.each do |host|
                end
 
     step "#{host} Install ruby from git using revision #{revision}"
-    # TODO remove this step once we are installing puppet from msi packages
-    win_path = on(host, 'cygpath -m /opt/puppet-git-repos').stdout.chomp
+    # TODO remove this step once we are installing oregano from msi packages
+    win_path = on(host, 'cygpath -m /opt/oregano-git-repos').stdout.chomp
     install_from_git_on(host, win_path,
-                     :name => 'puppet-win32-ruby',
-                     :path => build_git_url('puppet-win32-ruby'),
+                     :name => 'oregano-win32-ruby',
+                     :path => build_git_url('oregano-win32-ruby'),
                      :rev  => revision)
-    on host, 'cd /opt/puppet-git-repos/puppet-win32-ruby; cp -r ruby/* /'
+    on host, 'cd /opt/oregano-git-repos/oregano-win32-ruby; cp -r ruby/* /'
     on host, 'cd /lib; icacls ruby /grant "Everyone:(OI)(CI)(RX)"'
     on host, 'cd /lib; icacls ruby /reset /T'
     on host, 'cd /; icacls bin /grant "Everyone:(OI)(CI)(RX)"'
@@ -137,7 +137,7 @@ hosts.each do |host|
   when /solaris/
     step "#{host} Install bundler from rubygems"
     on host, 'gem install bundler --no-ri --no-rdoc'
-    on host, "ln -sf /opt/csw/bin/bundle #{host['puppetbindir']}/bundle"
+    on host, "ln -sf /opt/csw/bin/bundle #{host['oreganobindir']}/bundle"
   when /windows/
     on host, 'cmd /c gem install bundler --no-ri --no-rdoc'
   else

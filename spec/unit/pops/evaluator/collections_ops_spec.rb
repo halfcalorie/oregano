@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
-require 'puppet/pops/types/type_factory'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
+require 'oregano/pops/types/type_factory'
 
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl/Concat/Delete' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl/Concat/Delete' do
   include EvaluatorRspecHelper
 
   context 'The evaluator when operating on an Array' do

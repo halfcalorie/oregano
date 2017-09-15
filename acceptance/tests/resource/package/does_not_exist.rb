@@ -1,5 +1,5 @@
 # Redmine (#22529)
-test_name "Puppet returns only resource package declaration when querying an uninstalled package" do
+test_name "Oregano returns only resource package declaration when querying an uninstalled package" do
 
   tag 'audit:medium',
       'audit:acceptance' # Could be done at the integration (or unit) layer though
@@ -12,8 +12,8 @@ test_name "Puppet returns only resource package declaration when querying an uni
 
   agents.each do |agent|
 
-    step "test puppet resource package" do
-      on(agent, puppet('resource', 'package', 'not-installed-on-this-host')) do
+    step "test oregano resource package" do
+      on(agent, oregano('resource', 'package', 'not-installed-on-this-host')) do
         assert_match(resource_declaration_regex, stdout)
       end
     end
@@ -24,8 +24,8 @@ test_name "Puppet returns only resource package declaration when querying an uni
   # Also skipping solaris, windows whose providers do not have purgeable implemented.
   confine_block(:to, :platform => /debian|ubuntu/) do
     agents.each do |agent|
-      step "test puppet apply" do
-        on(agent, puppet('apply', '-e', %Q|"package {'not-installed-on-this-host': ensure => purged }"|)) do
+      step "test oregano apply" do
+        on(agent, oregano('apply', '-e', %Q|"package {'not-installed-on-this-host': ensure => purged }"|)) do
           assert_no_match(/warning/i, stdout)
         end
       end

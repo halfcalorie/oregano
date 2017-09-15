@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/key'
+require 'oregano/ssl/key'
 
-describe Puppet::SSL::Key do
-  include PuppetSpec::Files
+describe Oregano::SSL::Key do
+  include OreganoSpec::Files
 
   # different UTF-8 widths
   # 1-byte A
@@ -17,47 +17,47 @@ describe Puppet::SSL::Key do
     # Get a safe temporary file
     dir = tmpdir('key_integration_testing')
 
-    Puppet.settings[:confdir] = dir
-    Puppet.settings[:vardir] = dir
+    Oregano.settings[:confdir] = dir
+    Oregano.settings[:vardir] = dir
 
     # This is necessary so the terminus instances don't lie around.
-    # and so that Puppet::SSL::Key.indirection.save may be used
-    Puppet::SSL::Key.indirection.termini.clear
+    # and so that Oregano::SSL::Key.indirection.save may be used
+    Oregano::SSL::Key.indirection.termini.clear
   end
 
   describe 'with a custom user-specified passfile' do
 
     before do
-      # write custom password file to where Puppet expects
+      # write custom password file to where Oregano expects
       password_file = tmpfile('passfile')
-      Puppet[:passfile] = password_file
-      Puppet::FileSystem.open(password_file, nil, 'w:UTF-8') { |f| f.print(mixed_utf8) }
+      Oregano[:passfile] = password_file
+      Oregano::FileSystem.open(password_file, nil, 'w:UTF-8') { |f| f.print(mixed_utf8) }
     end
 
     it 'should use the configured password file if it is not the CA key' do
-      key = Puppet::SSL::Key.new('test')
-      expect(key.password_file).to eq(Puppet[:passfile])
+      key = Oregano::SSL::Key.new('test')
+      expect(key.password_file).to eq(Oregano[:passfile])
       expect(key.password).to eq(mixed_utf8.force_encoding(Encoding::BINARY))
     end
 
     it "should be able to read an existing private key given the correct password" do
-      Puppet[:keylength] = '50'
+      Oregano[:keylength] = '50'
 
       key_name = 'test'
       # use OpenSSL APIs to generate a private key
       private_key = OpenSSL::PKey::RSA.generate(512)
 
-      # stash it in Puppets private key directory
-      FileUtils.mkdir_p(Puppet[:privatekeydir])
-      pem_path = File.join(Puppet[:privatekeydir], "#{key_name}.pem")
-      Puppet::FileSystem.open(pem_path, nil, 'w:UTF-8') do |f|
+      # stash it in Oreganos private key directory
+      FileUtils.mkdir_p(Oregano[:privatekeydir])
+      pem_path = File.join(Oregano[:privatekeydir], "#{key_name}.pem")
+      Oregano::FileSystem.open(pem_path, nil, 'w:UTF-8') do |f|
         # with password protection enabled
         pem = private_key.to_pem(OpenSSL::Cipher::DES.new(:EDE3, :CBC), mixed_utf8)
         f.print(pem)
       end
 
       # indirector loads existing .pem off disk instead of replacing it
-      host = Puppet::SSL::Host.new(key_name)
+      host = Oregano::SSL::Host.new(key_name)
       host.generate
 
       # newly loaded host private key matches the manually created key
@@ -69,28 +69,28 @@ describe Puppet::SSL::Key do
     end
 
     it 'should export the private key to PEM using the password' do
-      Puppet[:keylength] = '50'
+      Oregano[:keylength] = '50'
 
       key_name = 'test'
 
       # uses specified :passfile when writing the private key
-      key = Puppet::SSL::Key.new(key_name)
+      key = Oregano::SSL::Key.new(key_name)
       key.generate
-      Puppet::SSL::Key.indirection.save(key)
+      Oregano::SSL::Key.indirection.save(key)
 
       # indirector writes file here
-      pem_path = File.join(Puppet[:privatekeydir], "#{key_name}.pem")
+      pem_path = File.join(Oregano[:privatekeydir], "#{key_name}.pem")
 
       # note incorrect password is an error
       expect do
-        Puppet::FileSystem.open(pem_path, nil, 'r:ASCII') do |f|
+        Oregano::FileSystem.open(pem_path, nil, 'r:ASCII') do |f|
           reloaded_key = OpenSSL::PKey::RSA.new(f.read, 'invalid_password')
         end
       end.to raise_error(OpenSSL::PKey::RSAError)
 
       # but when specifying the correct password
       reloaded_key = nil
-      Puppet::FileSystem.open(pem_path, nil, 'r:ASCII') do |f|
+      Oregano::FileSystem.open(pem_path, nil, 'r:ASCII') do |f|
         reloaded_key = OpenSSL::PKey::RSA.new(f.read, mixed_utf8)
       end
 

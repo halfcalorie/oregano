@@ -1,38 +1,38 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/loaders'
+require 'oregano/pops'
+require 'oregano/loaders'
 
 describe "the 'defined' function" do
-  after(:all) { Puppet::Pops::Loaders.clear }
+  after(:all) { Oregano::Pops::Loaders.clear }
 
   # This loads the function once and makes it easy to call it
   # It does not matter that it is not bound to the env used later since the function
   # looks up everything via the scope that is given to it.
   # The individual tests needs to have a fresh env/catalog set up
   #
-  let(:loaders) { Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, [])) }
-  let(:func) { loaders.puppet_system_loader.load(:function, 'defined') }
+  let(:loaders) { Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, [])) }
+  let(:func) { loaders.oregano_system_loader.load(:function, 'defined') }
 
   before :each do
     # A fresh environment is needed for each test since tests creates types and resources
-    environment = Puppet::Node::Environment.create(:testing, [])
-    @node = Puppet::Node.new('yaynode', :environment => environment)
+    environment = Oregano::Node::Environment.create(:testing, [])
+    @node = Oregano::Node.new('yaynode', :environment => environment)
     @known_resource_types = environment.known_resource_types
-    @compiler = Puppet::Parser::Compiler.new(@node)
-    @scope = Puppet::Parser::Scope.new(@compiler)
+    @compiler = Oregano::Parser::Compiler.new(@node)
+    @scope = Oregano::Parser::Scope.new(@compiler)
   end
 
   def newclass(name)
-    @known_resource_types.add Puppet::Resource::Type.new(:hostclass, name)
+    @known_resource_types.add Oregano::Resource::Type.new(:hostclass, name)
   end
 
   def newdefine(name)
-    @known_resource_types.add Puppet::Resource::Type.new(:definition, name)
+    @known_resource_types.add Oregano::Resource::Type.new(:definition, name)
   end
 
   def newresource(type, title)
-    resource = Puppet::Resource.new(type, title)
+    resource = Oregano::Resource.new(type, title)
     @compiler.add_resource(@scope, resource)
     resource
   end
@@ -50,8 +50,8 @@ describe "the 'defined' function" do
       it 'by using a Type[Class[name]] type reference' do
         name = 'yayness'
         newclass name
-        class_type = Puppet::Pops::Types::TypeFactory.host_class(name)
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(class_type)
+        class_type = Oregano::Pops::Types::TypeFactory.host_class(name)
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(class_type)
         expect(func.call(@scope, type_type)).to be_truthy
       end
     end
@@ -64,8 +64,8 @@ describe "the 'defined' function" do
       it 'even if there is a define, by using a Type[Class[name]] type reference' do
         name = 'yayness'
         newdefine name
-        class_type = Puppet::Pops::Types::TypeFactory.host_class(name)
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(class_type)
+        class_type = Oregano::Pops::Types::TypeFactory.host_class(name)
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(class_type)
         expect(func.call(@scope, type_type)).to be_falsey
       end
     end
@@ -75,7 +75,7 @@ describe "the 'defined' function" do
         name = 'cowabunga'
         newclass name
         newresource(:class, name)
-        class_type = Puppet::Pops::Types::TypeFactory.host_class(name)
+        class_type = Oregano::Pops::Types::TypeFactory.host_class(name)
         expect(func.call(@scope, class_type)).to be_truthy
       end
     end
@@ -84,13 +84,13 @@ describe "the 'defined' function" do
       it '(although defined) by using a Class[name] reference' do
         name = 'cowabunga'
         newclass name
-        class_type = Puppet::Pops::Types::TypeFactory.host_class(name)
+        class_type = Oregano::Pops::Types::TypeFactory.host_class(name)
         expect(func.call(@scope, class_type)).to be_falsey
       end
 
       it '(and not defined) by using a Class[name] reference' do
         name = 'cowabunga'
-        class_type = Puppet::Pops::Types::TypeFactory.host_class(name)
+        class_type = Oregano::Pops::Types::TypeFactory.host_class(name)
         expect(func.call(@scope, class_type)).to be_falsey
       end
     end
@@ -111,29 +111,29 @@ describe "the 'defined' function" do
       end
 
       it 'by using a File type reference (built in type)' do
-        resource_type = Puppet::Pops::Types::TypeFactory.resource('file')
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(resource_type)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource('file')
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(resource_type)
         expect(func.call(@scope, type_type)).to be_truthy
       end
 
       it 'by using a Type[File] type reference' do
-        resource_type = Puppet::Pops::Types::TypeFactory.resource('file')
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(resource_type)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource('file')
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(resource_type)
         expect(func.call(@scope, type_type)).to be_truthy
       end
 
       it 'by using a Resource[T] type reference (defined type)' do
         name = 'yayness'
         newdefine name
-        resource_type = Puppet::Pops::Types::TypeFactory.resource(name)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource(name)
         expect(func.call(@scope, resource_type)).to be_truthy
       end
 
       it 'by using a Type[Resource[T]] type reference (defined type)' do
         name = 'yayness'
         newdefine name
-        resource_type = Puppet::Pops::Types::TypeFactory.resource(name)
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(resource_type)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource(name)
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(resource_type)
         expect(func.call(@scope, type_type)).to be_truthy
       end
     end
@@ -146,8 +146,8 @@ describe "the 'defined' function" do
       it 'even if there is a class with the same name, by using a Type[Resource[T]] type reference' do
         name = 'yayness'
         newclass name
-        resource_type = Puppet::Pops::Types::TypeFactory.resource(name)
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(resource_type)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource(name)
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(resource_type)
         expect(func.call(@scope, type_type)).to be_falsey
       end
     end
@@ -158,7 +158,7 @@ describe "the 'defined' function" do
         title = '/tmp/myfile'
         newdefine type_name
         newresource(type_name, title)
-        class_type = Puppet::Pops::Types::TypeFactory.resource(type_name, title)
+        class_type = Oregano::Pops::Types::TypeFactory.resource(type_name, title)
         expect(func.call(@scope, class_type)).to be_truthy
       end
 
@@ -167,7 +167,7 @@ describe "the 'defined' function" do
         title = 'cowabunga'
         newdefine type_name
         newresource(type_name, title)
-        class_type = Puppet::Pops::Types::TypeFactory.resource(type_name, title)
+        class_type = Oregano::Pops::Types::TypeFactory.resource(type_name, title)
         expect(func.call(@scope, class_type)).to be_truthy
       end
     end
@@ -177,20 +177,20 @@ describe "the 'defined' function" do
         type_name = 'meme'
         title = 'cowabunga'
         newdefine type_name
-        resource_type = Puppet::Pops::Types::TypeFactory.resource(type_name, title)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource(type_name, title)
         expect(func.call(@scope, resource_type)).to be_falsey
 
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(resource_type)
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(resource_type)
         expect(func.call(@scope, type_type)).to be_falsey
       end
 
       it '(and not defined) by using a Resource[T, title] reference or Type[Resource[T, title]] reference' do
         type_name = 'meme'
         title = 'cowabunga'
-        resource_type = Puppet::Pops::Types::TypeFactory.resource(type_name, title)
+        resource_type = Oregano::Pops::Types::TypeFactory.resource(type_name, title)
         expect(func.call(@scope, resource_type)).to be_falsey
 
-        type_type = Puppet::Pops::Types::TypeFactory.type_type(resource_type)
+        type_type = Oregano::Pops::Types::TypeFactory.type_type(resource_type)
         expect(func.call(@scope, type_type)).to be_falsey
       end
     end
@@ -258,12 +258,12 @@ describe "the 'defined' function" do
   end
 
   it 'raises an argument error when asking if Resource type is defined' do
-    resource_type = Puppet::Pops::Types::TypeFactory.resource
+    resource_type = Oregano::Pops::Types::TypeFactory.resource
     expect { func.call(@scope, resource_type)}.to raise_error(ArgumentError, /reference to all.*type/)
   end
 
   it 'raises an argument error if you ask if Class is defined' do
-    class_type = Puppet::Pops::Types::TypeFactory.host_class
+    class_type = Oregano::Pops::Types::TypeFactory.host_class
     expect { func.call(@scope, class_type) }.to raise_error(ArgumentError, /reference to all.*class/)
   end
 

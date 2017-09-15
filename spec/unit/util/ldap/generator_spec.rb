@@ -1,19 +1,19 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/ldap/generator'
+require 'oregano/util/ldap/generator'
 
-describe Puppet::Util::Ldap::Generator do
+describe Oregano::Util::Ldap::Generator do
   before do
-    @generator = Puppet::Util::Ldap::Generator.new(:uno)
+    @generator = Oregano::Util::Ldap::Generator.new(:uno)
   end
 
   it "should require a parameter name at initialization" do
-    expect { Puppet::Util::Ldap::Generator.new }.to raise_error(ArgumentError, /wrong number of arguments/)
+    expect { Oregano::Util::Ldap::Generator.new }.to raise_error(ArgumentError, /wrong number of arguments/)
   end
 
   it "should always return its name as a string" do
-    g = Puppet::Util::Ldap::Generator.new(:myname)
+    g = Oregano::Util::Ldap::Generator.new(:myname)
     expect(g.name).to eq("myname")
   end
 

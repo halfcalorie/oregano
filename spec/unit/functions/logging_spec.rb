@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe 'the log function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   def collect_logs(code)
-    Puppet[:code] = code
-    node = Puppet::Node.new('logtest')
-    compiler = Puppet::Parser::Compiler.new(node)
+    Oregano[:code] = code
+    node = Oregano::Node.new('logtest')
+    compiler = Oregano::Parser::Compiler.new(node)
     node.environment.check_for_reparse
     logs = []
-    Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+    Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
       compiler.compile
     end
     logs
@@ -24,10 +24,10 @@ describe 'the log function' do
   end
 
   before(:each) do
-    Puppet[:log_level] = 'debug'
+    Oregano[:log_level] = 'debug'
   end
 
-  Puppet::Util::Log.levels.each do |level|
+  Oregano::Util::Log.levels.each do |level|
     context "for log level '#{level}'" do
       it 'can be called' do
         expect_log("#{level.to_s}('yay')", level, 'yay')

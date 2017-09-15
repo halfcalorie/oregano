@@ -2,8 +2,8 @@
 require 'spec_helper'
 
 
-describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:ssh_authorized_key), :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   before do
     provider_class = stub 'provider_class', :name => "fake", :suitable? => true, :supports_parameter? => true
@@ -60,7 +60,7 @@ describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.micr
       end
 
       it "nots support other values" do
-        expect { described_class.new(:name => "whev", :ensure => :foo, :user => "nobody") }.to raise_error(Puppet::Error, /Invalid value/)
+        expect { described_class.new(:name => "whev", :ensure => :foo, :user => "nobody") }.to raise_error(Oregano::Error, /Invalid value/)
       end
 
     end
@@ -91,7 +91,7 @@ describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.micr
       end
 
       it "doesn't support values other than ssh-dss, ssh-rsa, dsa, rsa" do
-        expect { described_class.new(:name => "whev", :type => :something) }.to raise_error(Puppet::Error,/Invalid value/)
+        expect { described_class.new(:name => "whev", :type => :something) }.to raise_error(Oregano::Error,/Invalid value/)
       end
 
     end
@@ -111,7 +111,7 @@ describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.micr
       end
 
       it "doesn't support whitespaces" do
-        expect { described_class.new(:name => "whev", :type => :rsa, :user => "nobody", :key => 'AAA FA==')}.to raise_error(Puppet::Error,/Key must not contain whitespace/)
+        expect { described_class.new(:name => "whev", :type => :rsa, :user => "nobody", :key => 'AAA FA==')}.to raise_error(Oregano::Error,/Key must not contain whitespace/)
       end
 
     end
@@ -140,7 +140,7 @@ describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.micr
       end
 
       it "doesn't support a comma separated list" do
-        expect { described_class.new(:name => "whev", :type => :rsa, :user => "nobody", :options => 'cert-authority,no-port-forwarding')}.to raise_error(Puppet::Error, /must be provided as an array/)
+        expect { described_class.new(:name => "whev", :type => :rsa, :user => "nobody", :options => 'cert-authority,no-port-forwarding')}.to raise_error(Oregano::Error, /must be provided as an array/)
       end
 
       it "uses :absent as a default value" do
@@ -186,7 +186,7 @@ describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.micr
       end
 
       it "informs about an absent user" do
-        Puppet::Log.level = :debug
+        Oregano::Log.level = :debug
         described_class.new(:name => "whev", :user => 'idontexist').should(:target)
         expect(@logs.map(&:message)).to include("The required user is not yet present on the system")
       end
@@ -204,7 +204,7 @@ describe Puppet::Type.type(:ssh_authorized_key), :unless => Puppet.features.micr
           :key    => "AAA",
           :type   => "ssh-rsa",
           :ensure => :present)
-      end.to raise_error(Puppet::Error,/user.*or.*target.*mandatory/)
+      end.to raise_error(Oregano::Error,/user.*or.*target.*mandatory/)
     end
 
   end

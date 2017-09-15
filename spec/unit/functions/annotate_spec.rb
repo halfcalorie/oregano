@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
 describe 'the annotate function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   let(:annotation) { <<-PUPPET }
     type MyAdapter = Object[{

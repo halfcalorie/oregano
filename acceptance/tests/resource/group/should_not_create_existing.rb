@@ -13,7 +13,7 @@ agents.each do |agent|
   agent.group_present(name)
 
   step "verify that we don't try and create the existing group"
-  on(agent, puppet_resource('group', name, 'ensure=present')) do
+  on(agent, oregano_resource('group', name, 'ensure=present')) do
     fail_test "looks like we created the group" if
       stdout.include? "/Group[#{name}]/ensure: created"
   end

@@ -2,15 +2,15 @@
 require 'spec_helper'
 require 'shared_behaviours/all_parsedfile_providers'
 
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-provider_class = Puppet::Type.type(:host).provider(:parsed)
+provider_class = Oregano::Type.type(:host).provider(:parsed)
 
 describe provider_class do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before do
-    @host_class = Puppet::Type.type(:host)
+    @host_class = Oregano::Type.type(:host)
     @provider = @host_class.provider(:parsed)
     @hostfile = tmpfile('hosts')
     @provider.any_instance.stubs(:target).returns @hostfile
@@ -21,7 +21,7 @@ describe provider_class do
   end
 
   def mkhost(args)
-    hostresource = Puppet::Type::Host.new(:name => args[:name])
+    hostresource = Oregano::Type::Host.new(:name => args[:name])
     hostresource.stubs(:should).with(:target).returns @hostfile
 
     # Using setters of provider to build our testobject
@@ -37,10 +37,10 @@ describe provider_class do
   end
 
   def genhost(host)
-    @provider.stubs(:filetype).returns(Puppet::Util::FileType::FileTypeRam)
+    @provider.stubs(:filetype).returns(Oregano::Util::FileType::FileTypeRam)
     File.stubs(:chown)
     File.stubs(:chmod)
-    Puppet::Util::SUIDManager.stubs(:asuser).yields
+    Oregano::Util::SUIDManager.stubs(:asuser).yields
     host.flush
     @provider.target_object(@hostfile).read
   end

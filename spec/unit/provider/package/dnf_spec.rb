@@ -3,7 +3,7 @@ require 'spec_helper'
 # Note that much of the functionality of the dnf provider is already tested with yum provider tests,
 # as yum is the parent provider.
 
-provider_class = Puppet::Type.type(:package).provider(:dnf)
+provider_class = Oregano::Type.type(:package).provider(:dnf)
 
 context 'default' do
   [ 19, 20, 21 ].each do |ver|

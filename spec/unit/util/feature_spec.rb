@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/feature'
+require 'oregano/util/feature'
 
-describe Puppet::Util::Feature do
+describe Oregano::Util::Feature do
   before do
-    @features = Puppet::Util::Feature.new("features")
+    @features = Oregano::Util::Feature.new("features")
     @features.stubs(:warn)
   end
 
@@ -54,7 +54,7 @@ describe Puppet::Util::Feature do
   end
 
   it "should support features with libraries" do
-    expect { @features.add(:puppet, :libs => %w{puppet}) }.not_to raise_error
+    expect { @features.add(:oregano, :libs => %w{oregano}) }.not_to raise_error
   end
 
   it "should consider a feature to be present if all of its libraries are present" do
@@ -70,7 +70,7 @@ describe Puppet::Util::Feature do
     @features.expects(:require).with("foo").raises(LoadError)
     @features.stubs(:require).with("bar")
 
-    Puppet.expects(:debug)
+    Oregano.expects(:debug)
 
     expect(@features).not_to be_myfeature
   end
@@ -79,17 +79,17 @@ describe Puppet::Util::Feature do
     @features.add(:myfeature, :libs => %w{foo bar})
     @features.expects(:require).twice().with("foo").raises(LoadError).then.returns(nil)
     @features.stubs(:require).with("bar")
-    Puppet::Util::RubyGems::Source.stubs(:source).returns(Puppet::Util::RubyGems::OldGemsSource)
-    Puppet::Util::RubyGems::OldGemsSource.any_instance.expects(:clear_paths).times(3)
+    Oregano::Util::RubyGems::Source.stubs(:source).returns(Oregano::Util::RubyGems::OldGemsSource)
+    Oregano::Util::RubyGems::OldGemsSource.any_instance.expects(:clear_paths).times(3)
 
-    Puppet.expects(:debug)
+    Oregano.expects(:debug)
 
     expect(@features).not_to be_myfeature
     expect(@features).to be_myfeature
   end
 
   it "should cache load failures when configured to do so" do
-    Puppet[:always_retry_plugins] = false
+    Oregano[:always_retry_plugins] = false
 
     @features.add(:myfeature, :libs => %w{foo bar})
     @features.expects(:require).with("foo").raises(LoadError)

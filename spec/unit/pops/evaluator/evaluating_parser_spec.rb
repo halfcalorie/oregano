@@ -1,45 +1,45 @@
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
-require 'puppet/loaders'
-require 'puppet_spec/pops'
-require 'puppet_spec/scope'
-require 'puppet/parser/e4_parser_adapter'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
+require 'oregano/loaders'
+require 'oregano_spec/pops'
+require 'oregano_spec/scope'
+require 'oregano/parser/e4_parser_adapter'
 
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 #require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
-  include PuppetSpec::Pops
-  include PuppetSpec::Scope
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl' do
+  include OreganoSpec::Pops
+  include OreganoSpec::Scope
   before(:each) do
-    Puppet[:strict_variables] = true
-    Puppet[:data_binding_terminus] = 'none'
+    Oregano[:strict_variables] = true
+    Oregano[:data_binding_terminus] = 'none'
 
     # Tests needs a known configuration of node/scope/compiler since it parses and evaluates
     # snippets as the compiler will evaluate them, butwithout the overhead of compiling a complete
     # catalog for each tested expression.
     #
-    @parser  = Puppet::Pops::Parser::EvaluatingParser.new
-    @node = Puppet::Node.new('node.example.com')
+    @parser  = Oregano::Pops::Parser::EvaluatingParser.new
+    @node = Oregano::Node.new('node.example.com')
     @node.environment = environment
-    @compiler = Puppet::Parser::Compiler.new(@node)
-    @scope = Puppet::Parser::Scope.new(@compiler)
-    @scope.source = Puppet::Resource::Type.new(:node, 'node.example.com')
+    @compiler = Oregano::Parser::Compiler.new(@node)
+    @scope = Oregano::Parser::Scope.new(@compiler)
+    @scope.source = Oregano::Resource::Type.new(:node, 'node.example.com')
     @scope.parent = @compiler.topscope
-    Puppet.push_context(:loaders => @compiler.loaders)
+    Oregano.push_context(:loaders => @compiler.loaders)
   end
 
   after(:each) do
-    Puppet.pop_context
+    Oregano.pop_context
   end
 
-  let(:environment) { Puppet::Node::Environment.create(:testing, []) }
+  let(:environment) { Oregano::Node::Environment.create(:testing, []) }
   let(:parser) { @parser }
   let(:scope) { @scope }
-  types = Puppet::Pops::Types::TypeFactory
+  types = Oregano::Pops::Types::TypeFactory
 
   context "When evaluator evaluates literals" do
     {
@@ -112,7 +112,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       "[1,2,3][a]" => :error,
     }.each do |source, result|
         it "should parse and raise error for '#{source}'" do
-          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
         end
       end
 
@@ -144,7 +144,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       "{'a' => 1, 'b'=>2} << 1" => :error,
     }.each do |source, result|
         it "should parse and raise error for '#{source}'" do
-          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
         end
       end
   end
@@ -253,7 +253,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       "Array =~ /A/"  => :error,
     }.each do |source, result|
         it "should parse and raise error for '#{source}'" do
-          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
         end
       end
 
@@ -397,7 +397,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
         "10.0 % 3.0" =>  1.0,
       }.each do |source, result|
           it "should parse and raise error for '#{source}'" do
-            expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+            expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
           end
         end
     end
@@ -441,19 +441,19 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
         "'10' % 3"      => 10,
       }.each do |source, coerced_val|
           it "should warn about numeric coercion in '#{source}' when strict = warning" do
-            Puppet[:strict] = :warning
+            Oregano[:strict] = :warning
             collect_notices(source)
             expect(warnings).to include(/The string '#{coerced_val}' was automatically coerced to the numerical value #{coerced_val}/)
           end
 
           it "should not warn about numeric coercion in '#{source}' if strict = off" do
-            Puppet[:strict] = :off
+            Oregano[:strict] = :off
             collect_notices(source)
             expect(warnings).to_not include(/The string '#{coerced_val}' was automatically coerced to the numerical value #{coerced_val}/)
           end
 
         it "should error when finding numeric coercion in '#{source}' if strict = error" do
-          Puppet[:strict] = :error
+          Oregano[:strict] = :error
           expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(
             /The string '#{coerced_val}' was automatically coerced to the numerical value #{coerced_val}/
             )
@@ -470,7 +470,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
         '"-2\n " + "2"'    => :error,
       }.each do |source, result|
           it "should parse and raise error for '#{source}'" do
-            expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+            expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
           end
         end
       end
@@ -507,7 +507,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       "[$a, [$b, $c]] = {a=>1, b =>{b=>2, c=>3}}",
     ].each do |source|
         it "should parse and evaluate the expression '#{source}' to error" do
-          expect { parser.evaluate_string(scope, source, __FILE__)}.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__)}.to raise_error(Oregano::ParseError)
         end
       end
   end
@@ -829,11 +829,11 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
            Class[wonka]['produces']"
 
         # This is more complicated since it needs to run like 3.x and do an import_ast
-        adapted_parser = Puppet::Parser::E4ParserAdapter.new
+        adapted_parser = Oregano::Parser::E4ParserAdapter.new
         adapted_parser.file = __FILE__
         ast = adapted_parser.parse(source)
-        Puppet.override({:global_scope => scope,
-                         :environments => Puppet::Environments::Static.new(@node.environment)
+        Oregano.override({:global_scope => scope,
+                         :environments => Oregano::Environments::Static.new(@node.environment)
         }, "gets class parameter test") do
           scope.environment.known_resource_types.import_ast(ast, '')
           expect(ast.code.safeevaluate(scope)).to eq('chocolate')
@@ -974,7 +974,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       "false || false || '0xwtf' + 1"   => :error,
     }.each do |source, result|
         it "should parse and raise error for '#{source}'" do
-          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
         end
       end
   end
@@ -1012,17 +1012,17 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       '"value is ${a*2} yo"'  => :error,
     }.each do |source, result|
         it "should parse and raise error for '#{source}'" do
-          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
         end
       end
 
     it "provides location information on error in unparenthesized call logic" do
-    expect{parser.evaluate_string(scope, "include non_existing_class", __FILE__)}.to raise_error(Puppet::ParseError, /:1:1/)
+    expect{parser.evaluate_string(scope, "include non_existing_class", __FILE__)}.to raise_error(Oregano::ParseError, /:1:1/)
     end
 
     it 'defaults can be given in a lambda and used only when arg is missing' do
       env_loader = @compiler.loaders.public_environment_loader
-      fc = Puppet::Functions.create_function(:test) do
+      fc = Oregano::Functions.create_function(:test) do
         dispatch :test do
           param 'Integer', :count
           required_block_param
@@ -1039,7 +1039,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
     it 'a given undef does not select the default value' do
       env_loader = @compiler.loaders.public_environment_loader
-      fc = Puppet::Functions.create_function(:test) do
+      fc = Oregano::Functions.create_function(:test) do
         dispatch :test do
           param 'Any', :lambda_arg
           required_block_param
@@ -1056,7 +1056,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
     it 'a given undef is given as nil' do
       env_loader = @compiler.loaders.public_environment_loader
-      fc = Puppet::Functions.create_function(:assert_no_undef) do
+      fc = Oregano::Functions.create_function(:assert_no_undef) do
         dispatch :assert_no_undef do
           param 'Any', :x
         end
@@ -1091,24 +1091,24 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
     context 'using the 3x function api' do
       it 'can call a 3x function' do
-        Puppet::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0] }
+        Oregano::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0] }
         expect(parser.evaluate_string(scope, "bazinga(42)", __FILE__)).to eq(42)
       end
 
       it 'maps :undef to empty string' do
-        Puppet::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0] }
+        Oregano::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0] }
         expect(parser.evaluate_string(scope, "$a = {} bazinga($a[nope])", __FILE__)).to eq('')
         expect(parser.evaluate_string(scope, "bazinga(undef)", __FILE__)).to eq('')
       end
 
       it 'does not map :undef to empty string in arrays' do
-        Puppet::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0][0] }
+        Oregano::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0][0] }
         expect(parser.evaluate_string(scope, "$a = {} $b = [$a[nope]] bazinga($b)", __FILE__)).to eq(:undef)
         expect(parser.evaluate_string(scope, "bazinga([undef])", __FILE__)).to eq(:undef)
       end
 
       it 'does not map :undef to empty string in hashes' do
-        Puppet::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0]['a'] }
+        Oregano::Parser::Functions.newfunction("bazinga", :type => :rvalue) { |args| args[0]['a'] }
         expect(parser.evaluate_string(scope, "$a = {} $b = {a => $a[nope]} bazinga($b)", __FILE__)).to eq(:undef)
         expect(parser.evaluate_string(scope, "bazinga({a => undef})", __FILE__)).to eq(:undef)
       end
@@ -1187,7 +1187,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       '"value is ${a*2} yo"'  => :error,
     }.each do |source, result|
         it "should parse and raise error for '#{source}'" do
-          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Puppet::ParseError)
+          expect { parser.evaluate_string(scope, source, __FILE__) }.to raise_error(Oregano::ParseError)
         end
       end
   end
@@ -1204,7 +1204,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
     end
 
     it "a lex error should be raised for '$foo::::bar'" do
-      expect { parser.evaluate_string(scope, "$foo::::bar") }.to raise_error(Puppet::ParseErrorWithIssue, /Illegal fully qualified name at line 1:7/)
+      expect { parser.evaluate_string(scope, "$foo::::bar") }.to raise_error(Oregano::ParseErrorWithIssue, /Illegal fully qualified name at line 1:7/)
     end
 
     { '$a = $0'   => nil,
@@ -1260,7 +1260,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
     it 'should form a relation with 3.x resource -> resource' do
       # Create a 3.x resource since this is the value given as arguments to defined type
-      scope['a_3x_resource']= Puppet::Parser::Resource.new('notify', 'a', {:scope => scope, :file => __FILE__, :line => 1})
+      scope['a_3x_resource']= Oregano::Parser::Resource.new('notify', 'a', {:scope => scope, :file => __FILE__, :line => 1})
       source = "$a_3x_resource -> notify{b:}"
       parser.evaluate_string(scope, source, __FILE__)
       expect(scope.compiler).to have_relationship(['Notify', 'a', '->', 'Notify', 'b'])
@@ -1416,14 +1416,14 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
     end
 
     it 'for non r-value producing define' do
-      Puppet::Util::Log.expects(:create).with(has_entries(:level => :err, :message => "Invalid use of expression. A 'define' expression does not produce a value", :line => 1, :pos => 6))
-      Puppet::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Classes, definitions, and nodes may only appear at toplevel or inside other classes', :line => 1, :pos => 6))
+      Oregano::Util::Log.expects(:create).with(has_entries(:level => :err, :message => "Invalid use of expression. A 'define' expression does not produce a value", :line => 1, :pos => 6))
+      Oregano::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Classes, definitions, and nodes may only appear at toplevel or inside other classes', :line => 1, :pos => 6))
       expect { parser.parse_string("$a = define foo { }", nil) }.to raise_error(/2 errors/)
     end
 
     it 'for non r-value producing class' do
-      Puppet::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Invalid use of expression. A Host Class Definition does not produce a value', :line => 1, :pos => 6))
-      Puppet::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Classes, definitions, and nodes may only appear at toplevel or inside other classes', :line => 1, :pos => 6))
+      Oregano::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Invalid use of expression. A Host Class Definition does not produce a value', :line => 1, :pos => 6))
+      Oregano::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Classes, definitions, and nodes may only appear at toplevel or inside other classes', :line => 1, :pos => 6))
       expect { parser.parse_string("$a = class foo { }", nil) }.to raise_error(/2 errors/)
     end
 
@@ -1437,8 +1437,8 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
     end
 
     it 'for multiple errors with a summary exception' do
-      Puppet::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Invalid use of expression. A Node Definition does not produce a value', :line => 1, :pos => 6))
-      Puppet::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Classes, definitions, and nodes may only appear at toplevel or inside other classes', :line => 1, :pos => 6))
+      Oregano::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Invalid use of expression. A Node Definition does not produce a value', :line => 1, :pos => 6))
+      Oregano::Util::Log.expects(:create).with(has_entries(:level => :err, :message => 'Classes, definitions, and nodes may only appear at toplevel or inside other classes', :line => 1, :pos => 6))
       expect { parser.parse_string("$a = node x { }",nil) }.to raise_error(/2 errors/)
     end
 
@@ -1494,7 +1494,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
   end
 
   matcher :have_relationship do |expected|
-    calc = Puppet::Pops::Types::TypeCalculator.new
+    calc = Oregano::Pops::Types::TypeCalculator.new
 
     match do |compiler|
       op_name = {'->' => :relationship, '~>' => :subscription}
@@ -1513,7 +1513,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
   end
 
   def collect_notices(code)
-    Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+    Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
       parser.evaluate_string(scope, code, __FILE__)
     end
   end

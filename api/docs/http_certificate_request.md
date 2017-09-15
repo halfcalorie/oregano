@@ -5,8 +5,8 @@ The `certificate_request` endpoint submits a Certificate Signing Request (CSR)
 to the master. The master must be configured to be a CA. The returned
 CSR is always in the `.pem` format.
 
-Under Puppet Server's CA service, the `environment` parameter is ignored and can
-be omitted. Under a Rack or WEBrick Puppet master, `environment` is required and
+Under Oregano Server's CA service, the `environment` parameter is ignored and can
+be omitted. Under a Rack or WEBrick Oregano master, `environment` is required and
 must be a valid environment, but it has no effect on the response.
 
 Find
@@ -14,7 +14,7 @@ Find
 
 Get a submitted CSR
 
-    GET /puppet-ca/v1/certificate_request/:nodename?environment=:environment
+    GET /oregano-ca/v1/certificate_request/:nodename?environment=:environment
     Accept: text/plain
 
 Save
@@ -22,7 +22,7 @@ Save
 
 Submit a CSR
 
-    PUT /puppet-ca/v1/certificate_request/:nodename?environment=:environment
+    PUT /oregano-ca/v1/certificate_request/:nodename?environment=:environment
     Content-Type: text/plain
 
 Note: The `:nodename` must match the Common Name on the submitted CSR.
@@ -33,12 +33,12 @@ specifically a CSR in PEM format.
 Search
 ----
 
-**Note:** The plural `certificate_requests` endpoint is a legacy feature. Puppet
+**Note:** The plural `certificate_requests` endpoint is a legacy feature. Oregano
 Server doesn't support it, and we don't plan to add support in the future.
 
 List submitted CSRs
 
-    GET /puppet-ca/v1/certificate_requests/:ignored_pattern?environment=:environment
+    GET /oregano-ca/v1/certificate_requests/:ignored_pattern?environment=:environment
     Accept: text/plain
 
 The `:ignored_pattern` parameter is not used, but must still be provided.
@@ -48,7 +48,7 @@ Destroy
 
 Delete a submitted CSR
 
-    DELETE /puppet-ca/v1/certificate_request/:nodename?environment=:environment
+    DELETE /oregano-ca/v1/certificate_request/:nodename?environment=:environment
     Accept: text/plain
 
 ### Supported HTTP Methods
@@ -73,7 +73,7 @@ None
 
 #### CSR found
 
-    GET /puppet-ca/v1/certificate_request/agency?environment=env
+    GET /oregano-ca/v1/certificate_request/agency?environment=env
 
     HTTP/1.1 200 OK
     Content-Type: text/plain
@@ -92,7 +92,7 @@ None
 
 #### CSR not found
 
-    GET /puppet-ca/v1/certificate_request/does_not_exist?environment=env
+    GET /oregano-ca/v1/certificate_request/does_not_exist?environment=env
 
     HTTP/1.1 404 Not Found
     Content-Type: text/plain
@@ -101,16 +101,16 @@ None
 
 #### No node name given
 
-    GET /puppet-ca/v1/certificate_request?environment=env
+    GET /oregano-ca/v1/certificate_request?environment=env
 
     HTTP/1.1 400 Bad Request
     Content-Type: text/plain
 
-    No request key specified in /puppet-ca/v1/certificate_request
+    No request key specified in /oregano-ca/v1/certificate_request
 
 #### Delete a CSR that exists
 
-    DELETE /puppet-ca/v1/certificate_request/agency?environment=production
+    DELETE /oregano-ca/v1/certificate_request/agency?environment=production
     Accept: s
 
     HTTP/1.1 200 OK
@@ -120,7 +120,7 @@ None
 
 #### Delete a CSR that does not exists
 
-    DELETE /puppet-ca/v1/certificate_request/missing?environment=production
+    DELETE /oregano-ca/v1/certificate_request/missing?environment=production
     Accept: s
 
     HTTP/1.1 200 OK
@@ -130,7 +130,7 @@ None
 
 #### Retrieve all CSRs
 
-     GET /puppet-ca/v1/certificate_requests/ignored?environment=production
+     GET /oregano-ca/v1/certificate_requests/ignored?environment=production
      Accept: s
 
      HTTP/1.1 200 OK

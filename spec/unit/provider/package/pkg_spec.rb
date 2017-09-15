@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package).provider(:pkg) do
-  let (:resource) { Puppet::Resource.new(:package, 'dummy', :parameters => {:name => 'dummy', :ensure => :latest}) }
+describe Oregano::Type.type(:package).provider(:pkg) do
+  let (:resource) { Oregano::Resource.new(:package, 'dummy', :parameters => {:name => 'dummy', :ensure => :latest}) }
   let (:provider) { described_class.new(resource) }
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   else
-    Puppet::Util::Execution.execute('exit 0', {:failonfail => false})
+    Oregano::Util::Execution.execute('exit 0', {:failonfail => false})
   end
 
   before :each do
@@ -112,7 +112,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
       end
 
       it "should work correctly for ensure latest on solaris 11(known UFOXI)" do
-        Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy'], {:failonfail => false, :combine => true}).returns ''
+        Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy'], {:failonfail => false, :combine => true}).returns ''
         $CHILD_STATUS.stubs(:exitstatus).returns 0
 
         described_class.expects(:pkg).with(:list,'-Hvn','dummy').returns File.read(my_fixture('dummy_solaris11.known'))
@@ -125,7 +125,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
       end
 
       it "should work correctly for ensure latest on solaris 11(known IFO)" do
-        Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy'], {:failonfail => false, :combine => true}).returns ''
+        Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy'], {:failonfail => false, :combine => true}).returns ''
         $CHILD_STATUS.stubs(:exitstatus).returns 0
 
         described_class.expects(:pkg).with(:list,'-Hvn','dummy').returns File.read(my_fixture('dummy_solaris11.ifo.known'))
@@ -134,14 +134,14 @@ describe Puppet::Type.type(:package).provider(:pkg) do
 
       it "issues a warning when the certificate has expired" do
         warning = "Certificate '/var/pkg/ssl/871b4ed0ade09926e6adf95f86bf17535f987684' for publisher 'solarisstudio', needed to access 'https://pkg.oracle.com/solarisstudio/release/', will expire in '29' days."
-        Puppet.expects(:warning).with("pkg warning: #{warning}")
+        Oregano.expects(:warning).with("pkg warning: #{warning}")
 
         described_class.expects(:pkg).with(:list,'-Hvn','dummy').returns File.read(my_fixture('dummy_solaris11.certificate_warning'))
         provider.latest
       end
 
       it "doesn't issue a warning when the certificate hasn't expired" do
-        Puppet.expects(:warning).with(/pkg warning/).never
+        Oregano.expects(:warning).with(/pkg warning/).never
 
         described_class.expects(:pkg).with(:list,'-Hvn','dummy').returns File.read(my_fixture('dummy_solaris11.installed'))
         provider.latest
@@ -177,7 +177,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
     context ":query" do
       context "on solaris 10" do
         it "should find the package" do
-          Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns File.read(my_fixture('dummy_solaris10'))
+          Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns File.read(my_fixture('dummy_solaris10'))
           $CHILD_STATUS.stubs(:exitstatus).returns 0
           expect(provider.query).to eq({
             :name      => 'dummy',
@@ -189,7 +189,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
         end
 
         it "should return :absent when the package is not found" do
-          Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns ''
+          Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns ''
           $CHILD_STATUS.stubs(:exitstatus).returns 1
           expect(provider.query).to eq({:ensure => :absent, :name => "dummy"})
         end
@@ -198,7 +198,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
       context "on solaris 11" do
         it "should find the package" do
           $CHILD_STATUS.stubs(:exitstatus).returns 0
-          Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns File.read(my_fixture('dummy_solaris11.installed'))
+          Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns File.read(my_fixture('dummy_solaris11.installed'))
           expect(provider.query).to eq({
             :name      => 'dummy',
             :status    => 'installed',
@@ -209,14 +209,14 @@ describe Puppet::Type.type(:package).provider(:pkg) do
         end
 
         it "should return :absent when the package is not found" do
-          Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns ''
+          Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns ''
           $CHILD_STATUS.stubs(:exitstatus).returns 1
           expect(provider.query).to eq({:ensure => :absent, :name => "dummy"})
         end
       end
 
       it "should return fail when the packageline cannot be parsed" do
-        Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns(File.read(my_fixture('incomplete')))
+        Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns(File.read(my_fixture('incomplete')))
         $CHILD_STATUS.stubs(:exitstatus).returns 0
         expect {
           provider.query
@@ -235,27 +235,27 @@ describe Puppet::Type.type(:package).provider(:pkg) do
           end
           it "should accept all licenses" do
             provider.expects(:query).with().returns({:ensure => :absent})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy'], {:failonfail => false, :combine => true}).returns ''
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true}).returns ''
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.install
           end
 
           it "should install specific version(1)" do
-            # Should install also check if the version installed is the same version we are asked to install? or should we rely on puppet for that?
+            # Should install also check if the version installed is the same version we are asked to install? or should we rely on oregano for that?
             resource[:ensure] = '0.0.7,5.11-0.151006:20131230T130000Z'
             $CHILD_STATUS.stubs(:exitstatus).returns 0
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns 'pkg://foo/dummy@0.0.6,5.11-0.151006:20131230T130000Z  installed -----'
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@0.0.7,5.11-0.151006:20131230T130000Z'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns 'pkg://foo/dummy@0.0.6,5.11-0.151006:20131230T130000Z  installed -----'
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@0.0.7,5.11-0.151006:20131230T130000Z'], {:failonfail => false, :combine => true}).returns ''
             provider.install
           end
 
           it "should install specific version(2)" do
             resource[:ensure] = '0.0.8'
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns 'pkg://foo/dummy@0.0.7,5.11-0.151006:20131230T130000Z  installed -----'
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@0.0.8'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'list', '-Hv', 'dummy'], {:failonfail => false, :combine => true}).returns 'pkg://foo/dummy@0.0.7,5.11-0.151006:20131230T130000Z  installed -----'
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@0.0.8'], {:failonfail => false, :combine => true}).returns ''
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.install
           end
@@ -264,16 +264,16 @@ describe Puppet::Type.type(:package).provider(:pkg) do
             resource[:ensure] = '0.0.7'
             provider.expects(:query).with().returns({:ensure => '0.0.8,5.11-0.151106:20131230T130000Z'})
             $CHILD_STATUS.stubs(:exitstatus).returns 0
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@0.0.7'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@0.0.7'], {:failonfail => false, :combine => true}).returns ''
             provider.install
           end
 
           it "should install any if version is not specified" do
             resource[:ensure] = :present
             provider.expects(:query).with().returns({:ensure => :absent})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy'], {:failonfail => false, :combine => true}).returns ''
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.install
           end
@@ -281,8 +281,8 @@ describe Puppet::Type.type(:package).provider(:pkg) do
           it "should install if no version was previously installed, and a specific version was requested" do
             resource[:ensure] = '0.0.7'
             provider.expects(:query).with().returns({:ensure => :absent})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy@0.0.7'], {:failonfail => false, :combine => true}).returns ''
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'unfreeze', 'dummy'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy@0.0.7'], {:failonfail => false, :combine => true}).returns ''
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.install
           end
@@ -292,9 +292,9 @@ describe Puppet::Type.type(:package).provider(:pkg) do
             is = :absent
             provider.expects(:query).with().returns({:ensure => is})
             described_class.expects(:pkg).with(:list, '-Hvfa', 'dummy@1.0-0.151006').returns File.read(my_fixture('dummy_implicit_version'))
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
             provider.expects(:unhold).with()
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', *hash[:flags], 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.insync?(is)
             provider.install
@@ -305,9 +305,9 @@ describe Puppet::Type.type(:package).provider(:pkg) do
             is = '1.0,5.11-0.151006:20140219T191204Z'
             provider.expects(:query).with().returns({:ensure => is})
             described_class.expects(:pkg).with(:list, '-Hvfa', 'dummy@1.0-0.151006').returns File.read(my_fixture('dummy_implicit_version'))
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
             provider.expects(:unhold).with()
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', *hash[:flags], 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.insync?(is)
             provider.install
@@ -318,7 +318,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
             is = '1.0,5.11-0.151006:20140220T084443Z'
             provider.expects(:warning).with("Implicit version 1.0-0.151006 has 3 possible matches")
             described_class.expects(:pkg).with(:list, '-Hvfa', 'dummy@1.0-0.151006').returns File.read(my_fixture('dummy_implicit_version'))
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'update', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
             $CHILD_STATUS.stubs(:exitstatus).returns 4
             provider.insync?(is)
           end
@@ -329,7 +329,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
             provider.expects(:warning).with("Implicit version 1.0-0.151006 has 3 possible matches")
             provider.expects(:warning).with("Selecting version '1.0,5.11-0.151006:20140220T084443Z' for implicit '1.0-0.151006'")
             described_class.expects(:pkg).with(:list, '-Hvfa', 'dummy@1.0-0.151006').returns File.read(my_fixture('dummy_implicit_version'))
-            Puppet::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
+            Oregano::Util::Execution.expects(:execute).with(['/bin/pkg', 'install', '-n', 'dummy@1.0,5.11-0.151006:20140220T084443Z'], {:failonfail => false, :combine => true})
             $CHILD_STATUS.stubs(:exitstatus).returns 0
             provider.insync?(is)
           end
@@ -352,7 +352,7 @@ describe Puppet::Type.type(:package).provider(:pkg) do
         provider.expects(:install).with(true).returns({:exit => 1})
         expect {
           provider.update
-        }.to raise_error(Puppet::Error, /Unable to update/)
+        }.to raise_error(Oregano::Error, /Unable to update/)
       end
     end
 

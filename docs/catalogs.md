@@ -1,6 +1,6 @@
 # Two Types of Catalogs
 
-When working on subsystems of Puppet that deal with the catalog it is important
+When working on subsystems of Oregano that deal with the catalog it is important
 to be aware of the two different types of Catalogs.
 
 The two different types of catalogs becomes relevant when writing spec tests
@@ -25,11 +25,11 @@ resource catalog.  You can produce a resource catalog suitable for spec tests
 using something like this:
 
     let(:catalog) do
-      catalog = Puppet::Resource::Catalog.new("node-name-val") # NOT certname!
-      rsrc = Puppet::Resource.new("file", "sshd_config",
+      catalog = Oregano::Resource::Catalog.new("node-name-val") # NOT certname!
+      rsrc = Oregano::Resource.new("file", "sshd_config",
         :parameters => {
           :ensure => 'file',
-          :source => 'puppet:///modules/filetest/sshd_config',
+          :source => 'oregano:///modules/filetest/sshd_config',
         }
       )
       rsrc.file = 'site.pp'
@@ -45,7 +45,7 @@ in
 ### RAL Catalog
 
 The resource catalog may be converted to a RAL catalog using `catalog.to_ral`.
-The RAL catalog contains `Puppet::Type` instances instead of `Puppet::Resource`
+The RAL catalog contains `Oregano::Type` instances instead of `Oregano::Resource`
 instances as is the case with the resource catalog.
 
 One very useful feature of the RAL catalog are the methods to work with
@@ -80,12 +80,12 @@ good chance the catalog is not a RAL catalog.
 
 ## Settings Catalog ##
 
-Be aware that Puppet creates a mini catalog and applies this catalog locally to
+Be aware that Oregano creates a mini catalog and applies this catalog locally to
 manage file resource from the settings.  This behavior made it difficult and
 time consuming to track down a race condition in
-[PUP-1070](https://tickets.puppetlabs.com/browse/PUP-1070).
+[PUP-1070](https://tickets.oreganolabs.com/browse/PUP-1070).
 
-Even more surprising, the `File[puppetdlockfile]` resource is only added to the
+Even more surprising, the `File[oreganodlockfile]` resource is only added to the
 settings catalog if the file exists on disk.  This caused the race condition as
 it will exist when a separate process holds the lock while applying the
 catalog.
@@ -105,17 +105,17 @@ sure and track down the problem is to wrap the File.open method like so:
 
       def self.open(name, *rest, &block)
         # Check the whitelist for any "good" File.open calls against the #
-        puppetdlock file
+        oreganodlock file
         white_listed = caller(0).find do |line|
           JJM_WHITELIST.find { |re| re.match(line) }
         end
 
         # If you drop into IRB here, take a look at your caller, it might be
         # the ghost in the machine you're looking for.
-        binding.pry if name =~ /puppetdlock/ and not white_listed
+        binding.pry if name =~ /oreganodlock/ and not white_listed
         xxx_orig_open(name, *rest, &block)
       end
     end
 
-The settings catalog is populated by the `Puppet::Util::Settings#to\_catalog`
+The settings catalog is populated by the `Oregano::Util::Settings#to\_catalog`
 method.

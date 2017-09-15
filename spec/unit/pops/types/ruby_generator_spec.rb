@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
-require 'puppet/pops/types/ruby_generator'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
+require 'oregano/pops/types/ruby_generator'
 
 def root_binding
   return binding
 end
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
-describe 'Puppet Ruby Generator' do
-  include PuppetSpec::Compiler
+describe 'Oregano Ruby Generator' do
+  include OreganoSpec::Compiler
 
   let!(:parser) { TypeParser.singleton }
   let(:generator) { RubyGenerator.new }
@@ -82,8 +82,8 @@ describe 'Puppet Ruby Generator' do
       after(:each) { typeset = nil }
 
       context 'the generated class' do
-        it 'inherits the PuppetObject module' do
-          expect(first < PuppetObject).to be_truthy
+        it 'inherits the OreganoObject module' do
+          expect(first < OreganoObject).to be_truthy
         end
 
         it 'is the superclass of a generated subclass' do
@@ -193,7 +193,7 @@ describe 'Puppet Ruby Generator' do
       module_def = nil
 
       before(:each) do
-        # Ideally, this would be in a before(:all) but that is impossible since lots of Puppet
+        # Ideally, this would be in a before(:all) but that is impossible since lots of Oregano
         # environment specific settings are configured by the spec_helper in before(:each)
         if module_def.nil?
           first_type = nil
@@ -204,16 +204,16 @@ describe 'Puppet Ruby Generator' do
 
             loader = Loaders.find_loader(nil)
             Loaders.implementation_registry.register_type_mapping(
-              PRuntimeType.new(:ruby, [/^PuppetSpec::RubyGenerator::(\w+)$/, 'MyModule::\1']),
-              [/^MyModule::(\w+)$/, 'PuppetSpec::RubyGenerator::\1'], loader)
+              PRuntimeType.new(:ruby, [/^OreganoSpec::RubyGenerator::(\w+)$/, 'MyModule::\1']),
+              [/^MyModule::(\w+)$/, 'OreganoSpec::RubyGenerator::\1'], loader)
 
             module_def = generator.module_definition([first_type, second_type], 'Generated stuff')
           end
           Loaders.clear
-          Puppet[:code] = nil
+          Oregano[:code] = nil
 
-          # Create the actual classes in the PuppetSpec::RubyGenerator module
-          Puppet.override(:loaders => Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, []))) do
+          # Create the actual classes in the OreganoSpec::RubyGenerator module
+          Oregano.override(:loaders => Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, []))) do
             eval(module_def, root_binding)
           end
         end
@@ -221,46 +221,46 @@ describe 'Puppet Ruby Generator' do
 
       after(:all) do
         # Don't want generated module to leak outside this test
-        PuppetSpec.send(:remove_const, :RubyGenerator)
+        OreganoSpec.send(:remove_const, :RubyGenerator)
       end
 
       it 'the #_pcore_type class method returns a resolved Type' do
-        first_type = PuppetSpec::RubyGenerator::FirstGenerated._pcore_type
+        first_type = OreganoSpec::RubyGenerator::FirstGenerated._pcore_type
         expect(first_type).to be_a(PObjectType)
-        second_type = PuppetSpec::RubyGenerator::SecondGenerated._pcore_type
+        second_type = OreganoSpec::RubyGenerator::SecondGenerated._pcore_type
         expect(second_type).to be_a(PObjectType)
         expect(second_type.parent).to eql(first_type)
       end
 
       context 'the #create class method' do
         it 'has an arity that reflects optional arguments' do
-          expect(PuppetSpec::RubyGenerator::FirstGenerated.method(:create).arity).to eql(-2)
-          expect(PuppetSpec::RubyGenerator::SecondGenerated.method(:create).arity).to eql(-6)
+          expect(OreganoSpec::RubyGenerator::FirstGenerated.method(:create).arity).to eql(-2)
+          expect(OreganoSpec::RubyGenerator::SecondGenerated.method(:create).arity).to eql(-6)
         end
 
         it 'creates an instance of the class' do
-          inst = PuppetSpec::RubyGenerator::FirstGenerated.create('Bob Builder', 52)
-          expect(inst).to be_a(PuppetSpec::RubyGenerator::FirstGenerated)
+          inst = OreganoSpec::RubyGenerator::FirstGenerated.create('Bob Builder', 52)
+          expect(inst).to be_a(OreganoSpec::RubyGenerator::FirstGenerated)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.age).to eq(52)
         end
 
         it 'will perform type assertion of the arguments' do
-          expect { PuppetSpec::RubyGenerator::FirstGenerated.create('Bob Builder', '52') }.to(
+          expect { OreganoSpec::RubyGenerator::FirstGenerated.create('Bob Builder', '52') }.to(
             raise_error(TypeAssertionError,
               'MyModule::FirstGenerated[age] has wrong type, expects an Integer value, got String')
           )
         end
 
         it 'will not accept nil as given value for an optional parameter that does not accept nil' do
-          expect { PuppetSpec::RubyGenerator::FirstGenerated.create('Bob Builder', nil) }.to(
+          expect { OreganoSpec::RubyGenerator::FirstGenerated.create('Bob Builder', nil) }.to(
             raise_error(TypeAssertionError,
               'MyModule::FirstGenerated[age] has wrong type, expects an Integer value, got Undef')
           )
         end
 
         it 'reorders parameters to but the optional parameters last' do
-          inst = PuppetSpec::RubyGenerator::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst = OreganoSpec::RubyGenerator::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.address).to eq('42 Cool Street')
           expect(inst.zipcode).to eq('12345')
@@ -274,26 +274,26 @@ describe 'Puppet Ruby Generator' do
 
       context 'the #from_hash class method' do
         it 'has an arity of one' do
-          expect(PuppetSpec::RubyGenerator::FirstGenerated.method(:from_hash).arity).to eql(1)
-          expect(PuppetSpec::RubyGenerator::SecondGenerated.method(:from_hash).arity).to eql(1)
+          expect(OreganoSpec::RubyGenerator::FirstGenerated.method(:from_hash).arity).to eql(1)
+          expect(OreganoSpec::RubyGenerator::SecondGenerated.method(:from_hash).arity).to eql(1)
         end
 
         it 'creates an instance of the class' do
-          inst = PuppetSpec::RubyGenerator::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => 52)
-          expect(inst).to be_a(PuppetSpec::RubyGenerator::FirstGenerated)
+          inst = OreganoSpec::RubyGenerator::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => 52)
+          expect(inst).to be_a(OreganoSpec::RubyGenerator::FirstGenerated)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.age).to eq(52)
         end
 
         it 'accepts an initializer where optional keys are missing' do
-          inst = PuppetSpec::RubyGenerator::FirstGenerated.from_hash('name' => 'Bob Builder')
-          expect(inst).to be_a(PuppetSpec::RubyGenerator::FirstGenerated)
+          inst = OreganoSpec::RubyGenerator::FirstGenerated.from_hash('name' => 'Bob Builder')
+          expect(inst).to be_a(OreganoSpec::RubyGenerator::FirstGenerated)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.age).to eq(30)
         end
 
         it 'does not accept an initializer where optional values are nil and type does not accept nil' do
-          expect { PuppetSpec::RubyGenerator::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => nil) }.to(
+          expect { OreganoSpec::RubyGenerator::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => nil) }.to(
             raise_error(TypeAssertionError,
               "MyModule::FirstGenerated initializer has wrong type, entry 'age' expects an Integer value, got Undef")
           )
@@ -380,7 +380,7 @@ describe 'Puppet Ruby Generator' do
       context 'the typeset' do
         it 'produces expected string representation' do
           expect(typeset.to_s).to eq(
-            "TypeSet[{pcore_version => '1.0.0', name_authority => 'http://puppet.com/2016.1/runtime', name => 'OtherModule', version => '1.0.0', types => {"+
+            "TypeSet[{pcore_version => '1.0.0', name_authority => 'http://oregano.com/2016.1/runtime', name => 'OtherModule', version => '1.0.0', types => {"+
               "MyFloat => Float, "+
               "ThirdGenerated => Object[{attributes => {'first' => My::FirstGenerated}}], "+
               "FourthGenerated => Object[{parent => My::SecondGenerated, attributes => {"+
@@ -392,8 +392,8 @@ describe 'Puppet Ruby Generator' do
       end
 
       context 'the generated class' do
-        it 'inherits the PuppetObject module' do
-          expect(first < PuppetObject).to be_truthy
+        it 'inherits the OreganoObject module' do
+          expect(first < OreganoObject).to be_truthy
         end
 
         it 'is the superclass of a generated subclass' do
@@ -507,7 +507,7 @@ describe 'Puppet Ruby Generator' do
       module_def2 = nil
 
       before(:each) do
-        # Ideally, this would be in a before(:all) but that is impossible since lots of Puppet
+        # Ideally, this would be in a before(:all) but that is impossible since lots of Oregano
         # environment specific settings are configured by the spec_helper in before(:each)
         if module_def.nil?
           typeset = nil
@@ -517,21 +517,21 @@ describe 'Puppet Ruby Generator' do
 
             loader = Loaders.find_loader(nil)
             Loaders.implementation_registry.register_type_mapping(
-              PRuntimeType.new(:ruby, [/^PuppetSpec::RubyGenerator::My::(\w+)$/, 'MyModule::\1']),
-              [/^MyModule::(\w+)$/, 'PuppetSpec::RubyGenerator::My::\1'], loader)
+              PRuntimeType.new(:ruby, [/^OreganoSpec::RubyGenerator::My::(\w+)$/, 'MyModule::\1']),
+              [/^MyModule::(\w+)$/, 'OreganoSpec::RubyGenerator::My::\1'], loader)
 
             Loaders.implementation_registry.register_type_mapping(
-              PRuntimeType.new(:ruby, [/^PuppetSpec::RubyGenerator::Other::(\w+)$/, 'OtherModule::\1']),
-              [/^OtherModule::(\w+)$/, 'PuppetSpec::RubyGenerator::Other::\1'], loader)
+              PRuntimeType.new(:ruby, [/^OreganoSpec::RubyGenerator::Other::(\w+)$/, 'OtherModule::\1']),
+              [/^OtherModule::(\w+)$/, 'OreganoSpec::RubyGenerator::Other::\1'], loader)
 
             module_def = generator.module_definition_from_typeset(typeset1)
             module_def2 = generator.module_definition_from_typeset(typeset2)
           end
           Loaders.clear
-          Puppet[:code] = nil
+          Oregano[:code] = nil
 
-          # Create the actual classes in the PuppetSpec::RubyGenerator module
-          Puppet.override(:loaders => Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, []))) do
+          # Create the actual classes in the OreganoSpec::RubyGenerator module
+          Oregano.override(:loaders => Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, []))) do
             eval(module_def, root_binding)
             eval(module_def2, root_binding)
           end
@@ -540,46 +540,46 @@ describe 'Puppet Ruby Generator' do
 
       after(:all) do
         # Don't want generated module to leak outside this test
-        PuppetSpec.send(:remove_const, :RubyGenerator)
+        OreganoSpec.send(:remove_const, :RubyGenerator)
       end
 
       it 'the #_pcore_type class method returns a resolved Type' do
-        first_type = PuppetSpec::RubyGenerator::My::FirstGenerated._pcore_type
+        first_type = OreganoSpec::RubyGenerator::My::FirstGenerated._pcore_type
         expect(first_type).to be_a(PObjectType)
-        second_type = PuppetSpec::RubyGenerator::My::SecondGenerated._pcore_type
+        second_type = OreganoSpec::RubyGenerator::My::SecondGenerated._pcore_type
         expect(second_type).to be_a(PObjectType)
         expect(second_type.parent).to eql(first_type)
       end
 
       context 'the #create class method' do
         it 'has an arity that reflects optional arguments' do
-          expect(PuppetSpec::RubyGenerator::My::FirstGenerated.method(:create).arity).to eql(-2)
-          expect(PuppetSpec::RubyGenerator::My::SecondGenerated.method(:create).arity).to eql(-6)
+          expect(OreganoSpec::RubyGenerator::My::FirstGenerated.method(:create).arity).to eql(-2)
+          expect(OreganoSpec::RubyGenerator::My::SecondGenerated.method(:create).arity).to eql(-6)
         end
 
         it 'creates an instance of the class' do
-          inst = PuppetSpec::RubyGenerator::My::FirstGenerated.create('Bob Builder', 52)
-          expect(inst).to be_a(PuppetSpec::RubyGenerator::My::FirstGenerated)
+          inst = OreganoSpec::RubyGenerator::My::FirstGenerated.create('Bob Builder', 52)
+          expect(inst).to be_a(OreganoSpec::RubyGenerator::My::FirstGenerated)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.age).to eq(52)
         end
 
         it 'will perform type assertion of the arguments' do
-          expect { PuppetSpec::RubyGenerator::My::FirstGenerated.create('Bob Builder', '52') }.to(
+          expect { OreganoSpec::RubyGenerator::My::FirstGenerated.create('Bob Builder', '52') }.to(
             raise_error(TypeAssertionError,
               'MyModule::FirstGenerated[age] has wrong type, expects an Integer value, got String')
           )
         end
 
         it 'will not accept nil as given value for an optional parameter that does not accept nil' do
-          expect { PuppetSpec::RubyGenerator::My::FirstGenerated.create('Bob Builder', nil) }.to(
+          expect { OreganoSpec::RubyGenerator::My::FirstGenerated.create('Bob Builder', nil) }.to(
             raise_error(TypeAssertionError,
               'MyModule::FirstGenerated[age] has wrong type, expects an Integer value, got Undef')
           )
         end
 
         it 'reorders parameters to but the optional parameters last' do
-          inst = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.address).to eq('42 Cool Street')
           expect(inst.zipcode).to eq('12345')
@@ -591,52 +591,52 @@ describe 'Puppet Ruby Generator' do
         end
 
         it 'two instances with the same attribute values are equal using #eql?' do
-          inst1 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
-          inst2 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst1 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst2 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
           expect(inst1.eql?(inst2)).to be_truthy
         end
 
         it 'two instances with the same attribute values are equal using #==' do
-          inst1 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
-          inst2 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst1 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst2 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
           expect(inst1 == inst2).to be_truthy
         end
 
         it 'two instances with the different attribute in super class values are different' do
-          inst1 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
-          inst2 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Engineer', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst1 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst2 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Engineer', '42 Cool Street', '12345', 'bob@example.com', 23)
           expect(inst1 == inst2).to be_falsey
         end
 
         it 'two instances with the different attribute in sub class values are different' do
-          inst1 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
-          inst2 = PuppetSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@other.com', 23)
+          inst1 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@example.com', 23)
+          inst2 = OreganoSpec::RubyGenerator::My::SecondGenerated.create('Bob Builder', '42 Cool Street', '12345', 'bob@other.com', 23)
           expect(inst1 == inst2).to be_falsey
         end
       end
 
       context 'the #from_hash class method' do
         it 'has an arity of one' do
-          expect(PuppetSpec::RubyGenerator::My::FirstGenerated.method(:from_hash).arity).to eql(1)
-          expect(PuppetSpec::RubyGenerator::My::SecondGenerated.method(:from_hash).arity).to eql(1)
+          expect(OreganoSpec::RubyGenerator::My::FirstGenerated.method(:from_hash).arity).to eql(1)
+          expect(OreganoSpec::RubyGenerator::My::SecondGenerated.method(:from_hash).arity).to eql(1)
         end
 
         it 'creates an instance of the class' do
-          inst = PuppetSpec::RubyGenerator::My::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => 52)
-          expect(inst).to be_a(PuppetSpec::RubyGenerator::My::FirstGenerated)
+          inst = OreganoSpec::RubyGenerator::My::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => 52)
+          expect(inst).to be_a(OreganoSpec::RubyGenerator::My::FirstGenerated)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.age).to eq(52)
         end
 
         it 'accepts an initializer where optional keys are missing' do
-          inst = PuppetSpec::RubyGenerator::My::FirstGenerated.from_hash('name' => 'Bob Builder')
-          expect(inst).to be_a(PuppetSpec::RubyGenerator::My::FirstGenerated)
+          inst = OreganoSpec::RubyGenerator::My::FirstGenerated.from_hash('name' => 'Bob Builder')
+          expect(inst).to be_a(OreganoSpec::RubyGenerator::My::FirstGenerated)
           expect(inst.name).to eq('Bob Builder')
           expect(inst.age).to eq(30)
         end
 
         it 'does not accept an initializer where optional values are nil and type does not accept nil' do
-          expect { PuppetSpec::RubyGenerator::My::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => nil) }.to(
+          expect { OreganoSpec::RubyGenerator::My::FirstGenerated.from_hash('name' => 'Bob Builder', 'age' => nil) }.to(
             raise_error(TypeAssertionError,
               "MyModule::FirstGenerated initializer has wrong type, entry 'age' expects an Integer value, got Undef")
           )

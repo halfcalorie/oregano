@@ -3,17 +3,17 @@ require 'spec_helper'
 
 describe "the digest function", :uses_checksums => true do
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
   before :each do
-    n = Puppet::Node.new('unnamed')
-    c = Puppet::Parser::Compiler.new(n)
-    @scope = Puppet::Parser::Scope.new(c)
+    n = Oregano::Node.new('unnamed')
+    c = Oregano::Parser::Compiler.new(n)
+    @scope = Oregano::Parser::Scope.new(c)
   end
 
   it "should exist" do
-    expect(Puppet::Parser::Functions.function("digest")).to eq("function_digest")
+    expect(Oregano::Parser::Functions.function("digest")).to eq("function_digest")
   end
 
   with_digest_algorithms do

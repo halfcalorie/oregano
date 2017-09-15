@@ -19,7 +19,7 @@ test_name 'utf-8 characters in function parameters' do
     step 'alert' do
       result = on(
         agent,
-        puppet("apply", "-e" "'alert(\"alert #{utf8chars}\")'"),
+        oregano("apply", "-e" "'alert(\"alert #{utf8chars}\")'"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(
@@ -32,7 +32,7 @@ test_name 'utf-8 characters in function parameters' do
     step 'assert_type' do
       on(
         agent,
-        puppet(
+        oregano(
           "apply", "-e", "'notice(assert_type(String, \"#{utf8chars}\"))'"
         ),
         {
@@ -42,7 +42,7 @@ test_name 'utf-8 characters in function parameters' do
       )
       on(
         agent,
-        puppet("apply", "-e 'notice(assert_type(Float, \"#{utf8chars}\"))'"),
+        oregano("apply", "-e 'notice(assert_type(Float, \"#{utf8chars}\"))'"),
         {
           :environment => {:LANG => "en_US.UTF-8"},
           :acceptable_exit_codes => [1],
@@ -51,14 +51,14 @@ test_name 'utf-8 characters in function parameters' do
     end
 
     step 'filter' do
-      puppet_cmd = "'
+      oregano_cmd = "'
         [$a] = [[\"abc\", \"#{utf8chars}\", \"100\"]];
         [$f] = [filter($a) |$p| {$p =~ /#{utf8chars}/}];
         notice(\"f = $f\")
       '"
       result = on(
         agent,
-        puppet("apply", "-e", puppet_cmd),
+        oregano("apply", "-e", oregano_cmd),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(/#{utf8chars}/, result.stdout, "filter() failed.")
@@ -178,21 +178,21 @@ LOOKUP_MANIFEST
     )
     result = on(
       agent,
-      puppet("config", "print hiera_config"),
+      oregano("config", "print hiera_config"),
       :environment => {:LANG => "en_US.UTF-8"}
     )
     orig_hiera_config = result.stdout.chomp
 
     result = on(
       agent,
-      puppet("config", "print environmentpath"),
+      oregano("config", "print environmentpath"),
       :environment => {:LANG => "en_US.UTF-8"}
     )
     orig_environmentpath = result.stdout.chomp
 
     on(
       agent,
-      puppet(
+      oregano(
         "config",
         "set hiera_config #{agent_lookup_test_dir}/hiera.yaml"
       ),
@@ -200,7 +200,7 @@ LOOKUP_MANIFEST
     )
     on(
       agent,
-      puppet(
+      oregano(
         "config", "set environmentpath #{agent_lookup_test_dir}/environments"
       ),
       :environment => {:LANG => "en_US.UTF-8"}
@@ -209,21 +209,21 @@ LOOKUP_MANIFEST
     step 'hiera' do
       result = on(
         agent,
-        puppet("apply", "-e", "'notice(hiera(\"#{array_key}\"))'"),
+        oregano("apply", "-e", "'notice(hiera(\"#{array_key}\"))'"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(/#{array_val_2}/, result.stdout, "hiera array lookup")
 
       result = on(
         agent,
-        puppet("apply", "-e", "'notice(hiera(\"#{scalar_key}\"))'"),
+        oregano("apply", "-e", "'notice(hiera(\"#{scalar_key}\"))'"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(/#{scalar_val}/, result.stdout, "hiera scalar lookup")
 
       result = on(
         agent,
-        puppet("apply", "-e", "'notice(hiera(\"#{non_key}\"))'"),
+        oregano("apply", "-e", "'notice(hiera(\"#{non_key}\"))'"),
         {
           :acceptable_exit_codes => (0..255),
           :environment => {:LANG => "en_US.UTF-8"}
@@ -239,7 +239,7 @@ LOOKUP_MANIFEST
     step 'lookup' do
       result = on(
         agent,
-        puppet("apply", "-e", "'notice(lookup(\"#{env_key}\"))'"),
+        oregano("apply", "-e", "'notice(lookup(\"#{env_key}\"))'"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(
@@ -250,7 +250,7 @@ LOOKUP_MANIFEST
 
       result = on(
         agent,
-        puppet("apply", "-e", "'notice(lookup(\"#{mod_key}\"))'"),
+        oregano("apply", "-e", "'notice(lookup(\"#{mod_key}\"))'"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(
@@ -261,12 +261,12 @@ LOOKUP_MANIFEST
 
       on(
         agent,
-        puppet("config", "set hiera_config #{orig_hiera_config}"),
+        oregano("config", "set hiera_config #{orig_hiera_config}"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       on(
         agent,
-        puppet("config", "set environmentpath #{orig_environmentpath}"),
+        oregano("config", "set environmentpath #{orig_environmentpath}"),
         :environment => {:LANG => "en_US.UTF-8"}
       )
     end
@@ -286,14 +286,14 @@ LOOKUP_MANIFEST
           ]
         }
       }"
-      puppet_cmd = "'
+      oregano_cmd = "'
         [$v] = [#{hash_string}];
         [$dig_result] = [dig($v, a, b, 1, y)];
         notice($dig_result)
       '"
       result = on(
         agent,
-        puppet("apply", "-e", puppet_cmd),
+        oregano("apply", "-e", oregano_cmd),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(
@@ -310,14 +310,14 @@ LOOKUP_MANIFEST
         "string3_no-utf8",
         "string4_no-utf8"
       ]
-      puppet_cmd = "'
+      oregano_cmd = "'
         [$vec] = [#{strings}];
         [$found] = [match($vec, /#{utf8chars}/)];
         notice($found)
       '"
       result = on(
         agent,
-        puppet("apply", "-e", puppet_cmd),
+        oregano("apply", "-e", oregano_cmd),
         :environment => {:LANG => "en_US.UTF-8"}
       )
       assert_match(

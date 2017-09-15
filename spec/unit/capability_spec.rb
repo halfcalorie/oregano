@@ -1,22 +1,22 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe 'Capability types' do
-  include PuppetSpec::Compiler
-  let(:env) { Puppet::Node::Environment.create(:testing, []) }
-  let(:node) { Puppet::Node.new('test', :environment => env) }
-  let(:loaders) { Puppet::Pops::Loaders.new(env) }
+  include OreganoSpec::Compiler
+  let(:env) { Oregano::Node::Environment.create(:testing, []) }
+  let(:node) { Oregano::Node.new('test', :environment => env) }
+  let(:loaders) { Oregano::Pops::Loaders.new(env) }
 
   around :each do |example|
-    Puppet::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
-    Puppet.override(:loaders => loaders, :current_environment => env) do
-      Puppet::Type.newtype :cap, :is_capability => true do
+    Oregano::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
+    Oregano.override(:loaders => loaders, :current_environment => env) do
+      Oregano::Type.newtype :cap, :is_capability => true do
         newparam :name
         newparam :host
       end
       example.run
-      Puppet::Type.rmtype(:cap)
+      Oregano::Type.rmtype(:cap)
     end
   end
 
@@ -40,7 +40,7 @@ describe 'Capability types' do
       expect(prd).to be_instance_of(Hash)
       expect(prd[:capability]).to eq("Cap")
       expect(prd[:mappings]).to be_instance_of(Hash)
-      expect(prd[:mappings]["host"]).to be_instance_of(Puppet::Parser::AST::PopsBridge::Expression)
+      expect(prd[:mappings]["host"]).to be_instance_of(Oregano::Parser::AST::PopsBridge::Expression)
     end
 
     it "adds a blueprint for a consumed resource" do
@@ -62,12 +62,12 @@ describe 'Capability types' do
       expect(cns).to be_instance_of(Hash)
       expect(cns[:capability]).to eq("Cap")
       expect(cns[:mappings]).to be_instance_of(Hash)
-      expect(cns[:mappings]["host"]).to be_instance_of(Puppet::Parser::AST::PopsBridge::Expression)
+      expect(cns[:mappings]["host"]).to be_instance_of(Oregano::Parser::AST::PopsBridge::Expression)
     end
 
     it 'can place define and consumes/produces in separate manifests' do
       parse_results = []
-      parser = Puppet::Parser::ParserFactory.parser
+      parser = Oregano::Parser::ParserFactory.parser
 
       parser.string = <<-MANIFEST
         define test($hostname) {
@@ -83,8 +83,8 @@ describe 'Capability types' do
       MANIFEST
       parse_results << parser.parse
 
-      main = Puppet::Parser::AST::Hostclass.new('', :code => Puppet::Parser::ParserFactory.code_merger.concatenate(parse_results))
-      Puppet::Node::Environment.any_instance.stubs(:perform_initial_import).returns main
+      main = Oregano::Parser::AST::Hostclass.new('', :code => Oregano::Parser::ParserFactory.code_merger.concatenate(parse_results))
+      Oregano::Node::Environment.any_instance.stubs(:perform_initial_import).returns main
 
       type = compile_to_catalog(nil).environment_instance.known_resource_types.definition(:test)
       expect(type.produces).to be_instance_of(Array)
@@ -93,12 +93,12 @@ describe 'Capability types' do
       expect(cns).to be_instance_of(Hash)
       expect(cns[:capability]).to eq('Cap')
       expect(cns[:mappings]).to be_instance_of(Hash)
-      expect(cns[:mappings]['host']).to be_instance_of(Puppet::Parser::AST::PopsBridge::Expression)
+      expect(cns[:mappings]['host']).to be_instance_of(Oregano::Parser::AST::PopsBridge::Expression)
     end
 
     it 'can place use a qualified name for defines that produces capabilities' do
       parse_results = []
-      parser = Puppet::Parser::ParserFactory.parser
+      parser = Oregano::Parser::ParserFactory.parser
 
       parser.string = <<-MANIFEST
         class mod {
@@ -117,8 +117,8 @@ describe 'Capability types' do
       MANIFEST
       parse_results << parser.parse
 
-      main = Puppet::Parser::AST::Hostclass.new('', :code => Puppet::Parser::ParserFactory.code_merger.concatenate(parse_results))
-      Puppet::Node::Environment.any_instance.stubs(:perform_initial_import).returns main
+      main = Oregano::Parser::AST::Hostclass.new('', :code => Oregano::Parser::ParserFactory.code_merger.concatenate(parse_results))
+      Oregano::Node::Environment.any_instance.stubs(:perform_initial_import).returns main
 
       type = compile_to_catalog(nil).environment_instance.known_resource_types.definition('Mod::Test')
       expect(type.produces).to be_instance_of(Array)
@@ -127,7 +127,7 @@ describe 'Capability types' do
       expect(cns).to be_instance_of(Hash)
       expect(cns[:capability]).to eq('Cap')
       expect(cns[:mappings]).to be_instance_of(Hash)
-      expect(cns[:mappings]['host']).to be_instance_of(Puppet::Parser::AST::PopsBridge::Expression)
+      expect(cns[:mappings]['host']).to be_instance_of(Oregano::Parser::AST::PopsBridge::Expression)
     end
     it "does not allow operator '+>' in a mapping" do
       expect do
@@ -140,7 +140,7 @@ describe 'Capability types' do
           host +> $hostname
         }
       MANIFEST
-      end.to raise_error(Puppet::ParseErrorWithIssue, /Illegal \+> operation.*This operator can not be used in a Capability Mapping/)
+      end.to raise_error(Oregano::ParseErrorWithIssue, /Illegal \+> operation.*This operator can not be used in a Capability Mapping/)
     end
 
     it "does not allow operator '*=>' in a mapping" do
@@ -154,7 +154,7 @@ describe 'Capability types' do
           *=> { host => $hostname }
         }
         MANIFEST
-      end.to raise_error(Puppet::ParseError, /The operator '\* =>' in a Capability Mapping is not supported/)
+      end.to raise_error(Oregano::ParseError, /The operator '\* =>' in a Capability Mapping is not supported/)
     end
 
     it "does not allow 'before' relationship to capability mapping" do
@@ -168,7 +168,7 @@ describe 'Capability types' do
 
         test { one: before => Cap[cap] }
         MANIFEST
-      end.to raise_error(Puppet::Error, /'before' is not a valid relationship to a capability/)
+      end.to raise_error(Oregano::Error, /'before' is not a valid relationship to a capability/)
     end
 
     ["produces", "consumes"].each do |kw|
@@ -181,7 +181,7 @@ describe 'Capability types' do
 
         expect {
           compile_to_catalog(manifest, node)
-        }.to raise_error(Puppet::Error,
+        }.to raise_error(Oregano::Error,
                          /#{kw} clause references nonexistent type Test/)
       end
     end
@@ -201,7 +201,7 @@ Test produces Cap {
 test { one: hostname => "ahost" }
     MANIFEST
       catalog = compile_to_catalog(manifest, node)
-      expect(catalog.resource("Test[one]")).to be_instance_of(Puppet::Resource)
+      expect(catalog.resource("Test[one]")).to be_instance_of(Oregano::Resource)
       expect(catalog.resource_keys.find { |type, _| type == "Cap" }).to be_nil
     end
 
@@ -223,16 +223,16 @@ Test produces Cap {
 test { one: hostname => "ahost", export => Cap[two] }
     MANIFEST
       catalog = compile_to_catalog(manifest, node)
-      expect(catalog.resource("Test[one]")).to be_instance_of(Puppet::Resource)
+      expect(catalog.resource("Test[one]")).to be_instance_of(Oregano::Resource)
 
       caps = catalog.resource_keys.select { |type, _| type == "Cap" }
       expect(caps.size).to eq(1)
 
       cap = catalog.resource("Cap[two]")
-      expect(cap).to be_instance_of(Puppet::Resource)
+      expect(cap).to be_instance_of(Oregano::Resource)
       expect(cap["require"]).to eq("Test[one]")
       expect(cap["host"]).to eq("ahost")
-      expect(cap.resource_type).to eq(Puppet::Type::Cap)
+      expect(cap.resource_type).to eq(Oregano::Type::Cap)
       expect(cap.tags.any? { |t| t == 'producer:testing' }).to eq(true)
     end
   end
@@ -252,14 +252,14 @@ test { one: hostname => "ahost", export => Cap[two] }
     end
 
     def mock_cap_finding
-      cap = Puppet::Resource.new("Cap", "two")
+      cap = Oregano::Resource.new("Cap", "two")
       cap["host"] = "ahost"
-      Puppet::Resource::CapabilityFinder.expects(:find).returns(cap)
+      Oregano::Resource::CapabilityFinder.expects(:find).returns(cap)
       cap
     end
 
     it "does not fetch a consumed resource when consume metaparam not set" do
-      Puppet::Resource::CapabilityFinder.expects(:find).never
+      Oregano::Resource::CapabilityFinder.expects(:find).never
       catalog = make_catalog("test { one: }")
       expect(catalog.resource_keys.find { |type, _| type == "Cap" }).to be_nil
       expect(catalog.resource("Test", "one")["hostname"]).to eq("nohost")
@@ -292,11 +292,11 @@ test { one: hostname => "ahost", export => Cap[two] }
     ['export', 'consume'].each do |metaparam|
 
       it "validates that #{metaparam} metaparameter rejects values that are not resources" do
-        expect { make_catalog("test { one: #{metaparam} => 'hello' }") }.to raise_error(Puppet::Error, /not a resource/)
+        expect { make_catalog("test { one: #{metaparam} => 'hello' }") }.to raise_error(Oregano::Error, /not a resource/)
       end
 
       it "validates that #{metaparam} metaparameter rejects resources that are not capability resources" do
-        expect { make_catalog("notify{hello:} test { one: #{metaparam} => Notify[hello] }") }.to raise_error(Puppet::Error, /not a capability resource/)
+        expect { make_catalog("notify{hello:} test { one: #{metaparam} => Notify[hello] }") }.to raise_error(Oregano::Error, /not a capability resource/)
       end
     end
 
@@ -323,7 +323,7 @@ test { one: hostname => "ahost", export => Cap[two] }
       end
 
       let(:graph) do
-        graph = Puppet::Graph::RelationshipGraph.new(Puppet::Graph::SequentialPrioritizer.new)
+        graph = Oregano::Graph::RelationshipGraph.new(Oregano::Graph::SequentialPrioritizer.new)
         graph.populate_from(ral)
         graph
       end
@@ -369,7 +369,7 @@ test { one: hostname => "ahost", export => Cap[two] }
       end
 
       let(:graph) do
-        graph = Puppet::Graph::RelationshipGraph.new(Puppet::Graph::SequentialPrioritizer.new)
+        graph = Oregano::Graph::RelationshipGraph.new(Oregano::Graph::SequentialPrioritizer.new)
         graph.populate_from(ral)
         graph
       end
@@ -391,7 +391,7 @@ test { one: hostname => "ahost", export => Cap[two] }
   end
 
   context 'and aliased resources' do
-    let(:drive) { Puppet.features.microsoft_windows? ? 'C:' : '' }
+    let(:drive) { Oregano.features.microsoft_windows? ? 'C:' : '' }
     let(:code) { <<-PUPPET }
       $dir='#{drive}/tmp/test'
       $same_dir='#{drive}/tmp/test/'

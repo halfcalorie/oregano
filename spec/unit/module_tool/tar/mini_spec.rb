@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/module_tool'
+require 'oregano/module_tool'
 
-describe Puppet::ModuleTool::Tar::Mini, :if => (Puppet.features.minitar? and Puppet.features.zlib?) do
+describe Oregano::ModuleTool::Tar::Mini, :if => (Oregano.features.minitar? and Oregano.features.zlib?) do
   let(:sourcefile) { '/the/module.tar.gz' }
   let(:destdir)    { File.expand_path '/the/dest/dir' }
   let(:sourcedir)  { '/the/src/dir' }
@@ -19,7 +19,7 @@ describe Puppet::ModuleTool::Tar::Mini, :if => (Puppet.features.minitar? and Pup
 
     expect {
       minitar.unpack(sourcefile, destdir, 'uid')
-    }.to raise_error(Puppet::ModuleTool::Errors::InvalidPathInPackageError,
+    }.to raise_error(Oregano::ModuleTool::Errors::InvalidPathInPackageError,
                      "Attempt to install file with an invalid path into \"/thefile\" under \"#{destdir}\"")
   end
 
@@ -28,7 +28,7 @@ describe Puppet::ModuleTool::Tar::Mini, :if => (Puppet.features.minitar? and Pup
 
     expect {
       minitar.unpack(sourcefile, destdir, 'uid')
-    }.to raise_error(Puppet::ModuleTool::Errors::InvalidPathInPackageError,
+    }.to raise_error(Oregano::ModuleTool::Errors::InvalidPathInPackageError,
                      "Attempt to install file with an invalid path into \"#{File.expand_path('/the/thefile')}\" under \"#{destdir}\"")
   end
 
@@ -37,7 +37,7 @@ describe Puppet::ModuleTool::Tar::Mini, :if => (Puppet.features.minitar? and Pup
 
     expect {
       minitar.unpack(sourcefile, destdir, 'uid')
-    }.to raise_error(Puppet::ModuleTool::Errors::InvalidPathInPackageError,
+    }.to raise_error(Oregano::ModuleTool::Errors::InvalidPathInPackageError,
                      "Attempt to install file with an invalid path into \"#{File.expand_path('/the/thedir')}\" under \"#{destdir}\"")
   end
 

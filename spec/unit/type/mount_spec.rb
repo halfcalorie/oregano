@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:mount), :unless => Oregano.features.microsoft_windows? do
 
   before :each do
-    Puppet::Type.type(:mount).stubs(:defaultprovider).returns providerclass
+    Oregano::Type.type(:mount).stubs(:defaultprovider).returns providerclass
   end
 
   let :providerclass do
@@ -79,7 +79,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it "should not allow spaces" do
-        expect { described_class.new(:name => "/mnt/foo bar") }.to raise_error Puppet::Error, /name.*whitespace/
+        expect { described_class.new(:name => "/mnt/foo bar") }.to raise_error Oregano::Error, /name.*whitespace/
       end
 
       it "should allow pseudo mountpoints (e.g. swap)" do
@@ -114,7 +114,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it "should not support other values for :ensure" do
-        expect { described_class.new(:name => "yay", :ensure => :mount) }.to raise_error Puppet::Error, /Invalid value/
+        expect { described_class.new(:name => "yay", :ensure => :mount) }.to raise_error Oregano::Error, /Invalid value/
       end
     end
 
@@ -137,8 +137,8 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it 'should not support whitespace in device' do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :device => '/dev/my dev/foo') }.to raise_error Puppet::Error, /device.*whitespace/
-        expect { described_class.new(:name => "/foo", :ensure => :present, :device => "/dev/my\tdev/foo") }.to raise_error Puppet::Error, /device.*whitespace/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :device => '/dev/my dev/foo') }.to raise_error Oregano::Error, /device.*whitespace/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :device => "/dev/my\tdev/foo") }.to raise_error Oregano::Error, /device.*whitespace/
       end
     end
 
@@ -158,8 +158,8 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it "should not support whitespace in blockdevice" do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :blockdevice => '/dev/my dev/foo') }.to raise_error Puppet::Error, /blockdevice.*whitespace/
-        expect { described_class.new(:name => "/foo", :ensure => :present, :blockdevice => "/dev/my\tdev/foo") }.to raise_error Puppet::Error, /blockdevice.*whitespace/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :blockdevice => '/dev/my dev/foo') }.to raise_error Oregano::Error, /blockdevice.*whitespace/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :blockdevice => "/dev/my\tdev/foo") }.to raise_error Oregano::Error, /blockdevice.*whitespace/
       end
 
       it "should default to /dev/rdsk/DEVICE if device is /dev/dsk/DEVICE" do
@@ -195,11 +195,11 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it "should not support whitespace in fstype" do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :fstype => 'ext 3') }.to raise_error Puppet::Error, /fstype.*whitespace/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :fstype => 'ext 3') }.to raise_error Oregano::Error, /fstype.*whitespace/
       end
 
       it "should not support an empty string in fstype" do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :fstype => "") }.to raise_error Puppet::Error, /fstype.*empty string/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :fstype => "") }.to raise_error Oregano::Error, /fstype.*empty string/
       end
     end
 
@@ -213,11 +213,11 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it "should not support whitespace in options" do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :options => ['ro','foo bar','intr']) }.to raise_error Puppet::Error, /option.*whitespace/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :options => ['ro','foo bar','intr']) }.to raise_error Oregano::Error, /option.*whitespace/
       end
 
       it "should not support an empty string in options" do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :options => "") }.to raise_error Puppet::Error, /option.*empty string/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :options => "") }.to raise_error Oregano::Error, /option.*empty string/
       end
     end
 
@@ -262,7 +262,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       end
 
       it "should not support 2 as a value for dump when not on FreeBSD", :if => Facter.value(:operatingsystem) != 'FreeBSD' do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :dump => '2') }.to raise_error Puppet::Error, /Invalid value/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :dump => '2') }.to raise_error Oregano::Error, /Invalid value/
       end
 
       it "should default to 0" do
@@ -272,7 +272,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
 
     describe "for atboot" do
       it "does not allow non-boolean values" do
-        expect { described_class.new(:name => "/foo", :ensure => :present, :atboot => 'unknown') }.to raise_error Puppet::Error, /expected a boolean value/
+        expect { described_class.new(:name => "/foo", :ensure => :present, :atboot => 'unknown') }.to raise_error Oregano::Error, /expected a boolean value/
       end
 
       it "interprets yes as yes" do
@@ -516,8 +516,8 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
     end
 
     def run_in_catalog(*resources)
-      Puppet::Util::Storage.stubs(:store)
-      catalog = Puppet::Resource::Catalog.new
+      Oregano::Util::Storage.stubs(:store)
+      catalog = Oregano::Resource::Catalog.new
       catalog.add_resource *resources
       catalog.apply
     end
@@ -555,7 +555,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
     end
 
     def create_file_resource(path)
-      file_class = Puppet::Type.type(:file)
+      file_class = Oregano::Type.type(:file)
       file_class.new(
         :path => path,
         :provider => file_class.new(:path => path).provider
@@ -563,7 +563,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
     end
 
     def create_catalog(*resources)
-      catalog = Puppet::Resource::Catalog.new
+      catalog = Oregano::Resource::Catalog.new
       resources.each do |resource|
         catalog.add_resource resource
       end
@@ -576,11 +576,11 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
     let(:log_mount)  { create_mount_resource("/var/log") }
     let(:var_file) { create_file_resource('/var') }
     let(:log_file) { create_file_resource('/var/log') }
-    let(:puppet_file) { create_file_resource('/var/log/puppet') }
-    let(:opt_file) { create_file_resource('/opt/var/puppet') }
+    let(:oregano_file) { create_file_resource('/var/log/oregano') }
+    let(:opt_file) { create_file_resource('/opt/var/oregano') }
 
     before do
-      create_catalog(root_mount, var_mount, log_mount, var_file, log_file, puppet_file, opt_file)
+      create_catalog(root_mount, var_mount, log_mount, var_file, log_file, oregano_file, opt_file)
     end
 
     it "adds no autorequires for the root mount" do
@@ -615,7 +615,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       expect(log_mount.autobefore).to have_exactly(1).item
 
       expect(child_relationship.source).to eq log_mount
-      expect(child_relationship.target).to eq puppet_file
+      expect(child_relationship.target).to eq oregano_file
     end
 
     it "adds both child autobefores for a mount with two file children" do
@@ -628,7 +628,7 @@ describe Puppet::Type.type(:mount), :unless => Puppet.features.microsoft_windows
       expect(child_relationship.target).to eq log_file
 
       expect(grandchild_relationship.source).to eq var_mount
-      expect(grandchild_relationship.target).to eq puppet_file
+      expect(grandchild_relationship.target).to eq oregano_file
     end
   end
 end

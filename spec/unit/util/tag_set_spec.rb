@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/tag_set'
+require 'oregano/util/tag_set'
 
 RSpec::Matchers.define :be_one_of do |*expected|
   match do |actual|
@@ -13,8 +13,8 @@ RSpec::Matchers.define :be_one_of do |*expected|
   end
 end
 
-describe Puppet::Util::TagSet do
-  let(:set) { Puppet::Util::TagSet.new }
+describe Oregano::Util::TagSet do
+  let(:set) { Oregano::Util::TagSet.new }
 
   it 'serializes to yaml as an array' do
     array = ['a', :b, 1, 5.4]
@@ -26,14 +26,14 @@ describe Puppet::Util::TagSet do
   it 'deserializes from a yaml array' do
     array = ['a', :b, 1, 5.4]
 
-    expect(Puppet::Util::TagSet.from_yaml(array.to_yaml)).to eq(Puppet::Util::TagSet.new(array))
+    expect(Oregano::Util::TagSet.from_yaml(array.to_yaml)).to eq(Oregano::Util::TagSet.new(array))
   end
 
   it 'round trips through json' do
     array = ['a', 'b', 1, 5.4]
     set.merge(array)
 
-    tes = Puppet::Util::TagSet.from_data_hash(JSON.parse(set.to_json))
+    tes = Oregano::Util::TagSet.from_data_hash(JSON.parse(set.to_json))
     expect(tes).to eq(set)
   end
 

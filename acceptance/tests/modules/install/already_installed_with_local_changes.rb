@@ -1,6 +1,6 @@
-test_name "puppet module install (already installed with local changes)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (already installed with local changes)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -26,7 +26,7 @@ step "Check that module is not installed" do
 end
 
 step "Install module" do
-  on master, puppet("module install #{module_reference}")
+  on master, oregano("module install #{module_reference}")
   assert_module_installed_on_disk(master, module_name)
 end
 
@@ -36,7 +36,7 @@ step "Make local changes in installed module" do
 end
 
 step "Try to install a specific version of a module that is already installed" do
-  on master, puppet("module install #{module_reference} --version 1.x"), :acceptable_exit_codes => [1] do
+  on master, oregano("module install #{module_reference} --version 1.x"), :acceptable_exit_codes => [1] do
     assert_match(/Could not install module '#{module_reference}' \(v1.x\)/, stderr,
           "Error that specified module version could not be installed was not displayed")
     assert_match(/#{module_reference}.*is already installed/, stderr,
@@ -48,7 +48,7 @@ step "Try to install a specific version of a module that is already installed" d
 end
 
 step "Install a module that is already installed (with --force)" do
-  on master, puppet("module install #{module_reference} --force") do
+  on master, oregano("module install #{module_reference} --force") do
     assert_module_installed_ui(stdout, module_author, module_name)
   end
   assert_module_installed_on_disk(master, module_name)

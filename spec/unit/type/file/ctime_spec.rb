@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).attrclass(:ctime) do
-  require 'puppet_spec/files'
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:ctime) do
+  require 'oregano_spec/files'
+  include OreganoSpec::Files
 
   before do
     @filename = tmpfile('ctime')
-    @resource = Puppet::Type.type(:file).new({:name => @filename})
+    @resource = Oregano::Type.type(:file).new({:name => @filename})
   end
 
   it "should be able to audit the file's ctime" do
@@ -16,7 +16,7 @@ describe Puppet::Type.type(:file).attrclass(:ctime) do
     @resource[:audit] = [:ctime]
 
     # this .to_resource audit behavior is magical :-(
-    expect(@resource.to_resource[:ctime]).to eq(Puppet::FileSystem.stat(@filename).ctime)
+    expect(@resource.to_resource[:ctime]).to eq(Oregano::FileSystem.stat(@filename).ctime)
   end
 
   it "should return absent if auditing an absent file" do
@@ -28,7 +28,7 @@ describe Puppet::Type.type(:file).attrclass(:ctime) do
   it "should prevent the user from trying to set the ctime" do
     expect {
       @resource[:ctime] = Time.now.to_s
-    }.to raise_error(Puppet::Error, /ctime is read-only/)
+    }.to raise_error(Oregano::Error, /ctime is read-only/)
   end
 
 end

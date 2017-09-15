@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Settings::TerminusSetting do
+describe Oregano::Settings::TerminusSetting do
   let(:setting) { described_class.new(:settings => mock('settings'), :desc => "test") }
 
   describe "#munge" do
@@ -22,7 +22,7 @@ describe Puppet::Settings::TerminusSetting do
     end
 
     it "does not allow unknown types through" do
-      expect { setting.munge(["not a terminus type"]) }.to raise_error Puppet::Settings::ValidationError
+      expect { setting.munge(["not a terminus type"]) }.to raise_error Oregano::Settings::ValidationError
     end
   end
 end

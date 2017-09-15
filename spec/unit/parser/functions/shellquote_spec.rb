@@ -2,12 +2,12 @@
 require 'spec_helper'
 
 describe "the shellquote function" do
-  let :node     do Puppet::Node.new('localhost') end
-  let :compiler do Puppet::Parser::Compiler.new(node) end
-  let :scope    do Puppet::Parser::Scope.new(compiler) end
+  let :node     do Oregano::Node.new('localhost') end
+  let :compiler do Oregano::Parser::Compiler.new(node) end
+  let :scope    do Oregano::Parser::Scope.new(compiler) end
 
   it "should exist" do
-    expect(Puppet::Parser::Functions.function("shellquote")).to eq("function_shellquote")
+    expect(Oregano::Parser::Functions.function("shellquote")).to eq("function_shellquote")
   end
 
   it "should handle no arguments" do

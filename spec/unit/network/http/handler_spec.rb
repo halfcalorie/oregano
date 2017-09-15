@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/handler'
+require 'oregano_spec/handler'
 
-require 'puppet/indirector_testing'
+require 'oregano/indirector_testing'
 
-require 'puppet/network/authorization'
+require 'oregano/network/authorization'
 
-require 'puppet/network/http'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP::Handler do
+describe Oregano::Network::HTTP::Handler do
   before :each do
-    Puppet::IndirectorTesting.indirection.terminus_class = :memory
+    Oregano::IndirectorTesting.indirection.terminus_class = :memory
   end
 
-  let(:indirection) { Puppet::IndirectorTesting.indirection }
+  let(:indirection) { Oregano::IndirectorTesting.indirection }
 
   def a_request(method = "HEAD", path = "/production/#{indirection.name}/unknown")
     {
@@ -29,7 +29,7 @@ describe Puppet::Network::HTTP::Handler do
     }
   end
 
-  let(:handler) { PuppetSpec::Handler.new() }
+  let(:handler) { OreganoSpec::Handler.new() }
 
   describe "the HTTP Handler" do
     def respond(text)
@@ -37,10 +37,10 @@ describe Puppet::Network::HTTP::Handler do
     end
 
     it "hands the request to the first route that matches the request path" do
-      handler = PuppetSpec::Handler.new(
-        Puppet::Network::HTTP::Route.path(%r{^/foo}).get(respond("skipped")),
-        Puppet::Network::HTTP::Route.path(%r{^/vtest}).get(respond("used")),
-        Puppet::Network::HTTP::Route.path(%r{^/vtest/foo}).get(respond("ignored")))
+      handler = OreganoSpec::Handler.new(
+        Oregano::Network::HTTP::Route.path(%r{^/foo}).get(respond("skipped")),
+        Oregano::Network::HTTP::Route.path(%r{^/vtest}).get(respond("used")),
+        Oregano::Network::HTTP::Route.path(%r{^/vtest/foo}).get(respond("ignored")))
 
       req = a_request("GET", "/vtest/foo")
       res = {}
@@ -52,14 +52,14 @@ describe Puppet::Network::HTTP::Handler do
 
     it "raises an error if multiple routes with the same path regex are registered" do
       expect do
-        handler = PuppetSpec::Handler.new(
-          Puppet::Network::HTTP::Route.path(%r{^/foo}).get(respond("ignored")),
-          Puppet::Network::HTTP::Route.path(%r{^/foo}).post(respond("also ignored")))
+        handler = OreganoSpec::Handler.new(
+          Oregano::Network::HTTP::Route.path(%r{^/foo}).get(respond("ignored")),
+          Oregano::Network::HTTP::Route.path(%r{^/foo}).post(respond("also ignored")))
       end.to raise_error(ArgumentError)
     end
 
     it "raises an HTTP not found error if no routes match" do
-      handler = PuppetSpec::Handler.new
+      handler = OreganoSpec::Handler.new
 
       req = a_request("GET", "/vtest/foo")
       res = {}
@@ -79,11 +79,11 @@ describe Puppet::Network::HTTP::Handler do
       original_stacktrace = ['a.rb', 'b.rb']
       error.set_backtrace(original_stacktrace)
 
-      handler = PuppetSpec::Handler.new(
-        Puppet::Network::HTTP::Route.path(/.*/).get(lambda { |_, _| raise error}))
+      handler = OreganoSpec::Handler.new(
+        Oregano::Network::HTTP::Route.path(/.*/).get(lambda { |_, _| raise error}))
 
       # Stacktraces should be included in logs
-      Puppet.expects(:err).with("Server Error: the sky is falling!\na.rb\nb.rb")
+      Oregano.expects(:err).with("Server Error: the sky is falling!\na.rb\nb.rb")
 
       req = a_request("GET", "/vtest/foo")
       res = {}
@@ -93,7 +93,7 @@ describe Puppet::Network::HTTP::Handler do
       res_body = JSON(res[:body])
 
       expect(res[:content_type_header]).to eq("application/json; charset=utf-8")
-      expect(res_body["issue_kind"]).to eq(Puppet::Network::HTTP::Issues::RUNTIME_ERROR.to_s)
+      expect(res_body["issue_kind"]).to eq(Oregano::Network::HTTP::Issues::RUNTIME_ERROR.to_s)
       expect(res_body["message"]).to eq("Server Error: the sky is falling!")
       expect(res[:status]).to eq(500)
     end
@@ -110,17 +110,17 @@ describe Puppet::Network::HTTP::Handler do
       handler.stubs(:warn_if_near_expiration)
     end
 
-    it "should setup a profiler when the puppet-profiling header exists" do
+    it "should setup a profiler when the oregano-profiling header exists" do
       request = a_request
-      request[:headers][Puppet::Network::HTTP::HEADER_ENABLE_PROFILING.downcase] = "true"
+      request[:headers][Oregano::Network::HTTP::HEADER_ENABLE_PROFILING.downcase] = "true"
 
-      p = PuppetSpec::HandlerProfiler.new
+      p = OreganoSpec::HandlerProfiler.new
 
-      Puppet::Util::Profiler.expects(:add_profiler).with { |profiler|
-        profiler.is_a? Puppet::Util::Profiler::WallClock
+      Oregano::Util::Profiler.expects(:add_profiler).with { |profiler|
+        profiler.is_a? Oregano::Util::Profiler::WallClock
       }.returns(p)
 
-      Puppet::Util::Profiler.expects(:remove_profiler).with { |profiler|
+      Oregano::Util::Profiler.expects(:remove_profiler).with { |profiler|
         profiler == p
       }
 
@@ -131,13 +131,13 @@ describe Puppet::Network::HTTP::Handler do
       request = a_request
       request[:params] = { }
 
-      Puppet::Util::Profiler.expects(:add_profiler).never
+      Oregano::Util::Profiler.expects(:add_profiler).never
 
       handler.process(request, response)
     end
 
     it "should still find the correct format if content type contains charset information" do
-      request = Puppet::Network::HTTP::Request.new({ 'content-type' => "text/plain; charset=UTF-8" },
+      request = Oregano::Network::HTTP::Request.new({ 'content-type' => "text/plain; charset=UTF-8" },
                                                    {}, 'GET', '/', nil)
       expect(request.formatter.name).to eq(:s)
     end

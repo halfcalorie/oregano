@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:selboolean).provider(:getsetsebool)
+provider_class = Oregano::Type.type(:selboolean).provider(:getsetsebool)
 
 describe provider_class do
   before :each do

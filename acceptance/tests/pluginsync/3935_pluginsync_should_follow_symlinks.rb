@@ -17,8 +17,8 @@ apply_manifest_on(master, <<MANIFEST, :catch_failures => true)
 File {
   ensure => directory,
   mode   => "0750",
-  owner  => #{master.puppet['user']},
-  group  => #{master.puppet['group']},
+  owner  => #{master.oregano['user']},
+  group  => #{master.oregano['group']},
 }
 
 file {
@@ -39,10 +39,10 @@ master_opts = {
   }
 }
 
-with_puppet_running_on master, master_opts, basedir do
+with_oregano_running_on master, master_opts, basedir do
   agents.each do |agent|
-    on(agent, puppet('agent', "-t --server #{master}"))
-      assert_no_match(/Could not retrieve information from environment production source\(s\) puppet:\/\/\/pluginfacts/, stderr)
-      assert_no_match(/Could not retrieve information from environment production source\(s\) puppet:\/\/\/plugins/, stderr)
+    on(agent, oregano('agent', "-t --server #{master}"))
+      assert_no_match(/Could not retrieve information from environment production source\(s\) oregano:\/\/\/pluginfacts/, stderr)
+      assert_no_match(/Could not retrieve information from environment production source\(s\) oregano:\/\/\/plugins/, stderr)
   end
 end

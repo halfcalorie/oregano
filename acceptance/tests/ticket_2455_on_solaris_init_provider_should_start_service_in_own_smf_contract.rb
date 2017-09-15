@@ -51,8 +51,8 @@ step "Setup fixture service manifest on master"
 File {
   ensure => directory,
   mode => "0750",
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
 }
 file { '#{testdir}': }
 file { '#{testdir}/environments': }
@@ -83,7 +83,7 @@ step "Start master"
     }
   }
 
-  with_puppet_running_on master, master_opts, testdir do
+  with_oregano_running_on master, master_opts, testdir do
 
     agents.each do |agent|
 
@@ -106,8 +106,8 @@ SCRIPT
         on(agent, "chmod +x #{sleepy_daemon_path} #{sleepy_daemon_initscript_path}")
 
       step "Start the fixture service on #{agent} "
-        on(agent, puppet("resource service #{fixture_service} provider=init ensure=stopped"))
-        on(agent, puppet("resource service #{fixture_service} provider=init ensure=running"))
+        on(agent, oregano("resource service #{fixture_service} provider=init ensure=stopped"))
+        on(agent, oregano("resource service #{fixture_service} provider=init ensure=running"))
 
         assert_match(/ensure changed 'stopped' to 'running'/, stdout, "The fixture service #{fixture_service} is not in a testable state on #{agent}.")
 
@@ -118,23 +118,23 @@ SCRIPT
 
       if agent.is_pe?
 
-        step "Stop puppet on #{agent}"
-          on(agent, "svcadm disable pe-puppet;sleep 70;svcadm disable pe-puppet")
+        step "Stop oregano on #{agent}"
+          on(agent, "svcadm disable pe-oregano;sleep 70;svcadm disable pe-oregano")
 
         step "Stop fixture service on #{agent}"
           on(agent, "#{fixture_service_stop}")
 
-        step "Enable puppet service on #{agent}"
-          on(agent, "svcadm enable pe-puppet;sleep 10") do
-            puppet_ctid = on(agent, "svcs -Ho CTID pe-puppet | awk '{print $1}'").stdout.chomp.to_i
+        step "Enable oregano service on #{agent}"
+          on(agent, "svcadm enable pe-oregano;sleep 10") do
+            oregano_ctid = on(agent, "svcs -Ho CTID pe-oregano | awk '{print $1}'").stdout.chomp.to_i
             service_ctid = on(agent, "ps -eo ctid,args | grep #{fixture_service} | grep -v grep | awk '{print $1}'").stdout.chomp.to_i
 
-          step "Compare SMF contract ids for puppet and #{fixture_service} on #{agent}"
-            unless ( puppet_ctid != "0" and service_ctid != "0" ) then
+          step "Compare SMF contract ids for oregano and #{fixture_service} on #{agent}"
+            unless ( oregano_ctid != "0" and service_ctid != "0" ) then
               fail_test("SMF contract ids should not equal zero.")
             end
 
-            assert(service_ctid != puppet_ctid, "Service is in the same SMF contract as puppet on #{agent}.")
+            assert(service_ctid != oregano_ctid, "Service is in the same SMF contract as oregano on #{agent}.")
          end
        end
     end

@@ -1,7 +1,7 @@
 ---
-packaging_url: 'git://github.com/puppetlabs/packaging.git --branch=master'
+packaging_url: 'git://github.com/oreganolabs/packaging.git --branch=master'
 packaging_repo: 'packaging'
-packager: 'puppetlabs'
+packager: 'oreganolabs'
 gpg_key: '7F438280EF8D349F'
 
 # These are the build targets used by the packaging repo. Uncomment to allow use.
@@ -12,9 +12,9 @@ pbuild_conf: '/etc/pbuilderrc'
 build_gem: TRUE
 build_dmg: FALSE
 sign_tar: FALSE
-yum_host: 'yum.puppetlabs.com'
+yum_host: 'yum.oreganolabs.com'
 yum_repo_path: '/opt/repository/yum/'
-apt_signing_server: 'apt.puppetlabs.com'
-apt_repo_url: 'http://apt.puppetlabs.com'
+apt_signing_server: 'apt.oreganolabs.com'
+apt_repo_url: 'http://apt.oreganolabs.com'
 apt_repo_path: '/opt/repository/incoming'
-tar_host: 'downloads.puppetlabs.com'
+tar_host: 'downloads.oreganolabs.com'

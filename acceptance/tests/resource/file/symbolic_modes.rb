@@ -6,8 +6,8 @@ test_name 'file resource: symbolic modes' do
   tag 'audit:high',
       'audit:acceptance'
 
-  require 'puppet/acceptance/temp_file_utils'
-  extend Puppet::Acceptance::TempFileUtils
+  require 'oregano/acceptance/temp_file_utils'
+  extend Oregano::Acceptance::TempFileUtils
 
   class FileSymlink
     attr_reader :mode, :path, :start_mode, :symbolic_mode
@@ -26,7 +26,7 @@ test_name 'file resource: symbolic modes' do
       end
     end
 
-    # does the mode of the file/directory change from start_mode to puppet apply
+    # does the mode of the file/directory change from start_mode to oregano apply
     def mode_changes?
       ! @start_mode.nil? && @start_mode != @mode
     end
@@ -58,11 +58,11 @@ test_name 'file resource: symbolic modes' do
       manifest_array.join("\n")
     end
 
-    def puppet_reapply
+    def oregano_reapply
       @testcase.apply_manifest_on(@agent, manifest) do |apply_result|
         assert_no_match(/mode changed/, apply_result.stdout, "reapplied the symbolic mode change")
         (@file_list + @directory_list).each do |file|
-          assert_no_match(/#{Regexp.escape(file.path)}/, apply_result.stdout, "Expected to not see '#{file.path}' in 'puppet apply' output")
+          assert_no_match(/#{Regexp.escape(file.path)}/, apply_result.stdout, "Expected to not see '#{file.path}' in 'oregano apply' output")
         end
       end
     end
@@ -78,7 +78,7 @@ test_name 'file resource: symbolic modes' do
       @directory_list << FileSymlink.new(@base_dir, 'directory', symbolic_mode, mode)
     end
 
-    def puppet_apply
+    def oregano_apply
       apply_result = @testcase.apply_manifest_on(@agent, manifest).stdout
       (@file_list + @directory_list).each do |file|
         assert_match(/File\[#{Regexp.escape(file.path)}\]\/ensure: created/, apply_result, "Failed to create #{file.path}")
@@ -111,7 +111,7 @@ test_name 'file resource: symbolic modes' do
       @testcase.on(@agent, cmd_list.join(' && '))
     end
 
-    def puppet_apply
+    def oregano_apply
       @testcase.step(manifest)
       apply_result = @testcase.apply_manifest_on(@agent, manifest).stdout
       @testcase.step(apply_result)
@@ -182,14 +182,14 @@ test_name 'file resource: symbolic modes' do
   agents.each do |agent|
     is_solaris = agent['platform'].include?('solaris')
 
-    on(agent, puppet('resource user symuser ensure=present'))
-    on(agent, puppet('resource group symgroup ensure=present'))
+    on(agent, oregano('resource user symuser ensure=present'))
+    on(agent, oregano('resource group symgroup ensure=present'))
     base_dir_create = agent.tmpdir('symbolic-modes-create_test')
     base_dir_modify = agent.tmpdir('symbolic-modes-modify_test')
 
     teardown do
-      on(agent, puppet('resource user symuser ensure=absent'))
-      on(agent, puppet('resource group symgroup ensure=absent'))
+      on(agent, oregano('resource user symuser ensure=absent'))
+      on(agent, oregano('resource group symgroup ensure=absent'))
       on(agent, "rm -rf '#{base_dir_create}' '#{base_dir_modify}'")
     end
 
@@ -214,7 +214,7 @@ test_name 'file resource: symbolic modes' do
     create_test.symlink_file('ugo=rw', 00666)
     create_test.symlink_file('ugo=rwx', 00777)
     create_test.symlink_file('ugo=rwxt', 01777)
-    #create_test.symlink_file('ugo=rwxs', 06777)  ## BUG, puppet creates 07777
+    #create_test.symlink_file('ugo=rwxs', 06777)  ## BUG, oregano creates 07777
     create_test.symlink_file('ugo=rwxts', 07777)
 
     create_test.symlink_file('u=rwx,go=rx', 00755)
@@ -245,7 +245,7 @@ test_name 'file resource: symbolic modes' do
     create_test.symlink_directory('ugo=rw', 00666)
     create_test.symlink_directory('ugo=rwx', 00777)
     create_test.symlink_directory('ugo=rwxt', 01777)
-    #create_test.symlink_directory('ugo=rwxs', 06777)  ## BUG, puppet creates 07777
+    #create_test.symlink_directory('ugo=rwxs', 06777)  ## BUG, oregano creates 07777
     create_test.symlink_directory('ugo=rwxts', 07777)
 
     create_test.symlink_directory('u=rwx,go=rx', 00755)
@@ -256,8 +256,8 @@ test_name 'file resource: symbolic modes' do
     create_test.symlink_directory('u+r', 00755)
     create_test.symlink_directory('u+w', 00755)
     create_test.symlink_directory('u+x', 00755)
-    create_test.puppet_apply()
-    create_test.puppet_reapply()
+    create_test.oregano_apply()
+    create_test.oregano_reapply()
 
     modify_test = ModifyTest.new(self, agent, base_dir_modify)
     modify_test.symlink_file('u+r', 00200, 00600)
@@ -315,8 +315,8 @@ test_name 'file resource: symbolic modes' do
     modify_test.symlink_directory('g-s', 02744, 00744) unless is_solaris
     modify_test.symlink_directory('u-t', 01744, 00744)
     modify_test.create_starting_state
-    modify_test.puppet_apply
-    modify_test.puppet_reapply
+    modify_test.oregano_apply
+    modify_test.oregano_reapply
 
     # these raise
     # test.assert_raises('')

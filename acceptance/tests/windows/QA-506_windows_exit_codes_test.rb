@@ -49,18 +49,18 @@ MANIFEST
 step "Install Custom Module for Testing"
 
 agents.each do |agent|
-  if (on(agent, puppet("--version")).stdout.split('.')[0].to_i < 4)
+  if (on(agent, oregano("--version")).stdout.split('.')[0].to_i < 4)
     module_path_config_property = "confdir"
   else
     module_path_config_property = "codedir"
   end
 
-  native_modules_path = on(agent, puppet("config print #{module_path_config_property}")).stdout.gsub('C:', '/cygdrive/c').strip
+  native_modules_path = on(agent, oregano("config print #{module_path_config_property}")).stdout.gsub('C:', '/cygdrive/c').strip
 
   #Check to see if we are running on Windows 2003. Do a crazy hack to get around SCP issues.
   if (on(agent, facter("find operatingsystemmajrelease")).stdout =~ /2003/)
-    on(agent, "ln -s #{native_modules_path.gsub(/ /, '\ ')} /tmp/puppet_etc")
-    modules_path = '/tmp/puppet_etc'
+    on(agent, "ln -s #{native_modules_path.gsub(/ /, '\ ')} /tmp/oregano_etc")
+    modules_path = '/tmp/oregano_etc'
   else
     modules_path = native_modules_path
   end
@@ -77,31 +77,31 @@ end
 agents.each do |agent|
   step "Verify '0' is a Valid Exit Code"
 
-  #Apply the manifest and verify Puppet returns success.
-  on(agent, puppet('apply', '--debug'), :stdin => pass_exitcode_manifest)
+  #Apply the manifest and verify Oregano returns success.
+  on(agent, oregano('apply', '--debug'), :stdin => pass_exitcode_manifest)
 
   step "Verify Unsigned 8bit Upper Boundary"
 
-  #Apply the manifest and verify Puppet returns success.
-  on(agent, puppet('apply', '--debug'), :stdin => upper_8bit_boundary_manifest)
+  #Apply the manifest and verify Oregano returns success.
+  on(agent, oregano('apply', '--debug'), :stdin => upper_8bit_boundary_manifest)
 
   step "Verify Unsigned 8bit Cross Boundary"
 
-  #Apply the manifest and verify Puppet returns success.
-  on(agent, puppet('apply', '--debug'), :stdin => cross_8bit_boundary_manifest)
+  #Apply the manifest and verify Oregano returns success.
+  on(agent, oregano('apply', '--debug'), :stdin => cross_8bit_boundary_manifest)
 
   step "Verify Unsigned 32bit Upper Boundary"
 
-  #Apply the manifest and verify Puppet returns success.
-  on(agent, puppet('apply', '--debug'), :stdin => upper_32bit_boundary_manifest)
+  #Apply the manifest and verify Oregano returns success.
+  on(agent, oregano('apply', '--debug'), :stdin => upper_32bit_boundary_manifest)
 
   step "Verify Unsigned 32bit Cross Boundary"
 
-  #Apply the manifest and verify Puppet returns success.
-  on(agent, puppet('apply', '--debug'), :stdin => cross_32bit_boundary_manifest)
+  #Apply the manifest and verify Oregano returns success.
+  on(agent, oregano('apply', '--debug'), :stdin => cross_32bit_boundary_manifest)
 
   step "Verify Negative Exit Code Rollover Boundary"
 
-  #Apply the manifest and verify Puppet returns success.
-  on(agent, puppet('apply', '--debug'), :stdin => negative_boundary_manifest)
+  #Apply the manifest and verify Oregano returns success.
+  on(agent, oregano('apply', '--debug'), :stdin => negative_boundary_manifest)
 end

@@ -1,11 +1,11 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 require 'shared_behaviours/iterative_functions'
 
 describe 'the tree_each function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   context "can be called on" do
     it 'an Array, yielding path and value when lambda has arity 2' do

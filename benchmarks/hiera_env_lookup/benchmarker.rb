@@ -9,22 +9,22 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
-    @config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', @config])
-    envs = Puppet.lookup(:environments)
-    @node = Puppet::Node.new('testing', :environment => envs.get('benchmarking'))
+    require 'oregano'
+    @config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', @config])
+    envs = Oregano.lookup(:environments)
+    @node = Oregano::Node.new('testing', :environment => envs.get('benchmarking'))
   end
 
   def run(args=nil)
-    @compiler = Puppet::Parser::Compiler.new(@node)
+    @compiler = Oregano::Parser::Compiler.new(@node)
     @compiler.compile do |catalog|
       scope = @compiler.topscope
       scope['confdir'] = 'test'
       @size.times do
         100.times do |index|
-          invocation = Puppet::Pops::Lookup::Invocation.new(scope)
-          Puppet::Pops::Lookup.lookup("x#{index}", nil, nil, true, nil, invocation)
+          invocation = Oregano::Pops::Lookup::Invocation.new(scope)
+          Oregano::Pops::Lookup.lookup("x#{index}", nil, nil, true, nil, invocation)
         end
       end
       catalog
@@ -77,8 +77,8 @@ hierarchy:
 
     templates = File.join('benchmarks', 'hiera_env_lookup')
 
-    render(File.join(templates, 'puppet.conf.erb'),
-      File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+      File.join(@target, 'oregano.conf'),
       :location => @target)
   end
 

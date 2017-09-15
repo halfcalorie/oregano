@@ -5,14 +5,14 @@
 
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:service).provider(:src)
+provider_class = Oregano::Type.type(:service).provider(:src)
 
 describe provider_class do
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   end
 
   before :each do
@@ -76,7 +76,7 @@ _EOF_
     it "should error if timeout occurs while stopping the service" do
       @provider.expects(:execute).with(['/usr/bin/startsrc', '-s', "myservice"], {:override_locale => false, :squelch => false, :combine => true, :failonfail => true})
       Timeout.expects(:timeout).with(60).raises(Timeout::Error)
-      expect { @provider.start }.to raise_error Puppet::Error, ('Timed out waiting for myservice to transition states')
+      expect { @provider.start }.to raise_error Oregano::Error, ('Timed out waiting for myservice to transition states')
     end
   end
 
@@ -90,7 +90,7 @@ _EOF_
     it "should error if timeout occurs while stopping the service" do
       @provider.expects(:execute).with(['/usr/bin/stopsrc', '-s', "myservice"], {:override_locale => false, :squelch => false, :combine => true, :failonfail => true})
       Timeout.expects(:timeout).with(60).raises(Timeout::Error)
-      expect { @provider.stop }.to raise_error Puppet::Error, ('Timed out waiting for myservice to transition states')
+      expect { @provider.stop }.to raise_error Oregano::Error, ('Timed out waiting for myservice to transition states')
     end
   end
 
@@ -169,7 +169,7 @@ _EOF_
     end
 
     it "should consider a non-existing service to be have a status of :stopped" do
-      @provider.expects(:execute).with(['/usr/bin/lssrc', '-s', 'myservice']).raises(Puppet::ExecutionFailure, "fail")
+      @provider.expects(:execute).with(['/usr/bin/lssrc', '-s', 'myservice']).raises(Oregano::ExecutionFailure, "fail")
       expect(@provider.status).to eq(:stopped)
     end
   end
@@ -188,7 +188,7 @@ _EOF_
     it "should execute restart which runs stop then start" do
       sample_output =  <<_EOF_
 #subsysname:synonym:cmdargs:path:uid:auditid:standin:standout:standerr:action:multi:contact:svrkey:svrmtype:priority:signorm:sigforce:display:waittime:grpname:
-myservice::--no-daemonize:/usr/sbin/puppetd:0:0:/dev/null:/var/log/puppet.log:/var/log/puppet.log:-O:-Q:-S:0:0:20:15:9:-d:20::"
+myservice::--no-daemonize:/usr/sbin/oreganod:0:0:/dev/null:/var/log/oregano.log:/var/log/oregano.log:-O:-Q:-S:0:0:20:15:9:-d:20::"
 _EOF_
 
       @provider.expects(:execute).with(['/usr/bin/lssrc', '-Ss', "myservice"]).returns sample_output

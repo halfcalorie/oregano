@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/settings'
-require 'puppet/settings/priority_setting'
-require 'puppet/util/platform'
+require 'oregano/settings'
+require 'oregano/settings/priority_setting'
+require 'oregano/util/platform'
 
-describe Puppet::Settings::PrioritySetting do
+describe Oregano::Settings::PrioritySetting do
   let(:setting) { described_class.new(:settings => mock('settings'), :desc => "test") }
 
   it "is of type :priority" do
@@ -33,11 +33,11 @@ describe Puppet::Settings::PrioritySetting do
       [ 'foo', 'realtime', true, 8.3, [] ].each do |value|
         expect {
           setting.munge(value)
-        }.to raise_error(Puppet::Settings::ValidationError)
+        }.to raise_error(Oregano::Settings::ValidationError)
       end
     end
 
-    describe "on a Unix-like platform it", :unless => Puppet::Util::Platform.windows? do
+    describe "on a Unix-like platform it", :unless => Oregano::Util::Platform.windows? do
       it "parses high, normal, low, and idle priorities" do
         {
           'high'   => -10,
@@ -50,13 +50,13 @@ describe Puppet::Settings::PrioritySetting do
       end
     end
 
-    describe "on a Windows-like platform it", :if => Puppet::Util::Platform.windows? do
+    describe "on a Windows-like platform it", :if => Oregano::Util::Platform.windows? do
       it "parses high, normal, low, and idle priorities" do
         {
-          'high'   => Puppet::Util::Windows::Process::HIGH_PRIORITY_CLASS,
-          'normal' => Puppet::Util::Windows::Process::NORMAL_PRIORITY_CLASS,
-          'low'    => Puppet::Util::Windows::Process::BELOW_NORMAL_PRIORITY_CLASS,
-          'idle'   => Puppet::Util::Windows::Process::IDLE_PRIORITY_CLASS
+          'high'   => Oregano::Util::Windows::Process::HIGH_PRIORITY_CLASS,
+          'normal' => Oregano::Util::Windows::Process::NORMAL_PRIORITY_CLASS,
+          'low'    => Oregano::Util::Windows::Process::BELOW_NORMAL_PRIORITY_CLASS,
+          'idle'   => Oregano::Util::Windows::Process::IDLE_PRIORITY_CLASS
         }.each do |value, converted_value|
           expect(setting.munge(value)).to eq(converted_value)
         end

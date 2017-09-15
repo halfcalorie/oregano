@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-module Puppet::Util::Plist
+module Oregano::Util::Plist
 end
 
 # We use this as a reasonable way to obtain all the support infrastructure.
 [:group].each do |type_for_this_round|
-  provider_class = Puppet::Type.type(type_for_this_round).provider(:directoryservice)
+  provider_class = Oregano::Type.type(type_for_this_round).provider(:directoryservice)
 
   describe provider_class do
     before do
@@ -42,23 +42,23 @@ end
 
 describe 'DirectoryService.single_report' do
   it 'should use plist data' do
-    Puppet::Provider::NameService::DirectoryService.stubs(:get_ds_path).returns('Users')
-    Puppet::Provider::NameService::DirectoryService.stubs(:list_all_present).returns(
+    Oregano::Provider::NameService::DirectoryService.stubs(:get_ds_path).returns('Users')
+    Oregano::Provider::NameService::DirectoryService.stubs(:list_all_present).returns(
       ['root', 'user1', 'user2', 'resource_name']
     )
-    Puppet::Provider::NameService::DirectoryService.stubs(:generate_attribute_hash)
-    Puppet::Provider::NameService::DirectoryService.stubs(:execute)
-    Puppet::Provider::NameService::DirectoryService.expects(:parse_dscl_plist_data)
+    Oregano::Provider::NameService::DirectoryService.stubs(:generate_attribute_hash)
+    Oregano::Provider::NameService::DirectoryService.stubs(:execute)
+    Oregano::Provider::NameService::DirectoryService.expects(:parse_dscl_plist_data)
 
-    Puppet::Provider::NameService::DirectoryService.single_report('resource_name')
+    Oregano::Provider::NameService::DirectoryService.single_report('resource_name')
   end
 end
 
 describe 'DirectoryService.get_exec_preamble' do
   it 'should use plist data' do
-    Puppet::Provider::NameService::DirectoryService.stubs(:get_ds_path).returns('Users')
+    Oregano::Provider::NameService::DirectoryService.stubs(:get_ds_path).returns('Users')
 
-    expect(Puppet::Provider::NameService::DirectoryService.get_exec_preamble('-list')).to include("-plist")
+    expect(Oregano::Provider::NameService::DirectoryService.get_exec_preamble('-list')).to include("-plist")
   end
 end
 
@@ -79,7 +79,7 @@ describe 'DirectoryService password behavior' do
   end
 
   let :ds_provider do
-    Puppet::Provider::NameService::DirectoryService
+    Oregano::Provider::NameService::DirectoryService
   end
 
   let :shadow_hash_data do
@@ -87,13 +87,13 @@ describe 'DirectoryService password behavior' do
   end
 
   subject do
-    Puppet::Provider::NameService::DirectoryService
+    Oregano::Provider::NameService::DirectoryService
   end
 
   it 'should execute convert_binary_to_hash once when getting the password' do
     subject.expects(:convert_binary_to_hash).returns({'SALTED-SHA512' => pw_string})
-    Puppet::FileSystem.expects(:exist?).with(plist_path).once.returns(true)
-    Puppet::Util::Plist.expects(:read_plist_file).returns(shadow_hash_data)
+    Oregano::FileSystem.expects(:exist?).with(plist_path).once.returns(true)
+    Oregano::Util::Plist.expects(:read_plist_file).returns(shadow_hash_data)
     subject.get_password('uid', 'jeff')
   end
 
@@ -106,24 +106,24 @@ describe 'DirectoryService password behavior' do
   it 'should convert xml-to-binary and binary-to-xml when setting the pw on >= 10.7' do
     subject.expects(:convert_binary_to_hash).returns({'SALTED-SHA512' => pw_string})
     subject.expects(:convert_hash_to_binary).returns(binary_plist)
-    Puppet::FileSystem.expects(:exist?).with(plist_path).once.returns(true)
-    Puppet::Util::Plist.expects(:read_plist_file).returns(shadow_hash_data)
-    Puppet::Util::Plist.expects(:write_plist_file).with(shadow_hash_data, plist_path, :binary)
+    Oregano::FileSystem.expects(:exist?).with(plist_path).once.returns(true)
+    Oregano::Util::Plist.expects(:read_plist_file).returns(shadow_hash_data)
+    Oregano::Util::Plist.expects(:write_plist_file).with(shadow_hash_data, plist_path, :binary)
     subject.set_password('jeff', 'uid', sha512_hash)
   end
 
   it '[#13686] should handle an empty ShadowHashData field in the users plist' do
     subject.expects(:convert_hash_to_binary).returns(binary_plist)
-    Puppet::FileSystem.expects(:exist?).with(plist_path).once.returns(true)
-    Puppet::Util::Plist.expects(:read_plist_file).returns({'ShadowHashData' => nil})
-    Puppet::Util::Plist.expects(:write_plist_file)
+    Oregano::FileSystem.expects(:exist?).with(plist_path).once.returns(true)
+    Oregano::Util::Plist.expects(:read_plist_file).returns({'ShadowHashData' => nil})
+    Oregano::Util::Plist.expects(:write_plist_file)
     subject.set_password('jeff', 'uid', sha512_hash)
   end
 end
 
 describe '(#4855) directoryservice group resource failure' do
   let :provider_class do
-    Puppet::Type.type(:group).provider(:directoryservice)
+    Oregano::Type.type(:group).provider(:directoryservice)
   end
 
   let :group_members do
@@ -153,7 +153,7 @@ describe '(#4855) directoryservice group resource failure' do
     stub_resource.stubs(:name).returns('fake_group')
     subject.expects(:execute).with([:dseditgroup, '-o', 'edit', '-n', '.',
                                    '-d', 'jeff',
-                                   'fake_group']).raises(Puppet::ExecutionFailure,
+                                   'fake_group']).raises(Oregano::ExecutionFailure,
                                    'it broke')
     subject.expects(:execute).with([:dscl, '.', '-delete',
                                    '/Groups/fake_group', 'GroupMembership',

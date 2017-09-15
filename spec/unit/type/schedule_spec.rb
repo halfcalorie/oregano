@@ -22,15 +22,15 @@ module ScheduleTesting
 
 end
 
-describe Puppet::Type.type(:schedule) do
+describe Oregano::Type.type(:schedule) do
   include ScheduleTesting
   before :each do
-    Puppet[:ignoreschedules] = false
+    Oregano[:ignoreschedules] = false
 
-    @schedule = Puppet::Type.type(:schedule).new(:name => "testing")
+    @schedule = Oregano::Type.type(:schedule).new(:name => "testing")
   end
 
-  describe Puppet::Type.type(:schedule) do
+  describe Oregano::Type.type(:schedule) do
     it "should apply to device" do
       expect(@schedule).to be_appliable_to_device
     end
@@ -53,30 +53,30 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when producing default schedules" do
+  describe Oregano::Type.type(:schedule), "when producing default schedules" do
     %w{hourly daily weekly monthly never}.each do |period|
       period = period.to_sym
       it "should produce a #{period} schedule with the period set appropriately" do
-        schedules = Puppet::Type.type(:schedule).mkdefaultschedules
-        expect(schedules.find { |s| s[:name] == period.to_s and s[:period] == period }).to be_instance_of(Puppet::Type.type(:schedule))
+        schedules = Oregano::Type.type(:schedule).mkdefaultschedules
+        expect(schedules.find { |s| s[:name] == period.to_s and s[:period] == period }).to be_instance_of(Oregano::Type.type(:schedule))
       end
     end
 
     it "should not produce default schedules when default_schedules is false"  do
-      Puppet[:default_schedules] = false
-      schedules = Puppet::Type.type(:schedule).mkdefaultschedules
+      Oregano[:default_schedules] = false
+      schedules = Oregano::Type.type(:schedule).mkdefaultschedules
       expect(schedules).to have_exactly(0).items
     end
 
-    it "should produce a schedule named puppet with a period of hourly and a repeat of 2" do
-      schedules = Puppet::Type.type(:schedule).mkdefaultschedules
+    it "should produce a schedule named oregano with a period of hourly and a repeat of 2" do
+      schedules = Oregano::Type.type(:schedule).mkdefaultschedules
       expect(schedules.find { |s|
-        s[:name] == "puppet" and s[:period] == :hourly and s[:repeat] == 2
-      }).to be_instance_of(Puppet::Type.type(:schedule))
+        s[:name] == "oregano" and s[:period] == :hourly and s[:repeat] == 2
+      }).to be_instance_of(Oregano::Type.type(:schedule))
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges" do
+  describe Oregano::Type.type(:schedule), "when matching ranges" do
     before do
       Time.stubs(:now).returns(Time.local(2011, "may", 23, 11, 0, 0))
     end
@@ -112,7 +112,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges with abbreviated time specifications" do
+  describe Oregano::Type.type(:schedule), "when matching ranges with abbreviated time specifications" do
     before do
       Time.stubs(:now).returns(Time.local(2011, "may", 23, 11, 45, 59))
     end
@@ -133,7 +133,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges with abbreviated time specifications, edge cases part 1" do
+  describe Oregano::Type.type(:schedule), "when matching ranges with abbreviated time specifications, edge cases part 1" do
     before do
       Time.stubs(:now).returns(Time.local(2011, "may", 23, 11, 00, 00))
     end
@@ -159,7 +159,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges with abbreviated time specifications, edge cases part 2" do
+  describe Oregano::Type.type(:schedule), "when matching ranges with abbreviated time specifications, edge cases part 2" do
     before do
       Time.stubs(:now).returns(Time.local(2011, "may", 23, 11, 00, 01))
     end
@@ -185,7 +185,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges with abbreviated time specifications, edge cases part 3" do
+  describe Oregano::Type.type(:schedule), "when matching ranges with abbreviated time specifications, edge cases part 3" do
     before do
       Time.stubs(:now).returns(Time.local(2011, "may", 23, 10, 59, 59))
     end
@@ -211,7 +211,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges spanning days, day 1" do
+  describe Oregano::Type.type(:schedule), "when matching ranges spanning days, day 1" do
     before do
       # Test with the current time at a month's end boundary to ensure we are
       # advancing the day properly when we push the ending limit out a day.
@@ -231,7 +231,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching ranges spanning days, day 2" do
+  describe Oregano::Type.type(:schedule), "when matching ranges spanning days, day 2" do
     before do
       # Test with the current time at a month's end boundary to ensure we are
       # advancing the day properly when we push the ending limit out a day.
@@ -256,7 +256,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching hourly by distance" do
+  describe Oregano::Type.type(:schedule), "when matching hourly by distance" do
     before do
       @schedule[:period] = :hourly
       @schedule[:periodmatch] = :distance
@@ -277,7 +277,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching daily by distance" do
+  describe Oregano::Type.type(:schedule), "when matching daily by distance" do
     before do
       @schedule[:period] = :daily
       @schedule[:periodmatch] = :distance
@@ -298,7 +298,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching weekly by distance" do
+  describe Oregano::Type.type(:schedule), "when matching weekly by distance" do
     before do
       @schedule[:period] = :weekly
       @schedule[:periodmatch] = :distance
@@ -319,7 +319,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching monthly by distance" do
+  describe Oregano::Type.type(:schedule), "when matching monthly by distance" do
     before do
       @schedule[:period] = :monthly
       @schedule[:periodmatch] = :distance
@@ -340,7 +340,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching hourly by number" do
+  describe Oregano::Type.type(:schedule), "when matching hourly by number" do
     before do
       @schedule[:period] = :hourly
       @schedule[:periodmatch] = :number
@@ -363,7 +363,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching daily by number" do
+  describe Oregano::Type.type(:schedule), "when matching daily by number" do
     before do
       @schedule[:period] = :daily
       @schedule[:periodmatch] = :number
@@ -392,7 +392,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching weekly by number" do
+  describe Oregano::Type.type(:schedule), "when matching weekly by number" do
     before do
       @schedule[:period] = :weekly
       @schedule[:periodmatch] = :number
@@ -415,7 +415,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching monthly by number" do
+  describe Oregano::Type.type(:schedule), "when matching monthly by number" do
     before do
       @schedule[:period] = :monthly
       @schedule[:periodmatch] = :number
@@ -438,7 +438,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching with a repeat greater than one" do
+  describe Oregano::Type.type(:schedule), "when matching with a repeat greater than one" do
     before do
       @schedule[:period] = :daily
       @schedule[:repeat] = 2
@@ -448,7 +448,7 @@ describe Puppet::Type.type(:schedule) do
 
     it "should fail if the periodmatch is 'number'" do
       @schedule[:periodmatch] = :number
-      expect(proc { @schedule[:repeat] = 2 }).to raise_error(Puppet::Error)
+      expect(proc { @schedule[:repeat] = 2 }).to raise_error(Oregano::Error)
     end
 
     it "should match if the previous run was further away than the distance divided by the repeat" do
@@ -462,18 +462,18 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching days of the week" do
+  describe Oregano::Type.type(:schedule), "when matching days of the week" do
     before do
       # 2011-05-23 is a Monday
       Time.stubs(:now).returns(Time.local(2011, "may", 23, 11, 0, 0))
     end
 
     it "should raise an error if the weekday is 'Someday'" do
-      expect { @schedule[:weekday] = "Someday" }.to raise_error(Puppet::Error)
+      expect { @schedule[:weekday] = "Someday" }.to raise_error(Oregano::Error)
     end
 
     it "should raise an error if the weekday is '7'" do
-      expect { @schedule[:weekday] = "7" }.to raise_error(Puppet::Error)
+      expect { @schedule[:weekday] = "7" }.to raise_error(Oregano::Error)
     end
 
     it "should accept all full weekday names as valid values" do
@@ -542,7 +542,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching days of week and ranges spanning days, day 1" do
+  describe Oregano::Type.type(:schedule), "when matching days of week and ranges spanning days, day 1" do
     before do
       # Test with ranges and days-of-week both set. 2011-03-31 was a Thursday.
       Time.stubs(:now).returns(Time.local(2011, "mar", 31, 22, 30, 0))
@@ -573,7 +573,7 @@ describe Puppet::Type.type(:schedule) do
     end
   end
 
-  describe Puppet::Type.type(:schedule), "when matching days of week and ranges spanning days, day 2" do
+  describe Oregano::Type.type(:schedule), "when matching days of week and ranges spanning days, day 2" do
     before do
       # 2011-03-31 was a Thursday. As the end-time of a day spanning match, that means
       # we need to match on Wednesday.

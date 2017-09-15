@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/forge'
+require 'oregano/forge'
 require 'net/http'
-require 'puppet/module_tool'
+require 'oregano/module_tool'
 
-describe Puppet::Forge do
+describe Oregano::Forge do
   let(:http_response) do
   <<-EOF
     {
@@ -18,24 +18,24 @@ describe Puppet::Forge do
       },
       "results": [
         {
-          "uri": "/v3/modules/puppetlabs-bacula",
+          "uri": "/v3/modules/oreganolabs-bacula",
           "name": "bacula",
           "downloads": 640274,
           "created_at": "2011-05-24 18:34:58 -0700",
           "updated_at": "2013-12-03 15:24:20 -0800",
           "owner": {
-            "uri": "/v3/users/puppetlabs",
-            "username": "puppetlabs",
+            "uri": "/v3/users/oreganolabs",
+            "username": "oreganolabs",
             "gravatar_id": "fdd009b7c1ec96e088b389f773e87aec"
           },
           "current_release": {
-            "uri": "/v3/releases/puppetlabs-bacula-0.0.2",
+            "uri": "/v3/releases/oreganolabs-bacula-0.0.2",
             "module": {
-              "uri": "/v3/modules/puppetlabs-bacula",
+              "uri": "/v3/modules/oreganolabs-bacula",
               "name": "bacula",
               "owner": {
-                "uri": "/v3/users/puppetlabs",
-                "username": "puppetlabs",
+                "uri": "/v3/users/oreganolabs",
+                "username": "oreganolabs",
                 "gravatar_id": "fdd009b7c1ec96e088b389f773e87aec"
               }
             },
@@ -45,18 +45,18 @@ describe Puppet::Forge do
               "license": "Apache 2.0",
               "checksums": { },
               "version": "0.0.2",
-              "source": "git://github.com/puppetlabs/puppetlabs-bacula.git",
-              "project_page": "https://github.com/puppetlabs/puppetlabs-bacula",
+              "source": "git://github.com/oreganolabs/oreganolabs-bacula.git",
+              "project_page": "https://github.com/oreganolabs/oreganolabs-bacula",
               "summary": "bacula",
               "dependencies": [ ],
-              "author": "puppetlabs",
-              "name": "puppetlabs-bacula"
+              "author": "oreganolabs",
+              "name": "oreganolabs-bacula"
             },
             "tags": [
               "backup",
               "bacula"
             ],
-            "file_uri": "/v3/files/puppetlabs-bacula-0.0.2.tar.gz",
+            "file_uri": "/v3/files/oreganolabs-bacula-0.0.2.tar.gz",
             "file_size": 67586,
             "file_md5": "bbf919d7ee9d278d2facf39c25578bf8",
             "downloads": 565041,
@@ -69,16 +69,16 @@ describe Puppet::Forge do
           },
           "releases": [
             {
-              "uri": "/v3/releases/puppetlabs-bacula-0.0.2",
+              "uri": "/v3/releases/oreganolabs-bacula-0.0.2",
               "version": "0.0.2"
             },
             {
-              "uri": "/v3/releases/puppetlabs-bacula-0.0.1",
+              "uri": "/v3/releases/oreganolabs-bacula-0.0.1",
               "version": "0.0.1"
             }
           ],
-          "homepage_url": "https://github.com/puppetlabs/puppetlabs-bacula",
-          "issues_url": "https://projects.puppetlabs.com/projects/bacula/issues"
+          "homepage_url": "https://github.com/oreganolabs/oreganolabs-bacula",
+          "issues_url": "https://projects.oreganolabs.com/projects/bacula/issues"
         }
       ]
     }
@@ -88,21 +88,21 @@ describe Puppet::Forge do
   let(:search_results) do
     JSON.parse(http_response)['results'].map do |hash|
       hash.merge(
-        "author" => "puppetlabs",
+        "author" => "oreganolabs",
         "name" => "bacula",
         "tag_list" => ["backup", "bacula"],
-        "full_name" => "puppetlabs/bacula",
+        "full_name" => "oreganolabs/bacula",
         "version" => "0.0.2",
-        "project_url" => "https://github.com/puppetlabs/puppetlabs-bacula",
+        "project_url" => "https://github.com/oreganolabs/oreganolabs-bacula",
         "desc" => "bacula"
       )
     end
   end
 
-  let(:forge) { Puppet::Forge.new }
+  let(:forge) { Oregano::Forge.new }
 
   def repository_responds_with(response)
-    Puppet::Forge::Repository.any_instance.stubs(:make_http_request).returns(response)
+    Oregano::Forge::Repository.any_instance.stubs(:make_http_request).returns(response)
   end
 
   it "returns a list of matches from the forge when there are matches for the search term" do
@@ -119,7 +119,7 @@ describe Puppet::Forge do
 
     before :each do
       repository_responds_with(stub(:body => release_response, :code => '200')).with {|uri| uri =~ /module_groups=foo/}
-      Puppet[:module_groups] = "foo"
+      Oregano[:module_groups] = "foo"
     end
 
     it "passes module_groups with search" do
@@ -127,7 +127,7 @@ describe Puppet::Forge do
     end
 
     it "passes module_groups with fetch" do
-      forge.fetch('puppetlabs-bacula')
+      forge.fetch('oreganolabs-bacula')
     end
   end
 
@@ -137,11 +137,11 @@ describe Puppet::Forge do
     end
 
     it "raises an error for search" do
-      expect { forge.search('bacula') }.to raise_error Puppet::Forge::Errors::ResponseError, "Request to Puppet Forge failed. Detail: 404 not found."
+      expect { forge.search('bacula') }.to raise_error Oregano::Forge::Errors::ResponseError, "Request to Oregano Forge failed. Detail: 404 not found."
     end
 
     it "raises an error for fetch" do
-      expect { forge.fetch('puppetlabs/bacula') }.to raise_error Puppet::Forge::Errors::ResponseError, "Request to Puppet Forge failed. Detail: 404 not found."
+      expect { forge.fetch('oreganolabs/bacula') }.to raise_error Oregano::Forge::Errors::ResponseError, "Request to Oregano Forge failed. Detail: 404 not found."
     end
   end
 
@@ -151,7 +151,7 @@ describe Puppet::Forge do
     end
 
     it "raises an error for fetch" do
-      expect { forge.fetch('puppetlabs/bacula') }.to raise_error Puppet::Forge::Errors::ResponseError, "Request to Puppet Forge failed. Detail: 410 Gone."
+      expect { forge.fetch('oreganolabs/bacula') }.to raise_error Oregano::Forge::Errors::ResponseError, "Request to Oregano Forge failed. Detail: 410 Gone."
     end
   end
 
@@ -165,7 +165,7 @@ describe Puppet::Forge do
     end
 
     it "ignores modules with unparseable dependencies" do
-      expect { result = forge.fetch('puppetlabs/bacula') }.to_not raise_error
+      expect { result = forge.fetch('oreganolabs/bacula') }.to_not raise_error
       expect { result.to be_empty }
     end
   end

@@ -64,7 +64,7 @@ step "Add an sshkey to the default file" do
           "key=how_about_the_key_of_c",
           "type=ssh-rsa",
          ]
-  on(agent, puppet_resource("sshkey", "#{keyname}", args))
+  on(agent, oregano_resource("sshkey", "#{keyname}", args))
 end
 
 step 'Verify the new entry in the default file' do

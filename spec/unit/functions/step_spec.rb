@@ -1,18 +1,18 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 require 'shared_behaviours/iterative_functions'
 
 describe 'the step method' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   it 'raises an error when given a type that cannot be iterated' do
     expect do
       compile_to_catalog(<<-MANIFEST)
         3.14.step(1) |$v| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects an Iterable value, got Float/)
+    end.to raise_error(Oregano::Error, /expects an Iterable value, got Float/)
   end
 
   it 'raises an error when called with more than two arguments and a block' do
@@ -20,7 +20,7 @@ describe 'the step method' do
       compile_to_catalog(<<-MANIFEST)
         [1].step(1,2) |$v| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects 2 arguments, got 3/)
+    end.to raise_error(Oregano::Error, /expects 2 arguments, got 3/)
   end
 
   it 'raises an error when called with more than two arguments and without a block' do
@@ -28,7 +28,7 @@ describe 'the step method' do
       compile_to_catalog(<<-MANIFEST)
         [1].step(1,2)
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects 2 arguments, got 3/)
+    end.to raise_error(Oregano::Error, /expects 2 arguments, got 3/)
   end
 
   it 'raises an error when called with a block with too many required parameters' do
@@ -36,7 +36,7 @@ describe 'the step method' do
       compile_to_catalog(<<-MANIFEST)
         [1].step(1) |$v1, $v2| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /block expects 1 argument, got 2/)
+    end.to raise_error(Oregano::Error, /block expects 1 argument, got 2/)
   end
 
   it 'raises an error when called with a block with too few parameters' do
@@ -44,7 +44,7 @@ describe 'the step method' do
       compile_to_catalog(<<-MANIFEST)
         [1].step(1) | | {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /block expects 1 argument, got none/)
+    end.to raise_error(Oregano::Error, /block expects 1 argument, got none/)
   end
 
   it 'raises an error when called with step == 0' do
@@ -52,7 +52,7 @@ describe 'the step method' do
       compile_to_catalog(<<-MANIFEST)
         [1].step(0) |$x| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /'step' expects an Integer\[1, default\] value, got Integer\[0, 0\]/)
+    end.to raise_error(Oregano::Error, /'step' expects an Integer\[1, default\] value, got Integer\[0, 0\]/)
   end
 
   it 'raises an error when step is not an integer' do
@@ -60,7 +60,7 @@ describe 'the step method' do
       compile_to_catalog(<<-MANIFEST)
         [1].step('three') |$x| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /'step' expects an Integer value, got String/)
+    end.to raise_error(Oregano::Error, /'step' expects an Integer value, got String/)
   end
 
   it 'does not raise an error when called with a block with too many but optional arguments' do

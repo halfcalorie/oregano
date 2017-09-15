@@ -1,23 +1,23 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/certificate/ca'
+require 'oregano/indirector/certificate/ca'
 
-describe Puppet::SSL::Certificate::Ca do
+describe Oregano::SSL::Certificate::Ca do
   it "should have documentation" do
-    expect(Puppet::SSL::Certificate::Ca.doc).to be_instance_of(String)
+    expect(Oregano::SSL::Certificate::Ca.doc).to be_instance_of(String)
   end
 
   it "should use the :signeddir as the collection directory" do
-    Puppet[:signeddir] = File.expand_path("/cert/dir")
-    expect(Puppet::SSL::Certificate::Ca.collection_directory).to eq(Puppet[:signeddir])
+    Oregano[:signeddir] = File.expand_path("/cert/dir")
+    expect(Oregano::SSL::Certificate::Ca.collection_directory).to eq(Oregano[:signeddir])
   end
 
   it "should store the ca certificate at the :cacert location" do
-    Puppet.settings.stubs(:use)
-    Puppet[:cacert] = File.expand_path("/ca/cert")
-    file = Puppet::SSL::Certificate::Ca.new
+    Oregano.settings.stubs(:use)
+    Oregano[:cacert] = File.expand_path("/ca/cert")
+    file = Oregano::SSL::Certificate::Ca.new
     file.stubs(:ca?).returns true
-    expect(file.path("whatever")).to eq(Puppet[:cacert])
+    expect(file.path("whatever")).to eq(Oregano[:cacert])
   end
 end

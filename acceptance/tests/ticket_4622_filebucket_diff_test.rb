@@ -9,21 +9,21 @@ tag 'audit:medium',
     'server'
 
 def get_checksum_from_backup_on(host, filename, bucket_locale)
-  on host, puppet("filebucket backup #{filename} #{bucket_locale}"), :acceptable_exit_codes => [ 0, 2 ]
+  on host, oregano("filebucket backup #{filename} #{bucket_locale}"), :acceptable_exit_codes => [ 0, 2 ]
   output = result.stdout.strip.split(": ")
   checksum = output.last
   return checksum
 end
 
 def validate_diff_on(host, item_one, item_two, bucket_locale)
-  on host, puppet("filebucket diff #{item_one} #{item_two} #{bucket_locale}"), :acceptable_exit_codes => [ 0, 2 ]
+  on host, oregano("filebucket diff #{item_one} #{item_two} #{bucket_locale}"), :acceptable_exit_codes => [ 0, 2 ]
   assert_match(/[-<] ?foo/, result.stdout.strip)
   assert_match(/[+>] ?bar/, result.stdout.strip)
   assert_match(/[+>] ?baz/, result.stdout.strip)
 end
 
-step "Master: Start Puppet Master" do
-  with_puppet_running_on(master, {}) do
+step "Master: Start Oregano Master" do
+  with_oregano_running_on(master, {}) do
     agents.each do |agent|
 
       tmpfile = agent.tmpfile('testfile')

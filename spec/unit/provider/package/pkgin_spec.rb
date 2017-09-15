@@ -1,12 +1,12 @@
 require "spec_helper"
 
-provider_class = Puppet::Type.type(:package).provider(:pkgin)
+provider_class = Oregano::Type.type(:package).provider(:pkgin)
 
 describe provider_class do
-  let(:resource) { Puppet::Type.type(:package).new(:name => "vim", :provider => :pkgin) }
+  let(:resource) { Oregano::Type.type(:package).new(:name => "vim", :provider => :pkgin) }
   subject        { resource.provider }
 
-  describe "Puppet provider interface" do
+  describe "Oregano provider interface" do
     it "can return the list of all packages" do
       expect(provider_class).to respond_to(:instances)
     end
@@ -126,11 +126,11 @@ SEARCH
 
     context "when the package cannot be found" do
       let(:pkgin_search_output) do
-        "No results found for is-puppet"
+        "No results found for is-oregano"
       end
 
       it "returns nil" do
-        expect { subject.latest }.to raise_error(Puppet::Error, "No candidate to be installed")
+        expect { subject.latest }.to raise_error(Oregano::Error, "No candidate to be installed")
       end
     end
   end
@@ -147,10 +147,10 @@ SEARCH
     end
 
     context "with an installed package with a hyphen in the name" do
-      let(:package) { "ruby18-puppet-0.25.5nb1;>;Configuration management framework written in Ruby" }
+      let(:package) { "ruby18-oregano-0.25.5nb1;>;Configuration management framework written in Ruby" }
 
       it "extracts the name and status" do
-        expect(provider_class.parse_pkgin_line(package)).to eq({ :name =>  "ruby18-puppet",
+        expect(provider_class.parse_pkgin_line(package)).to eq({ :name =>  "ruby18-oregano",
                                                              :status => ">" ,
                                                              :ensure => "0.25.5nb1" })
       end

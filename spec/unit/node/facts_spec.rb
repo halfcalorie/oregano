@@ -1,30 +1,30 @@
 #! /usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/node/facts'
+require 'oregano/node/facts'
 require 'matchers/json'
 
-describe Puppet::Node::Facts, "when indirecting" do
+describe Oregano::Node::Facts, "when indirecting" do
   include JSONMatchers
 
   before do
-    @facts = Puppet::Node::Facts.new("me")
+    @facts = Oregano::Node::Facts.new("me")
   end
 
   describe "adding local facts" do
     it "should add the node's certificate name as the 'clientcert' fact" do
       @facts.add_local_facts
-      expect(@facts.values["clientcert"]).to eq(Puppet.settings[:certname])
+      expect(@facts.values["clientcert"]).to eq(Oregano.settings[:certname])
     end
 
-    it "adds the Puppet version as a 'clientversion' fact" do
+    it "adds the Oregano version as a 'clientversion' fact" do
       @facts.add_local_facts
-      expect(@facts.values["clientversion"]).to eq(Puppet.version.to_s)
+      expect(@facts.values["clientversion"]).to eq(Oregano.version.to_s)
     end
 
     it "adds the agent side noop setting as 'clientnoop'" do
       @facts.add_local_facts
-      expect(@facts.values["clientnoop"]).to eq(Puppet.settings[:noop])
+      expect(@facts.values["clientnoop"]).to eq(Oregano.settings[:noop])
     end
 
     it "doesn't add the current environment" do
@@ -87,26 +87,26 @@ describe Puppet::Node::Facts, "when indirecting" do
     before do
       @indirection = stub 'indirection', :request => mock('request'), :name => :facts
 
-      @facts = Puppet::Node::Facts.new("me", "one" => "two")
+      @facts = Oregano::Node::Facts.new("me", "one" => "two")
     end
 
     it "should redirect to the specified fact store for storage" do
-      Puppet::Node::Facts.stubs(:indirection).returns(@indirection)
+      Oregano::Node::Facts.stubs(:indirection).returns(@indirection)
       @indirection.expects(:save)
-      Puppet::Node::Facts.indirection.save(@facts)
+      Oregano::Node::Facts.indirection.save(@facts)
     end
 
-    describe "when the Puppet application is 'master'" do
+    describe "when the Oregano application is 'master'" do
       it "should default to the 'yaml' terminus" do
         pending "Cannot test the behavior of defaults in defaults.rb"
-        expect(Puppet::Node::Facts.indirection.terminus_class).to eq(:yaml)
+        expect(Oregano::Node::Facts.indirection.terminus_class).to eq(:yaml)
       end
     end
 
-    describe "when the Puppet application is not 'master'" do
+    describe "when the Oregano application is not 'master'" do
       it "should default to the 'facter' terminus" do
         pending "Cannot test the behavior of defaults in defaults.rb"
-        expect(Puppet::Node::Facts.indirection.terminus_class).to eq(:facter)
+        expect(Oregano::Node::Facts.indirection.terminus_class).to eq(:facter)
       end
     end
 
@@ -115,7 +115,7 @@ describe Puppet::Node::Facts, "when indirecting" do
   describe "when storing and retrieving" do
     it "doesn't manufacture a `_timestamp` fact value" do
       values = {"one" => "two", "three" => "four"}
-      facts = Puppet::Node::Facts.new("mynode", values)
+      facts = Oregano::Node::Facts.new("mynode", values)
 
       expect(facts.values).to eq(values)
     end
@@ -125,12 +125,12 @@ describe Puppet::Node::Facts, "when indirecting" do
       let(:expiration) { Time.parse("Thu Oct 28 11:21:31 -0700 2010") }
 
       def create_facts(values = {})
-        Puppet::Node::Facts.new('mynode', values)
+        Oregano::Node::Facts.new('mynode', values)
       end
 
       def deserialize_yaml_facts(facts)
-        format = Puppet::Network::FormatHandler.format('yaml')
-        format.intern(Puppet::Node::Facts, facts.to_yaml)
+        format = Oregano::Network::FormatHandler.format('yaml')
+        format.intern(Oregano::Node::Facts, facts.to_yaml)
       end
 
       it 'preserves `_timestamp` value' do
@@ -168,8 +168,8 @@ describe Puppet::Node::Facts, "when indirecting" do
 
       it "should accept properly formatted json" do
         json = %Q({"name": "foo", "expiration": "#{@expiration}", "timestamp": "#{@timestamp}", "values": {"a": "1", "b": "2", "c": "3"}})
-        format = Puppet::Network::FormatHandler.format('json')
-        facts = format.intern(Puppet::Node::Facts, json)
+        format = Oregano::Network::FormatHandler.format('json')
+        facts = format.intern(Oregano::Node::Facts, json)
         expect(facts.name).to eq('foo')
         expect(facts.expiration).to eq(@expiration)
         expect(facts.timestamp).to eq(@timestamp)
@@ -178,7 +178,7 @@ describe Puppet::Node::Facts, "when indirecting" do
 
       it "should generate properly formatted json" do
         Time.stubs(:now).returns(@timestamp)
-        facts = Puppet::Node::Facts.new("foo", {'a' => 1, 'b' => 2, 'c' => 3})
+        facts = Oregano::Node::Facts.new("foo", {'a' => 1, 'b' => 2, 'c' => 3})
         facts.expiration = @expiration
         result = JSON.parse(facts.to_json)
         expect(result['name']).to eq(facts.name)
@@ -189,22 +189,22 @@ describe Puppet::Node::Facts, "when indirecting" do
 
       it "should generate valid facts data against the facts schema" do
         Time.stubs(:now).returns(@timestamp)
-        facts = Puppet::Node::Facts.new("foo", {'a' => 1, 'b' => 2, 'c' => 3})
+        facts = Oregano::Node::Facts.new("foo", {'a' => 1, 'b' => 2, 'c' => 3})
         facts.expiration = @expiration
 
         expect(facts.to_json).to validate_against('api/schemas/facts.json')
       end
 
       it "should not include nil values" do
-        facts = Puppet::Node::Facts.new("foo", {'a' => 1, 'b' => 2, 'c' => 3})
+        facts = Oregano::Node::Facts.new("foo", {'a' => 1, 'b' => 2, 'c' => 3})
         json= JSON.parse(facts.to_json)
         expect(json).not_to be_include("expiration")
       end
 
       it "should be able to handle nil values" do
         json = %Q({"name": "foo", "values": {"a": "1", "b": "2", "c": "3"}})
-        format = Puppet::Network::FormatHandler.format('json')
-        facts = format.intern(Puppet::Node::Facts, json)
+        format = Oregano::Network::FormatHandler.format('json')
+        facts = format.intern(Oregano::Node::Facts, json)
         expect(facts.name).to eq('foo')
         expect(facts.expiration).to be_nil
       end

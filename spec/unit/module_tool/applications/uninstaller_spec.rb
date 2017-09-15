@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet/module_tool'
+require 'oregano/module_tool'
 require 'tmpdir'
-require 'puppet_spec/module_tool/shared_functions'
-require 'puppet_spec/module_tool/stub_source'
+require 'oregano_spec/module_tool/shared_functions'
+require 'oregano_spec/module_tool/stub_source'
 
-describe Puppet::ModuleTool::Applications::Uninstaller do
-  include PuppetSpec::ModuleTool::SharedFunctions
-  include PuppetSpec::Files
+describe Oregano::ModuleTool::Applications::Uninstaller do
+  include OreganoSpec::ModuleTool::SharedFunctions
+  include OreganoSpec::Files
 
   before do
     FileUtils.mkdir_p(primary_dir)
@@ -14,7 +14,7 @@ describe Puppet::ModuleTool::Applications::Uninstaller do
   end
 
   let(:environment) do
-    Puppet.lookup(:current_environment).override_with(
+    Oregano.lookup(:current_environment).override_with(
       :vardir     => vardir,
       :modulepath => [ primary_dir, secondary_dir ]
     )
@@ -23,13 +23,13 @@ describe Puppet::ModuleTool::Applications::Uninstaller do
   let(:vardir)   { tmpdir('uninstaller') }
   let(:primary_dir) { File.join(vardir, "primary") }
   let(:secondary_dir) { File.join(vardir, "secondary") }
-  let(:remote_source) { PuppetSpec::ModuleTool::StubSource.new }
+  let(:remote_source) { OreganoSpec::ModuleTool::StubSource.new }
 
   let(:module) { 'module-not_installed' }
   let(:application) do
     opts = options
-    Puppet::ModuleTool.set_option_defaults(opts)
-    Puppet::ModuleTool::Applications::Uninstaller.new(self.module, opts)
+    Oregano::ModuleTool.set_option_defaults(opts)
+    Oregano::ModuleTool::Applications::Uninstaller.new(self.module, opts)
   end
 
   def options

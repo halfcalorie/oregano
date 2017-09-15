@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/agent'
-require 'puppet/agent/locker'
+require 'oregano/agent'
+require 'oregano/agent/locker'
 
 class LockerTester
-  include Puppet::Agent::Locker
+  include Oregano::Agent::Locker
 end
 
-describe Puppet::Agent::Locker do
+describe Oregano::Agent::Locker do
   before do
     @locker = LockerTester.new
   end
@@ -20,21 +20,21 @@ describe Puppet::Agent::Locker do
   ##  the tests.   --cprice 2012-04-16
 
   it "should use a Pidlock instance as its lockfile" do
-    expect(@locker.send(:lockfile)).to be_instance_of(Puppet::Util::Pidlock)
+    expect(@locker.send(:lockfile)).to be_instance_of(Oregano::Util::Pidlock)
   end
 
-  it "should use puppet's agent_catalog_run_lockfile' setting to determine its lockfile path" do
+  it "should use oregano's agent_catalog_run_lockfile' setting to determine its lockfile path" do
     lockfile = File.expand_path("/my/lock")
-    Puppet[:agent_catalog_run_lockfile] = lockfile
-    lock = Puppet::Util::Pidlock.new(lockfile)
-    Puppet::Util::Pidlock.expects(:new).with(lockfile).returns lock
+    Oregano[:agent_catalog_run_lockfile] = lockfile
+    lock = Oregano::Util::Pidlock.new(lockfile)
+    Oregano::Util::Pidlock.expects(:new).with(lockfile).returns lock
 
     @locker.send(:lockfile)
   end
 
   it "#lockfile_path provides the path to the lockfile" do
     lockfile = File.expand_path("/my/lock")
-    Puppet[:agent_catalog_run_lockfile] = lockfile
+    Oregano[:agent_catalog_run_lockfile] = lockfile
     expect(@locker.lockfile_path).to eq(File.expand_path("/my/lock"))
   end
 
@@ -61,14 +61,14 @@ describe Puppet::Agent::Locker do
   it "should raise LockError when the lock method does not receive the lock" do
     @locker.send(:lockfile).expects(:lock).returns false
 
-    expect { @locker.lock {} }.to raise_error(Puppet::LockError)
+    expect { @locker.lock {} }.to raise_error(Oregano::LockError)
   end
 
   it "should not yield when the lock method does not receive the lock" do
     @locker.send(:lockfile).expects(:lock).returns false
 
     yielded = false
-    expect { @locker.lock { yielded = true } }.to raise_error(Puppet::LockError)
+    expect { @locker.lock { yielded = true } }.to raise_error(Oregano::LockError)
     expect(yielded).to be_falsey
   end
 
@@ -76,7 +76,7 @@ describe Puppet::Agent::Locker do
     @locker.send(:lockfile).expects(:lock).returns false
     @locker.send(:lockfile).expects(:unlock).never
 
-    expect { @locker.lock {} }.to raise_error(Puppet::LockError)
+    expect { @locker.lock {} }.to raise_error(Oregano::LockError)
   end
 
   it "should unlock after yielding upon obtaining a lock" do

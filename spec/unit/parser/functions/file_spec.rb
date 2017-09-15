@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
 describe "the 'file' function" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
-  let :node     do Puppet::Node.new('localhost') end
-  let :compiler do Puppet::Parser::Compiler.new(node) end
-  let :scope    do Puppet::Parser::Scope.new(compiler) end
+  let :node     do Oregano::Node.new('localhost') end
+  let :compiler do Oregano::Parser::Compiler.new(node) end
+  let :scope    do Oregano::Parser::Scope.new(compiler) end
 
   def with_file_content(content)
     path = tmpfile('file-function')
@@ -99,6 +99,6 @@ describe "the 'file' function" do
   it "should fail when all files are absent" do
     expect {
       scope.function_file([File.expand_path('one')])
-    }.to raise_error(Puppet::ParseError, /Could not find any files/)
+    }.to raise_error(Oregano::ParseError, /Could not find any files/)
   end
 end

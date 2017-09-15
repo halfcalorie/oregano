@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
-describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Type, :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   it "should be Comparable" do
-    a = Puppet::Type.type(:notify).new(:name => "a")
-    b = Puppet::Type.type(:notify).new(:name => "b")
-    c = Puppet::Type.type(:notify).new(:name => "c")
+    a = Oregano::Type.type(:notify).new(:name => "a")
+    b = Oregano::Type.type(:notify).new(:name => "b")
+    c = Oregano::Type.type(:notify).new(:name => "c")
 
     [[a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a]].each do |this|
       expect(this.sort).to eq([a, b, c])
@@ -29,34 +29,34 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "should consider a parameter to be valid if it is a valid parameter" do
-    expect(Puppet::Type.type(:mount)).to be_valid_parameter(:name)
+    expect(Oregano::Type.type(:mount)).to be_valid_parameter(:name)
   end
 
   it "should consider a parameter to be valid if it is a valid property" do
-    expect(Puppet::Type.type(:mount)).to be_valid_parameter(:fstype)
+    expect(Oregano::Type.type(:mount)).to be_valid_parameter(:fstype)
   end
 
   it "should consider a parameter to be valid if it is a valid metaparam" do
-    expect(Puppet::Type.type(:mount)).to be_valid_parameter(:noop)
+    expect(Oregano::Type.type(:mount)).to be_valid_parameter(:noop)
   end
 
   it "should be able to retrieve a property by name" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
-    expect(resource.property(:fstype)).to be_instance_of(Puppet::Type.type(:mount).attrclass(:fstype))
+    resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
+    expect(resource.property(:fstype)).to be_instance_of(Oregano::Type.type(:mount).attrclass(:fstype))
   end
 
   it "should be able to retrieve a parameter by name" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
-    expect(resource.parameter(:name)).to be_instance_of(Puppet::Type.type(:mount).attrclass(:name))
+    resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
+    expect(resource.parameter(:name)).to be_instance_of(Oregano::Type.type(:mount).attrclass(:name))
   end
 
   it "should be able to retrieve a property by name using the :parameter method" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
-    expect(resource.parameter(:fstype)).to be_instance_of(Puppet::Type.type(:mount).attrclass(:fstype))
+    resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
+    expect(resource.parameter(:fstype)).to be_instance_of(Oregano::Type.type(:mount).attrclass(:fstype))
   end
 
   it "should be able to retrieve all set properties" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
+    resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
     props = resource.properties
     expect(props).not_to be_include(nil)
     [:fstype, :ensure, :pass].each do |name|
@@ -65,7 +65,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "can retrieve all set parameters" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present, :tag => 'foo')
+    resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present, :tag => 'foo')
     params = resource.parameters_with_value
     [:name, :provider, :ensure, :fstype, :pass, :dump, :target, :loglevel, :tag].each do |name|
       expect(params).to be_include(resource.parameter(name))
@@ -73,13 +73,13 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "can not return any `nil` values when retrieving all set parameters" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present, :tag => 'foo')
+    resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present, :tag => 'foo')
     params = resource.parameters_with_value
     expect(params).not_to be_include(nil)
   end
 
   it "can return an iterator for all set parameters" do
-    resource = Puppet::Type.type(:notify).new(:name=>'foo',:message=>'bar',:tag=>'baz',:require=> "File['foo']")
+    resource = Oregano::Type.type(:notify).new(:name=>'foo',:message=>'bar',:tag=>'baz',:require=> "File['foo']")
     params = [:name, :message, :withpath, :loglevel, :tag, :require]
     resource.eachparameter { |param|
       expect(params).to be_include(param.to_s.to_sym)
@@ -87,23 +87,23 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "should have a method for setting default values for resources" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo")).to respond_to(:set_default)
+    expect(Oregano::Type.type(:mount).new(:name => "foo")).to respond_to(:set_default)
   end
 
   it "should do nothing for attributes that have no defaults and no specified value" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo").parameter(:noop)).to be_nil
+    expect(Oregano::Type.type(:mount).new(:name => "foo").parameter(:noop)).to be_nil
   end
 
   it "should have a method for adding tags" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo")).to respond_to(:tags)
+    expect(Oregano::Type.type(:mount).new(:name => "foo")).to respond_to(:tags)
   end
 
   it "should use the tagging module" do
-    expect(Puppet::Type.type(:mount).ancestors).to be_include(Puppet::Util::Tagging)
+    expect(Oregano::Type.type(:mount).ancestors).to be_include(Oregano::Util::Tagging)
   end
 
   it "should delegate to the tagging module when tags are added" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo")
+    resource = Oregano::Type.type(:mount).new(:name => "foo")
     resource.stubs(:tag).with(:mount)
 
     resource.expects(:tag).with(:tag1, :tag2)
@@ -112,7 +112,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "should add the current type as tag" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo")
+    resource = Oregano::Type.type(:mount).new(:name => "foo")
     resource.stubs(:tag)
 
     resource.expects(:tag).with(:mount)
@@ -121,19 +121,19 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "should have a method to know if the resource is exported" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo")).to respond_to(:exported?)
+    expect(Oregano::Type.type(:mount).new(:name => "foo")).to respond_to(:exported?)
   end
 
   it "should have a method to know if the resource is virtual" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo")).to respond_to(:virtual?)
+    expect(Oregano::Type.type(:mount).new(:name => "foo")).to respond_to(:virtual?)
   end
 
   it "should consider its version to be zero if it has no catalog" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo").version).to eq(0)
+    expect(Oregano::Type.type(:mount).new(:name => "foo").version).to eq(0)
   end
 
   it "reports the correct path even after path is used during setup of the type" do
-    Puppet::Type.newtype(:testing) do
+    Oregano::Type.newtype(:testing) do
       newparam(:name) do
         isnamevar
         validate do |value|
@@ -164,8 +164,8 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
   context "resource attributes" do
     let(:resource) {
-      resource = Puppet::Type.type(:mount).new(:name => "foo")
-      catalog = Puppet::Resource::Catalog.new
+      resource = Oregano::Type.type(:mount).new(:name => "foo")
+      catalog = Oregano::Resource::Catalog.new
       catalog.version = 50
       catalog.add_resource resource
       resource
@@ -186,28 +186,28 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "should consider its type to be the name of its class" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo").type).to eq(:mount)
+    expect(Oregano::Type.type(:mount).new(:name => "foo").type).to eq(:mount)
   end
 
   it "should use any provided noop value" do
-    expect(Puppet::Type.type(:mount).new(:name => "foo", :noop => true)).to be_noop
+    expect(Oregano::Type.type(:mount).new(:name => "foo", :noop => true)).to be_noop
   end
 
   it "should use the global noop value if none is provided" do
-    Puppet[:noop] = true
-    expect(Puppet::Type.type(:mount).new(:name => "foo")).to be_noop
+    Oregano[:noop] = true
+    expect(Oregano::Type.type(:mount).new(:name => "foo")).to be_noop
   end
 
   it "should not be noop if in a non-host_config catalog" do
-    resource = Puppet::Type.type(:mount).new(:name => "foo")
-    catalog = Puppet::Resource::Catalog.new
+    resource = Oregano::Type.type(:mount).new(:name => "foo")
+    catalog = Oregano::Resource::Catalog.new
     catalog.add_resource resource
     expect(resource).not_to be_noop
   end
 
   describe "when creating an event" do
     before do
-      @resource = Puppet::Type.type(:mount).new :name => "foo"
+      @resource = Oregano::Type.type(:mount).new :name => "foo"
     end
 
     it "should have the resource's reference as the resource" do
@@ -239,7 +239,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
   describe "when creating a provider" do
     before :each do
-      @type = Puppet::Type.newtype(:provider_test_type) do
+      @type = Oregano::Type.newtype(:provider_test_type) do
         newparam(:name) { isnamevar }
         newparam(:foo)
         newproperty(:bar)
@@ -273,10 +273,10 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       expect { @type.paramdoc(:provider) }.to raise_error(NoMethodError)
     end
 
-    it "should create a subclass of Puppet::Provider for the provider" do
+    it "should create a subclass of Oregano::Provider for the provider" do
       provider = @type.provide(:test_provider)
 
-      expect(provider.ancestors).to include(Puppet::Provider)
+      expect(provider.ancestors).to include(Oregano::Provider)
     end
 
     it "should use a parent class if specified" do
@@ -296,7 +296,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
     it "should raise an error when the parent class can't be found" do
       expect {
         @type.provide(:child_provider, :parent => :parent_provider)
-      }.to raise_error(Puppet::DevError, /Could not find parent provider.+parent_provider/)
+      }.to raise_error(Oregano::DevError, /Could not find parent provider.+parent_provider/)
     end
 
     it "should ensure its type has a 'provider' parameter" do
@@ -325,13 +325,13 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
       provider = @type.provide(:test_provider)
 
-      expect(provider.ancestors).to include(Puppet::Provider)
+      expect(provider.ancestors).to include(Oregano::Provider)
       expect(provider).to eq(@type.provider(:test_provider))
     end
 
     describe "with a parent class from another type" do
       before :each do
-        @parent_type = Puppet::Type.newtype(:provider_parent_type) do
+        @parent_type = Oregano::Type.newtype(:provider_parent_type) do
           newparam(:name) { isnamevar }
         end
         @parent_provider = @parent_type.provide(:parent_provider)
@@ -353,7 +353,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   describe "when choosing a default provider" do
     it "should choose the provider with the highest specificity" do
       # Make a fake type
-      type = Puppet::Type.newtype(:defaultprovidertest) do
+      type = Oregano::Type.newtype(:defaultprovidertest) do
         newparam(:name) do end
       end
 
@@ -369,14 +369,14 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
   context "autorelations" do
     before :each do
-      type = Puppet::Type.newtype(:autorelation_one) do
+      type = Oregano::Type.newtype(:autorelation_one) do
         newparam(:name) { isnamevar }
       end
     end
 
     describe "when building autorelations" do
       it "should be able to autorequire resources" do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autorequire(:autorelation_one) { ['foo'] }
         end
@@ -394,7 +394,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it 'should not fail autorequire contains undef entries' do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autorequire(:autorelation_one) { [nil, 'foo'] }
         end
@@ -412,7 +412,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it "should be able to autosubscribe resources" do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autosubscribe(:autorelation_one) { ['foo'] }
         end
@@ -430,7 +430,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it 'should not fail if autosubscribe contains undef entries' do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autosubscribe(:autorelation_one) { [nil, 'foo'] }
         end
@@ -448,7 +448,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it "should be able to autobefore resources" do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autobefore(:autorelation_one) { ['foo'] }
         end
@@ -466,7 +466,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it "should not fail when autobefore contains undef entries" do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autobefore(:autorelation_one) { [nil, 'foo'] }
         end
@@ -484,7 +484,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it "should be able to autonotify resources" do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autonotify(:autorelation_one) { ['foo'] }
         end
@@ -502,7 +502,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       end
 
       it 'should not fail if autonotify contains undef entries' do
-        type = Puppet::Type.newtype(:autorelation_two) do
+        type = Oregano::Type.newtype(:autorelation_two) do
           newparam(:name) { isnamevar }
           autonotify(:autorelation_one) { [nil, 'foo'] }
         end
@@ -522,168 +522,168 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   describe "when initializing" do
-    describe "and passed a Puppet::Resource instance" do
+    describe "and passed a Oregano::Resource instance" do
       it "should set its title to the title of the resource if the resource type is equal to the current type" do
-        resource = Puppet::Resource.new(:mount, "/foo", :parameters => {:name => "/other"})
-        expect(Puppet::Type.type(:mount).new(resource).title).to eq("/foo")
+        resource = Oregano::Resource.new(:mount, "/foo", :parameters => {:name => "/other"})
+        expect(Oregano::Type.type(:mount).new(resource).title).to eq("/foo")
       end
 
       it "should set its title to the resource reference if the resource type is not equal to the current type" do
-        resource = Puppet::Resource.new(:user, "foo")
-        expect(Puppet::Type.type(:mount).new(resource).title).to eq("User[foo]")
+        resource = Oregano::Resource.new(:user, "foo")
+        expect(Oregano::Type.type(:mount).new(resource).title).to eq("User[foo]")
       end
 
       [:line, :file, :catalog, :exported, :virtual].each do |param|
         it "should copy '#{param}' from the resource if present" do
-          resource = Puppet::Resource.new(:mount, "/foo")
+          resource = Oregano::Resource.new(:mount, "/foo")
           resource.send(param.to_s + "=", "foo")
           resource.send(param.to_s + "=", "foo")
-          expect(Puppet::Type.type(:mount).new(resource).send(param)).to eq("foo")
+          expect(Oregano::Type.type(:mount).new(resource).send(param)).to eq("foo")
         end
       end
 
       it "should copy any tags from the resource" do
-        resource = Puppet::Resource.new(:mount, "/foo")
+        resource = Oregano::Resource.new(:mount, "/foo")
         resource.tag "one", "two"
-        tags = Puppet::Type.type(:mount).new(resource).tags
+        tags = Oregano::Type.type(:mount).new(resource).tags
         expect(tags).to be_include("one")
         expect(tags).to be_include("two")
       end
 
       it "should copy the resource's parameters as its own" do
-        resource = Puppet::Resource.new(:mount, "/foo", :parameters => {:atboot => :yes, :fstype => "boo"})
-        params = Puppet::Type.type(:mount).new(resource).to_hash
+        resource = Oregano::Resource.new(:mount, "/foo", :parameters => {:atboot => :yes, :fstype => "boo"})
+        params = Oregano::Type.type(:mount).new(resource).to_hash
         expect(params[:fstype]).to eq("boo")
         expect(params[:atboot]).to eq(:yes)
       end
 
       it "copies sensitive parameters to the appropriate properties" do
-        resource = Puppet::Resource.new(:mount, "/foo",
+        resource = Oregano::Resource.new(:mount, "/foo",
                                         :parameters => {:atboot => :yes, :fstype => "boo"},
                                         :sensitive_parameters => [:fstype])
-        type = Puppet::Type.type(:mount).new(resource)
+        type = Oregano::Type.type(:mount).new(resource)
         expect(type.property(:fstype).sensitive).to eq true
       end
 
       it "logs a warning when a parameter is marked as sensitive" do
-        resource = Puppet::Resource.new(:mount, "/foo",
+        resource = Oregano::Resource.new(:mount, "/foo",
                                         :parameters => {:atboot => :yes, :fstype => "boo", :remounts => true},
                                         :sensitive_parameters => [:remounts])
-        Puppet::Type.type(:mount).any_instance.expects(:warning).with(regexp_matches(/Unable to mark 'remounts' as sensitive: remounts is a parameter and not a property/))
-        Puppet::Type.type(:mount).new(resource)
+        Oregano::Type.type(:mount).any_instance.expects(:warning).with(regexp_matches(/Unable to mark 'remounts' as sensitive: remounts is a parameter and not a property/))
+        Oregano::Type.type(:mount).new(resource)
       end
 
       it "logs a warning when a property is not set but is marked as sensitive" do
-        resource = Puppet::Resource.new(:mount, "/foo",
+        resource = Oregano::Resource.new(:mount, "/foo",
                                         :parameters => {:atboot => :yes, :fstype => "boo"},
                                         :sensitive_parameters => [:device])
-        Puppet::Type.type(:mount).any_instance.expects(:warning).with("Unable to mark 'device' as sensitive: the property itself was not assigned a value.")
-        Puppet::Type.type(:mount).new(resource)
+        Oregano::Type.type(:mount).any_instance.expects(:warning).with("Unable to mark 'device' as sensitive: the property itself was not assigned a value.")
+        Oregano::Type.type(:mount).new(resource)
       end
 
       it "logs an error when a property is not defined on the type but is marked as sensitive" do
-        resource = Puppet::Resource.new(:mount, "/foo",
+        resource = Oregano::Resource.new(:mount, "/foo",
                                         :parameters => {:atboot => :yes, :fstype => "boo"},
                                         :sensitive_parameters => [:content])
-        Puppet::Type.type(:mount).any_instance.expects(:err).with("Unable to mark 'content' as sensitive: the property itself is not defined on mount.")
-        Puppet::Type.type(:mount).new(resource)
+        Oregano::Type.type(:mount).any_instance.expects(:err).with("Unable to mark 'content' as sensitive: the property itself is not defined on mount.")
+        Oregano::Type.type(:mount).new(resource)
       end
     end
 
     describe "and passed a Hash" do
       it "should extract the title from the hash" do
-        expect(Puppet::Type.type(:mount).new(:title => "/yay").title).to eq("/yay")
+        expect(Oregano::Type.type(:mount).new(:title => "/yay").title).to eq("/yay")
       end
 
       it "should work when hash keys are provided as strings" do
-        expect(Puppet::Type.type(:mount).new("title" => "/yay").title).to eq("/yay")
+        expect(Oregano::Type.type(:mount).new("title" => "/yay").title).to eq("/yay")
       end
 
       it "should work when hash keys are provided as symbols" do
-        expect(Puppet::Type.type(:mount).new(:title => "/yay").title).to eq("/yay")
+        expect(Oregano::Type.type(:mount).new(:title => "/yay").title).to eq("/yay")
       end
 
       it "should use the name from the hash as the title if no explicit title is provided" do
-        expect(Puppet::Type.type(:mount).new(:name => "/yay").title).to eq("/yay")
+        expect(Oregano::Type.type(:mount).new(:name => "/yay").title).to eq("/yay")
       end
 
       it "should use the Resource Type's namevar to determine how to find the name in the hash" do
         yay = make_absolute('/yay')
-        expect(Puppet::Type.type(:file).new(:path => yay).title).to eq(yay)
+        expect(Oregano::Type.type(:file).new(:path => yay).title).to eq(yay)
       end
 
       [:catalog].each do |param|
         it "should extract '#{param}' from the hash if present" do
-          expect(Puppet::Type.type(:mount).new(:name => "/yay", param => "foo").send(param)).to eq("foo")
+          expect(Oregano::Type.type(:mount).new(:name => "/yay", param => "foo").send(param)).to eq("foo")
         end
       end
 
       it "should use any remaining hash keys as its parameters" do
-        resource = Puppet::Type.type(:mount).new(:title => "/foo", :catalog => "foo", :atboot => :yes, :fstype => "boo")
+        resource = Oregano::Type.type(:mount).new(:title => "/foo", :catalog => "foo", :atboot => :yes, :fstype => "boo")
         expect(resource[:fstype]).to eq("boo")
         expect(resource[:atboot]).to eq(:yes)
       end
     end
 
     it "should fail if any invalid attributes have been provided" do
-      expect { Puppet::Type.type(:mount).new(:title => "/foo", :nosuchattr => "whatever") }.to raise_error(Puppet::Error, /no parameter named 'nosuchattr'/)
+      expect { Oregano::Type.type(:mount).new(:title => "/foo", :nosuchattr => "whatever") }.to raise_error(Oregano::Error, /no parameter named 'nosuchattr'/)
     end
 
     context "when an attribute fails validation" do
-      it "should fail with Puppet::ResourceError when PuppetError raised" do
-        expect { Puppet::Type.type(:file).new(:title => "/foo", :source => "unknown:///") }.to raise_error(Puppet::ResourceError, /Parameter source failed on File\[.*foo\]/)
+      it "should fail with Oregano::ResourceError when OreganoError raised" do
+        expect { Oregano::Type.type(:file).new(:title => "/foo", :source => "unknown:///") }.to raise_error(Oregano::ResourceError, /Parameter source failed on File\[.*foo\]/)
       end
 
-      it "should fail with Puppet::ResourceError when ArgumentError raised" do
-        expect { Puppet::Type.type(:file).new(:title => "/foo", :mode => "abcdef") }.to raise_error(Puppet::ResourceError, /Parameter mode failed on File\[.*foo\]/)
+      it "should fail with Oregano::ResourceError when ArgumentError raised" do
+        expect { Oregano::Type.type(:file).new(:title => "/foo", :mode => "abcdef") }.to raise_error(Oregano::ResourceError, /Parameter mode failed on File\[.*foo\]/)
       end
 
       it "should include the file/line in the error" do
-        Puppet::Type.type(:file).any_instance.stubs(:file).returns("example.pp")
-        Puppet::Type.type(:file).any_instance.stubs(:line).returns(42)
-        expect { Puppet::Type.type(:file).new(:title => "/foo", :source => "unknown:///") }.to raise_error(Puppet::ResourceError, /example.pp:42/)
+        Oregano::Type.type(:file).any_instance.stubs(:file).returns("example.pp")
+        Oregano::Type.type(:file).any_instance.stubs(:line).returns(42)
+        expect { Oregano::Type.type(:file).new(:title => "/foo", :source => "unknown:///") }.to raise_error(Oregano::ResourceError, /example.pp:42/)
       end
     end
 
     it "should set its name to the resource's title if the resource does not have a :name or namevar parameter set" do
-      resource = Puppet::Resource.new(:mount, "/foo")
+      resource = Oregano::Resource.new(:mount, "/foo")
 
-      expect(Puppet::Type.type(:mount).new(resource).name).to eq("/foo")
+      expect(Oregano::Type.type(:mount).new(resource).name).to eq("/foo")
     end
 
     it "should fail if no title, name, or namevar are provided" do
-      expect { Puppet::Type.type(:mount).new(:atboot => :yes) }.to raise_error(Puppet::Error)
+      expect { Oregano::Type.type(:mount).new(:atboot => :yes) }.to raise_error(Oregano::Error)
     end
 
     it "should set the attributes in the order returned by the class's :allattrs method" do
-      Puppet::Type.type(:mount).stubs(:allattrs).returns([:name, :atboot, :noop])
-      resource = Puppet::Resource.new(:mount, "/foo", :parameters => {:name => "myname", :atboot => :yes, :noop => "whatever"})
+      Oregano::Type.type(:mount).stubs(:allattrs).returns([:name, :atboot, :noop])
+      resource = Oregano::Resource.new(:mount, "/foo", :parameters => {:name => "myname", :atboot => :yes, :noop => "whatever"})
 
       set = []
 
-      Puppet::Type.type(:mount).any_instance.stubs(:newattr).with do |param, hash|
+      Oregano::Type.type(:mount).any_instance.stubs(:newattr).with do |param, hash|
         set << param
         true
       end.returns(stub_everything("a property"))
 
-      Puppet::Type.type(:mount).new(resource)
+      Oregano::Type.type(:mount).new(resource)
 
       expect(set[-1]).to eq(:noop)
       expect(set[-2]).to eq(:atboot)
     end
 
     it "should always set the name and then default provider before anything else" do
-      Puppet::Type.type(:mount).stubs(:allattrs).returns([:provider, :name, :atboot])
-      resource = Puppet::Resource.new(:mount, "/foo", :parameters => {:name => "myname", :atboot => :yes})
+      Oregano::Type.type(:mount).stubs(:allattrs).returns([:provider, :name, :atboot])
+      resource = Oregano::Resource.new(:mount, "/foo", :parameters => {:name => "myname", :atboot => :yes})
 
       set = []
 
-      Puppet::Type.type(:mount).any_instance.stubs(:newattr).with do |param, hash|
+      Oregano::Type.type(:mount).any_instance.stubs(:newattr).with do |param, hash|
         set << param
         true
       end.returns(stub_everything("a property"))
 
-      Puppet::Type.type(:mount).new(resource)
+      Oregano::Type.type(:mount).new(resource)
       expect(set[0]).to eq(:name)
       expect(set[1]).to eq(:provider)
     end
@@ -691,54 +691,54 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
     # This one is really hard to test :/
     it "should set each default immediately if no value is provided" do
       defaults = []
-      Puppet::Type.type(:service).any_instance.stubs(:set_default).with { |value| defaults << value; true }
+      Oregano::Type.type(:service).any_instance.stubs(:set_default).with { |value| defaults << value; true }
 
-      Puppet::Type.type(:service).new :name => "whatever"
+      Oregano::Type.type(:service).new :name => "whatever"
 
       expect(defaults[0]).to eq(:provider)
     end
 
     it "should retain a copy of the originally provided parameters" do
-      expect(Puppet::Type.type(:mount).new(:name => "foo", :atboot => :yes, :noop => false).original_parameters).to eq({:atboot => :yes, :noop => false})
+      expect(Oregano::Type.type(:mount).new(:name => "foo", :atboot => :yes, :noop => false).original_parameters).to eq({:atboot => :yes, :noop => false})
     end
 
     it "should delete the name via the namevar from the originally provided parameters" do
-      expect(Puppet::Type.type(:file).new(:name => make_absolute('/foo')).original_parameters[:path]).to be_nil
+      expect(Oregano::Type.type(:file).new(:name => make_absolute('/foo')).original_parameters[:path]).to be_nil
     end
 
     context "when validating the resource" do
       it "should call the type's validate method if present" do
-        Puppet::Type.type(:file).any_instance.expects(:validate)
-        Puppet::Type.type(:file).new(:name => make_absolute('/foo'))
+        Oregano::Type.type(:file).any_instance.expects(:validate)
+        Oregano::Type.type(:file).new(:name => make_absolute('/foo'))
       end
 
-      it "should raise Puppet::ResourceError with resource name when Puppet::Error raised" do
+      it "should raise Oregano::ResourceError with resource name when Oregano::Error raised" do
         expect do
-          Puppet::Type.type(:file).new(
+          Oregano::Type.type(:file).new(
             :name => make_absolute('/foo'),
-            :source => "puppet:///",
+            :source => "oregano:///",
             :content => "foo"
           )
-        end.to raise_error(Puppet::ResourceError, /Validation of File\[.*foo.*\]/)
+        end.to raise_error(Oregano::ResourceError, /Validation of File\[.*foo.*\]/)
       end
 
-      it "should raise Puppet::ResourceError with manifest file and line on failure" do
-        Puppet::Type.type(:file).any_instance.stubs(:file).returns("example.pp")
-        Puppet::Type.type(:file).any_instance.stubs(:line).returns(42)
+      it "should raise Oregano::ResourceError with manifest file and line on failure" do
+        Oregano::Type.type(:file).any_instance.stubs(:file).returns("example.pp")
+        Oregano::Type.type(:file).any_instance.stubs(:line).returns(42)
         expect do
-          Puppet::Type.type(:file).new(
+          Oregano::Type.type(:file).new(
             :name => make_absolute('/foo'),
-            :source => "puppet:///",
+            :source => "oregano:///",
             :content => "foo"
           )
-        end.to raise_error(Puppet::ResourceError, /Validation.*example.pp:42/)
+        end.to raise_error(Oregano::ResourceError, /Validation.*example.pp:42/)
       end
     end
   end
 
   describe "when #finish is called on a type" do
     let(:post_hook_type) do
-      Puppet::Type.newtype(:finish_test) do
+      Oregano::Type.newtype(:finish_test) do
         newparam(:name) { isnamevar }
 
         newparam(:post) do
@@ -758,13 +758,13 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
     end
   end
 
-  it "should have a class method for converting a hash into a Puppet::Resource instance" do
-    expect(Puppet::Type.type(:mount)).to respond_to(:hash2resource)
+  it "should have a class method for converting a hash into a Oregano::Resource instance" do
+    expect(Oregano::Type.type(:mount)).to respond_to(:hash2resource)
   end
 
-  describe "when converting a hash to a Puppet::Resource instance" do
+  describe "when converting a hash to a Oregano::Resource instance" do
     before do
-      @type = Puppet::Type.type(:mount)
+      @type = Oregano::Type.type(:mount)
     end
 
     it "should treat a :title key as the title of the resource" do
@@ -809,33 +809,33 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
   describe "when retrieving current property values" do
     before do
-      @resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
+      @resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
       @resource.property(:ensure).stubs(:retrieve).returns :absent
     end
 
     it "should always retrieve the ensure value by default" do
-      @ensurable_resource = Puppet::Type.type(:file).new(:name => "/not/existent", :mode => "0644")
-      Puppet::Type::File::Ensure.stubs(:ensure).returns :absent
-      Puppet::Type::File::Ensure.any_instance.expects(:retrieve).once
+      @ensurable_resource = Oregano::Type.type(:file).new(:name => "/not/existent", :mode => "0644")
+      Oregano::Type::File::Ensure.stubs(:ensure).returns :absent
+      Oregano::Type::File::Ensure.any_instance.expects(:retrieve).once
       @ensurable_resource.retrieve_resource
     end
 
     it "should not retrieve the ensure value if specified" do
-      @ensurable_resource = Puppet::Type.type(:service).new(:name => "DummyService", :enable => true)
+      @ensurable_resource = Oregano::Type.type(:service).new(:name => "DummyService", :enable => true)
       @ensurable_resource.properties.each { |prop| prop.stubs(:retrieve) }
-      Puppet::Type::Service::Ensure.any_instance.expects(:retrieve).never
+      Oregano::Type::Service::Ensure.any_instance.expects(:retrieve).never
       @ensurable_resource.retrieve_resource
     end
 
     it "should fail if its provider is unsuitable" do
-      @resource = Puppet::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
+      @resource = Oregano::Type.type(:mount).new(:name => "foo", :fstype => "bar", :pass => 1, :ensure => :present)
       @resource.provider.class.expects(:suitable?).returns false
-      expect { @resource.retrieve_resource }.to raise_error(Puppet::Error)
+      expect { @resource.retrieve_resource }.to raise_error(Oregano::Error)
     end
 
-    it "should return a Puppet::Resource instance with its type and title set appropriately" do
+    it "should return a Oregano::Resource instance with its type and title set appropriately" do
       result = @resource.retrieve_resource
-      expect(result).to be_instance_of(Puppet::Resource)
+      expect(result).to be_instance_of(Oregano::Resource)
       expect(result.type).to eq("Mount")
       expect(result.title).to eq("foo")
     end
@@ -852,7 +852,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
     end
 
     it "should provide a value for 'ensure' even if no desired value is provided" do
-      @resource = Puppet::Type.type(:file).new(:path => make_absolute("/my/file/that/can't/exist"))
+      @resource = Oregano::Type.type(:file).new(:path => make_absolute("/my/file/that/can't/exist"))
     end
 
     it "should not call retrieve on non-ensure properties if the resource is absent and should consider the property absent" do
@@ -869,8 +869,8 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   describe "#to_resource" do
-    it "should return a Puppet::Resource that includes properties, parameters and tags" do
-      type_resource = Puppet::Type.type(:mount).new(
+    it "should return a Oregano::Resource that includes properties, parameters and tags" do
+      type_resource = Oregano::Type.type(:mount).new(
         :ensure   => :present,
         :name     => "foo",
         :fstype   => "bar",
@@ -879,25 +879,25 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
       type_resource.tags = %w{bar baz}
 
       # If it's not a property it's a parameter
-      expect(type_resource.parameters[:remounts]).not_to be_a(Puppet::Property)
-      expect(type_resource.parameters[:fstype].is_a?(Puppet::Property)).to be_truthy
+      expect(type_resource.parameters[:remounts]).not_to be_a(Oregano::Property)
+      expect(type_resource.parameters[:fstype].is_a?(Oregano::Property)).to be_truthy
 
       type_resource.property(:ensure).expects(:retrieve).returns :present
       type_resource.property(:fstype).expects(:retrieve).returns 15
 
       resource = type_resource.to_resource
 
-      expect(resource).to be_a Puppet::Resource
+      expect(resource).to be_a Oregano::Resource
       expect(resource[:fstype]).to   eq(15)
       expect(resource[:remounts]).to eq(:true)
-      expect(resource.tags).to eq(Puppet::Util::TagSet.new(%w{foo bar baz mount}))
+      expect(resource.tags).to eq(Oregano::Util::TagSet.new(%w{foo bar baz mount}))
     end
   end
 
   describe ".title_patterns" do
     describe "when there's one namevar" do
       before do
-        @type_class = Puppet::Type.type(:notify)
+        @type_class = Oregano::Type.type(:notify)
         @type_class.stubs(:key_attributes).returns([:one])
       end
 
@@ -918,10 +918,10 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
   describe "when in a catalog" do
     before do
-      @catalog = Puppet::Resource::Catalog.new
-      @container = Puppet::Type.type(:component).new(:name => "container")
-      @one = Puppet::Type.type(:file).new(:path => make_absolute("/file/one"))
-      @two = Puppet::Type.type(:file).new(:path => make_absolute("/file/two"))
+      @catalog = Oregano::Resource::Catalog.new
+      @container = Oregano::Type.type(:component).new(:name => "container")
+      @one = Oregano::Type.type(:file).new(:path => make_absolute("/file/one"))
+      @two = Oregano::Type.type(:file).new(:path => make_absolute("/file/two"))
 
       @catalog.add_resource @container
       @catalog.add_resource @one
@@ -944,11 +944,11 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   it "should have a 'stage' metaparam" do
-    expect(Puppet::Type.metaparamclass(:stage)).to be_instance_of(Class)
+    expect(Oregano::Type.metaparamclass(:stage)).to be_instance_of(Class)
   end
 
   describe "#suitable?" do
-    let(:type) { Puppet::Type.type(:file) }
+    let(:type) { Oregano::Type.type(:file) }
     let(:resource) { type.new :path => tmpfile('suitable') }
     let(:provider) { resource.provider }
 
@@ -980,9 +980,9 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 
   describe "::instances" do
-    after :each do Puppet::Type.rmtype(:type_spec_fake_type) end
+    after :each do Oregano::Type.rmtype(:type_spec_fake_type) end
     let :type do
-      Puppet::Type.newtype(:type_spec_fake_type) do
+      Oregano::Type.newtype(:type_spec_fake_type) do
         newparam(:name) do
           isnamevar
         end
@@ -990,7 +990,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
         newproperty(:prop1) {}
       end
 
-      Puppet::Type.type(:type_spec_fake_type)
+      Oregano::Type.type(:type_spec_fake_type)
     end
 
     it "should not fail if no suitable providers are found" do
@@ -1048,7 +1048,7 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
 
   describe "::ensurable?" do
     before :each do
-      class TestEnsurableType < Puppet::Type
+      class TestEnsurableType < Oregano::Type
         def exists?; end
         def create; end
         def destroy; end
@@ -1076,36 +1076,36 @@ describe Puppet::Type, :unless => Puppet.features.microsoft_windows? do
   end
 end
 
-describe Puppet::Type::RelationshipMetaparam do
-  include PuppetSpec::Files
+describe Oregano::Type::RelationshipMetaparam do
+  include OreganoSpec::Files
 
-  it "should be a subclass of Puppet::Parameter" do
-    expect(Puppet::Type::RelationshipMetaparam.superclass).to equal(Puppet::Parameter)
+  it "should be a subclass of Oregano::Parameter" do
+    expect(Oregano::Type::RelationshipMetaparam.superclass).to equal(Oregano::Parameter)
   end
 
   it "should be able to produce a list of subclasses" do
-    expect(Puppet::Type::RelationshipMetaparam).to respond_to(:subclasses)
+    expect(Oregano::Type::RelationshipMetaparam).to respond_to(:subclasses)
   end
 
   describe "when munging relationships" do
     before do
       @path = File.expand_path('/foo')
-      @resource = Puppet::Type.type(:file).new :name => @path
-      @metaparam = Puppet::Type.metaparamclass(:require).new :resource => @resource
+      @resource = Oregano::Type.type(:file).new :name => @path
+      @metaparam = Oregano::Type.metaparamclass(:require).new :resource => @resource
     end
 
-    it "should accept Puppet::Resource instances" do
-      ref = Puppet::Resource.new(:file, @path)
+    it "should accept Oregano::Resource instances" do
+      ref = Oregano::Resource.new(:file, @path)
       expect(@metaparam.munge(ref)[0]).to equal(ref)
     end
 
-    it "should turn any string into a Puppet::Resource" do
-      expect(@metaparam.munge("File[/ref]")[0]).to be_instance_of(Puppet::Resource)
+    it "should turn any string into a Oregano::Resource" do
+      expect(@metaparam.munge("File[/ref]")[0]).to be_instance_of(Oregano::Resource)
     end
   end
 
   it "should be able to validate relationships" do
-    expect(Puppet::Type.metaparamclass(:require).new(:resource => mock("resource"))).to respond_to(:validate_relationship)
+    expect(Oregano::Type.metaparamclass(:require).new(:resource => mock("resource"))).to respond_to(:validate_relationship)
   end
 
   describe 'if any specified resource is not in the catalog' do
@@ -1121,7 +1121,7 @@ describe Puppet::Type::RelationshipMetaparam do
         :file    => nil
     end
 
-    let(:param) { Puppet::Type.metaparamclass(:require).new(:resource => resource, :value => %w{Foo[bar] Class[test]}) }
+    let(:param) { Oregano::Type.metaparamclass(:require).new(:resource => resource, :value => %w{Foo[bar] Class[test]}) }
 
     before do
       catalog.expects(:resource).with("Foo[bar]").returns "something"
@@ -1131,7 +1131,7 @@ describe Puppet::Type::RelationshipMetaparam do
     describe "and the resource doesn't have a file or line number" do
       it "raises an error" do
         expect { param.validate_relationship }.to raise_error do |error|
-          expect(error).to be_a Puppet::ResourceError
+          expect(error).to be_a Oregano::ResourceError
           expect(error.message).to match %r[Class\[Test\]]
         end
       end
@@ -1145,7 +1145,7 @@ describe Puppet::Type::RelationshipMetaparam do
 
       it "raises an error with context" do
         expect { param.validate_relationship }.to raise_error do |error|
-          expect(error).to be_a Puppet::ResourceError
+          expect(error).to be_a Oregano::ResourceError
           expect(error.message).to match %r[Class\[Test\]]
           expect(error.message).to match %r[/hitchhikers/guide/to/the/galaxy:42]
         end
@@ -1154,11 +1154,11 @@ describe Puppet::Type::RelationshipMetaparam do
   end
 end
 
-describe Puppet::Type.metaparamclass(:audit) do
-  include PuppetSpec::Files
+describe Oregano::Type.metaparamclass(:audit) do
+  include OreganoSpec::Files
 
   before do
-    @resource = Puppet::Type.type(:file).new :path => make_absolute('/foo')
+    @resource = Oregano::Type.type(:file).new :path => make_absolute('/foo')
   end
 
   it "should default to being nil" do
@@ -1180,7 +1180,7 @@ describe Puppet::Type.metaparamclass(:audit) do
   end
 
   it "should fail if asked to audit an invalid property" do
-    expect { @resource[:audit] = :foobar }.to raise_error(Puppet::Error)
+    expect { @resource[:audit] = :foobar }.to raise_error(Oregano::Error)
   end
 
   it "should create an attribute instance for each auditable property" do
@@ -1200,20 +1200,20 @@ describe Puppet::Type.metaparamclass(:audit) do
 
   describe "when generating the uniqueness key" do
     it "should include all of the key_attributes in alphabetical order by attribute name" do
-      Puppet::Type.type(:file).stubs(:key_attributes).returns [:path, :mode, :owner]
-      Puppet::Type.type(:file).stubs(:title_patterns).returns(
+      Oregano::Type.type(:file).stubs(:key_attributes).returns [:path, :mode, :owner]
+      Oregano::Type.type(:file).stubs(:title_patterns).returns(
         [ [ /(.*)/, [ [:path, lambda{|x| x} ] ] ] ]
       )
       myfile = make_absolute('/my/file')
-      res = Puppet::Type.type(:file).new( :title => myfile, :path => myfile, :owner => 'root', :content => 'hello' )
+      res = Oregano::Type.type(:file).new( :title => myfile, :path => myfile, :owner => 'root', :content => 'hello' )
       expect(res.uniqueness_key).to eq([ nil, 'root', myfile])
     end
   end
 
   context "type attribute bracket methods" do
-    after :each do Puppet::Type.rmtype(:attributes)     end
+    after :each do Oregano::Type.rmtype(:attributes)     end
     let   :type do
-      Puppet::Type.newtype(:attributes) do
+      Oregano::Type.newtype(:attributes) do
         newparam(:name) {}
       end
     end
@@ -1267,7 +1267,7 @@ describe Puppet::Type.metaparamclass(:audit) do
     end
 
     it "newattr should handle required features correctly" do
-      Puppet::Util::Log.level = :debug
+      Oregano::Util::Log.level = :debug
 
       type.feature :feature1, "one"
       type.feature :feature2, "two"

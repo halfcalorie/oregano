@@ -12,16 +12,16 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
-    config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', config])
-    Puppet[:always_retry_plugins] = false
+    require 'oregano'
+    config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', config])
+    Oregano[:always_retry_plugins] = false
   end
 
   def run(args=nil)
-    env = Puppet.lookup(:environments).get('benchmarking')
-    node = Puppet::Node.new("testing", :environment => env)
-    Puppet::Resource::Catalog.indirection.find("testing", :use_node => node)
+    env = Oregano.lookup(:environments).get('benchmarking')
+    node = Oregano::Node.new("testing", :environment => env)
+    Oregano::Resource::Catalog.indirection.find("testing", :use_node => node)
   end
 
   def generate
@@ -33,7 +33,7 @@ class Benchmarker
     mkdir_p(File.join(environment, 'modules'))
     @size.times.each do |i|
       mkdir_p(File.join(environment, 'modules', "mymodule_#{i}", 'lib',
-                        'puppet', 'type'))
+                        'oregano', 'type'))
       mkdir_p(File.join(environment, 'modules', "mymodule_#{i}", 'manifests'))
     end
     mkdir_p(File.join(environment, 'manifests'))
@@ -49,8 +49,8 @@ class Benchmarker
            File.join(test_module_dir, 'init.pp'),
            :name => "foo")
 
-    render(File.join(templates, 'puppet.conf.erb'),
-           File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+           File.join(@target, 'oregano.conf'),
            :location => @target)
   end
 

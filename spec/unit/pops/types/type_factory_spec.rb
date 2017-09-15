@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'The type factory' do
   context 'when creating' do
@@ -82,7 +82,7 @@ describe 'The type factory' do
     end
 
     it 'sem_ver(r1, r2) returns constrained PSemVerType' do
-      expect(TypeFactory.sem_ver('1.x', '3.x').ranges).to include(SemanticPuppet::VersionRange.parse('1.x'), SemanticPuppet::VersionRange.parse('3.x'))
+      expect(TypeFactory.sem_ver('1.x', '3.x').ranges).to include(SemanticOregano::VersionRange.parse('1.x'), SemanticOregano::VersionRange.parse('3.x'))
     end
 
     it 'sem_ver_range() returns PSemVerRangeType' do
@@ -198,20 +198,20 @@ describe 'The type factory' do
     end
 
     it 'a typed empty array, the resulting array erases the type' do
-      t = Puppet::Pops::Types::TypeFactory.array_of(Puppet::Pops::Types::TypeFactory.data, Puppet::Pops::Types::TypeFactory.range(0,0))
-      expect(t.size_type.class).to eq(Puppet::Pops::Types::PIntegerType)
+      t = Oregano::Pops::Types::TypeFactory.array_of(Oregano::Pops::Types::TypeFactory.data, Oregano::Pops::Types::TypeFactory.range(0,0))
+      expect(t.size_type.class).to eq(Oregano::Pops::Types::PIntegerType)
       expect(t.size_type.from).to eq(0)
       expect(t.size_type.to).to eq(0)
-      expect(t.element_type).to eq(Puppet::Pops::Types::PUnitType::DEFAULT)
+      expect(t.element_type).to eq(Oregano::Pops::Types::PUnitType::DEFAULT)
     end
 
     it 'a typed empty hash, the resulting hash erases the key and value type' do
-      t = Puppet::Pops::Types::TypeFactory.hash_of(Puppet::Pops::Types::TypeFactory.scalar, Puppet::Pops::Types::TypeFactory.data, Puppet::Pops::Types::TypeFactory.range(0,0))
-      expect(t.size_type.class).to eq(Puppet::Pops::Types::PIntegerType)
+      t = Oregano::Pops::Types::TypeFactory.hash_of(Oregano::Pops::Types::TypeFactory.scalar, Oregano::Pops::Types::TypeFactory.data, Oregano::Pops::Types::TypeFactory.range(0,0))
+      expect(t.size_type.class).to eq(Oregano::Pops::Types::PIntegerType)
       expect(t.size_type.from).to eq(0)
       expect(t.size_type.to).to eq(0)
-      expect(t.key_type).to eq(Puppet::Pops::Types::PUnitType::DEFAULT)
-      expect(t.value_type).to eq(Puppet::Pops::Types::PUnitType::DEFAULT)
+      expect(t.key_type).to eq(Oregano::Pops::Types::PUnitType::DEFAULT)
+      expect(t.value_type).to eq(Oregano::Pops::Types::PUnitType::DEFAULT)
     end
 
     context 'callable types' do

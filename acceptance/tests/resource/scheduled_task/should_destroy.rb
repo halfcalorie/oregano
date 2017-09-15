@@ -26,7 +26,7 @@ agents.each do |agent|
   on agent, "schtasks.exe /create #{version} /tn #{name} /tr c:\\\\windows\\\\system32\\\\notepad.exe /sc daily /ru system"
 
   step "delete the task"
-  on agent, puppet_resource('scheduled_task', name, 'ensure=absent')
+  on agent, oregano_resource('scheduled_task', name, 'ensure=absent')
 
   step "verify the task was deleted"
   Timeout.timeout(30) do

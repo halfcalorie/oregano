@@ -20,7 +20,7 @@ agents.each do |agent|
 
   step "create the user with shell"
   shell = '/bin/sh'
-  on agent, puppet_resource('user', name, ["ensure=present", "shell=#{shell}"])
+  on agent, oregano_resource('user', name, ["ensure=present", "shell=#{shell}"])
 
   step "verify the user shell matches the managed shell"
   agent.user_get(name) do |result|
@@ -36,7 +36,7 @@ agents.each do |agent|
     shell = '/bin/bash'
   end
 
-  on agent, puppet_resource('user', name, ["ensure=present", "shell=#{shell}"])
+  on agent, oregano_resource('user', name, ["ensure=present", "shell=#{shell}"])
 
   step "verify the user shell matches the managed shell"
   agent.user_get(name) do |result|

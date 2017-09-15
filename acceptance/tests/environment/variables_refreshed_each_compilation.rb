@@ -1,6 +1,6 @@
 test_name 'C98115 compilation should get new values in variables on each compilation' do
-require 'puppet/acceptance/environment_utils'
-extend Puppet::Acceptance::EnvironmentUtils
+require 'oregano/acceptance/environment_utils'
+extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:medium',
     'audit:integration',
@@ -41,12 +41,12 @@ tag 'audit:medium',
   on(master, "chmod -R 0777 #{fq_tmp_environmentpath}/")
 
   step "run agent in #{tmp_environment}, ensure it increments the uptime with each run" do
-    with_puppet_running_on(master,{}) do
+    with_oregano_running_on(master,{}) do
       uptime = nil
       module_uptime = nil
       local_uptime_pattern = 'local_(\d+)_local'
       agents.each do |agent|
-        on(agent, puppet("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert_equal(2, result.exit_code, 'wrong exit_code')
           assert_match(/Notice: #{local_uptime_pattern}/, result.stdout, 'first uptime was not as expected')
@@ -59,7 +59,7 @@ tag 'audit:medium',
         else
           sleep 1
         end
-        on(agent, puppet("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert_equal(2, result.exit_code, 'wrong exit_code')
           assert_match(/Notice: #{local_uptime_pattern}/, result.stdout, 'second uptime was not as expected')

@@ -2,13 +2,13 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/util/windows'
+require 'oregano/util/windows'
 
-describe "Puppet::Util::Windows::String", :if => Puppet.features.microsoft_windows? do
+describe "Oregano::Util::Windows::String", :if => Oregano.features.microsoft_windows? do
   UTF16_NULL = [0, 0]
 
   def wide_string(str)
-    Puppet::Util::Windows::String.wide_string(str)
+    Oregano::Util::Windows::String.wide_string(str)
   end
 
   def converts_to_wide_string(string_value)

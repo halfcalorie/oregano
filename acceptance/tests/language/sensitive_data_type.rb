@@ -1,6 +1,6 @@
 test_name 'C98120, C98077: Sensitive Data is redacted on CLI, logs, reports' do
-  require 'puppet/acceptance/puppet_type_test_tools.rb'
-  extend Puppet::Acceptance::PuppetTypeTestTools
+  require 'oregano/acceptance/oregano_type_test_tools.rb'
+  extend Oregano::Acceptance::OreganoTypeTestTools
 
 tag 'audit:high',
     'audit:acceptance',   # Tests that sensitive data is retains integrity
@@ -89,7 +89,7 @@ tag 'audit:high',
   # This is done so that when validating the log output, we can refute the
   # existence of any of the sensitive info in the log without having to
   # assert that redacted info is in the log.  The redacted info appears in
-  # the console output from the Puppet agent run - by virtue of including a
+  # the console output from the Oregano agent run - by virtue of including a
   # '--debug' flag on the agent command line - whereas the redacted info is not
   # expected to be piped into the log.
 
@@ -105,15 +105,15 @@ tag 'audit:high',
   create_sitepp(master, tmp_environment, sitepp_content)
 
   step "run agent in #{tmp_environment}, run all assertions" do
-    with_puppet_running_on(master,{}) do
+    with_oregano_running_on(master,{}) do
       agents.each do |agent|
         # redirect logging to a temp location to avoid platform specific syslogs
         logfile = agent.tmpfile("tmpdest.log")
         # specifying a file with `--logdest` overrides printing debug output to the console,
         # so we must also explicitly send the output to the console.
-        on(agent, puppet("agent -t --debug --trace --show_diff --server #{master.hostname} --environment #{tmp_environment} --logdest '#{logfile}' --logdest 'console'"),
+        on(agent, oregano("agent -t --debug --trace --show_diff --server #{master.hostname} --environment #{tmp_environment} --logdest '#{logfile}' --logdest 'console'"),
            :accept_all_exit_codes => true) do |result|
-          assert(result.exit_code==2,'puppet agent run failed')
+          assert(result.exit_code==2,'oregano agent run failed')
           run_assertions(assertion_code, result) unless agent['locale'] == 'ja'
         end
 
@@ -126,7 +126,7 @@ tag 'audit:high',
         # don't do this before the agent log scanning, above. it will skew the results
         step "assert no redacted data in vardir" do
           # no recursive grep in solaris :facepalm:
-          on(agent, "find #{agent.puppet['vardir']} -type f | xargs grep sekrit", :accept_all_exit_codes => true) do |result|
+          on(agent, "find #{agent.oregano['vardir']} -type f | xargs grep sekrit", :accept_all_exit_codes => true) do |result|
             refute_match(/sekrit(1|2|3|6|7)/, result.stdout, 'found redacted data we should not have')
             #TODO: if/when this is fixed, we should just be able to eval(assertion_code_ in this result block also!
             expect_failure 'file resource contents will end up in the cached catalog en-clair' do

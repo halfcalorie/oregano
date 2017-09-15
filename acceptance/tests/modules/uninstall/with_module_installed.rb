@@ -1,4 +1,4 @@
-test_name "puppet module uninstall (with module installed)"
+test_name "oregano module uninstall (with module installed)"
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -30,7 +30,7 @@ PP
 on master, "[ -d #{master['distmoduledir']}/crakorn ]"
 
 step "Uninstall the module jimmy-crakorn"
-on master, puppet('module uninstall jimmy-crakorn') do
+on master, oregano('module uninstall jimmy-crakorn') do
   assert_equal <<-OUTPUT, stdout
 \e[mNotice: Preparing to uninstall 'jimmy-crakorn' ...\e[0m
 Removed 'jimmy-crakorn' (\e[0;36mv0.4.0\e[0m) from #{master['distmoduledir']}

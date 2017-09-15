@@ -26,12 +26,12 @@ agents.each do |agent|
 
   step "modify the task"
   # use long arg string, but be careful not to exceed Windows maximum command line length of 8191 on XP+
-  on agent, puppet_resource('scheduled_task', name, ['ensure=present', 'command=c:\\\\windows\\\\system32\\\\notepad2.exe', "arguments=args-#{verylongstring}"])
+  on agent, oregano_resource('scheduled_task', name, ['ensure=present', 'command=c:\\\\windows\\\\system32\\\\notepad2.exe', "arguments=args-#{verylongstring}"])
 
   # note that this only verifies the output of the ITaskScheduler / ITask COM API
   # and unfortunately schtasks.exe and the MMC snap-in may get out of sync
-  step "verify the arguments were updated from Puppet"
-  on agent, puppet_resource('scheduled_task', name) do
+  step "verify the arguments were updated from Oregano"
+  on agent, oregano_resource('scheduled_task', name) do
     assert_match(/command\s*=>\s*'c:\\windows\\system32\\notepad2.exe'/, stdout)
     assert_match(/arguments\s*=>\s*'args-#{verylongstring}'/, stdout)
   end

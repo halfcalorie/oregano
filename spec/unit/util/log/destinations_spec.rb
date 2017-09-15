@@ -2,11 +2,11 @@
 require 'spec_helper'
 require 'json'
 
-require 'puppet/util/log'
+require 'oregano/util/log'
 
-describe Puppet::Util::Log.desttypes[:report] do
+describe Oregano::Util::Log.desttypes[:report] do
   before do
-    @dest = Puppet::Util::Log.desttypes[:report]
+    @dest = Oregano::Util::Log.desttypes[:report]
   end
 
   it "should require a report at initialization" do
@@ -24,11 +24,11 @@ describe Puppet::Util::Log.desttypes[:report] do
 end
 
 
-describe Puppet::Util::Log.desttypes[:file] do
-  include PuppetSpec::Files
+describe Oregano::Util::Log.desttypes[:file] do
+  include OreganoSpec::Files
 
   before do
-    @class = Puppet::Util::Log.desttypes[:file]
+    @class = Oregano::Util::Log.desttypes[:file]
   end
 
   it "should default to autoflush false" do
@@ -46,29 +46,29 @@ describe Puppet::Util::Log.desttypes[:file] do
       end
     end
 
-    describe "on POSIX systems", :if => Puppet.features.posix? do
+    describe "on POSIX systems", :if => Oregano.features.posix? do
       let (:abspath) { '/tmp/log' }
       let (:relpath) { 'log' }
 
       it_behaves_like "file destination"
 
       it "logs an error if it can't chown the file owner & group" do
-        FileUtils.expects(:chown).with(Puppet[:user], Puppet[:group], abspath).raises(Errno::EPERM)
-        Puppet.features.expects(:root?).returns(true)
-        Puppet.expects(:err).with("Unable to set ownership to #{Puppet[:user]}:#{Puppet[:group]} for log file: #{abspath}")
+        FileUtils.expects(:chown).with(Oregano[:user], Oregano[:group], abspath).raises(Errno::EPERM)
+        Oregano.features.expects(:root?).returns(true)
+        Oregano.expects(:err).with("Unable to set ownership to #{Oregano[:user]}:#{Oregano[:group]} for log file: #{abspath}")
 
         @class.new(abspath)
       end
 
       it "doesn't attempt to chown when running as non-root" do
-        FileUtils.expects(:chown).with(Puppet[:user], Puppet[:group], abspath).never
-        Puppet.features.expects(:root?).returns(false)
+        FileUtils.expects(:chown).with(Oregano[:user], Oregano[:group], abspath).never
+        Oregano.features.expects(:root?).returns(false)
 
         @class.new(abspath)
       end
     end
 
-    describe "on Windows systems", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows systems", :if => Oregano.features.microsoft_windows? do
       let (:abspath) { 'C:\\temp\\log.txt' }
       let (:relpath) { 'log.txt' }
 
@@ -77,12 +77,12 @@ describe Puppet::Util::Log.desttypes[:file] do
   end
 end
 
-describe Puppet::Util::Log.desttypes[:syslog] do
-  let (:klass) { Puppet::Util::Log.desttypes[:syslog] }
+describe Oregano::Util::Log.desttypes[:syslog] do
+  let (:klass) { Oregano::Util::Log.desttypes[:syslog] }
 
   # these tests can only be run when syslog is present, because
   # we can't stub the top-level Syslog module
-  describe "when syslog is available", :if => Puppet.features.syslog? do
+  describe "when syslog is available", :if => Oregano.features.syslog? do
     before :each do
       Syslog.stubs(:opened?).returns(false)
       Syslog.stubs(:const_get).returns("LOG_KERN").returns(0)
@@ -107,7 +107,7 @@ describe Puppet::Util::Log.desttypes[:syslog] do
       syslog.expects(:info).with("don't panic")
       Syslog.stubs(:open).returns(syslog)
 
-      msg = Puppet::Util::Log.new(:level => :info, :message => "don't panic")
+      msg = Oregano::Util::Log.new(:level => :info, :message => "don't panic")
       dest = klass.new
       dest.handle(msg)
     end
@@ -115,18 +115,18 @@ describe Puppet::Util::Log.desttypes[:syslog] do
 
   describe "when syslog is unavailable" do
     it "should not be a suitable log destination" do
-      Puppet.features.stubs(:syslog?).returns(false)
+      Oregano.features.stubs(:syslog?).returns(false)
 
       expect(klass.suitable?(:syslog)).to be_falsey
     end
   end
 end
 
-describe Puppet::Util::Log.desttypes[:logstash_event] do
+describe Oregano::Util::Log.desttypes[:logstash_event] do
 
   describe "when using structured log format with logstash_event schema" do
     before :each do
-      @msg = Puppet::Util::Log.new(:level => :info, :message => "So long, and thanks for all the fish.", :source => "a dolphin")
+      @msg = Oregano::Util::Log.new(:level => :info, :message => "So long, and thanks for all the fish.", :source => "a dolphin")
     end
 
     it "format should fix the hash to have the correct structure" do
@@ -154,61 +154,61 @@ describe Puppet::Util::Log.desttypes[:logstash_event] do
   end
 end
 
-describe Puppet::Util::Log.desttypes[:console] do
-  let (:klass) { Puppet::Util::Log.desttypes[:console] }
+describe Oregano::Util::Log.desttypes[:console] do
+  let (:klass) { Oregano::Util::Log.desttypes[:console] }
 
   it "should support color output" do
-    Puppet[:color] = true
+    Oregano[:color] = true
     expect(subject.colorize(:red, 'version')).to eq("\e[0;31mversion\e[0m")
   end
 
   it "should withhold color output when not appropriate" do
-    Puppet[:color] = false
+    Oregano[:color] = false
     expect(subject.colorize(:red, 'version')).to eq("version")
   end
 
   it "should handle multiple overlapping colors in a stack-like way" do
-    Puppet[:color] = true
+    Oregano[:color] = true
     vstring = subject.colorize(:red, 'version')
     expect(subject.colorize(:green, "(#{vstring})")).to eq("\e[0;32m(\e[0;31mversion\e[0;32m)\e[0m")
   end
 
   it "should handle resets in a stack-like way" do
-    Puppet[:color] = true
+    Oregano[:color] = true
     vstring = subject.colorize(:reset, 'version')
     expect(subject.colorize(:green, "(#{vstring})")).to eq("\e[0;32m(\e[mversion\e[0;32m)\e[0m")
   end
 
   it "should include the log message's source/context in the output when available" do
-    Puppet[:color] = false
+    Oregano[:color] = false
     $stdout.expects(:puts).with("Info: a hitchhiker: don't panic")
 
-    msg = Puppet::Util::Log.new(:level => :info, :message => "don't panic", :source => "a hitchhiker")
+    msg = Oregano::Util::Log.new(:level => :info, :message => "don't panic", :source => "a hitchhiker")
     dest = klass.new
     dest.handle(msg)
   end
 end
 
 
-describe ":eventlog", :if => Puppet::Util::Platform.windows? do
-  let(:klass) { Puppet::Util::Log.desttypes[:eventlog] }
+describe ":eventlog", :if => Oregano::Util::Platform.windows? do
+  let(:klass) { Oregano::Util::Log.desttypes[:eventlog] }
 
   def expects_message_with_type(klass, level, eventlog_type, eventlog_id)
     eventlog = stub('eventlog')
     eventlog.expects(:report_event).with(has_entries(:event_type => eventlog_type, :event_id => eventlog_id, :data => "a hitchhiker: don't panic"))
-    Puppet::Util::Windows::EventLog.stubs(:open).returns(eventlog)
+    Oregano::Util::Windows::EventLog.stubs(:open).returns(eventlog)
 
-    msg = Puppet::Util::Log.new(:level => level, :message => "don't panic", :source => "a hitchhiker")
+    msg = Oregano::Util::Log.new(:level => level, :message => "don't panic", :source => "a hitchhiker")
     dest = klass.new
     dest.handle(msg)
   end
 
   it "supports the eventlog feature" do
-    expect(Puppet.features.eventlog?).to be_truthy
+    expect(Oregano.features.eventlog?).to be_truthy
   end
 
-  it "logs to the Puppet Application event log" do
-    Puppet::Util::Windows::EventLog.expects(:open).with('Puppet').returns(stub('eventlog'))
+  it "logs to the Oregano Application event log" do
+    Oregano::Util::Windows::EventLog.expects(:open).with('Oregano').returns(stub('eventlog'))
 
     klass.new
   end

@@ -1,4 +1,4 @@
-Puppet::Resource::ResourceType3.new('myresource',
-  [Puppet::Resource::Param.new(String, 'myprop')],
-  [Puppet::Resource::Param.new(String, 'myparam')]
+Oregano::Resource::ResourceType3.new('myresource',
+  [Oregano::Resource::Param.new(String, 'myprop')],
+  [Oregano::Resource::Param.new(String, 'myparam')]
 )

@@ -3,10 +3,10 @@ require 'spec_helper'
 
 require 'yaml'
 require 'fileutils'
-require 'puppet/transaction/persistence'
+require 'oregano/transaction/persistence'
 
-describe Puppet::Transaction::Persistence do
-  include PuppetSpec::Files
+describe Oregano::Transaction::Persistence do
+  include OreganoSpec::Files
 
   before(:each) do
     @basepath = File.expand_path("/somepath")
@@ -14,7 +14,7 @@ describe Puppet::Transaction::Persistence do
 
   describe "when loading from file" do
     before do
-      Puppet.settings.stubs(:use).returns(true)
+      Oregano.settings.stubs(:use).returns(true)
     end
 
     describe "when the file/directory does not exist" do
@@ -23,12 +23,12 @@ describe Puppet::Transaction::Persistence do
       end
 
       it "should not fail to load" do
-        expect(Puppet::FileSystem.exist?(@path)).to be_falsey
-        Puppet[:statedir] = @path
-        persistence = Puppet::Transaction::Persistence.new
+        expect(Oregano::FileSystem.exist?(@path)).to be_falsey
+        Oregano[:statedir] = @path
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
-        Puppet[:transactionstorefile] = @path
-        persistence = Puppet::Transaction::Persistence.new
+        Oregano[:transactionstorefile] = @path
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
       end
     end
@@ -36,7 +36,7 @@ describe Puppet::Transaction::Persistence do
     describe "when the file/directory exists" do
       before(:each) do
         @tmpfile = tmpfile('storage_test')
-        Puppet[:transactionstorefile] = @tmpfile
+        Oregano[:transactionstorefile] = @tmpfile
       end
 
       def write_state_file(contents)
@@ -48,9 +48,9 @@ describe Puppet::Transaction::Persistence do
         property = "my"
         value = "something"
 
-        Puppet.expects(:err).never
+        Oregano.expects(:err).never
 
-        persistence = Puppet::Transaction::Persistence.new
+        persistence = Oregano::Transaction::Persistence.new
         persistence.set_system_value(resource, property, value)
 
         persistence.load
@@ -62,9 +62,9 @@ describe Puppet::Transaction::Persistence do
         test_yaml = {"resources"=>{"a"=>"b"}}
         write_state_file(test_yaml.to_yaml)
 
-        Puppet.expects(:err).never
+        Oregano.expects(:err).never
 
-        persistence = Puppet::Transaction::Persistence.new
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
 
         expect(persistence.data).to eq(test_yaml)
@@ -73,9 +73,9 @@ describe Puppet::Transaction::Persistence do
       it "should initialize with a clear internal state if the file does not contain valid YAML" do
         write_state_file('{ invalid')
 
-        Puppet.expects(:err).with(regexp_matches(/Transaction store file .* is corrupt/))
+        Oregano.expects(:err).with(regexp_matches(/Transaction store file .* is corrupt/))
 
-        persistence = Puppet::Transaction::Persistence.new
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
 
         expect(persistence.data).to eq({})
@@ -84,9 +84,9 @@ describe Puppet::Transaction::Persistence do
       it "should initialize with a clear internal state if the file does not contain a hash of data" do
         write_state_file("not_a_hash")
 
-        Puppet.expects(:err).with(regexp_matches(/Transaction store file .* is valid YAML but not returning a hash/))
+        Oregano.expects(:err).with(regexp_matches(/Transaction store file .* is valid YAML but not returning a hash/))
 
-        persistence = Puppet::Transaction::Persistence.new
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
 
         expect(persistence.data).to eq({})
@@ -97,11 +97,11 @@ describe Puppet::Transaction::Persistence do
 
         File.expects(:rename).raises(SystemCallError)
 
-        Puppet.expects(:err).with(regexp_matches(/Transaction store file .* is corrupt/))
-        Puppet.expects(:err).with(regexp_matches(/Unable to rename/))
+        Oregano.expects(:err).with(regexp_matches(/Transaction store file .* is corrupt/))
+        Oregano.expects(:err).with(regexp_matches(/Unable to rename/))
 
-        persistence = Puppet::Transaction::Persistence.new
-        expect { persistence.load }.to raise_error(Puppet::Error, /Could not rename/)
+        persistence = Oregano::Transaction::Persistence.new
+        expect { persistence.load }.to raise_error(Oregano::Error, /Could not rename/)
       end
 
       it "should attempt to rename the file if the file is corrupted" do
@@ -109,9 +109,9 @@ describe Puppet::Transaction::Persistence do
 
         File.expects(:rename).at_least_once
 
-        Puppet.expects(:err).with(regexp_matches(/Transaction store file .* is corrupt/))
+        Oregano.expects(:err).with(regexp_matches(/Transaction store file .* is corrupt/))
 
-        persistence = Puppet::Transaction::Persistence.new
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
       end
 
@@ -119,9 +119,9 @@ describe Puppet::Transaction::Persistence do
         FileUtils.rm_f(@tmpfile)
         Dir.mkdir(@tmpfile)
 
-        Puppet.expects(:warning).with(regexp_matches(/Transaction store file .* is not a file/))
+        Oregano.expects(:warning).with(regexp_matches(/Transaction store file .* is not a file/))
 
-        persistence = Puppet::Transaction::Persistence.new
+        persistence = Oregano::Transaction::Persistence.new
         persistence.load
       end
     end
@@ -130,35 +130,35 @@ describe Puppet::Transaction::Persistence do
   describe "when storing to the file" do
     before(:each) do
       @tmpfile = tmpfile('persistence_test')
-      @saved = Puppet[:transactionstorefile]
-      Puppet[:transactionstorefile] = @tmpfile
+      @saved = Oregano[:transactionstorefile]
+      Oregano[:transactionstorefile] = @tmpfile
     end
 
     it "should create the file if it does not exist" do
-      expect(Puppet::FileSystem.exist?(Puppet[:transactionstorefile])).to be_falsey
+      expect(Oregano::FileSystem.exist?(Oregano[:transactionstorefile])).to be_falsey
 
-      persistence = Puppet::Transaction::Persistence.new
+      persistence = Oregano::Transaction::Persistence.new
       persistence.save
 
-      expect(Puppet::FileSystem.exist?(Puppet[:transactionstorefile])).to be_truthy
+      expect(Oregano::FileSystem.exist?(Oregano[:transactionstorefile])).to be_truthy
     end
 
     it "should raise an exception if the file is not a regular file" do
-      Dir.mkdir(Puppet[:transactionstorefile])
-      persistence = Puppet::Transaction::Persistence.new
+      Dir.mkdir(Oregano[:transactionstorefile])
+      persistence = Oregano::Transaction::Persistence.new
 
-      if Puppet.features.microsoft_windows?
+      if Oregano.features.microsoft_windows?
         expect do
           persistence.save
         end.to raise_error do |error|
-          expect(error).to be_a(Puppet::Util::Windows::Error)
+          expect(error).to be_a(Oregano::Util::Windows::Error)
           expect(error.code).to eq(5) # ERROR_ACCESS_DENIED
         end
       else
         expect { persistence.save }.to raise_error(Errno::EISDIR, /Is a directory/)
       end
 
-      Dir.rmdir(Puppet[:transactionstorefile])
+      Dir.rmdir(Oregano[:transactionstorefile])
     end
 
     it "should load the same information that it saves" do
@@ -166,7 +166,7 @@ describe Puppet::Transaction::Persistence do
       property = "content"
       value = "foo"
 
-      persistence = Puppet::Transaction::Persistence.new
+      persistence = Oregano::Transaction::Persistence.new
       persistence.set_system_value(resource, property, value)
 
       persistence.save

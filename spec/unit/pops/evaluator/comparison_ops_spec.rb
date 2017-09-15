@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl' do
   include EvaluatorRspecHelper
 
   context "When the evaluator performs comparisons" do
@@ -124,46 +124,46 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
     context "of non comparable types" do
       # TODO: Change the exception type
-      it "false < true  == error" do; expect { evaluate(literal(true) <  literal(false))}.to raise_error(Puppet::ParseError); end
-      it "false <= true == error" do; expect { evaluate(literal(true) <= literal(false))}.to raise_error(Puppet::ParseError); end
-      it "false > true  == error" do; expect { evaluate(literal(true) >  literal(false))}.to raise_error(Puppet::ParseError); end
-      it "false >= true == error" do; expect { evaluate(literal(true) >= literal(false))}.to raise_error(Puppet::ParseError); end
+      it "false < true  == error" do; expect { evaluate(literal(true) <  literal(false))}.to raise_error(Oregano::ParseError); end
+      it "false <= true == error" do; expect { evaluate(literal(true) <= literal(false))}.to raise_error(Oregano::ParseError); end
+      it "false > true  == error" do; expect { evaluate(literal(true) >  literal(false))}.to raise_error(Oregano::ParseError); end
+      it "false >= true == error" do; expect { evaluate(literal(true) >= literal(false))}.to raise_error(Oregano::ParseError); end
 
-      it "/a/ < /b/  == error" do; expect { evaluate(literal(/a/) <  literal(/b/))}.to raise_error(Puppet::ParseError); end
-      it "/a/ <= /b/ == error" do; expect { evaluate(literal(/a/) <= literal(/b/))}.to raise_error(Puppet::ParseError); end
-      it "/a/ > /b/  == error" do; expect { evaluate(literal(/a/) >  literal(/b/))}.to raise_error(Puppet::ParseError); end
-      it "/a/ >= /b/ == error" do; expect { evaluate(literal(/a/) >= literal(/b/))}.to raise_error(Puppet::ParseError); end
+      it "/a/ < /b/  == error" do; expect { evaluate(literal(/a/) <  literal(/b/))}.to raise_error(Oregano::ParseError); end
+      it "/a/ <= /b/ == error" do; expect { evaluate(literal(/a/) <= literal(/b/))}.to raise_error(Oregano::ParseError); end
+      it "/a/ > /b/  == error" do; expect { evaluate(literal(/a/) >  literal(/b/))}.to raise_error(Oregano::ParseError); end
+      it "/a/ >= /b/ == error" do; expect { evaluate(literal(/a/) >= literal(/b/))}.to raise_error(Oregano::ParseError); end
 
       it "[1,2,3] < [1,2,3] == error" do
-        expect{ evaluate(literal([1,2,3]) < literal([1,2,3]))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal([1,2,3]) < literal([1,2,3]))}.to raise_error(Oregano::ParseError)
       end
 
       it "[1,2,3] > [1,2,3] == error" do
-        expect{ evaluate(literal([1,2,3]) > literal([1,2,3]))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal([1,2,3]) > literal([1,2,3]))}.to raise_error(Oregano::ParseError)
       end
 
       it "[1,2,3] >= [1,2,3] == error" do
-        expect{ evaluate(literal([1,2,3]) >= literal([1,2,3]))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal([1,2,3]) >= literal([1,2,3]))}.to raise_error(Oregano::ParseError)
       end
 
       it "[1,2,3] <= [1,2,3] == error" do
-        expect{ evaluate(literal([1,2,3]) <= literal([1,2,3]))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal([1,2,3]) <= literal([1,2,3]))}.to raise_error(Oregano::ParseError)
       end
 
       it "{'a'=>1, 'b'=>2} < {'a'=>1, 'b'=>2} == error" do
-        expect{ evaluate(literal({'a'=>1, 'b'=>2}) < literal({'a'=>1, 'b'=>2}))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal({'a'=>1, 'b'=>2}) < literal({'a'=>1, 'b'=>2}))}.to raise_error(Oregano::ParseError)
       end
 
       it "{'a'=>1, 'b'=>2} > {'a'=>1, 'b'=>2} == error" do
-        expect{ evaluate(literal({'a'=>1, 'b'=>2}) > literal({'a'=>1, 'b'=>2}))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal({'a'=>1, 'b'=>2}) > literal({'a'=>1, 'b'=>2}))}.to raise_error(Oregano::ParseError)
       end
 
       it "{'a'=>1, 'b'=>2} <= {'a'=>1, 'b'=>2} == error" do
-        expect{ evaluate(literal({'a'=>1, 'b'=>2}) <= literal({'a'=>1, 'b'=>2}))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal({'a'=>1, 'b'=>2}) <= literal({'a'=>1, 'b'=>2}))}.to raise_error(Oregano::ParseError)
       end
 
       it "{'a'=>1, 'b'=>2} >= {'a'=>1, 'b'=>2} == error" do
-        expect{ evaluate(literal({'a'=>1, 'b'=>2}) >= literal({'a'=>1, 'b'=>2}))}.to raise_error(Puppet::ParseError)
+        expect{ evaluate(literal({'a'=>1, 'b'=>2}) >= literal({'a'=>1, 'b'=>2}))}.to raise_error(Oregano::ParseError)
       end
     end
   end
@@ -184,7 +184,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
     end
 
     it 'should fail if LHS is not a string' do
-      expect { evaluate(literal(666) =~ literal(/6/))}.to raise_error(Puppet::ParseError)
+      expect { evaluate(literal(666) =~ literal(/6/))}.to raise_error(Oregano::ParseError)
     end
   end
 

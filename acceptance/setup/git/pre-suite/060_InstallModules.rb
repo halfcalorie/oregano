@@ -2,7 +2,7 @@ require 'pathname'
 
 # Given an array of modules specified by the --modules command line option,
 # Parse all of them into an array of usable hash structures.
-class PuppetModules
+class OreganoModules
   attr_reader :modules
 
   def initialize(modules=[])
@@ -31,7 +31,7 @@ def install_git_module(mod, hosts)
   # temporary directory to this location.  This will preserve the global
   # state of the system while allowing individual test cases to quickly run
   # with a module "installed" in the module path.
-  moddir = "/opt/puppet-git-repos"
+  moddir = "/opt/oregano-git-repos"
   target = "#{moddir}/#{mod[:name]}"
 
   step "Clone #{mod[:url]} if needed"
@@ -52,7 +52,7 @@ def install_git_module(mod, hosts)
 end
 
 def install_scp_module(mod, hosts)
-  moddir = "/opt/puppet-git-repos"
+  moddir = "/opt/oregano-git-repos"
   target = "#{moddir}/#{mod[:name]}"
 
   step "Purge #{target} if needed"
@@ -62,9 +62,9 @@ def install_scp_module(mod, hosts)
   scp_to hosts, mod[:url].split(':', 2)[1], target
 end
 
-modules = PuppetModules.new(options[:modules]).list
+modules = OreganoModules.new(options[:modules]).list
 
-step "Masters: Install Puppet Modules"
+step "Masters: Install Oregano Modules"
 masters = hosts.select { |host| host['roles'].include? 'master' }
 
 modules.each do |mod|

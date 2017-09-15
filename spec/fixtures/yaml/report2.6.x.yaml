@@ -1,74 +1,74 @@
---- !ruby/object:Puppet::Transaction::Report
+--- !ruby/object:Oregano::Transaction::Report
   external_times: 
     !ruby/sym config_retrieval: 0.170313835144043
   host: ubuntu1004desktop.localdomain
   logs: 
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym debug
       message: Using cached certificate for ca
-      source: Puppet
+      source: Oregano
       tags: 
         - debug
       time: 2010-09-23 15:44:06.244173 -07:00
       version: &id001 2.6.1
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym debug
       message: Using cached certificate for ubuntu1004desktop.localdomain
-      source: Puppet
+      source: Oregano
       tags: 
         - debug
       time: 2010-09-23 15:44:06.244764 -07:00
       version: *id001
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym debug
       message: Using cached certificate_revocation_list for ca
-      source: Puppet
+      source: Oregano
       tags: 
         - debug
       time: 2010-09-23 15:44:06.245677 -07:00
       version: *id001
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym debug
       message: "catalog supports formats: b64_zlib_yaml dot marshal pson raw yaml; using pson"
-      source: Puppet
+      source: Oregano
       tags: 
         - debug
       time: 2010-09-23 15:44:06.247069 -07:00
       version: *id001
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym info
       message: Caching catalog for ubuntu1004desktop.localdomain
-      source: Puppet
+      source: Oregano
       tags: 
         - info
       time: 2010-09-23 15:44:06.409109 -07:00
       version: *id001
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym debug
       message: Creating default schedules
-      source: Puppet
+      source: Oregano
       tags: 
         - debug
       time: 2010-09-23 15:44:06.418755 -07:00
       version: *id001
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym debug
       message: Loaded state in 0.00 seconds
-      source: Puppet
+      source: Oregano
       tags: 
         - debug
       time: 2010-09-23 15:44:06.427441 -07:00
       version: *id001
-    - !ruby/object:Puppet::Util::Log
+    - !ruby/object:Oregano::Util::Log
       level: !ruby/sym info
       message: Applying configuration version '1285281846'
-      source: Puppet
+      source: Oregano
       tags: 
         - info
       time: 2010-09-23 15:44:06.429532 -07:00
       version: *id001
   metrics: 
-    time: !ruby/object:Puppet::Util::Metric
+    time: !ruby/object:Oregano::Util::Metric
       label: Time
       name: time
       values: 
@@ -81,21 +81,21 @@
         - - filebucket
           - Filebucket
           - 0.000166
-    resources: !ruby/object:Puppet::Util::Metric
+    resources: !ruby/object:Oregano::Util::Metric
       label: Resources
       name: resources
       values: 
         - - !ruby/sym total
           - Total
           - 7
-    events: !ruby/object:Puppet::Util::Metric
+    events: !ruby/object:Oregano::Util::Metric
       label: Events
       name: events
       values: 
         - - !ruby/sym total
           - Total
           - 0
-    changes: !ruby/object:Puppet::Util::Metric
+    changes: !ruby/object:Oregano::Util::Metric
       label: Changes
       name: changes
       values: 
@@ -103,7 +103,7 @@
           - Total
           - 0
   resource_statuses: 
-    "Schedule[monthly]": !ruby/object:Puppet::Resource::Status
+    "Schedule[monthly]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000121
       events: []
       file: 
@@ -115,19 +115,19 @@
         - monthly
       time: 2010-09-23 15:44:06.430577 -07:00
       version: 1285281846
-    "Filebucket[puppet]": !ruby/object:Puppet::Resource::Status
+    "Filebucket[oregano]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000166
       events: []
       file: 
       line: 
-      resource: "Filebucket[puppet]"
-      source_description: "/Filebucket[puppet]"
+      resource: "Filebucket[oregano]"
+      source_description: "/Filebucket[oregano]"
       tags: 
         - filebucket
-        - puppet
+        - oregano
       time: 2010-09-23 15:44:06.430998 -07:00
       version: 1285281846
-    "Schedule[never]": !ruby/object:Puppet::Resource::Status
+    "Schedule[never]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000119
       events: []
       file: 
@@ -139,7 +139,7 @@
         - never
       time: 2010-09-23 15:44:06.433034 -07:00
       version: 1285281846
-    "Schedule[weekly]": !ruby/object:Puppet::Resource::Status
+    "Schedule[weekly]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000118
       events: []
       file: 
@@ -151,19 +151,19 @@
         - weekly
       time: 2010-09-23 15:44:06.431443 -07:00
       version: 1285281846
-    "Schedule[puppet]": !ruby/object:Puppet::Resource::Status
+    "Schedule[oregano]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000129
       events: []
       file: 
       line: 
-      resource: "Schedule[puppet]"
-      source_description: "/Schedule[puppet]"
+      resource: "Schedule[oregano]"
+      source_description: "/Schedule[oregano]"
       tags: 
         - schedule
-        - puppet
+        - oregano
       time: 2010-09-23 15:44:06.432626 -07:00
       version: 1285281846
-    "Schedule[daily]": !ruby/object:Puppet::Resource::Status
+    "Schedule[daily]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000154
       events: []
       file: 
@@ -175,7 +175,7 @@
         - daily
       time: 2010-09-23 15:44:06.430130 -07:00
       version: 1285281846
-    "Schedule[hourly]": !ruby/object:Puppet::Resource::Status
+    "Schedule[hourly]": !ruby/object:Oregano::Resource::Status
       evaluation_time: 0.000129
       events: []
       file: 

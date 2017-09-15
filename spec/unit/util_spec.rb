@@ -2,22 +2,22 @@
 
 require 'spec_helper'
 
-describe Puppet::Util do
-  include PuppetSpec::Files
+describe Oregano::Util do
+  include OreganoSpec::Files
 
   # Discriminator for tests that attempts to unset HOME since that, for reasons currently unknown,
   # doesn't work in Ruby >= 2.4.0
   def self.gte_ruby_2_4
-    @gte_ruby_2_4 ||= SemanticPuppet::Version.parse(RUBY_VERSION) >= SemanticPuppet::Version.parse('2.4.0')
+    @gte_ruby_2_4 ||= SemanticOregano::Version.parse(RUBY_VERSION) >= SemanticOregano::Version.parse('2.4.0')
   end
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     def set_mode(mode, file)
-      Puppet::Util::Windows::Security.set_mode(mode, file)
+      Oregano::Util::Windows::Security.set_mode(mode, file)
     end
 
     def get_mode(file)
-      Puppet::Util::Windows::Security.get_mode(file) & 07777
+      Oregano::Util::Windows::Security.get_mode(file) & 07777
     end
   else
     def set_mode(mode, file)
@@ -25,12 +25,12 @@ describe Puppet::Util do
     end
 
     def get_mode(file)
-      Puppet::FileSystem.lstat(file).mode & 07777
+      Oregano::FileSystem.lstat(file).mode & 07777
     end
   end
 
   describe "#withenv" do
-    let(:mode) { Puppet.features.microsoft_windows? ? :windows : :posix }
+    let(:mode) { Oregano.features.microsoft_windows? ? :windows : :posix }
 
     before :each do
       @original_path = ENV["PATH"]
@@ -38,7 +38,7 @@ describe Puppet::Util do
     end
 
     it "should change environment variables within the block then reset environment variables to their original values" do
-      Puppet::Util.withenv @new_env, mode do
+      Oregano::Util.withenv @new_env, mode do
         expect(ENV["PATH"]).to eq("/some/bogus/path")
       end
       expect(ENV["PATH"]).to eq(@original_path)
@@ -46,7 +46,7 @@ describe Puppet::Util do
 
     it "should reset environment variables to their original values even if the block fails" do
       begin
-        Puppet::Util.withenv @new_env, mode do
+        Oregano::Util.withenv @new_env, mode do
           expect(ENV["PATH"]).to eq("/some/bogus/path")
           raise "This is a failure"
         end
@@ -58,7 +58,7 @@ describe Puppet::Util do
     it "should reset environment variables even when they are set twice" do
       # Setting Path & Environment parameters in Exec type can cause weirdness
       @new_env["PATH"] = "/someother/bogus/path"
-      Puppet::Util.withenv @new_env, mode do
+      Oregano::Util.withenv @new_env, mode do
         # When assigning duplicate keys, can't guarantee order of evaluation
         expect(ENV["PATH"]).to match(/\/some.*\/bogus\/path/)
       end
@@ -68,14 +68,14 @@ describe Puppet::Util do
     it "should remove any new environment variables after the block ends" do
       @new_env[:FOO] = "bar"
       ENV["FOO"] = nil
-      Puppet::Util.withenv @new_env, mode do
+      Oregano::Util.withenv @new_env, mode do
         expect(ENV["FOO"]).to eq("bar")
       end
       expect(ENV["FOO"]).to eq(nil)
     end
   end
 
-  describe "#withenv on POSIX", :unless => Puppet.features.microsoft_windows? do
+  describe "#withenv on POSIX", :unless => Oregano.features.microsoft_windows? do
     it "should preserve case" do
       # start with lower case key,
       env_key = SecureRandom.uuid.downcase
@@ -85,7 +85,7 @@ describe Puppet::Util do
         ENV[env_key] = original_value
         new_value = 'goodbye'
 
-        Puppet::Util.withenv({env_key.upcase => new_value}, :posix) do
+        Oregano::Util.withenv({env_key.upcase => new_value}, :posix) do
           expect(ENV[env_key]).to eq(original_value)
           expect(ENV[env_key.upcase]).to eq(new_value)
         end
@@ -98,9 +98,9 @@ describe Puppet::Util do
     end
   end
 
-  describe "#withenv on Windows", :if => Puppet.features.microsoft_windows? do
+  describe "#withenv on Windows", :if => Oregano.features.microsoft_windows? do
 
-    let(:process) { Puppet::Util::Windows::Process }
+    let(:process) { Oregano::Util::Windows::Process }
 
     it "should ignore case" do
       # start with lower case key, ensuring string is not entirely numeric
@@ -111,7 +111,7 @@ describe Puppet::Util do
         ENV[env_key] = original_value
         new_value = 'goodbye'
 
-        Puppet::Util.withenv({env_key.upcase => new_value}, :windows) do
+        Oregano::Util.withenv({env_key.upcase => new_value}, :windows) do
           expect(ENV[env_key]).to eq(new_value)
           expect(ENV[env_key.upcase]).to eq(new_value)
         end
@@ -132,7 +132,7 @@ describe Puppet::Util do
       utf_8_value = utf_8_key + 'value'
       codepage_key = utf_8_key.dup.force_encoding(Encoding.default_external)
 
-      Puppet::Util.withenv({utf_8_key => utf_8_value}, :windows) do
+      Oregano::Util.withenv({utf_8_key => utf_8_value}, :windows) do
         # the true Windows environment APIs see the variables correctly
         expect(process.get_environment_strings[utf_8_key]).to eq(utf_8_value)
 
@@ -154,7 +154,7 @@ describe Puppet::Util do
     # interestingly we would expect some of these tests to fail when codepage is 65001
     # but instead the env values are in Encoding::ASCII_8BIT!
     it "works around Ruby bug 8822 (which fails to preserve UTF-8 properly when accessing ENV) (Ruby <= 2.1) ",
-      :if => ((RUBY_VERSION =~ /^(1\.|2\.0\.|2\.1\.)/) && Puppet.features.microsoft_windows?) do
+      :if => ((RUBY_VERSION =~ /^(1\.|2\.0\.|2\.1\.)/) && Oregano.features.microsoft_windows?) do
 
       withenv_utf8 do |utf_8_key, utf_8_value, codepage_key|
         # both a string in UTF-8 and current codepage are deemed valid keys to the hash
@@ -189,7 +189,7 @@ describe Puppet::Util do
 
     # but in 2.3, the behavior is mostly correct when external codepage is 65001 / UTF-8
     it "works around Ruby bug 8822 (which fails to preserve UTF-8 properly when accessing ENV) (Ruby >= 2.3.x) ",
-      :if => ((match = RUBY_VERSION.match(/^2\.(\d+)\./)) && match.captures[0].to_i >= 3 && Puppet.features.microsoft_windows?) do
+      :if => ((match = RUBY_VERSION.match(/^2\.(\d+)\./)) && match.captures[0].to_i >= 3 && Oregano.features.microsoft_windows?) do
 
       raise 'This test requires a non-UTF8 codepage' if Encoding.default_external == Encoding::UTF_8
 
@@ -244,7 +244,7 @@ describe Puppet::Util do
         process.set_environment_variable(env_var_name, utf_8_str)
 
         original_keys = process.get_environment_strings.keys.to_a
-        Puppet::Util.withenv({}, :windows) { }
+        Oregano::Util.withenv({}, :windows) { }
 
         env = process.get_environment_strings
 
@@ -259,30 +259,30 @@ describe Puppet::Util do
   end
 
   describe "#absolute_path?" do
-    describe "on posix systems", :if => Puppet.features.posix? do
+    describe "on posix systems", :if => Oregano.features.posix? do
       it "should default to the platform of the local system" do
-        expect(Puppet::Util).to be_absolute_path('/foo')
-        expect(Puppet::Util).not_to be_absolute_path('C:/foo')
+        expect(Oregano::Util).to be_absolute_path('/foo')
+        expect(Oregano::Util).not_to be_absolute_path('C:/foo')
       end
     end
 
-    describe "on windows", :if => Puppet.features.microsoft_windows? do
+    describe "on windows", :if => Oregano.features.microsoft_windows? do
       it "should default to the platform of the local system" do
-        expect(Puppet::Util).to be_absolute_path('C:/foo')
-        expect(Puppet::Util).not_to be_absolute_path('/foo')
+        expect(Oregano::Util).to be_absolute_path('C:/foo')
+        expect(Oregano::Util).not_to be_absolute_path('/foo')
       end
     end
 
     describe "when using platform :posix" do
       %w[/ /foo /foo/../bar //foo //Server/Foo/Bar //?/C:/foo/bar /\Server/Foo /foo//bar/baz].each do |path|
         it "should return true for #{path}" do
-          expect(Puppet::Util).to be_absolute_path(path, :posix)
+          expect(Oregano::Util).to be_absolute_path(path, :posix)
         end
       end
 
       %w[. ./foo \foo C:/foo \\Server\Foo\Bar \\?\C:\foo\bar \/?/foo\bar \/Server/foo foo//bar/baz].each do |path|
         it "should return false for #{path}" do
-          expect(Puppet::Util).not_to be_absolute_path(path, :posix)
+          expect(Oregano::Util).not_to be_absolute_path(path, :posix)
         end
       end
     end
@@ -290,13 +290,13 @@ describe Puppet::Util do
     describe "when using platform :windows" do
       %w[C:/foo C:\foo \\\\Server\Foo\Bar \\\\?\C:\foo\bar //Server/Foo/Bar //?/C:/foo/bar /\?\C:/foo\bar \/Server\Foo/Bar c:/foo//bar//baz].each do |path|
         it "should return true for #{path}" do
-          expect(Puppet::Util).to be_absolute_path(path, :windows)
+          expect(Oregano::Util).to be_absolute_path(path, :windows)
         end
       end
 
       %w[/ . ./foo \foo /foo /foo/../bar //foo C:foo/bar foo//bar/baz].each do |path|
         it "should return false for #{path}" do
-          expect(Puppet::Util).not_to be_absolute_path(path, :windows)
+          expect(Oregano::Util).not_to be_absolute_path(path, :windows)
         end
       end
     end
@@ -313,16 +313,16 @@ describe Puppet::Util do
 
     %w[. .. foo foo/bar foo/../bar].each do |path|
       it "should reject relative path: #{path}" do
-        expect { Puppet::Util.path_to_uri(path) }.to raise_error(Puppet::Error)
+        expect { Oregano::Util.path_to_uri(path) }.to raise_error(Oregano::Error)
       end
     end
 
     it "should perform URI escaping" do
-      expect(Puppet::Util.path_to_uri("/foo bar").path).to eq("/foo%20bar")
+      expect(Oregano::Util.path_to_uri("/foo bar").path).to eq("/foo%20bar")
     end
 
     it "should properly URI encode + and space in path" do
-      expect(Puppet::Util.path_to_uri("/foo+foo bar").path).to eq("/foo+foo%20bar")
+      expect(Oregano::Util.path_to_uri("/foo+foo bar").path).to eq("/foo+foo%20bar")
     end
 
     # reserved characters are different for each part
@@ -334,7 +334,7 @@ describe Puppet::Util do
     # "/?:@-._~!$&'()*+,;=" are allowed unescaped anywhere within a fragment part.
     it "should properly URI encode + and space in path and query" do
       path = "/foo+foo bar?foo+foo bar"
-      uri = Puppet::Util.path_to_uri(path)
+      uri = Oregano::Util.path_to_uri(path)
 
       # Ruby 1.9.3 URI#to_s has a bug that returns ASCII always
       # despite parts being UTF-8 strings
@@ -351,7 +351,7 @@ describe Puppet::Util do
     end
 
     it "should perform UTF-8 URI escaping" do
-      uri = Puppet::Util.path_to_uri("/#{mixed_utf8}")
+      uri = Oregano::Util.path_to_uri("/#{mixed_utf8}")
 
       expect(uri.path.encoding).to eq(Encoding::UTF_8)
       expect(uri.path).to eq("/#{mixed_utf8_urlencoded}")
@@ -359,38 +359,38 @@ describe Puppet::Util do
 
     describe "when using platform :posix" do
       before :each do
-        Puppet.features.stubs(:posix).returns true
-        Puppet.features.stubs(:microsoft_windows?).returns false
+        Oregano.features.stubs(:posix).returns true
+        Oregano.features.stubs(:microsoft_windows?).returns false
       end
 
       %w[/ /foo /foo/../bar].each do |path|
         it "should convert #{path} to URI" do
-          expect(Puppet::Util.path_to_uri(path).path).to eq(path)
+          expect(Oregano::Util.path_to_uri(path).path).to eq(path)
         end
       end
     end
 
     describe "when using platform :windows" do
       before :each do
-        Puppet.features.stubs(:posix).returns false
-        Puppet.features.stubs(:microsoft_windows?).returns true
+        Oregano.features.stubs(:posix).returns false
+        Oregano.features.stubs(:microsoft_windows?).returns true
       end
 
       it "should normalize backslashes" do
-        expect(Puppet::Util.path_to_uri('c:\\foo\\bar\\baz').path).to eq('/' + 'c:/foo/bar/baz')
+        expect(Oregano::Util.path_to_uri('c:\\foo\\bar\\baz').path).to eq('/' + 'c:/foo/bar/baz')
       end
 
       %w[C:/ C:/foo/bar].each do |path|
         it "should convert #{path} to absolute URI" do
-          expect(Puppet::Util.path_to_uri(path).path).to eq('/' + path)
+          expect(Oregano::Util.path_to_uri(path).path).to eq('/' + path)
         end
       end
 
       %w[share C$].each do |path|
         it "should convert UNC #{path} to absolute URI" do
-          uri = Puppet::Util.path_to_uri("\\\\server\\#{path}")
+          uri = Oregano::Util.path_to_uri("\\\\server\\#{path}")
           expect(uri.host).to eq('server')
-          expect(uri.path).to eq('/' + Puppet::Util.uri_encode(path))
+          expect(uri.path).to eq('/' + Oregano::Util.uri_encode(path))
         end
       end
     end
@@ -406,11 +406,11 @@ describe Puppet::Util do
     let (:mixed_utf8_urlencoded) { "A%DB%BF%E1%9A%A0%F0%A0%9C%8E" }
 
     it "should perform basic URI escaping that includes space and +" do
-      expect(Puppet::Util.uri_query_encode("foo bar+foo")).to eq("foo%20bar%2Bfoo")
+      expect(Oregano::Util.uri_query_encode("foo bar+foo")).to eq("foo%20bar%2Bfoo")
     end
 
     it "should URI encode any special characters: = + <space> & * and #" do
-      expect(Puppet::Util.uri_query_encode("foo=bar+foo baz&bar=baz qux&special= *&qux=not fragment#")).to eq("foo%3Dbar%2Bfoo%20baz%26bar%3Dbaz%20qux%26special%3D%20%2A%26qux%3Dnot%20fragment%23")
+      expect(Oregano::Util.uri_query_encode("foo=bar+foo baz&bar=baz qux&special= *&qux=not fragment#")).to eq("foo%3Dbar%2Bfoo%20baz%26bar%3Dbaz%20qux%26special%3D%20%2A%26qux%3Dnot%20fragment%23")
     end
 
     [
@@ -418,7 +418,7 @@ describe Puppet::Util do
       "A\u06FF\u16A0\u{2070E}".force_encoding(Encoding::BINARY)
     ].each do |uri_string|
       it "should perform UTF-8 URI escaping, even when input strings are not UTF-8" do
-        uri = Puppet::Util.uri_query_encode(mixed_utf8)
+        uri = Oregano::Util.uri_query_encode(mixed_utf8)
 
         expect(uri.encoding).to eq(Encoding::UTF_8)
         expect(uri).to eq(mixed_utf8_urlencoded)
@@ -426,9 +426,9 @@ describe Puppet::Util do
     end
 
     it "should be usable by URI::parse" do
-      uri = URI::parse("puppet://server/path?" + Puppet::Util.uri_query_encode(mixed_utf8))
+      uri = URI::parse("oregano://server/path?" + Oregano::Util.uri_query_encode(mixed_utf8))
 
-      expect(uri.scheme).to eq('puppet')
+      expect(uri.scheme).to eq('oregano')
       expect(uri.host).to eq('server')
       expect(uri.path).to eq('/path')
       expect(uri.query).to eq(mixed_utf8_urlencoded)
@@ -439,7 +439,7 @@ describe Puppet::Util do
         :scheme => 'file',
         :host => 'foobar',
         :path => '/path/to',
-        :query => Puppet::Util.uri_query_encode(mixed_utf8)
+        :query => Oregano::Util.uri_query_encode(mixed_utf8)
       }
 
       uri = URI::Generic.build(params)
@@ -461,7 +461,7 @@ describe Puppet::Util do
     let (:mixed_utf8_urlencoded) { "A%DB%BF%E1%9A%A0%F0%A0%9C%8E" }
 
     it "should perform URI escaping" do
-      expect(Puppet::Util.uri_encode("/foo bar")).to eq("/foo%20bar")
+      expect(Oregano::Util.uri_encode("/foo bar")).to eq("/foo%20bar")
     end
 
     [
@@ -469,7 +469,7 @@ describe Puppet::Util do
       "A\u06FF\u16A0\u{2070E}".force_encoding(Encoding::BINARY)
     ].each do |uri_string|
       it "should perform UTF-8 URI escaping, even when input strings are not UTF-8" do
-        uri = Puppet::Util.uri_encode(mixed_utf8)
+        uri = Oregano::Util.uri_encode(mixed_utf8)
 
         expect(uri.encoding).to eq(Encoding::UTF_8)
         expect(uri).to eq(mixed_utf8_urlencoded)
@@ -479,13 +479,13 @@ describe Puppet::Util do
     it "should treat & and = as delimiters in a query string, but URI encode other special characters: + <space> * and #" do
       input = "http://foo.bar.com/path?foo=bar+foo baz&bar=baz qux&special= *&qux=not fragment#"
       expected_output = "http://foo.bar.com/path?foo=bar%2Bfoo%20baz&bar=baz%20qux&special=%20%2A&qux=not%20fragment%23"
-      expect(Puppet::Util.uri_encode(input)).to eq(expected_output)
+      expect(Oregano::Util.uri_encode(input)).to eq(expected_output)
     end
 
     it "should be usable by URI::parse" do
-      uri = URI::parse(Puppet::Util.uri_encode("puppet://server/path/to/#{mixed_utf8}"))
+      uri = URI::parse(Oregano::Util.uri_encode("oregano://server/path/to/#{mixed_utf8}"))
 
-      expect(uri.scheme).to eq('puppet')
+      expect(uri.scheme).to eq('oregano')
       expect(uri.host).to eq('server')
       expect(uri.path).to eq("/path/to/#{mixed_utf8_urlencoded}")
     end
@@ -494,7 +494,7 @@ describe Puppet::Util do
       params = {
         :scheme => 'file',
         :host => 'foobar',
-        :path => Puppet::Util.uri_encode("/path/to/#{mixed_utf8}")
+        :path => Oregano::Util.uri_encode("/path/to/#{mixed_utf8}")
       }
 
       uri = URI::Generic.build(params)
@@ -506,13 +506,13 @@ describe Puppet::Util do
 
     describe "when using platform :posix" do
       before :each do
-        Puppet.features.stubs(:posix).returns true
-        Puppet.features.stubs(:microsoft_windows?).returns false
+        Oregano.features.stubs(:posix).returns true
+        Oregano.features.stubs(:microsoft_windows?).returns false
       end
 
       %w[/ /foo /foo/../bar].each do |path|
         it "should not replace / in #{path} with %2F" do
-          expect(Puppet::Util.uri_encode(path)).to eq(path)
+          expect(Oregano::Util.uri_encode(path)).to eq(path)
         end
       end
     end
@@ -520,24 +520,24 @@ describe Puppet::Util do
     describe "with fragment support" do
       context "disabled by default" do
         it "should encode # as %23 in path" do
-          encoded = Puppet::Util.uri_encode("/foo bar#fragment")
+          encoded = Oregano::Util.uri_encode("/foo bar#fragment")
           expect(encoded).to eq("/foo%20bar%23fragment")
         end
 
         it "should encode # as %23 in query" do
-          encoded = Puppet::Util.uri_encode("/foo bar?baz+qux#fragment")
+          encoded = Oregano::Util.uri_encode("/foo bar?baz+qux#fragment")
           expect(encoded).to eq("/foo%20bar?baz%2Bqux%23fragment")
         end
       end
 
       context "optionally enabled" do
         it "should leave fragment delimiter # after encoded paths" do
-          encoded = Puppet::Util.uri_encode("/foo bar#fragment", { :allow_fragment => true })
+          encoded = Oregano::Util.uri_encode("/foo bar#fragment", { :allow_fragment => true })
           expect(encoded).to eq("/foo%20bar#fragment")
         end
 
         it "should leave fragment delimiter # after encoded query" do
-          encoded = Puppet::Util.uri_encode("/foo bar?baz+qux#fragment", { :allow_fragment => true })
+          encoded = Oregano::Util.uri_encode("/foo bar?baz+qux#fragment", { :allow_fragment => true })
           expect(encoded).to eq("/foo%20bar?baz%2Bqux#fragment")
         end
       end
@@ -545,17 +545,17 @@ describe Puppet::Util do
 
     describe "when using platform :windows" do
       before :each do
-        Puppet.features.stubs(:posix).returns false
-        Puppet.features.stubs(:microsoft_windows?).returns true
+        Oregano.features.stubs(:posix).returns false
+        Oregano.features.stubs(:microsoft_windows?).returns true
       end
 
       it "should url encode \\ as %5C, but not replace : as %3F" do
-        expect(Puppet::Util.uri_encode('c:\\foo\\bar\\baz')).to eq('c:%5Cfoo%5Cbar%5Cbaz')
+        expect(Oregano::Util.uri_encode('c:\\foo\\bar\\baz')).to eq('c:%5Cfoo%5Cbar%5Cbaz')
       end
 
       %w[C:/ C:/foo/bar].each do |path|
         it "should not replace / in #{path} with %2F" do
-          expect(Puppet::Util.uri_encode(path)).to eq(path)
+          expect(Oregano::Util.uri_encode(path)).to eq(path)
         end
       end
     end
@@ -572,15 +572,15 @@ describe Puppet::Util do
     let (:mixed_utf8) { "A\u06FF\u16A0\u{2070E}" } # Aۿᚠ𠜎
 
     it "should strip host component" do
-      expect(Puppet::Util.uri_to_path(URI.parse('http://foo/bar'))).to eq('/bar')
+      expect(Oregano::Util.uri_to_path(URI.parse('http://foo/bar'))).to eq('/bar')
     end
 
-    it "should accept puppet URLs" do
-      expect(Puppet::Util.uri_to_path(URI.parse('puppet:///modules/foo'))).to eq('/modules/foo')
+    it "should accept oregano URLs" do
+      expect(Oregano::Util.uri_to_path(URI.parse('oregano:///modules/foo'))).to eq('/modules/foo')
     end
 
     it "should return unencoded path" do
-      expect(Puppet::Util.uri_to_path(URI.parse('http://foo/bar%20baz'))).to eq('/bar baz')
+      expect(Oregano::Util.uri_to_path(URI.parse('http://foo/bar%20baz'))).to eq('/bar baz')
     end
 
 
@@ -589,7 +589,7 @@ describe Puppet::Util do
       "http://foo/A%DB%BF%E1%9A%A0%F0%A0%9C%8E".force_encoding(Encoding::ASCII)
     ].each do |uri_string|
       it "should return paths as UTF-8" do
-        path = Puppet::Util.uri_to_path(URI.parse(uri_string))
+        path = Oregano::Util.uri_to_path(URI.parse(uri_string))
 
         expect(path).to eq("/#{mixed_utf8}")
         expect(path.encoding).to eq(Encoding::UTF_8)
@@ -597,38 +597,38 @@ describe Puppet::Util do
     end
 
     it "should be nil-safe" do
-      expect(Puppet::Util.uri_to_path(nil)).to be_nil
+      expect(Oregano::Util.uri_to_path(nil)).to be_nil
     end
 
-    describe "when using platform :posix",:if => Puppet.features.posix? do
+    describe "when using platform :posix",:if => Oregano.features.posix? do
       it "should accept root" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file:/'))).to eq('/')
+        expect(Oregano::Util.uri_to_path(URI.parse('file:/'))).to eq('/')
       end
 
       it "should accept single slash" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file:/foo/bar'))).to eq('/foo/bar')
+        expect(Oregano::Util.uri_to_path(URI.parse('file:/foo/bar'))).to eq('/foo/bar')
       end
 
       it "should accept triple slashes" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file:///foo/bar'))).to eq('/foo/bar')
+        expect(Oregano::Util.uri_to_path(URI.parse('file:///foo/bar'))).to eq('/foo/bar')
       end
     end
 
-    describe "when using platform :windows", :if => Puppet.features.microsoft_windows? do
+    describe "when using platform :windows", :if => Oregano.features.microsoft_windows? do
       it "should accept root" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file:/C:/'))).to eq('C:/')
+        expect(Oregano::Util.uri_to_path(URI.parse('file:/C:/'))).to eq('C:/')
       end
 
       it "should accept single slash" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file:/C:/foo/bar'))).to eq('C:/foo/bar')
+        expect(Oregano::Util.uri_to_path(URI.parse('file:/C:/foo/bar'))).to eq('C:/foo/bar')
       end
 
       it "should accept triple slashes" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file:///C:/foo/bar'))).to eq('C:/foo/bar')
+        expect(Oregano::Util.uri_to_path(URI.parse('file:///C:/foo/bar'))).to eq('C:/foo/bar')
       end
 
       it "should accept file scheme with double slashes as a UNC path" do
-        expect(Puppet::Util.uri_to_path(URI.parse('file://host/share/file'))).to eq('//host/share/file')
+        expect(Oregano::Util.uri_to_path(URI.parse('file://host/share/file'))).to eq('//host/share/file')
       end
     end
   end
@@ -663,7 +663,7 @@ describe Puppet::Util do
       end
 
       Dir.stubs(:foreach).with('/proc/self/fd').multiple_yields(*fds)
-      Puppet::Util.safe_posix_fork
+      Oregano::Util.safe_posix_fork
     end
 
     it "should close all open file descriptors except stdin/stdout/stderr when /proc/self/fd doesn't exists" do
@@ -673,19 +673,19 @@ describe Puppet::Util do
       (3..256).each { |n| IO.expects(:new).with(n).returns mock('io', :close)  }
       Dir.stubs(:foreach).with('/proc/self/fd') { raise Errno::ENOENT }
 
-      Puppet::Util.safe_posix_fork
+      Oregano::Util.safe_posix_fork
     end
 
     it "should fork a child process to execute the block" do
       Kernel.expects(:fork).returns(pid).yields
 
-      Puppet::Util.safe_posix_fork do
+      Oregano::Util.safe_posix_fork do
         message = "Fork this!"
       end
     end
 
     it "should return the pid of the child process" do
-      expect(Puppet::Util.safe_posix_fork).to eq(pid)
+      expect(Oregano::Util.safe_posix_fork).to eq(pid)
     end
   end
 
@@ -702,27 +702,27 @@ describe Puppet::Util do
     end
 
     it "should accept absolute paths" do
-      expect(Puppet::Util.which(path)).to eq(path)
+      expect(Oregano::Util.which(path)).to eq(path)
     end
 
     it "should return nil if no executable found" do
-      expect(Puppet::Util.which('doesnotexist')).to be_nil
+      expect(Oregano::Util.which('doesnotexist')).to be_nil
     end
 
     it "should warn if the user's HOME is not set but their PATH contains a ~", :unless => gte_ruby_2_4 do
       env_path = %w[~/bin /usr/bin /bin].join(File::PATH_SEPARATOR)
 
       env = {:HOME => nil, :PATH => env_path}
-      env.merge!({:HOMEDRIVE => nil, :USERPROFILE => nil}) if Puppet.features.microsoft_windows?
+      env.merge!({:HOMEDRIVE => nil, :USERPROFILE => nil}) if Oregano.features.microsoft_windows?
 
-      Puppet::Util.withenv(env) do
-        Puppet::Util::Warnings.expects(:warnonce).once
-        Puppet::Util.which('foo')
+      Oregano::Util.withenv(env) do
+        Oregano::Util::Warnings.expects(:warnonce).once
+        Oregano::Util.which('foo')
       end
     end
 
     it "should reject directories" do
-      expect(Puppet::Util.which(base)).to be_nil
+      expect(Oregano::Util.which(base)).to be_nil
     end
 
     it "should ignore ~user directories if the user doesn't exist" do
@@ -731,22 +731,22 @@ describe Puppet::Util do
       # behave consistently.  If they ever implement it correctly (eg: to do
       # the lookup for real) it should just work transparently.
       baduser = 'if_this_user_exists_I_will_eat_my_hat'
-      Puppet::Util.withenv("PATH" => "~#{baduser}#{File::PATH_SEPARATOR}#{base}") do
-        expect(Puppet::Util.which('foo')).to eq(path)
+      Oregano::Util.withenv("PATH" => "~#{baduser}#{File::PATH_SEPARATOR}#{base}") do
+        expect(Oregano::Util.which('foo')).to eq(path)
       end
     end
 
     describe "on POSIX systems" do
       before :each do
-        Puppet.features.stubs(:posix?).returns true
-        Puppet.features.stubs(:microsoft_windows?).returns false
+        Oregano.features.stubs(:posix?).returns true
+        Oregano.features.stubs(:microsoft_windows?).returns false
       end
 
       it "should walk the search PATH returning the first executable" do
-        Puppet::Util.stubs(:get_env).with('PATH').returns(File.expand_path('/bin'))
-        Puppet::Util.stubs(:get_env).with('PATHEXT').returns(nil)
+        Oregano::Util.stubs(:get_env).with('PATH').returns(File.expand_path('/bin'))
+        Oregano::Util.stubs(:get_env).with('PATHEXT').returns(nil)
 
-        expect(Puppet::Util.which('foo')).to eq(path)
+        expect(Oregano::Util.which('foo')).to eq(path)
       end
     end
 
@@ -754,26 +754,26 @@ describe Puppet::Util do
       let(:path) { File.expand_path(File.join(base, 'foo.CMD')) }
 
       before :each do
-        Puppet.features.stubs(:posix?).returns false
-        Puppet.features.stubs(:microsoft_windows?).returns true
+        Oregano.features.stubs(:posix?).returns false
+        Oregano.features.stubs(:microsoft_windows?).returns true
       end
 
       describe "when a file extension is specified" do
         it "should walk each directory in PATH ignoring PATHEXT" do
-          Puppet::Util.stubs(:get_env).with('PATH').returns(%w[/bar /bin].map{|dir| File.expand_path(dir)}.join(File::PATH_SEPARATOR))
-          Puppet::Util.stubs(:get_env).with('PATHEXT').returns('.FOOBAR')
+          Oregano::Util.stubs(:get_env).with('PATH').returns(%w[/bar /bin].map{|dir| File.expand_path(dir)}.join(File::PATH_SEPARATOR))
+          Oregano::Util.stubs(:get_env).with('PATHEXT').returns('.FOOBAR')
 
           FileTest.expects(:file?).with(File.join(File.expand_path('/bar'), 'foo.CMD')).returns false
 
-          expect(Puppet::Util.which('foo.CMD')).to eq(path)
+          expect(Oregano::Util.which('foo.CMD')).to eq(path)
         end
       end
 
       describe "when a file extension is not specified" do
         it "should walk each extension in PATHEXT until an executable is found" do
           bar = File.expand_path('/bar')
-          Puppet::Util.stubs(:get_env).with('PATH').returns("#{bar}#{File::PATH_SEPARATOR}#{base}")
-          Puppet::Util.stubs(:get_env).with('PATHEXT').returns(".EXE#{File::PATH_SEPARATOR}.CMD")
+          Oregano::Util.stubs(:get_env).with('PATH').returns("#{bar}#{File::PATH_SEPARATOR}#{base}")
+          Oregano::Util.stubs(:get_env).with('PATHEXT').returns(".EXE#{File::PATH_SEPARATOR}.CMD")
 
           exts = sequence('extensions')
           FileTest.expects(:file?).in_sequence(exts).with(File.join(bar, 'foo.EXE')).returns false
@@ -781,12 +781,12 @@ describe Puppet::Util do
           FileTest.expects(:file?).in_sequence(exts).with(File.join(base, 'foo.EXE')).returns false
           FileTest.expects(:file?).in_sequence(exts).with(path).returns true
 
-          expect(Puppet::Util.which('foo')).to eq(path)
+          expect(Oregano::Util.which('foo')).to eq(path)
         end
 
         it "should walk the default extension path if the environment variable is not defined" do
-          Puppet::Util.stubs(:get_env).with('PATH').returns(base)
-          Puppet::Util.stubs(:get_env).with('PATHEXT').returns(nil)
+          Oregano::Util.stubs(:get_env).with('PATH').returns(base)
+          Oregano::Util.stubs(:get_env).with('PATHEXT').returns(nil)
 
           exts = sequence('extensions')
           %w[.COM .EXE .BAT].each do |ext|
@@ -794,18 +794,18 @@ describe Puppet::Util do
           end
           FileTest.expects(:file?).in_sequence(exts).with(path).returns true
 
-          expect(Puppet::Util.which('foo')).to eq(path)
+          expect(Oregano::Util.which('foo')).to eq(path)
         end
 
         it "should fall back if no extension matches" do
-          Puppet::Util.stubs(:get_env).with('PATH').returns(base)
-          Puppet::Util.stubs(:get_env).with('PATHEXT').returns(".EXE")
+          Oregano::Util.stubs(:get_env).with('PATH').returns(base)
+          Oregano::Util.stubs(:get_env).with('PATHEXT').returns(".EXE")
 
           FileTest.stubs(:file?).with(File.join(base, 'foo.EXE')).returns false
           FileTest.stubs(:file?).with(File.join(base, 'foo')).returns true
           FileTest.stubs(:executable?).with(File.join(base, 'foo')).returns true
 
-          expect(Puppet::Util.which('foo')).to eq(File.join(base, 'foo'))
+          expect(Oregano::Util.which('foo')).to eq(File.join(base, 'foo'))
         end
       end
     end
@@ -817,18 +817,18 @@ describe Puppet::Util do
 
     describe "#symbolizehash" do
       it "should return a symbolized hash" do
-        newhash = Puppet::Util.symbolizehash(myhash)
+        newhash = Oregano::Util.symbolizehash(myhash)
         expect(newhash).to eq(resulthash)
       end
     end
   end
 
   context "#replace_file" do
-    subject { Puppet::Util }
+    subject { Oregano::Util }
     it { is_expected.to respond_to :replace_file }
 
     let :target do
-      target = Tempfile.new("puppet-util-replace-file")
+      target = Tempfile.new("oregano-util-replace-file")
       target.puts("hello, world")
       target.flush              # make sure content is on disk.
       target.fsync rescue nil
@@ -857,7 +857,7 @@ describe Puppet::Util do
     # Windows collapses the owner and group modes into a single ACE, resulting
     # in set(0600) => get(0660) and so forth. --daniel 2012-03-30
     modes = [0555, 0660, 0770]
-    modes += [0600, 0700] unless Puppet.features.microsoft_windows?
+    modes += [0600, 0700] unless Oregano.features.microsoft_windows?
     modes.each do |mode|
       it "should copy 0#{mode.to_s(8)} permissions from the target file by default" do
         set_mode(mode, target.path)
@@ -871,9 +871,9 @@ describe Puppet::Util do
       end
     end
 
-    it "should copy the permissions of the source file before yielding on Unix", :if => !Puppet.features.microsoft_windows? do
+    it "should copy the permissions of the source file before yielding on Unix", :if => !Oregano.features.microsoft_windows? do
       set_mode(0555, target.path)
-      inode = Puppet::FileSystem.stat(target.path).ino
+      inode = Oregano::FileSystem.stat(target.path).ino
 
       yielded = false
       subject.replace_file(target.path, 0600) do |fh|
@@ -882,19 +882,19 @@ describe Puppet::Util do
       end
       expect(yielded).to be_truthy
 
-      expect(Puppet::FileSystem.stat(target.path).ino).not_to eq(inode)
+      expect(Oregano::FileSystem.stat(target.path).ino).not_to eq(inode)
       expect(get_mode(target.path)).to eq(0555)
     end
 
     it "should use the default permissions if the source file doesn't exist" do
       new_target = target.path + '.foo'
-      expect(Puppet::FileSystem.exist?(new_target)).to be_falsey
+      expect(Oregano::FileSystem.exist?(new_target)).to be_falsey
 
       begin
         subject.replace_file(new_target, 0555) {|fh| fh.puts "foo" }
         expect(get_mode(new_target)).to eq(0555)
       ensure
-        Puppet::FileSystem.unlink(new_target) if Puppet::FileSystem.exist?(new_target)
+        Oregano::FileSystem.unlink(new_target) if Oregano::FileSystem.exist?(new_target)
       end
     end
 
@@ -926,14 +926,14 @@ describe Puppet::Util do
     {:string => '664', :number => 0664, :symbolic => "ug=rw-,o=r--" }.each do |label,mode|
       it "should support #{label} format permissions" do
         new_target = target.path + "#{mode}.foo"
-        expect(Puppet::FileSystem.exist?(new_target)).to be_falsey
+        expect(Oregano::FileSystem.exist?(new_target)).to be_falsey
 
         begin
           subject.replace_file(new_target, mode) {|fh| fh.puts "this is an interesting content" }
 
           expect(get_mode(new_target)).to eq(0664)
         ensure
-          Puppet::FileSystem.unlink(new_target) if Puppet::FileSystem.exist?(new_target)
+          Oregano::FileSystem.unlink(new_target) if Oregano::FileSystem.exist?(new_target)
         end
       end
     end
@@ -944,39 +944,39 @@ describe Puppet::Util do
     it "should include lines that don't match the standard backtrace pattern" do
       line = "non-standard line\n"
       trace = caller[0..2] + [line] + caller[3..-1]
-      expect(Puppet::Util.pretty_backtrace(trace)).to match(/#{line}/)
+      expect(Oregano::Util.pretty_backtrace(trace)).to match(/#{line}/)
     end
 
     it "should include function names" do
-      expect(Puppet::Util.pretty_backtrace).to match(/:in `\w+'/)
+      expect(Oregano::Util.pretty_backtrace).to match(/:in `\w+'/)
     end
 
     it "should work with Windows paths" do
-      expect(Puppet::Util.pretty_backtrace(["C:/work/puppet/c.rb:12:in `foo'\n"])).
-        to eq("C:/work/puppet/c.rb:12:in `foo'")
+      expect(Oregano::Util.pretty_backtrace(["C:/work/oregano/c.rb:12:in `foo'\n"])).
+        to eq("C:/work/oregano/c.rb:12:in `foo'")
     end
   end
 
   describe "#deterministic_rand" do
 
     it "should not fiddle with future rand calls" do
-      Puppet::Util.deterministic_rand(123,20)
+      Oregano::Util.deterministic_rand(123,20)
       rand_one = rand()
-      Puppet::Util.deterministic_rand(123,20)
+      Oregano::Util.deterministic_rand(123,20)
       expect(rand()).not_to eql(rand_one)
     end
 
     if defined?(Random) == 'constant' && Random.class == Class
       it "should not fiddle with the global seed" do
         srand(1234)
-        Puppet::Util.deterministic_rand(123,20)
+        Oregano::Util.deterministic_rand(123,20)
         expect(srand()).to eql(1234)
       end
     # ruby below 1.9.2 variant
     else
       it "should set a new global seed" do
         srand(1234)
-        Puppet::Util.deterministic_rand(123,20)
+        Oregano::Util.deterministic_rand(123,20)
         expect(srand()).not_to eql(1234)
       end
     end

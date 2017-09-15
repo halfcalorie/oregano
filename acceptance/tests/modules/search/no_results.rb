@@ -1,4 +1,4 @@
-test_name 'puppet module search should print a reasonable message for no results'
+test_name 'oregano module search should print a reasonable message for no results'
 
 tag 'audit:low',
     'audit:unit'
@@ -9,7 +9,7 @@ step 'Setup'
 stub_forge_on(master)
 
 step "Search for a module that doesn't exist"
-on master, puppet("module search #{module_name}") do |res|
+on master, oregano("module search #{module_name}") do |res|
   assert_match(/Searching/, res.stdout)
   assert_match(/No results found for '#{module_name}'/, res.stdout)
 end

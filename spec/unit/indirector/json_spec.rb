@@ -1,36 +1,36 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet/indirector/indirector_testing/json'
+require 'oregano_spec/files'
+require 'oregano/indirector/indirector_testing/json'
 
-describe Puppet::Indirector::JSON do
-  include PuppetSpec::Files
+describe Oregano::Indirector::JSON do
+  include OreganoSpec::Files
 
-  subject { Puppet::IndirectorTesting::JSON.new }
-  let :model       do Puppet::IndirectorTesting end
+  subject { Oregano::IndirectorTesting::JSON.new }
+  let :model       do Oregano::IndirectorTesting end
   let :indirection do model.indirection end
 
   context "#path" do
     before :each do
-      Puppet[:server_datadir] = '/sample/datadir/master'
-      Puppet[:client_datadir] = '/sample/datadir/client'
+      Oregano[:server_datadir] = '/sample/datadir/master'
+      Oregano[:client_datadir] = '/sample/datadir/client'
     end
 
     it "uses the :server_datadir setting if this is the master" do
-      Puppet.run_mode.stubs(:master?).returns(true)
-      expected = File.join(Puppet[:server_datadir], 'indirector_testing', 'testing.json')
+      Oregano.run_mode.stubs(:master?).returns(true)
+      expected = File.join(Oregano[:server_datadir], 'indirector_testing', 'testing.json')
       expect(subject.path('testing')).to eq(expected)
     end
 
     it "uses the :client_datadir setting if this is not the master" do
-      Puppet.run_mode.stubs(:master?).returns(false)
-      expected = File.join(Puppet[:client_datadir], 'indirector_testing', 'testing.json')
+      Oregano.run_mode.stubs(:master?).returns(false)
+      expected = File.join(Oregano[:client_datadir], 'indirector_testing', 'testing.json')
       expect(subject.path('testing')).to eq(expected)
     end
 
     it "overrides the default extension with a supplied value" do
-      Puppet.run_mode.stubs(:master?).returns(true)
-      expected = File.join(Puppet[:server_datadir], 'indirector_testing', 'testing.not-json')
+      Oregano.run_mode.stubs(:master?).returns(true)
+      expected = File.join(Oregano[:server_datadir], 'indirector_testing', 'testing.not-json')
       expect(subject.path('testing', '.not-json')).to eq(expected)
     end
 
@@ -51,9 +51,9 @@ describe Puppet::Indirector::JSON do
 
   context "handling requests" do
     before :each do
-      Puppet.run_mode.stubs(:master?).returns(true)
-      Puppet[:server_datadir] = tmpdir('jsondir')
-      FileUtils.mkdir_p(File.join(Puppet[:server_datadir], 'indirector_testing'))
+      Oregano.run_mode.stubs(:master?).returns(true)
+      Oregano[:server_datadir] = tmpdir('jsondir')
+      FileUtils.mkdir_p(File.join(Oregano[:server_datadir], 'indirector_testing'))
     end
 
     let :file do subject.path(request.key) end
@@ -81,16 +81,16 @@ describe Puppet::Indirector::JSON do
           # I don't like this, but there isn't a credible alternative that
           # also works on Windows, so a stub it is. At least the expectation
           # will fail if the implementation changes. Sorry to the next dev.
-          Puppet::FileSystem.expects(:read).with(file, anything).raises(Errno::EPERM)
+          Oregano::FileSystem.expects(:read).with(file, anything).raises(Errno::EPERM)
           expect { subject.find(request) }.
-            to raise_error Puppet::Error, /Could not read JSON/
+            to raise_error Oregano::Error, /Could not read JSON/
         end
       end
 
       it "raises a descriptive error when the file content is invalid" do
         with_content("this is totally invalid JSON") do
           expect { subject.find(request) }.
-            to raise_error Puppet::Error, /Could not parse JSON data/
+            to raise_error Oregano::Error, /Could not parse JSON data/
         end
       end
 
@@ -100,7 +100,7 @@ describe Puppet::Indirector::JSON do
         with_content(binary) do
           expect {
             subject.find(request)
-          }.to raise_error Puppet::Error, /Could not parse JSON data/
+          }.to raise_error Oregano::Error, /Could not parse JSON data/
         end
       end
 
@@ -124,7 +124,7 @@ describe Puppet::Indirector::JSON do
       end
 
       it "should create the indirection directory if required" do
-        target = File.join(Puppet[:server_datadir], 'indirector_testing')
+        target = File.join(Oregano[:server_datadir], 'indirector_testing')
         Dir.rmdir(target)
 
         subject.save(request)
@@ -140,29 +140,29 @@ describe Puppet::Indirector::JSON do
         with_content('hello') do
           subject.destroy(request)
         end
-        expect(Puppet::FileSystem.exist?(file)).to be_falsey
+        expect(Oregano::FileSystem.exist?(file)).to be_falsey
       end
 
       it "silently succeeds when files don't exist" do
-        Puppet::FileSystem.unlink(file) rescue nil
+        Oregano::FileSystem.unlink(file) rescue nil
         expect(subject.destroy(request)).to be_truthy
       end
 
       it "raises an informative error for other failures" do
-        Puppet::FileSystem.stubs(:unlink).with(file).raises(Errno::EPERM, 'fake permission problem')
+        Oregano::FileSystem.stubs(:unlink).with(file).raises(Errno::EPERM, 'fake permission problem')
         with_content('hello') do
-          expect { subject.destroy(request) }.to raise_error(Puppet::Error)
+          expect { subject.destroy(request) }.to raise_error(Oregano::Error)
         end
-        Puppet::FileSystem.unstub(:unlink)    # thanks, mocha
+        Oregano::FileSystem.unstub(:unlink)    # thanks, mocha
       end
     end
   end
 
   context "#search" do
     before :each do
-      Puppet.run_mode.stubs(:master?).returns(true)
-      Puppet[:server_datadir] = tmpdir('jsondir')
-      FileUtils.mkdir_p(File.join(Puppet[:server_datadir], 'indirector_testing'))
+      Oregano.run_mode.stubs(:master?).returns(true)
+      Oregano[:server_datadir] = tmpdir('jsondir')
+      FileUtils.mkdir_p(File.join(Oregano[:server_datadir], 'indirector_testing'))
     end
 
     def request(glob)
@@ -171,7 +171,7 @@ describe Puppet::Indirector::JSON do
 
     def create_file(name, value = 12)
       File.open(subject.path(name, ''), 'wb') do |f|
-        f.puts Puppet::IndirectorTesting.new(value).to_json
+        f.puts Oregano::IndirectorTesting.new(value).to_json
       end
     end
 
@@ -207,7 +207,7 @@ describe Puppet::Indirector::JSON do
 
       expect {
         subject.search(request('*'))
-      }.to raise_error Puppet::Error, /Could not parse JSON data/
+      }.to raise_error Oregano::Error, /Could not parse JSON data/
     end
   end
 end

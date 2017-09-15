@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/format'
+require 'oregano/network/format'
 
 # A class with all of the necessary
 # hooks.
@@ -19,37 +19,37 @@ class FormatRenderer
   end
 end
 
-describe Puppet::Network::Format do
+describe Oregano::Network::Format do
   describe "when initializing" do
     it "should require a name" do
-      expect { Puppet::Network::Format.new }.to raise_error(ArgumentError)
+      expect { Oregano::Network::Format.new }.to raise_error(ArgumentError)
     end
 
     it "should be able to provide its name" do
-      expect(Puppet::Network::Format.new(:my_format).name).to eq(:my_format)
+      expect(Oregano::Network::Format.new(:my_format).name).to eq(:my_format)
     end
 
     it "should always convert its name to a downcased symbol" do
-      expect(Puppet::Network::Format.new(:My_Format).name).to eq(:my_format)
+      expect(Oregano::Network::Format.new(:My_Format).name).to eq(:my_format)
     end
 
     it "should be able to set its downcased mime type at initialization" do
-      format = Puppet::Network::Format.new(:my_format, :mime => "Foo/Bar")
+      format = Oregano::Network::Format.new(:my_format, :mime => "Foo/Bar")
       expect(format.mime).to eq("foo/bar")
     end
 
     it "should default to text plus the name of the format as the mime type" do
-      expect(Puppet::Network::Format.new(:my_format).mime).to eq("text/my_format")
+      expect(Oregano::Network::Format.new(:my_format).mime).to eq("text/my_format")
     end
 
     it "should fail if unsupported options are provided" do
-      expect { Puppet::Network::Format.new(:my_format, :foo => "bar") }.to raise_error(ArgumentError)
+      expect { Oregano::Network::Format.new(:my_format, :foo => "bar") }.to raise_error(ArgumentError)
     end
   end
 
   describe "instances" do
     before do
-      @format = Puppet::Network::Format.new(:my_format)
+      @format = Oregano::Network::Format.new(:my_format)
     end
 
     it "should support being confined" do
@@ -70,11 +70,11 @@ describe Puppet::Network::Format do
     end
 
     it "should default to its required methods being the individual and multiple methods for rendering and interning" do
-      expect(Puppet::Network::Format.new(:foo).required_methods.sort { |a,b| a.to_s <=> b.to_s }).to eq([:intern_method, :intern_multiple_method, :render_multiple_method, :render_method].sort { |a,b| a.to_s <=> b.to_s })
+      expect(Oregano::Network::Format.new(:foo).required_methods.sort { |a,b| a.to_s <=> b.to_s }).to eq([:intern_method, :intern_multiple_method, :render_multiple_method, :render_method].sort { |a,b| a.to_s <=> b.to_s })
     end
 
     it "should consider a class supported if the provided class has all required methods present" do
-      format = Puppet::Network::Format.new(:foo)
+      format = Oregano::Network::Format.new(:foo)
       [:intern_method, :intern_multiple_method, :render_multiple_method, :render_method].each do |method|
         format.expects(:required_method_present?).with { |name, klass, type| name == method and klass == String }.returns true
       end
@@ -83,18 +83,18 @@ describe Puppet::Network::Format do
     end
 
     it "should consider a class not supported if any required methods are missing from the provided class" do
-      format = Puppet::Network::Format.new(:foo)
+      format = Oregano::Network::Format.new(:foo)
       format.stubs(:required_method_present?).returns true
       format.expects(:required_method_present?).with { |name, *args| name == :intern_method }.returns false
       expect(format).not_to be_required_methods_present(String)
     end
 
     it "should be able to specify the methods required for support" do
-      expect(Puppet::Network::Format.new(:foo, :required_methods => [:render_method, :intern_method]).required_methods).to eq([:render_method, :intern_method])
+      expect(Oregano::Network::Format.new(:foo, :required_methods => [:render_method, :intern_method]).required_methods).to eq([:render_method, :intern_method])
     end
 
     it "should only test for required methods if specific methods are specified as required" do
-      format = Puppet::Network::Format.new(:foo, :required_methods => [:intern_method])
+      format = Oregano::Network::Format.new(:foo, :required_methods => [:intern_method])
       format.expects(:required_method_present?).with { |name, klass, type| name == :intern_method }
 
       format.required_methods_present?(String)
@@ -119,35 +119,35 @@ describe Puppet::Network::Format do
     end
 
     it "should be able to override its weight at initialization" do
-      expect(Puppet::Network::Format.new(:foo, :weight => 1).weight).to eq(1)
+      expect(Oregano::Network::Format.new(:foo, :weight => 1).weight).to eq(1)
     end
 
     it "should default to its extension being equal to its name" do
-      expect(Puppet::Network::Format.new(:foo).extension).to eq("foo")
+      expect(Oregano::Network::Format.new(:foo).extension).to eq("foo")
     end
 
     it "should support overriding the extension" do
-      expect(Puppet::Network::Format.new(:foo, :extension => "bar").extension).to eq("bar")
+      expect(Oregano::Network::Format.new(:foo, :extension => "bar").extension).to eq("bar")
     end
 
     it "doesn't support charset by default" do
-      expect(Puppet::Network::Format.new(:foo).charset).to be_nil
+      expect(Oregano::Network::Format.new(:foo).charset).to be_nil
     end
 
     it "allows charset to be set to 'utf-8'" do
-      expect(Puppet::Network::Format.new(:foo, :charset => Encoding::UTF_8).charset).to eq(Encoding::UTF_8)
+      expect(Oregano::Network::Format.new(:foo, :charset => Encoding::UTF_8).charset).to eq(Encoding::UTF_8)
     end
 
     [:intern_method, :intern_multiple_method, :render_multiple_method, :render_method].each do |method|
       it "should allow assignment of the #{method}" do
-        expect(Puppet::Network::Format.new(:foo, method => :foo).send(method)).to eq(:foo)
+        expect(Oregano::Network::Format.new(:foo, method => :foo).send(method)).to eq(:foo)
       end
     end
   end
 
   describe "when converting between instances and formatted text" do
     before do
-      @format = Puppet::Network::Format.new(:my_format)
+      @format = Oregano::Network::Format.new(:my_format)
       @instance = FormatRenderer.new
     end
 

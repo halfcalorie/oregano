@@ -3,12 +3,12 @@ require 'spec_helper'
 
 describe "the scanf function" do
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
-  let(:node) { Puppet::Node.new('localhost') }
-  let(:compiler) { Puppet::Parser::Compiler.new(node) }
-  let(:scope) { Puppet::Parser::Scope.new(compiler) }
+  let(:node) { Oregano::Node.new('localhost') }
+  let(:compiler) { Oregano::Parser::Compiler.new(node) }
+  let(:scope) { Oregano::Parser::Scope.new(compiler) }
 
   it 'scans a value and returns an array' do
     expect(scope.function_scanf(['42', '%i'])[0] == 42)

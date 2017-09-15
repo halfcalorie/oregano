@@ -1,6 +1,6 @@
 test_name "The source attribute" do
-  require 'puppet/acceptance/module_utils'
-  extend Puppet::Acceptance::ModuleUtils
+  require 'oregano/acceptance/module_utils'
+  extend Oregano::Acceptance::ModuleUtils
 
   tag 'audit:high',
       'audit:acceptance',
@@ -54,7 +54,7 @@ test_name "The source attribute" do
     }
 
     file { $target_file#{checksum_type}:
-      source => \\'puppet:///modules/source_test_module/source_file\\',
+      source => \\'oregano:///modules/source_test_module/source_file\\',
       #{checksum}
       ensure => present
     }
@@ -65,7 +65,7 @@ test_name "The source attribute" do
     }
 
     file { $target_dir#{checksum_type}:
-      source => \\'puppet:///modules/source_test_module/source_dir\\',
+      source => \\'oregano:///modules/source_test_module/source_dir\\',
       #{checksum}
       ensure => directory,
       recurse => true
@@ -141,17 +141,17 @@ test_name "The source attribute" do
     }
   MANIFEST
 
-  step "When using a puppet:/// URI with a master/agent setup"
+  step "When using a oregano:/// URI with a master/agent setup"
   master_opts = {
     'main' => {
       'environmentpath' => "#{env_dir}",
     },
   }
-  with_puppet_running_on(master, master_opts, testdir) do
+  with_oregano_running_on(master, master_opts, testdir) do
     agents.each do |agent|
       # accept an exit code of 2 which is returned if there are changes
       step "create file the first run"
-      on(agent, puppet('agent', "--test --server #{master}"), :acceptable_exit_codes => [0,2]) do
+      on(agent, oregano('agent', "--test --server #{master}"), :acceptable_exit_codes => [0,2]) do
         file_to_check = agent['platform'] =~ /windows/ ? @target_file_on_windows : @target_file_on_nix
         dir_to_check = agent['platform'] =~ /windows/ ? @target_dir_on_windows : @target_dir_on_nix
 
@@ -167,7 +167,7 @@ test_name "The source attribute" do
       end
 
       step "second run should not update file"
-      on(agent, puppet('agent', "--test --server #{master}"), :acceptable_exit_codes => [0,2]) do
+      on(agent, oregano('agent', "--test --server #{master}"), :acceptable_exit_codes => [0,2]) do
         assert_no_match(/content changed.*(md5|sha256)/, stdout, "Shouldn't have overwritten any files")
 
         # When using ctime/mtime, the agent compares the values from its
@@ -193,13 +193,13 @@ test_name "The source attribute" do
     # Disable flaky test until PUP-4115 is addressed.
     step "touch files and verify they're updated with ctime/mtime"
     # wait until we're not at the mtime of files on the agents
-    # this could be done cross-platform using Puppet, but a single puppet query is unlikely to be less than a second,
+    # this could be done cross-platform using Oregano, but a single oregano query is unlikely to be less than a second,
     # and iterating over all agents would be much slower
     sleep(1)
 
     on master, "touch #{mod_source_file} #{mod_source_dir_file}"
     agents.each do |agent|
-      on(agent, puppet('agent', "--test --server #{master}"), :acceptable_exit_codes => [0,2]) do
+      on(agent, oregano('agent', "--test --server #{master}"), :acceptable_exit_codes => [0,2]) do
         file_to_check = agent['platform'] =~ /windows/ ? @target_file_on_windows : @target_file_on_nix
         dir_to_check = agent['platform'] =~ /windows/ ? @target_dir_on_windows : @target_dir_on_nix
         ['ctime', 'mtime'].each do |time_type|
@@ -211,13 +211,13 @@ test_name "The source attribute" do
 =end
   end
 
-  # TODO: Add tests for puppet:// URIs with multi-master/agent setups.
-  step "When using puppet apply"
+  # TODO: Add tests for oregano:// URIs with multi-master/agent setups.
+  step "When using oregano apply"
   agents.each do |agent|
     step "Setup testing local file sources"
 
     # create one larger manifest with all the files so we don't have to run
-    # puppet apply per each checksum_type
+    # oregano apply per each checksum_type
     localsource_testdir = agent.tmpdir('local_source_file_test')
     source = "#{localsource_testdir}/source_mod/files/source"
     on agent, "mkdir -p #{File.dirname(source)}"
@@ -260,22 +260,22 @@ test_name "The source attribute" do
     checksums.each do |checksum_type|
       on agent, "rm -rf #{target[checksum_type]}"
       checksum = if checksum_type then "checksum => #{checksum_type}," else "" end
-      local_module_manifest.concat("file { '#{target[checksum_type]}': source => 'puppet:///modules/source_mod/source', ensure => present, #{checksum} }\n")
+      local_module_manifest.concat("file { '#{target[checksum_type]}': source => 'oregano:///modules/source_mod/source', ensure => present, #{checksum} }\n")
     end
 
     localsource_test_manifest = agent.tmpfile('local_source_test_manifest')
     create_remote_file agent, localsource_test_manifest, local_module_manifest
-    on agent, puppet( %{apply --modulepath=#{localsource_testdir} #{localsource_test_manifest}} )
+    on agent, oregano( %{apply --modulepath=#{localsource_testdir} #{localsource_test_manifest}} )
 
     checksums.each do |checksum_type|
-      step "Using a puppet:/// URI with checksum type: #{checksum_type}"
+      step "Using a oregano:/// URI with checksum type: #{checksum_type}"
       on agent, "cat #{target[checksum_type]}" do
         assert_match(/Yay, this is the local file./, stdout, "FIRST: File contents not matched on #{agent}")
       end
     end
 
-    step "second run should not update any files using apply with puppet:/// URI source"
-    on agent, puppet( %{apply --modulepath=#{localsource_testdir} #{localsource_test_manifest}} ) do
+    step "second run should not update any files using apply with oregano:/// URI source"
+    on agent, oregano( %{apply --modulepath=#{localsource_testdir} #{localsource_test_manifest}} ) do
       assert_no_match(/content changed/, stdout, "Shouldn't have overwrote any files")
     end
   end

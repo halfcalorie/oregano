@@ -1,22 +1,22 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http'
-require 'puppet/network/http/webrick'
+require 'oregano/network/http'
+require 'oregano/network/http/webrick'
 
-describe Puppet::Network::HTTP::WEBrick, "after initializing" do
+describe Oregano::Network::HTTP::WEBrick, "after initializing" do
   it "should not be listening" do
-    expect(Puppet::Network::HTTP::WEBrick.new).not_to be_listening
+    expect(Oregano::Network::HTTP::WEBrick.new).not_to be_listening
   end
 end
 
-describe Puppet::Network::HTTP::WEBrick do
-  include PuppetSpec::Files
+describe Oregano::Network::HTTP::WEBrick do
+  include OreganoSpec::Files
 
   let(:address) { '127.0.0.1' }
   let(:port) { 31337 }
 
   let(:server) do
-    s = Puppet::Network::HTTP::WEBrick.new
+    s = Oregano::Network::HTTP::WEBrick.new
     s.stubs(:setup_logger).returns(Hash.new)
     s.stubs(:setup_ssl).returns(Hash.new)
     s
@@ -91,7 +91,7 @@ describe Puppet::Network::HTTP::WEBrick do
     describe "when the REST protocol is requested" do
       it "should register the REST handler at /" do
         # We don't care about the options here.
-        mock_webrick.expects(:mount).with("/", Puppet::Network::HTTP::WEBrickREST, anything)
+        mock_webrick.expects(:mount).with("/", Oregano::Network::HTTP::WEBrickREST, anything)
 
         server.listen(address, port)
       end
@@ -117,24 +117,24 @@ describe Puppet::Network::HTTP::WEBrick do
   end
 
   describe "when configuring an http logger" do
-    let(:server) { Puppet::Network::HTTP::WEBrick.new }
+    let(:server) { Oregano::Network::HTTP::WEBrick.new }
 
     before :each do
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
       @filehandle = stub 'handle', :fcntl => nil, :sync= => nil
 
       File.stubs(:open).returns @filehandle
     end
 
     it "should use the settings for :main, :ssl, and :application" do
-      Puppet.settings.expects(:use).with(:main, :ssl, :application)
+      Oregano.settings.expects(:use).with(:main, :ssl, :application)
 
       server.setup_logger
     end
 
     it "should use the masterhttplog" do
       log = make_absolute("/master/log")
-      Puppet[:masterhttplog] = log
+      Oregano[:masterhttplog] = log
 
       File.expects(:open).with(log, "a+:UTF-8").returns @filehandle
 
@@ -166,7 +166,7 @@ describe Puppet::Network::HTTP::WEBrick do
     end
 
     it "should set debugging if the current loglevel is :debug" do
-      Puppet::Util::Log.expects(:level).returns :debug
+      Oregano::Util::Log.expects(:level).returns :debug
 
       WEBrick::Log.expects(:new).with { |handle, debug| debug == WEBrick::Log::DEBUG }
 
@@ -192,7 +192,7 @@ describe Puppet::Network::HTTP::WEBrick do
   end
 
   describe "when configuring ssl" do
-    let(:server) { Puppet::Network::HTTP::WEBrick.new }
+    let(:server) { Oregano::Network::HTTP::WEBrick.new }
     let(:localcacert) { make_absolute("/ca/crt") }
     let(:ssl_server_ca_auth) { make_absolute("/ca/ssl_server_auth_file") }
     let(:key) { stub 'key', :content => "mykey" }
@@ -200,12 +200,12 @@ describe Puppet::Network::HTTP::WEBrick do
     let(:host) { stub 'host', :key => key, :certificate => cert, :name => "yay", :ssl_store => "mystore" }
 
     before :each do
-      Puppet::SSL::Certificate.indirection.stubs(:find).with('ca').returns cert
-      Puppet::SSL::Host.stubs(:localhost).returns host
+      Oregano::SSL::Certificate.indirection.stubs(:find).with('ca').returns cert
+      Oregano::SSL::Host.stubs(:localhost).returns host
     end
 
     it "should use the key from the localhost SSL::Host instance" do
-      Puppet::SSL::Host.expects(:localhost).returns host
+      Oregano::SSL::Host.expects(:localhost).returns host
       host.expects(:key).returns key
 
       expect(server.setup_ssl[:SSLPrivateKey]).to eq("mykey")
@@ -216,22 +216,22 @@ describe Puppet::Network::HTTP::WEBrick do
     end
 
     it "should fail if no CA certificate can be found" do
-      Puppet::SSL::Certificate.indirection.stubs(:find).with('ca').returns nil
+      Oregano::SSL::Certificate.indirection.stubs(:find).with('ca').returns nil
 
-      expect { server.setup_ssl }.to raise_error(Puppet::Error, /Could not find CA certificate/)
+      expect { server.setup_ssl }.to raise_error(Oregano::Error, /Could not find CA certificate/)
     end
 
     it "should specify the path to the CA certificate" do
-      Puppet.settings[:hostcrl] = 'false'
-      Puppet.settings[:localcacert] = localcacert
+      Oregano.settings[:hostcrl] = 'false'
+      Oregano.settings[:localcacert] = localcacert
 
       expect(server.setup_ssl[:SSLCACertificateFile]).to eq(localcacert)
     end
 
     it "should specify the path to the CA certificate" do
-      Puppet.settings[:hostcrl] = 'false'
-      Puppet.settings[:localcacert] = localcacert
-      Puppet.settings[:ssl_server_ca_auth] = ssl_server_ca_auth
+      Oregano.settings[:hostcrl] = 'false'
+      Oregano.settings[:localcacert] = localcacert
+      Oregano.settings[:ssl_server_ca_auth] = ssl_server_ca_auth
 
       expect(server.setup_ssl[:SSLCACertificateFile]).to eq(ssl_server_ca_auth)
     end

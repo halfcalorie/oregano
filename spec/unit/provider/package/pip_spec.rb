@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:pip)
+provider_class = Oregano::Type.type(:package).provider(:pip)
 osfamilies = { 'windows' => ['pip.exe'], 'other' => ['pip', 'pip-python'] }
 
 describe provider_class do
 
   before do  
-    @resource = Puppet::Resource.new(:package, "fake_package")
+    @resource = Oregano::Resource.new(:package, "fake_package")
     @provider = provider_class.new(@resource)
     @client = stub_everything('client')
     @client.stubs(:call).with('package_releases', 'real_package').returns(["1.3", "1.2.5", "1.2.4"])
@@ -33,17 +33,17 @@ describe provider_class do
   describe "cmd" do
 
     it "should return 'pip.exe' by default on Windows systems" do
-      Puppet.features.stubs(:microsoft_windows?).returns true
+      Oregano.features.stubs(:microsoft_windows?).returns true
       expect(provider_class.cmd[0]).to eq('pip.exe')
     end
 
     it "could return pip-python on legacy redhat systems which rename pip" do
-      Puppet.features.stubs(:microsoft_windows?).returns false
+      Oregano.features.stubs(:microsoft_windows?).returns false
       expect(provider_class.cmd[1]).to eq('pip-python')
     end
 
     it "should return pip by default on other systems" do
-      Puppet.features.stubs(:microsoft_windows?).returns false
+      Oregano.features.stubs(:microsoft_windows?).returns false
       expect(provider_class.cmd[0]).to eq('pip')
     end
 
@@ -54,7 +54,7 @@ describe provider_class do
     osfamilies.each do |osfamily, pip_cmds|
 
       it "should return an array on #{osfamily} systems when #{pip_cmds.join(' or ')} is present" do
-        Puppet.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
+        Oregano.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
         pip_cmds.each do |pip_cmd|  
           pip_cmds.each do |cmd|
             unless cmd == pip_cmd
@@ -74,7 +74,7 @@ describe provider_class do
         versions = ['8.1.0', '9.0.1']
         versions.each do |version|
           it "should use the --all option when version is '#{version}'" do
-            Puppet.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
+            Oregano.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
             provider_class.stubs(:pip_cmd).returns('/fake/bin/pip')
             provider_class.stubs(:pip_version).returns(version)
             p = stub("process")
@@ -86,7 +86,7 @@ describe provider_class do
       end
 
       it "should return an empty array on #{osfamily} systems when #{pip_cmds.join(' and ')} are missing" do
-        Puppet.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
+        Oregano.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
         pip_cmds.each do |cmd|
           provider_class.expects(:which).with(cmd).returns nil
         end
@@ -159,7 +159,7 @@ describe provider_class do
           Successfully downloaded real-package
           EOS
         )
-        Puppet::Util::Execution.expects(:execpipe).yields(p).once
+        Oregano::Util::Execution.expects(:execpipe).yields(p).once
         @resource[:name] = "real_package"
         expect(@provider.latest).to eq('0.10.1')
       end
@@ -189,7 +189,7 @@ describe provider_class do
           Storing complete log in /root/.pip/pip.log
           EOS
         )
-        Puppet::Util::Execution.expects(:execpipe).yields(p).once
+        Oregano::Util::Execution.expects(:execpipe).yields(p).once
         @resource[:name] = "fake_package"
         expect(@provider.latest).to eq(nil)
       end
@@ -214,7 +214,7 @@ describe provider_class do
           No matching distribution found for real-package==versionplease
           EOS
         )
-        Puppet::Util::Execution.expects(:execpipe).with(["/fake/bin/pip", "install", "real_package==versionplease"]).yields(p).once
+        Oregano::Util::Execution.expects(:execpipe).with(["/fake/bin/pip", "install", "real_package==versionplease"]).yields(p).once
         @resource[:name] = "real_package"
         latest = @provider.latest
         expect(latest).to eq('1.9b1')
@@ -228,7 +228,7 @@ describe provider_class do
           No matching distribution found for fake-package==versionplease
           EOS
         )
-        Puppet::Util::Execution.expects(:execpipe).with(["/fake/bin/pip", "install", "fake_package==versionplease"]).yields(p).once
+        Oregano::Util::Execution.expects(:execpipe).with(["/fake/bin/pip", "install", "fake_package==versionplease"]).yields(p).once
         @resource[:name] = "fake_package"
         expect(@provider.latest).to eq(nil)
       end
@@ -241,7 +241,7 @@ describe provider_class do
           No distributions matching the version for real-package==versionplease
           EOS
         )
-        Puppet::Util::Execution.expects(:execpipe).with(["/fake/bin/pip", "install", "real_package==versionplease"]).yields(p).once
+        Oregano::Util::Execution.expects(:execpipe).with(["/fake/bin/pip", "install", "real_package==versionplease"]).yields(p).once
         @resource[:name] = "real_package"
         latest = @provider.latest
         expect(latest).to eq('15.0.2')
@@ -357,7 +357,7 @@ describe provider_class do
   describe "lazy_pip" do
 
     after(:each) do
-      Puppet::Type::Package::ProviderPip.instance_variable_set(:@confine_collection, nil)
+      Oregano::Type::Package::ProviderPip.instance_variable_set(:@confine_collection, nil)
     end
 
     it "should succeed if pip is present" do
@@ -369,7 +369,7 @@ describe provider_class do
 
       pip_cmds.each do |pip_cmd|
         it "should retry on #{osfamily} systems if #{pip_cmd} has not yet been found" do
-          Puppet.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
+          Oregano.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
           @provider.expects(:pip).twice.with('freeze').raises(NoMethodError).then.returns(nil)
           pip_cmds.each do |cmd|
             unless cmd == pip_cmd
@@ -382,7 +382,7 @@ describe provider_class do
       end
 
       it "should fail on #{osfamily} systems if #{pip_cmds.join(' and ')} are missing" do
-        Puppet.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
+        Oregano.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
         @provider.expects(:pip).with('freeze').raises(NoMethodError)
         pip_cmds.each do |pip_cmd|
           @provider.expects(:which).with(pip_cmd).returns(nil)
@@ -391,7 +391,7 @@ describe provider_class do
       end
 
       it "should output a useful error message on #{osfamily} systems if #{pip_cmds.join(' and ')} are missing" do
-        Puppet.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
+        Oregano.features.stubs(:microsoft_windows?).returns (osfamily == 'windows')
         @provider.expects(:pip).with('freeze').raises(NoMethodError)
         pip_cmds.each do |pip_cmd|
           @provider.expects(:which).with(pip_cmd).returns(nil)

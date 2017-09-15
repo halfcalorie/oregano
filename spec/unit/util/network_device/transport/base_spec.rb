@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/network_device/transport/base'
+require 'oregano/util/network_device/transport/base'
 
-describe Puppet::Util::NetworkDevice::Transport::Base do
-  class TestTransport < Puppet::Util::NetworkDevice::Transport::Base
+describe Oregano::Util::NetworkDevice::Transport::Base do
+  class TestTransport < Oregano::Util::NetworkDevice::Transport::Base
   end
 
   before(:each) do

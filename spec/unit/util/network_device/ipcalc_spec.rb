@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/network_device/ipcalc'
+require 'oregano/util/network_device/ipcalc'
 
-describe Puppet::Util::NetworkDevice::IPCalc do
+describe Oregano::Util::NetworkDevice::IPCalc do
   class TestIPCalc
-    include Puppet::Util::NetworkDevice::IPCalc
+    include Oregano::Util::NetworkDevice::IPCalc
   end
 
   before(:each) do

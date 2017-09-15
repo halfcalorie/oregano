@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-provider = Puppet::Type.type(:package).provider(:portage)
+provider = Oregano::Type.type(:package).provider(:portage)
 
 describe provider do
   before do
@@ -59,7 +59,7 @@ describe provider do
     @set_provider.class.stubs(:emerge).with('--list-sets').returns(package_sets)
 
     portage   = stub(:executable => "foo",:execute => true)
-    Puppet::Provider::CommandDefiner.stubs(:define).returns(portage)
+    Oregano::Provider::CommandDefiner.stubs(:define).returns(portage)
 
     @nomatch_result = ""
     @match_result    = "app-misc sl [] [5.02] [] [] [5.02] [5.02:0] http://www.tkl.iis.u-tokyo.ac.jp/~toyoda/index_e.html https://github.com/mtoyoda/sl/ sophisticated graphical program which corrects your miss typing\n"

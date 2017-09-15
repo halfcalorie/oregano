@@ -1,16 +1,16 @@
 test_name 'C99044: lookup should allow rich data as values' do
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:medium',
     'audit:acceptance',
     'audit:refactor',  # Master is not needed for this test. Refactor
-                       # to use puppet apply with a local environment.
+                       # to use oregano apply with a local environment.
 
-  # The following two lines are required for the puppetserver service to
+  # The following two lines are required for the oreganoserver service to
   # start correctly. These should be removed when PUP-7102 is resolved.
-  confdir = master.puppet('master')['confdir']
-  on(master, "chown puppet:puppet #{confdir}/hiera.yaml")
+  confdir = master.oregano('master')['confdir']
+  on(master, "chown oregano:oregano #{confdir}/hiera.yaml")
 
   app_type        = File.basename(__FILE__, '.*')
   tmp_environment = mk_tmp_environment_with_teardown(master, app_type)
@@ -21,7 +21,7 @@ tag 'audit:medium',
   sensitive_value_pp2 = 'toe, no module'
 
   step "create ruby lookup function in #{tmp_environment}" do
-    on(master, "mkdir -p #{fq_tmp_environmentpath}/lib/puppet/functions/environment")
+    on(master, "mkdir -p #{fq_tmp_environmentpath}/lib/oregano/functions/environment")
     create_remote_file(master, "#{fq_tmp_environmentpath}/hiera.yaml", <<-HIERA)
 ---
 version: 5
@@ -33,10 +33,10 @@ hierarchy:
   - name: Test3
     data_hash: rich_data_test3
   HIERA
-    create_remote_file(master, "#{fq_tmp_environmentpath}/lib/puppet/functions/rich_data_test.rb", <<-FUNC)
-Puppet::Functions.create_function(:rich_data_test) do
+    create_remote_file(master, "#{fq_tmp_environmentpath}/lib/oregano/functions/rich_data_test.rb", <<-FUNC)
+Oregano::Functions.create_function(:rich_data_test) do
   def rich_data_test(options, context)
-    rich_type_instance = Puppet::Pops::Types::PSensitiveType::Sensitive.new("#{sensitive_value_rb}")
+    rich_type_instance = Oregano::Pops::Types::PSensitiveType::Sensitive.new("#{sensitive_value_rb}")
     {
       'environment_key' => rich_type_instance,
     }
@@ -45,7 +45,7 @@ end
     FUNC
   end
 
-  step "create puppet language lookup function in #{tmp_environment} module" do
+  step "create oregano language lookup function in #{tmp_environment} module" do
     on(master, "mkdir -p #{fq_tmp_environmentpath}/modules/some_mod/functions")
     create_remote_file(master, "#{fq_tmp_environmentpath}/modules/some_mod/functions/rich_data_test2.pp", <<-FUNC)
 function some_mod::rich_data_test2($options, $context) {
@@ -57,7 +57,7 @@ function some_mod::rich_data_test2($options, $context) {
     on(master, "chmod -R a+rw #{fq_tmp_environmentpath}")
   end
 
-  step "C99571: create puppet language lookup function in #{tmp_environment}" do
+  step "C99571: create oregano language lookup function in #{tmp_environment}" do
     on(master, "mkdir -p #{fq_tmp_environmentpath}/functions")
     create_remote_file(master, "#{fq_tmp_environmentpath}/functions/rich_data_test3.pp", <<-FUNC)
 function rich_data_test3($options, $context) {
@@ -78,35 +78,35 @@ function rich_data_test3($options, $context) {
   end
 
   step 'assert lookups using lookup subcommand' do
-    on(master, puppet('lookup', "--environment #{tmp_environment}", 'environment_key'), :accept_all_exit_codes => true) do |result|
+    on(master, oregano('lookup', "--environment #{tmp_environment}", 'environment_key'), :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "lookup subcommand using ruby function didn't exit properly: (#{result.exit_code})")
       assert_match(sensitive_value_rb, result.stdout,
                    "lookup subcommand using ruby function didn't find correct key")
     end
-    on(master, puppet('lookup', "--environment #{tmp_environment}", 'environment_key2'), :accept_all_exit_codes => true) do |result|
-      assert(result.exit_code == 0, "lookup subcommand using puppet function in module didn't exit properly: (#{result.exit_code})")
+    on(master, oregano('lookup', "--environment #{tmp_environment}", 'environment_key2'), :accept_all_exit_codes => true) do |result|
+      assert(result.exit_code == 0, "lookup subcommand using oregano function in module didn't exit properly: (#{result.exit_code})")
       assert_match(sensitive_value_pp, result.stdout,
-                   "lookup subcommand using puppet function in module didn't find correct key")
+                   "lookup subcommand using oregano function in module didn't find correct key")
     end
-    on(master, puppet('lookup', "--environment #{tmp_environment}", 'environment_key3'), :accept_all_exit_codes => true) do |result|
-      assert(result.exit_code == 0, "lookup subcommand using puppet function didn't exit properly: (#{result.exit_code})")
+    on(master, oregano('lookup', "--environment #{tmp_environment}", 'environment_key3'), :accept_all_exit_codes => true) do |result|
+      assert(result.exit_code == 0, "lookup subcommand using oregano function didn't exit properly: (#{result.exit_code})")
       assert_match(sensitive_value_pp2, result.stdout,
-                   "lookup subcommand using puppet function didn't find correct key")
+                   "lookup subcommand using oregano function didn't find correct key")
     end
   end
 
-  with_puppet_running_on(master,{}) do
+  with_oregano_running_on(master,{}) do
     agents.each do |agent|
       step "agent lookup in ruby function" do
-        on(agent, puppet('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert(result.exit_code == 2, "agent lookup using ruby function didn't exit properly: (#{result.exit_code})")
           assert_match(sensitive_value_rb, result.stdout,
                        "agent lookup using ruby function didn't find correct key")
           assert_match(sensitive_value_pp, result.stdout,
-                       "agent lookup using puppet function in module didn't find correct key")
+                       "agent lookup using oregano function in module didn't find correct key")
           assert_match(sensitive_value_pp2, result.stdout,
-                       "agent lookup using puppet function didn't find correct key")
+                       "agent lookup using oregano function didn't find correct key")
         end
       end
     end

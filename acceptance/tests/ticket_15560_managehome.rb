@@ -26,7 +26,7 @@ user { '#{username}':
 EOM
 
 agents.each do |host|
-  on(host, puppet_apply, :stdin => manifest_present)
+  on(host, oregano_apply, :stdin => manifest_present)
 
   deleteable_profile = true
 
@@ -40,7 +40,7 @@ agents.each do |host|
 
   on(host, "test -d '#{homedir}'")
 
-  on(host, puppet_apply, :stdin => manifest_absent)
+  on(host, oregano_apply, :stdin => manifest_absent)
 
   if deleteable_profile
     on(host, "test ! -d '#{homedir}'")

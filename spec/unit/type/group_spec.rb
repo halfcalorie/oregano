@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:group) do
+describe Oregano::Type.type(:group) do
   before do
-    @class = Puppet::Type.type(:group)
+    @class = Oregano::Type.type(:group)
   end
 
   it "should have a system_groups feature" do

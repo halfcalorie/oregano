@@ -1,24 +1,24 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-require 'puppet'
-require 'puppet/provider/parsedfile'
+require 'oregano'
+require 'oregano/provider/parsedfile'
 
-Puppet::Type.newtype(:parsedfile_type) do
+Oregano::Type.newtype(:parsedfile_type) do
   newparam(:name)
   newproperty(:target)
 end
 
 # Most of the tests for this are still in test/ral/provider/parsedfile.rb.
-describe Puppet::Provider::ParsedFile do
+describe Oregano::Provider::ParsedFile do
   # The ParsedFile provider class is meant to be used as an abstract base class
   # but also stores a lot of state within the singleton class. To avoid
   # sharing data between classes we construct an anonymous class that inherits
   # the ParsedFile provider instead of directly working with the ParsedFile
   # provider itself.
   let(:parsed_type) do
-    Puppet::Type.type(:parsedfile_type)
+    Oregano::Type.type(:parsedfile_type)
   end
 
   let!(:provider) { parsed_type.provide(:parsedfile_provider, :parent => described_class) }
@@ -54,12 +54,12 @@ describe Puppet::Provider::ParsedFile do
         {:name => 'target1_record1'},
         {:name => 'target1_record2'}
       ]
-      provider.expects(:retrieve).with("/two").raises Puppet::Util::FileType::FileReadError, "some error"
+      provider.expects(:retrieve).with("/two").raises Oregano::Util::FileType::FileReadError, "some error"
       provider.expects(:retrieve).with("/three").returns [
         {:name => 'target3_record1'},
         {:name => 'target3_record2'}
       ]
-      Puppet.expects(:err).with('Could not prefetch parsedfile_type provider \'parsedfile_provider\' target \'/two\': some error. Treating as empty')
+      Oregano.expects(:err).with('Could not prefetch parsedfile_type provider \'parsedfile_provider\' target \'/two\': some error. Treating as empty')
       provider.expects(:new).with(:name => 'target1_record1', :on_disk => true, :target => '/one', :ensure => :present).returns 'r1'
       provider.expects(:new).with(:name => 'target1_record2', :on_disk => true, :target => '/one', :ensure => :present).returns 'r2'
       provider.expects(:new).with(:name => 'target3_record1', :on_disk => true, :target => '/three', :ensure => :present).returns 'r3'
@@ -107,8 +107,8 @@ describe Puppet::Provider::ParsedFile do
       provider.initvars
       provider.prefetch
 
-      @filetype = Puppet::Util::FileType.filetype(:flat).new("/my/file")
-      Puppet::Util::FileType.filetype(:flat).stubs(:new).with("/my/file",nil).returns @filetype
+      @filetype = Oregano::Util::FileType.filetype(:flat).new("/my/file")
+      Oregano::Util::FileType.filetype(:flat).stubs(:new).with("/my/file",nil).returns @filetype
 
       @filetype.stubs(:write)
     end
@@ -120,8 +120,8 @@ describe Puppet::Provider::ParsedFile do
     end
 
     it "should not try to back up the file if the filetype cannot be backed up" do
-      @filetype = Puppet::Util::FileType.filetype(:ram).new("/my/file")
-      Puppet::Util::FileType.filetype(:flat).expects(:new).returns @filetype
+      @filetype = Oregano::Util::FileType.filetype(:ram).new("/my/file")
+      Oregano::Util::FileType.filetype(:flat).expects(:new).returns @filetype
 
       @filetype.stubs(:write)
 
@@ -175,13 +175,13 @@ describe Puppet::Provider::ParsedFile do
 end
 
 describe "A very basic provider based on ParsedFile" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   let(:input_text) { File.read(my_fixture('simple.txt')) }
   let(:target) { tmpfile('parsedfile_spec') }
 
   let(:provider) do
-    example_provider_class = Class.new(Puppet::Provider::ParsedFile)
+    example_provider_class = Class.new(Oregano::Provider::ParsedFile)
     example_provider_class.default_target = target
     # Setup some record rules
     example_provider_class.instance_eval do
@@ -191,7 +191,7 @@ describe "A very basic provider based on ParsedFile" do
     example_provider_class.prefetch
     # evade a race between multiple invocations of the header method
     example_provider_class.stubs(:header).
-      returns("# HEADER As added by puppet.\n")
+      returns("# HEADER As added by oregano.\n")
     example_provider_class
   end
 

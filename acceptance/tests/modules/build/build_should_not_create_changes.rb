@@ -1,4 +1,4 @@
-test_name "puppet module build should not result in changed files"
+test_name "oregano module build should not result in changed files"
 
 tag 'audit:medium',
     'audit:acceptance'
@@ -14,16 +14,16 @@ agents.each do |agent|
   end
 
   step 'Generate module' do
-    on(agent, puppet("module generate #{modauthor}-#{modname} --skip-interview"))
+    on(agent, oregano("module generate #{modauthor}-#{modname} --skip-interview"))
   end
 
   step 'Build module' do
-    on(agent, puppet("module build #{modname}"))
+    on(agent, oregano("module build #{modname}"))
     on(agent, "test -d #{buildpath}")
   end
 
   step 'Verify fresh build has no changes' do
-    on(agent, puppet("module changes #{buildpath}")) do |res|
+    on(agent, oregano("module changes #{buildpath}")) do |res|
       fail_test('Changed files found') if res.stderr.include? 'modified'
     end
   end

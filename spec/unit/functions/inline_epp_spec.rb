@@ -2,11 +2,11 @@
 require 'spec_helper'
 
 describe "the inline_epp function" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
-  let :node     do Puppet::Node.new('localhost') end
-  let :compiler do Puppet::Parser::Compiler.new(node) end
-  let :scope    do Puppet::Parser::Scope.new(compiler) end
+  let :node     do Oregano::Node.new('localhost') end
+  let :compiler do Oregano::Parser::Compiler.new(node) end
+  let :scope    do Oregano::Parser::Scope.new(compiler) end
 
   context "when accessing scope variables as $ variables" do
     it "looks up the value from the scope" do

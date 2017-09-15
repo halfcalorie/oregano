@@ -1,24 +1,24 @@
 require 'spec_helper'
-require 'puppet/face'
-require 'puppet/application/module'
-require 'puppet/module_tool'
+require 'oregano/face'
+require 'oregano/application/module'
+require 'oregano/module_tool'
 
-describe "puppet module search" do
-  subject { Puppet::Face[:module, :current] }
+describe "oregano module search" do
+  subject { Oregano::Face[:module, :current] }
 
   let(:options) do
     {}
   end
 
-  describe Puppet::Application::Module do
+  describe Oregano::Application::Module do
     subject do
-      app = Puppet::Application::Module.new
-      app.stubs(:action).returns(Puppet::Face.find_action(:module, :search))
+      app = Oregano::Application::Module.new
+      app.stubs(:action).returns(Oregano::Face.find_action(:module, :search))
       app
     end
 
     before { subject.render_as = :console }
-    before { Puppet::Util::Terminal.stubs(:width).returns(100) }
+    before { Oregano::Util::Terminal.stubs(:width).returns(100) }
 
     it 'should output nothing when receiving an empty dataset' do
       expect(subject.render({:answers => [], :result => :success}, ['apache', {}])).to eq("No results found for 'apache'.")
@@ -155,7 +155,7 @@ describe "puppet module search" do
           ]
         }
 
-        Puppet::Util::Terminal.expects(:width).returns(width)
+        Oregano::Util::Terminal.expects(:width).returns(width)
         result = subject.render(results, ['apache', {}])
         expect(result.lines.sort_by(&:length).last.chomp.length).to be <= width
         expect(result).to eq(expectation)
@@ -172,20 +172,20 @@ describe "puppet module search" do
     end
 
     it "should accept the --module_repository option" do
-      forge = mock("Puppet::Forge")
+      forge = mock("Oregano::Forge")
       searcher = mock("Searcher")
       options[:module_repository] = "http://forge.example.com"
 
-      Puppet::Forge.expects(:new).with("http://forge.example.com", false).returns(forge)
-      Puppet::ModuleTool::Applications::Searcher.expects(:new).with("puppetlabs-apache", forge, has_entries(options)).returns(searcher)
+      Oregano::Forge.expects(:new).with("http://forge.example.com", false).returns(forge)
+      Oregano::ModuleTool::Applications::Searcher.expects(:new).with("oreganolabs-apache", forge, has_entries(options)).returns(searcher)
       searcher.expects(:run)
 
-      subject.search("puppetlabs-apache", options)
+      subject.search("oreganolabs-apache", options)
     end
   end
 
   describe "inline documentation" do
-    subject { Puppet::Face[:module, :current].get_action :search }
+    subject { Oregano::Face[:module, :current].get_action :search }
 
     its(:summary)     { should =~ /search.*module/im }
     its(:description) { should =~ /search.*module/im }

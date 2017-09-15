@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet_spec/language'
+require 'oregano_spec/language'
 
-describe "Puppet resource expressions" do
-  extend PuppetSpec::Language
+describe "Oregano resource expressions" do
+  extend OreganoSpec::Language
 
   produces(
   "$a = notify

@@ -1,12 +1,12 @@
-function puppet_init_calling_puppet() {
-  usee::usee_puppet()
+function oregano_init_calling_oregano() {
+  usee::usee_oregano()
 }
 
-function puppet_init_calling_puppet_init() {
-  usee_puppet_init()
+function oregano_init_calling_oregano_init() {
+  usee_oregano_init()
 }
 
-function puppet_init_calling_ruby() {
+function oregano_init_calling_ruby() {
   usee::usee_ruby()
 }
 
@@ -19,15 +19,15 @@ class user {
 
   case $::case_number {
     1: {
-      # Call a puppet function that resides in usee/functions directly from init.pp
+      # Call a oregano function that resides in usee/functions directly from init.pp
       #
-      notify { 'case_1': message => usee::usee_puppet() }
+      notify { 'case_1': message => usee::usee_oregano() }
     }
     2: {
-      # Call a puppet function that resides in usee/manifests/init.pp directly from init.pp
+      # Call a oregano function that resides in usee/manifests/init.pp directly from init.pp
       #
       include usee
-      notify { 'case_2': message => usee_puppet_init() }
+      notify { 'case_2': message => usee_oregano_init() }
     }
     3: {
       # Call a ruby function that resides in usee directly from init.pp
@@ -35,47 +35,47 @@ class user {
       notify { 'case_3': message => usee::usee_ruby() }
     }
     4: {
-      # Call a puppet function that resides in usee/functions from a puppet function under functions
+      # Call a oregano function that resides in usee/functions from a oregano function under functions
       #
-      notify { 'case_4': message => user::puppet_calling_puppet() }
+      notify { 'case_4': message => user::oregano_calling_oregano() }
     }
     5: {
-      # Call a puppet function that resides in usee/manifests/init.pp from a puppet function under functions
+      # Call a oregano function that resides in usee/manifests/init.pp from a oregano function under functions
       #
       include usee
-      notify { 'case_5': message => user::puppet_calling_puppet_init() }
+      notify { 'case_5': message => user::oregano_calling_oregano_init() }
     }
     6: {
-      # Call a ruby function that resides in usee from a puppet function under functions
+      # Call a ruby function that resides in usee from a oregano function under functions
       #
-      notify { 'case_6': message => user::puppet_calling_ruby() }
+      notify { 'case_6': message => user::oregano_calling_ruby() }
     }
     7: {
-      # Call a puppet function that resides in usee/functions from a puppet function in init.pp
+      # Call a oregano function that resides in usee/functions from a oregano function in init.pp
       #
-      notify { 'case_7': message => puppet_init_calling_puppet() }
+      notify { 'case_7': message => oregano_init_calling_oregano() }
     }
     8: {
-      # Call a puppet function that resides in usee/manifests/init.pp from a puppet function in init.pp
+      # Call a oregano function that resides in usee/manifests/init.pp from a oregano function in init.pp
       #
       include usee
-      notify { 'case_8': message => puppet_init_calling_puppet_init() }
+      notify { 'case_8': message => oregano_init_calling_oregano_init() }
     }
     9: {
-      # Call a ruby function that resides in usee from a puppet function in init.pp
+      # Call a ruby function that resides in usee from a oregano function in init.pp
       #
-      notify { 'case_9': message => puppet_init_calling_ruby() }
+      notify { 'case_9': message => oregano_init_calling_ruby() }
     }
     10: {
-      # Call a puppet function that resides in usee/functions from a ruby function in this module
+      # Call a oregano function that resides in usee/functions from a ruby function in this module
       #
-      notify { 'case_10': message => user::ruby_calling_puppet() }
+      notify { 'case_10': message => user::ruby_calling_oregano() }
     }
     11: {
-      # Call a puppet function that resides in usee/manifests/init.pp from a ruby function in this module
+      # Call a oregano function that resides in usee/manifests/init.pp from a ruby function in this module
       #
       include usee
-      notify { 'case_11': message => user::ruby_calling_puppet_init() }
+      notify { 'case_11': message => user::ruby_calling_oregano_init() }
     }
     12: {
       # Call a ruby function that resides in usee from a ruby function in this module

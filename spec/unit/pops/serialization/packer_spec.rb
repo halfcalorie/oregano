@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'puppet/pops/serialization'
+require 'oregano/pops/serialization'
 
-module Puppet::Pops
+module Oregano::Pops
 module Serialization
 [JSON].each do |packer_module|
-describe "the Puppet::Pops::Serialization when using #{packer_module.name}" do
+describe "the Oregano::Pops::Serialization when using #{packer_module.name}" do
   let(:io) { StringIO.new }
   let(:reader_class) { packer_module::Reader }
   let(:writer_class) { packer_module::Writer }
@@ -104,18 +104,18 @@ describe "the Puppet::Pops::Serialization when using #{packer_module.name}" do
     end
 
     it 'Version' do
-      val = SemanticPuppet::Version.parse('1.2.3-alpha2')
+      val = SemanticOregano::Version.parse('1.2.3-alpha2')
       write(val)
       val2 = read
-      expect(val2).to be_a(SemanticPuppet::Version)
+      expect(val2).to be_a(SemanticOregano::Version)
       expect(val2).to eql(val)
     end
 
     it 'VersionRange' do
-      val = SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4')
+      val = SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4')
       write(val)
       val2 = read
-      expect(val2).to be_a(SemanticPuppet::VersionRange)
+      expect(val2).to be_a(SemanticOregano::VersionRange)
       expect(val2).to eql(val)
     end
 
@@ -137,7 +137,7 @@ describe "the Puppet::Pops::Serialization when using #{packer_module.name}" do
       expect { write(-2**63-1) }.to raise_error(SerializationError, 'Integer out of bounds')
     end
 
-    it 'objects unknown to Puppet serialization' do
+    it 'objects unknown to Oregano serialization' do
       expect { write("".class) }.to raise_error(SerializationError, 'Unable to serialize a Class')
     end
   end

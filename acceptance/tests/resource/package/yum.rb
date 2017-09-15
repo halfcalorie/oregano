@@ -9,8 +9,8 @@ test_name "test the yum package provider" do
                          # actual changing of resources could irreparably damage a
                          # host running this, or require special permissions.
 
-  require 'puppet/acceptance/rpm_util'
-  extend Puppet::Acceptance::RpmUtils
+  require 'oregano/acceptance/rpm_util'
+  extend Oregano::Acceptance::RpmUtils
 
   epoch_rpm_options    = {:pkg => 'epoch', :version => '1.1', :epoch => '1'}
   no_epoch_rpm_options = {:pkg => 'guid', :version => '1.0'}

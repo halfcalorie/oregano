@@ -6,7 +6,7 @@ tag 'audit:medium',  # CA functionality
     'audit:unit',
     'server'
 
-with_puppet_running_on(master, {'master' => {'allow_duplicate_certs' => true,
+with_oregano_running_on(master, {'master' => {'allow_duplicate_certs' => true,
                                              'autosign' => false}}) do
   agents_with_cert_name = {}
   agents.each do |agent|
@@ -17,12 +17,12 @@ with_puppet_running_on(master, {'master' => {'allow_duplicate_certs' => true,
 
   agents_with_cert_name.each do |fqdn, agent|
     step "Generate a certificate request for the agent"
-    on(agent, puppet("certificate generate #{fqdn} --ca-location remote --server #{master}"))
+    on(agent, oregano("certificate generate #{fqdn} --ca-location remote --server #{master}"))
   end
 
   step "Collect the original certs"
-  on(master, puppet_cert("--sign --all"))
-  original_certs = on(master, puppet_cert("--list --all"))
+  on(master, oregano_cert("--sign --all"))
+  original_certs = on(master, oregano_cert("--list --all"))
 
   old_certs = {}
   original_certs.stdout.each_line do |line|
@@ -37,12 +37,12 @@ with_puppet_running_on(master, {'master' => {'allow_duplicate_certs' => true,
 
   agents_with_cert_name.each do |fqdn, agent|
     step "Make another request with the same certname"
-    on(agent, puppet("certificate generate #{fqdn} --ca-location remote --server #{master}"))
+    on(agent, oregano("certificate generate #{fqdn} --ca-location remote --server #{master}"))
   end
 
   step "Collect the new certs"
-  on(master, puppet_cert("--sign --all"))
-  new_cert_list = on(master, puppet_cert("--list --all"))
+  on(master, oregano_cert("--sign --all"))
+  new_cert_list = on(master, oregano_cert("--list --all"))
 
   new_certs = {}
   new_cert_list.stdout.each_line do |line|

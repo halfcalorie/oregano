@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-describe Puppet::Pops::Model do
+describe Oregano::Pops::Model do
   it "should be possible to create an instance of a model object" do
-    nop = Puppet::Pops::Model::Nop.new(Puppet::Pops::Parser::Locator.locator('code', 'file'), 0, 0)
-    expect(nop.class).to eq(Puppet::Pops::Model::Nop)
+    nop = Oregano::Pops::Model::Nop.new(Oregano::Pops::Parser::Locator.locator('code', 'file'), 0, 0)
+    expect(nop.class).to eq(Oregano::Pops::Model::Nop)
   end
 end
 
-describe Puppet::Pops::Model::Factory do
-  Factory = Puppet::Pops::Model::Factory
-  Model = Puppet::Pops::Model
+describe Oregano::Pops::Model::Factory do
+  Factory = Oregano::Pops::Model::Factory
+  Model = Oregano::Pops::Model
 
   it "construct an arithmetic expression" do
     x = Factory.literal(10) + Factory.literal(20)
@@ -27,11 +27,11 @@ describe Puppet::Pops::Model::Factory do
 
   it "should be easy to compare using a model tree dumper" do
     x = Factory.literal(10) + Factory.literal(20)
-    expect(Puppet::Pops::Model::ModelTreeDumper.new.dump(x.model)).to eq("(+ 10 20)")
+    expect(Oregano::Pops::Model::ModelTreeDumper.new.dump(x.model)).to eq("(+ 10 20)")
   end
 
   it "builder should apply precedence" do
     x = Factory.literal(2) * Factory.literal(10) + Factory.literal(20)
-    expect(Puppet::Pops::Model::ModelTreeDumper.new.dump(x.model)).to eq("(+ (* 2 10) 20)")
+    expect(Oregano::Pops::Model::ModelTreeDumper.new.dump(x.model)).to eq("(+ (* 2 10) 20)")
   end
 end

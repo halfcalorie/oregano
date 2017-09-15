@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/provider/exec'
+require 'oregano/provider/exec'
 
-describe Puppet::Provider::Exec do
+describe Oregano::Provider::Exec do
   describe "#extractexe" do
     it "should return the first element of an array" do
       expect(subject.extractexe(['one', 'two'])).to eq('one')

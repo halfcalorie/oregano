@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl' do
   include EvaluatorRspecHelper
 
   context "When the evaluator evaluates literals" do
@@ -31,7 +31,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
     end
 
     it 'should evaluator types to types' do
-      array_type = Puppet::Pops::Types::PArrayType::DEFAULT
+      array_type = Oregano::Pops::Types::PArrayType::DEFAULT
       expect(evaluate(fqr('Array'))).to eq(array_type)
     end
   end
@@ -47,7 +47,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
     it "[2 + 2] should evaluate expressions in entries" do
       x = literal([literal(2) + literal(2)]);
-      expect(Puppet::Pops::Model::ModelTreeDumper.new.dump(x)).to eq("([] (+ 2 2))")
+      expect(Oregano::Pops::Model::ModelTreeDumper.new.dump(x)).to eq("([] (+ 2 2))")
       expect(evaluate(x)[0]).to eq(4)
     end
 

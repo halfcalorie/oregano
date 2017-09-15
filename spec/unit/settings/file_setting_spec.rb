@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/settings'
-require 'puppet/settings/file_setting'
+require 'oregano/settings'
+require 'oregano/settings/file_setting'
 
-describe Puppet::Settings::FileSetting do
-  FileSetting = Puppet::Settings::FileSetting
+describe Oregano::Settings::FileSetting do
+  FileSetting = Oregano::Settings::FileSetting
 
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   describe "when controlling permissions" do
     def settings(wanted_values = {})
@@ -127,7 +127,7 @@ describe Puppet::Settings::FileSetting do
     before do
       @basepath = make_absolute("/somepath")
       @settings = mock 'settings'
-      @file = Puppet::Settings::FileSetting.new(:settings => @settings, :desc => "eh", :name => :myfile, :section => "mysect")
+      @file = Oregano::Settings::FileSetting.new(:settings => @settings, :desc => "eh", :name => :myfile, :section => "mysect")
       @file.stubs(:create_files?).returns true
       @settings.stubs(:value).with(:myfile, nil, false).returns @basepath
     end
@@ -139,19 +139,19 @@ describe Puppet::Settings::FileSetting do
     it "should skip non-existent files if 'create_files' is not enabled" do
       @file.expects(:create_files?).returns false
       @file.expects(:type).returns :file
-      Puppet::FileSystem.expects(:exist?).with(@basepath).returns false
+      Oregano::FileSystem.expects(:exist?).with(@basepath).returns false
       expect(@file.to_resource).to be_nil
     end
 
     it "should manage existent files even if 'create_files' is not enabled" do
       @file.expects(:create_files?).returns false
       @file.expects(:type).returns :file
-      Puppet::FileSystem.stubs(:exist?)
-      Puppet::FileSystem.expects(:exist?).with(@basepath).returns true
-      expect(@file.to_resource).to be_instance_of(Puppet::Resource)
+      Oregano::FileSystem.stubs(:exist?)
+      Oregano::FileSystem.expects(:exist?).with(@basepath).returns true
+      expect(@file.to_resource).to be_instance_of(Oregano::Resource)
     end
 
-    describe "on POSIX systems", :if => Puppet.features.posix? do
+    describe "on POSIX systems", :if => Oregano.features.posix? do
       it "should skip files in /dev" do
         @settings.stubs(:value).with(:myfile, nil, false).returns "/dev/file"
         expect(@file.to_resource).to be_nil
@@ -169,7 +169,7 @@ describe Puppet::Settings::FileSetting do
       expect(resource.title).to eq(@basepath)
     end
 
-    it "should have a working directory with a root directory not called dev", :if => Puppet.features.microsoft_windows? do
+    it "should have a working directory with a root directory not called dev", :if => Oregano.features.microsoft_windows? do
       # Although C:\Dev\.... is a valid path on Windows, some other code may regard it as a path to be ignored.  e.g. /dev/null resolves to C:\dev\null on Windows.
       path = File.expand_path('somefile')
       expect(path).to_not match(/^[A-Z]:\/dev/i)
@@ -194,7 +194,7 @@ describe Puppet::Settings::FileSetting do
     end
 
     it "should not set the mode on a the file if manage_internal_file_permissions is disabled" do
-      Puppet[:manage_internal_file_permissions] = false
+      Oregano[:manage_internal_file_permissions] = false
 
       @file.stubs(:mode).returns(0755)
 
@@ -202,32 +202,32 @@ describe Puppet::Settings::FileSetting do
     end
 
     it "should set the owner if running as root and the owner is provided" do
-      Puppet.features.expects(:root?).returns true
-      Puppet.features.stubs(:microsoft_windows?).returns false
+      Oregano.features.expects(:root?).returns true
+      Oregano.features.stubs(:microsoft_windows?).returns false
 
       @file.stubs(:owner).returns "foo"
       expect(@file.to_resource[:owner]).to eq("foo")
     end
 
     it "should not set the owner if manage_internal_file_permissions is disabled" do
-      Puppet[:manage_internal_file_permissions] = false
-      Puppet.features.stubs(:root?).returns true
+      Oregano[:manage_internal_file_permissions] = false
+      Oregano.features.stubs(:root?).returns true
       @file.stubs(:owner).returns "foo"
 
       expect(@file.to_resource[:owner]).to eq(nil)
     end
 
     it "should set the group if running as root and the group is provided" do
-      Puppet.features.expects(:root?).returns true
-      Puppet.features.stubs(:microsoft_windows?).returns false
+      Oregano.features.expects(:root?).returns true
+      Oregano.features.stubs(:microsoft_windows?).returns false
 
       @file.stubs(:group).returns "foo"
       expect(@file.to_resource[:group]).to eq("foo")
     end
 
     it "should not set the group if manage_internal_file_permissions is disabled" do
-      Puppet[:manage_internal_file_permissions] = false
-      Puppet.features.stubs(:root?).returns true
+      Oregano[:manage_internal_file_permissions] = false
+      Oregano.features.stubs(:root?).returns true
       @file.stubs(:group).returns "foo"
 
       expect(@file.to_resource[:group]).to eq(nil)
@@ -235,22 +235,22 @@ describe Puppet::Settings::FileSetting do
 
 
     it "should not set owner if not running as root" do
-      Puppet.features.expects(:root?).returns false
-      Puppet.features.stubs(:microsoft_windows?).returns false
+      Oregano.features.expects(:root?).returns false
+      Oregano.features.stubs(:microsoft_windows?).returns false
       @file.stubs(:owner).returns "foo"
       expect(@file.to_resource[:owner]).to be_nil
     end
 
     it "should not set group if not running as root" do
-      Puppet.features.expects(:root?).returns false
-      Puppet.features.stubs(:microsoft_windows?).returns false
+      Oregano.features.expects(:root?).returns false
+      Oregano.features.stubs(:microsoft_windows?).returns false
       @file.stubs(:group).returns "foo"
       expect(@file.to_resource[:group]).to be_nil
     end
 
     describe "on Microsoft Windows systems" do
       before :each do
-        Puppet.features.stubs(:microsoft_windows?).returns true
+        Oregano.features.stubs(:microsoft_windows?).returns true
       end
 
       it "should not set owner" do
@@ -302,7 +302,7 @@ describe Puppet::Settings::FileSetting do
     end
   end
 
-  context "when opening", :unless => Puppet.features.microsoft_windows? do
+  context "when opening", :unless => Oregano.features.microsoft_windows? do
     let(:path) do
       tmpfile('file_setting_spec')
     end
@@ -319,17 +319,17 @@ describe Puppet::Settings::FileSetting do
       setting.open('w')
 
       expect(File).to be_exist(path)
-      expect(Puppet::FileSystem.stat(path).mode & 0777).to eq(0640)
+      expect(Oregano::FileSystem.stat(path).mode & 0777).to eq(0640)
     end
 
     it "preserves the mode of an existing file" do
       setting.mode = '0640'
 
-      Puppet::FileSystem.touch(path)
-      Puppet::FileSystem.chmod(0644, path)
+      Oregano::FileSystem.touch(path)
+      Oregano::FileSystem.chmod(0644, path)
       setting.open('w')
 
-      expect(Puppet::FileSystem.stat(path).mode & 0777).to eq(0644)
+      expect(Oregano::FileSystem.stat(path).mode & 0777).to eq(0644)
     end
   end
 end

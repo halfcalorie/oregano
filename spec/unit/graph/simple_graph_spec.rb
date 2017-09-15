@@ -1,27 +1,27 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/graph'
+require 'oregano/graph'
 
-describe Puppet::Graph::SimpleGraph do
+describe Oregano::Graph::SimpleGraph do
   it "should return the number of its vertices as its length" do
-    @graph = Puppet::Graph::SimpleGraph.new
+    @graph = Oregano::Graph::SimpleGraph.new
     @graph.add_vertex("one")
     @graph.add_vertex("two")
     expect(@graph.size).to eq(2)
   end
 
   it "should consider itself a directed graph" do
-    expect(Puppet::Graph::SimpleGraph.new.directed?).to be_truthy
+    expect(Oregano::Graph::SimpleGraph.new.directed?).to be_truthy
   end
 
   it "should provide a method for reversing the graph" do
-    @graph = Puppet::Graph::SimpleGraph.new
+    @graph = Oregano::Graph::SimpleGraph.new
     @graph.add_edge(:one, :two)
     expect(@graph.reversal.edge?(:two, :one)).to be_truthy
   end
 
   it "should be able to produce a dot graph" do
-    @graph = Puppet::Graph::SimpleGraph.new
+    @graph = Oregano::Graph::SimpleGraph.new
     class FauxVertex
       def ref
         "never mind"
@@ -36,7 +36,7 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when managing vertices" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
     end
 
     it "should provide a method to add a vertex" do
@@ -85,7 +85,7 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when managing edges" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
     end
 
     it "should provide a method to test whether a given vertex pair is an edge" do
@@ -99,7 +99,7 @@ describe Puppet::Graph::SimpleGraph do
     end
 
     it "should provide a method to add an edge as an instance of the edge class" do
-      edge = Puppet::Relationship.new(:one, :two)
+      edge = Oregano::Relationship.new(:one, :two)
       @graph.add_edge(edge)
       expect(@graph.edge?(:one, :two)).to be_truthy
     end
@@ -126,15 +126,15 @@ describe Puppet::Graph::SimpleGraph do
       end
 
       it "should handle the case of nodes connected by a single edge" do
-        edge = Puppet::Relationship.new(:one, :two)
+        edge = Oregano::Relationship.new(:one, :two)
         @graph.add_edge(edge)
         expect(@graph.edges_between(:one, :two).length).to eq(1)
         expect(@graph.edges_between(:one, :two)[0]).to equal(edge)
       end
 
       it "should handle the case of nodes connected by multiple edges" do
-        edge1 = Puppet::Relationship.new(:one, :two, :callback => :foo)
-        edge2 = Puppet::Relationship.new(:one, :two, :callback => :bar)
+        edge1 = Oregano::Relationship.new(:one, :two, :callback => :foo)
+        edge2 = Oregano::Relationship.new(:one, :two, :callback => :bar)
         @graph.add_edge(edge1)
         @graph.add_edge(edge2)
         expect(Set.new(@graph.edges_between(:one, :two))).to eq(Set.new([edge1, edge2]))
@@ -142,20 +142,20 @@ describe Puppet::Graph::SimpleGraph do
     end
 
     it "should add the edge source as a vertex if it is not already" do
-      edge = Puppet::Relationship.new(:one, :two)
+      edge = Oregano::Relationship.new(:one, :two)
       @graph.add_edge(edge)
       expect(@graph.vertex?(:one)).to be_truthy
     end
 
     it "should add the edge target as a vertex if it is not already" do
-      edge = Puppet::Relationship.new(:one, :two)
+      edge = Oregano::Relationship.new(:one, :two)
       @graph.add_edge(edge)
       expect(@graph.vertex?(:two)).to be_truthy
     end
 
     it "should return all edges as edge instances when asked" do
-      one = Puppet::Relationship.new(:one, :two)
-      two = Puppet::Relationship.new(:two, :three)
+      one = Oregano::Relationship.new(:one, :two)
+      two = Oregano::Relationship.new(:two, :three)
       @graph.add_edge(one)
       @graph.add_edge(two)
       edges = @graph.edges
@@ -166,15 +166,15 @@ describe Puppet::Graph::SimpleGraph do
     end
 
     it "should remove an edge when asked" do
-      edge = Puppet::Relationship.new(:one, :two)
+      edge = Oregano::Relationship.new(:one, :two)
       @graph.add_edge(edge)
       @graph.remove_edge!(edge)
       expect(@graph.edge?(edge.source, edge.target)).to be_falsey
     end
 
     it "should remove all related edges when a vertex is removed" do
-      one = Puppet::Relationship.new(:one, :two)
-      two = Puppet::Relationship.new(:two, :three)
+      one = Oregano::Relationship.new(:one, :two)
+      two = Oregano::Relationship.new(:two, :three)
       @graph.add_edge(one)
       @graph.add_edge(two)
       @graph.remove_vertex!(:two)
@@ -186,10 +186,10 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when finding adjacent vertices" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
-      @one_two = Puppet::Relationship.new(:one, :two)
-      @two_three = Puppet::Relationship.new(:two, :three)
-      @one_three = Puppet::Relationship.new(:one, :three)
+      @graph = Oregano::Graph::SimpleGraph.new
+      @one_two = Oregano::Relationship.new(:one, :two)
+      @two_three = Oregano::Relationship.new(:two, :three)
+      @one_three = Oregano::Relationship.new(:one, :three)
       @graph.add_edge(@one_two)
       @graph.add_edge(@one_three)
       @graph.add_edge(@two_three)
@@ -219,7 +219,7 @@ describe Puppet::Graph::SimpleGraph do
 
     # Bug #2111
     it "should not consider a vertex adjacent just because it was asked about previously" do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
       @graph.add_vertex("a")
       @graph.add_vertex("b")
       @graph.edge?("a", "b")
@@ -229,9 +229,9 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when clearing" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
-      one = Puppet::Relationship.new(:one, :two)
-      two = Puppet::Relationship.new(:two, :three)
+      @graph = Oregano::Graph::SimpleGraph.new
+      one = Oregano::Relationship.new(:one, :two)
+      two = Oregano::Relationship.new(:two, :three)
       @graph.add_edge(one)
       @graph.add_edge(two)
 
@@ -249,7 +249,7 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when reversing graphs" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
     end
 
     it "should provide a method for reversing the graph" do
@@ -272,13 +272,13 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when reporting cycles in the graph" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
     end
 
     # This works with `add_edges` to auto-vivify the resource instances.
     let :vertex do
       Hash.new do |hash, key|
-        hash[key] = Puppet::Type.type(:notify).new(:name => key.to_s)
+        hash[key] = Oregano::Type.type(:notify).new(:name => key.to_s)
       end
     end
 
@@ -304,28 +304,28 @@ describe Puppet::Graph::SimpleGraph do
 
     it "should report two-vertex loops" do
       add_edges :a => :b, :b => :a
-      Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:\n\(Notify\[a\] => Notify\[b\] => Notify\[a\]\)/))
+      Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:\n\(Notify\[a\] => Notify\[b\] => Notify\[a\]\)/))
       cycle = @graph.report_cycles_in_graph.first
       expect_cycle_to_include(cycle, :a, :b)
     end
 
     it "should report multi-vertex loops" do
       add_edges :a => :b, :b => :c, :c => :a
-      Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:\n\(Notify\[a\] => Notify\[b\] => Notify\[c\] => Notify\[a\]\)/))
+      Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:\n\(Notify\[a\] => Notify\[b\] => Notify\[c\] => Notify\[a\]\)/))
       cycle = @graph.report_cycles_in_graph.first
       expect_cycle_to_include(cycle, :a, :b, :c)
     end
 
     it "should report when a larger tree contains a small cycle" do
       add_edges :a => :b, :b => :a, :c => :a, :d => :c
-      Puppet.expects(:err).with(regexp_matches(/Found 1 dependency cycle:\n\(Notify\[a\] => Notify\[b\] => Notify\[a\]\)/))
+      Oregano.expects(:err).with(regexp_matches(/Found 1 dependency cycle:\n\(Notify\[a\] => Notify\[b\] => Notify\[a\]\)/))
       cycle = @graph.report_cycles_in_graph.first
       expect_cycle_to_include(cycle, :a, :b)
     end
 
     it "should succeed on trees with no cycles" do
       add_edges :a => :b, :b => :e, :c => :a, :d => :c
-      Puppet.expects(:err).never
+      Oregano.expects(:err).never
       expect(@graph.report_cycles_in_graph).to be_nil
     end
 
@@ -423,28 +423,28 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when writing dot files" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
       @name = :test
-      @file = File.join(Puppet[:graphdir], @name.to_s + ".dot")
+      @file = File.join(Oregano[:graphdir], @name.to_s + ".dot")
     end
 
     it "should only write when graphing is enabled" do
       File.expects(:open).with(@file).never
-      Puppet[:graph] = false
+      Oregano[:graph] = false
       @graph.write_graph(@name)
     end
 
     it "should write a dot file based on the passed name" do
       File.expects(:open).with(@file, "w:UTF-8").yields(stub("file", :puts => nil))
       @graph.expects(:to_dot).with("name" => @name.to_s.capitalize)
-      Puppet[:graph] = true
+      Oregano[:graph] = true
       @graph.write_graph(@name)
     end
   end
 
-  describe Puppet::Graph::SimpleGraph do
+  describe Oregano::Graph::SimpleGraph do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
     end
 
     it "should correctly clear vertices and edges when asked" do
@@ -458,19 +458,19 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when matching edges" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
 
       # Resource is a String here although not for realz. Stub [] to always return nil
       # because indexing a String with a non-Integer throws an exception (and none of
       # these tests need anything meaningful from []).
       resource = "a"
       resource.stubs(:[])
-      @event = Puppet::Transaction::Event.new(:name => :yay, :resource => resource)
-      @none = Puppet::Transaction::Event.new(:name => :NONE, :resource => resource)
+      @event = Oregano::Transaction::Event.new(:name => :yay, :resource => resource)
+      @none = Oregano::Transaction::Event.new(:name => :NONE, :resource => resource)
 
       @edges = {}
-      @edges["a/b"] = Puppet::Relationship.new("a", "b", {:event => :yay, :callback => :refresh})
-      @edges["a/c"] = Puppet::Relationship.new("a", "c", {:event => :yay, :callback => :refresh})
+      @edges["a/b"] = Oregano::Relationship.new("a", "b", {:event => :yay, :callback => :refresh})
+      @edges["a/c"] = Oregano::Relationship.new("a", "c", {:event => :yay, :callback => :refresh})
       @graph.add_edge(@edges["a/b"])
     end
 
@@ -492,7 +492,7 @@ describe Puppet::Graph::SimpleGraph do
 
   describe "when determining dependencies" do
     before do
-      @graph = Puppet::Graph::SimpleGraph.new
+      @graph = Oregano::Graph::SimpleGraph.new
 
       @graph.add_edge("a", "b")
       @graph.add_edge("a", "c")
@@ -525,7 +525,7 @@ describe Puppet::Graph::SimpleGraph do
   end
 
   it "should serialize to YAML using the old format by default" do
-    expect(Puppet::Graph::SimpleGraph.use_new_yaml_format).to eq(false)
+    expect(Oregano::Graph::SimpleGraph.use_new_yaml_format).to eq(false)
   end
 
   describe "(yaml tests)" do
@@ -572,30 +572,30 @@ describe Puppet::Graph::SimpleGraph do
     end
 
     def graph_to_yaml(graph, which_format)
-      previous_use_new_yaml_format = Puppet::Graph::SimpleGraph.use_new_yaml_format
-      Puppet::Graph::SimpleGraph.use_new_yaml_format = (which_format == :new)
+      previous_use_new_yaml_format = Oregano::Graph::SimpleGraph.use_new_yaml_format
+      Oregano::Graph::SimpleGraph.use_new_yaml_format = (which_format == :new)
       if block_given?
         yield
       else
         YAML.dump(graph)
       end
     ensure
-      Puppet::Graph::SimpleGraph.use_new_yaml_format = previous_use_new_yaml_format
+      Oregano::Graph::SimpleGraph.use_new_yaml_format = previous_use_new_yaml_format
     end
 
     # Test serialization of graph to YAML.
     [:old, :new].each do |which_format|
       all_test_graphs.each do |graph_to_test|
         it "should be able to serialize #{graph_to_test} to YAML (#{which_format} format)" do
-          graph = Puppet::Graph::SimpleGraph.new
+          graph = Oregano::Graph::SimpleGraph.new
           send(graph_to_test, graph)
           yaml_form = graph_to_yaml(graph, which_format)
 
-          # Hack the YAML so that objects in the Puppet namespace get
+          # Hack the YAML so that objects in the Oregano namespace get
           # changed to YAML::DomainType objects.  This lets us inspect
           # the serialized objects easily without invoking any
           # yaml_initialize hooks.
-          yaml_form.gsub!('!ruby/object:Puppet::', '!hack/object:Puppet::')
+          yaml_form.gsub!('!ruby/object:Oregano::', '!hack/object:Oregano::')
           serialized_object = YAML.load(yaml_form)
 
           # Check that the object contains instance variables @edges and
@@ -661,7 +661,7 @@ describe Puppet::Graph::SimpleGraph do
       # tested.
       all_test_graphs.each do |graph_to_test|
         it "should be able to deserialize #{graph_to_test} from YAML (#{which_format} format)" do
-          reference_graph = Puppet::Graph::SimpleGraph.new
+          reference_graph = Oregano::Graph::SimpleGraph.new
           send(graph_to_test, reference_graph)
           yaml_form = graph_to_yaml(reference_graph, which_format)
           recovered_graph = YAML.load(yaml_form)
@@ -692,7 +692,7 @@ describe Puppet::Graph::SimpleGraph do
     end
 
     it "should serialize properly when used as a base class" do
-      class Puppet::TestDerivedClass < Puppet::Graph::SimpleGraph
+      class Oregano::TestDerivedClass < Oregano::Graph::SimpleGraph
         attr_accessor :foo
 
         def initialize_from_hash(hash)
@@ -704,12 +704,12 @@ describe Puppet::Graph::SimpleGraph do
           super.merge('foo' => @foo)
         end
       end
-      derived = Puppet::TestDerivedClass.new
+      derived = Oregano::TestDerivedClass.new
       derived.add_edge('a', 'b')
       derived.foo = 1234
       yaml = YAML.dump(derived)
       recovered_derived = YAML.load(yaml)
-      expect(recovered_derived.class).to equal(Puppet::TestDerivedClass)
+      expect(recovered_derived.class).to equal(Oregano::TestDerivedClass)
       expect(recovered_derived.edges.length).to eq(1)
       expect(recovered_derived.edges[0].source).to eq('a')
       expect(recovered_derived.edges[0].target).to eq('b')

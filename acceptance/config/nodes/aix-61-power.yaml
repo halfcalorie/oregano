@@ -11,9 +11,9 @@ HOSTS:
       - agent
     platform: aix-6.1-power
     hypervisor: none
-    vmhostname: pe-aix-61-acceptance.delivery.puppetlabs.net
+    vmhostname: pe-aix-61-acceptance.delivery.oreganolabs.net
 CONFIG:
   datastore: instance0
   resourcepool: delivery/Quality Assurance/FOSS/Dynamic
   folder: Delivery/Quality Assurance/FOSS/Dynamic
-  pooling_api: http://vmpooler.delivery.puppetlabs.net/
+  pooling_api: http://vmpooler.delivery.oreganolabs.net/

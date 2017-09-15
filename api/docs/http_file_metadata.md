@@ -13,11 +13,11 @@ the following three types:
 
 The endpoint path includes a `:mount` which can be one of the following types:
 
-* Custom file serving mounts as specified in fileserver.conf --- see [the docs on configuring mount points](https://docs.puppet.com/puppet/latest/reference/file_serving.html).
-* `modules/<MODULE>` --- a semi-magical mount point which allows access to the `files` subdirectory of `<MODULE>` --- see [the docs on file serving](https://docs.puppet.com/puppet/latest/reference/file_serving.html).
+* Custom file serving mounts as specified in fileserver.conf --- see [the docs on configuring mount points](https://docs.oregano.com/oregano/latest/reference/file_serving.html).
+* `modules/<MODULE>` --- a semi-magical mount point which allows access to the `files` subdirectory of `<MODULE>` --- see [the docs on file serving](https://docs.oregano.com/oregano/latest/reference/file_serving.html).
 * `plugins` --- a highly magical mount point which merges the `lib`  directory of every module together. Used for syncing plugins; not intended for general consumption. Per-module sub-paths can not be specified.
 * `pluginfacts` --- a highly magical mount point which merges the `facts.d` directory of every module together. Used for syncing external facts; not intended for general consumption. Per-module sub-paths can not be specified.
-* `tasks/<MODULE>` --- a semi-magical mount point which allows access to files in the `tasks` subdirectory of `<MODULE>` --- see the [the docs on file serving](https://docs.puppet.com/puppet/latest/reference/file_serving.html).
+* `tasks/<MODULE>` --- a semi-magical mount point which allows access to files in the `tasks` subdirectory of `<MODULE>` --- see the [the docs on file serving](https://docs.oregano.com/oregano/latest/reference/file_serving.html).
 
 Note: PSON responses in the examples below are pretty-printed for readability.
 
@@ -26,7 +26,7 @@ Find
 
 Get file metadata for a single file
 
-    GET /puppet/v3/file_metadata/:mount/path/to/file?environment=:environment
+    GET /oregano/v3/file_metadata/:mount/path/to/file?environment=:environment
 
 ### Supported HTTP Methods
 
@@ -42,16 +42,16 @@ Optional parameters to GET:
 
 * `links` -- either `manage` (default) or `follow`. See examples in Search below.
 * `checksum_type` -- the checksum type to calculate the checksum value for the result metadata; one of `md5` (default), `md5lite`, `sha256`, `sha256lite`, `mtime`, `ctime`, and `none`.
-* `source_permissions` -- whether (and how) Puppet should copy owner, group, and mode permissions; one of
-  * `ignore` (the default) will never apply the owner, group, or mode from the source when managing a file. When creating new files without explicit permissions, the permissions they receive will depend on platform-specific behavior. On POSIX, Puppet will use the umask of the user it is running as. On Windows, Puppet will use the default DACL associated with the user it is running as.
-  * `use` will cause Puppet to apply the owner, group, and mode from the source to any files it is managing.
+* `source_permissions` -- whether (and how) Oregano should copy owner, group, and mode permissions; one of
+  * `ignore` (the default) will never apply the owner, group, or mode from the source when managing a file. When creating new files without explicit permissions, the permissions they receive will depend on platform-specific behavior. On POSIX, Oregano will use the umask of the user it is running as. On Windows, Oregano will use the default DACL associated with the user it is running as.
+  * `use` will cause Oregano to apply the owner, group, and mode from the source to any files it is managing.
   * `use_when_creating` will only apply the owner, group, and mode from the source when creating a file; existing files will not have their permissions overwritten.
 
 ### Example Response
 
 #### File metadata found for a file
 
-    GET /puppet/v3/file_metadata/modules/example/just_a_file.txt?environment=env
+    GET /oregano/v3/file_metadata/modules/example/just_a_file.txt?environment=env
 
     HTTP/1.1 200 OK
     Content-Type: text/pson
@@ -66,14 +66,14 @@ Optional parameters to GET:
         "links": "manage",
         "mode": 420,
         "owner": 501,
-        "path": "/etc/puppetlabs/code/modules/example/files/just_a_file.txt",
+        "path": "/etc/oreganolabs/code/modules/example/files/just_a_file.txt",
         "relative_path": null,
         "type": "file"
     }
 
 #### File metadata found for a directory
 
-    GET /puppet/v3/file_metadata/modules/example/subdirectory?environment=env
+    GET /oregano/v3/file_metadata/modules/example/subdirectory?environment=env
 
     HTTP/1.1 200 OK
     Content-Type: text/pson
@@ -88,14 +88,14 @@ Optional parameters to GET:
         "links": "manage",
         "mode": 493,
         "owner": 501,
-        "path": "/etc/puppetlabs/code/modules/example/files/subdirectory",
+        "path": "/etc/oreganolabs/code/modules/example/files/subdirectory",
         "relative_path": null,
         "type": "directory"
     }
 
 #### File metadata found for a link ignoring source permissions
 
-    GET /puppet/v3/file_metadata/modules/example/link_to_file.txt?environment=env&source_permissions=ignore
+    GET /oregano/v3/file_metadata/modules/example/link_to_file.txt?environment=env&source_permissions=ignore
 
     HTTP/1.1 200 OK
     Content-Type: text/pson
@@ -105,19 +105,19 @@ Optional parameters to GET:
             "type": "md5",
             "value": "{md5}d0a10f45491acc8743bc5a82b228f89e"
         },
-        "destination": "/etc/puppetlabs/code/modules/example/files/just_a_file.txt",
+        "destination": "/etc/oreganolabs/code/modules/example/files/just_a_file.txt",
         "group": 20,
         "links": "manage",
         "mode": 420,
         "owner": 501,
-        "path": "/etc/puppetlabs/code/modules/example/files/link_to_file.txt",
+        "path": "/etc/oreganolabs/code/modules/example/files/link_to_file.txt",
         "relative_path": null,
         "type": "link"
     }
 
 #### File not found
 
-    GET /puppet/v3/file_metadata/modules/example/does_not_exist?environment=env
+    GET /oregano/v3/file_metadata/modules/example/does_not_exist?environment=env
 
     HTTP/1.1 404 Not Found
 
@@ -128,7 +128,7 @@ Search
 
 Get a list of metadata for multiple files
 
-    GET /puppet/v3/file_metadatas/foo.txt?environment=env
+    GET /oregano/v3/file_metadatas/foo.txt?environment=env
 
 ### Supported HTTP Methods
 
@@ -144,16 +144,16 @@ GET
 * `ignore` -- file or directory regex to ignore; can be repeated.
 * `links` -- either `manage` (default) or `follow`. See examples below.
 * `checksum_type` -- the checksum type to calculate the checksum value for the result metadata; one of `md5` (default), `md5lite`, `sha256`, `sha256lite`, `mtime`, `ctime`, and `none`.
-* `source_permissions` -- whether (and how) Puppet should copy owner, group, and mode permissions; one of
-  * `ignore` (the default) will never apply the owner, group, or mode from the source when managing a file. When creating new files without explicit permissions, the permissions they receive will depend on platform-specific behavior. On POSIX, Puppet will use the umask of the user it is running as. On Windows, Puppet will use the default DACL associated with the user it is running as.
-  * `use` will cause Puppet to apply the owner, group, and mode from the source to any files it is managing.
+* `source_permissions` -- whether (and how) Oregano should copy owner, group, and mode permissions; one of
+  * `ignore` (the default) will never apply the owner, group, or mode from the source when managing a file. When creating new files without explicit permissions, the permissions they receive will depend on platform-specific behavior. On POSIX, Oregano will use the umask of the user it is running as. On Windows, Oregano will use the default DACL associated with the user it is running as.
+  * `use` will cause Oregano to apply the owner, group, and mode from the source to any files it is managing.
   * `use_when_creating` will only apply the owner, group, and mode from the source when creating a file; existing files will not have their permissions overwritten.
 
 ### Example Response
 
 #### Basic search
 
-    GET /puppet/v3/file_metadatas/modules/example?environment=env&recurse=yes
+    GET /oregano/v3/file_metadatas/modules/example?environment=env&recurse=yes
 
     HTTP 200 OK
     Content-Type: text/pson
@@ -169,7 +169,7 @@ GET
             "links": "manage",
             "mode": 493,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": ".",
             "type": "directory"
         },
@@ -183,7 +183,7 @@ GET
             "links": "manage",
             "mode": 420,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": "just_a_file.txt",
             "type": "file"
         },
@@ -192,12 +192,12 @@ GET
                 "type": "md5",
                 "value": "{md5}d0a10f45491acc8743bc5a82b228f89e"
             },
-            "destination": "/etc/puppetlabs/code/modules/example/files/just_a_file.txt",
+            "destination": "/etc/oreganolabs/code/modules/example/files/just_a_file.txt",
             "group": 20,
             "links": "manage",
             "mode": 493,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": "link_to_file.txt",
             "type": "link"
         },
@@ -211,7 +211,7 @@ GET
             "links": "manage",
             "mode": 493,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": "subdirectory",
             "type": "directory"
         },
@@ -225,7 +225,7 @@ GET
             "links": "manage",
             "mode": 420,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": "subdirectory/another_file.txt",
             "type": "file"
         }
@@ -233,7 +233,7 @@ GET
 
 #### Search ignoring 'sub*' and links = manage
 
-    GET /puppet/v3/file_metadatas/modules/example?environment=env&recurse=true&ignore=sub*&links=manage
+    GET /oregano/v3/file_metadatas/modules/example?environment=env&recurse=true&ignore=sub*&links=manage
 
     HTTP 200 OK
     Content-Type: text/pson
@@ -249,7 +249,7 @@ GET
             "links": "manage",
             "mode": 493,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": ".",
             "type": "directory"
         },
@@ -263,7 +263,7 @@ GET
             "links": "manage",
             "mode": 420,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": "just_a_file.txt",
             "type": "file"
         },
@@ -272,12 +272,12 @@ GET
                 "type": "md5",
                 "value": "{md5}d0a10f45491acc8743bc5a82b228f89e"
             },
-            "destination": "/etc/puppetlabs/code/modules/example/files/just_a_file.txt",
+            "destination": "/etc/oreganolabs/code/modules/example/files/just_a_file.txt",
             "group": 20,
             "links": "manage",
             "mode": 493,
             "owner": 501,
-            "path": "/etc/puppetlabs/code/modules/example/files",
+            "path": "/etc/oreganolabs/code/modules/example/files",
             "relative_path": "link_to_file.txt",
             "type": "link"
         }
@@ -295,7 +295,7 @@ is identical to the above example, except for:
     * for "manage" the "mode", "owner" and "group" fields are the link's values; for "follow" the destination's values
 
 ~~~
-GET /puppet/v3/file_metadatas/modules/example?environment=env&recurse=true&ignore=sub*&links=follow
+GET /oregano/v3/file_metadatas/modules/example?environment=env&recurse=true&ignore=sub*&links=follow
 
 HTTP 200 OK
 Content-Type: text/pson
@@ -311,7 +311,7 @@ Content-Type: text/pson
         "links": "follow",
         "mode": 493,
         "owner": 501,
-        "path": "/etc/puppetlabs/code/modules/example/files",
+        "path": "/etc/oreganolabs/code/modules/example/files",
         "relative_path": ".",
         "type": "directory"
     },
@@ -325,7 +325,7 @@ Content-Type: text/pson
         "links": "follow",
         "mode": 420,
         "owner": 501,
-        "path": "/etc/puppetlabs/code/modules/example/files",
+        "path": "/etc/oreganolabs/code/modules/example/files",
         "relative_path": "just_a_file.txt",
         "type": "file"
     },
@@ -339,7 +339,7 @@ Content-Type: text/pson
         "links": "follow",
         "mode": 420,
         "owner": 501,
-        "path": "/etc/puppetlabs/code/modules/example/files",
+        "path": "/etc/oreganolabs/code/modules/example/files",
         "relative_path": "link_to_file.txt",
         "type": "file"
     }
@@ -357,9 +357,9 @@ Sample Module
 
 The examples above use this (faux) module:
 
-    /etc/puppetlabs/code/modules/example/
+    /etc/oreganolabs/code/modules/example/
       files/
         just_a_file.txt
-        link_to_file.txt -> /etc/puppetlabs/code/modules/example/files/just_a_file.txt
+        link_to_file.txt -> /etc/oreganolabs/code/modules/example/files/just_a_file.txt
         subdirectory/
           another_file.txt

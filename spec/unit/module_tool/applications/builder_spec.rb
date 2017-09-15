@@ -1,17 +1,17 @@
 require 'spec_helper'
-require 'puppet/file_system'
-require 'puppet/module_tool/applications'
-require 'puppet_spec/modules'
+require 'oregano/file_system'
+require 'oregano/module_tool/applications'
+require 'oregano_spec/modules'
 
-describe Puppet::ModuleTool::Applications::Builder do
-  include PuppetSpec::Files
+describe Oregano::ModuleTool::Applications::Builder do
+  include OreganoSpec::Files
 
   let(:path)         { tmpdir("working_dir") }
   let(:module_name)  { 'mymodule-mytarball' }
   let(:version)      { '0.0.1' }
   let(:release_name) { "#{module_name}-#{version}" }
   let(:tarball)      { File.join(path, 'pkg', release_name) + ".tar.gz" }
-  let(:builder)      { Puppet::ModuleTool::Applications::Builder.new(path) }
+  let(:builder)      { Oregano::ModuleTool::Applications::Builder.new(path) }
 
   shared_examples "a packagable module" do
     def target_exists?(file)
@@ -20,7 +20,7 @@ describe Puppet::ModuleTool::Applications::Builder do
 
     def build
       tarrer = mock('tarrer')
-      Puppet::ModuleTool::Tar.expects(:instance).returns(tarrer)
+      Oregano::ModuleTool::Tar.expects(:instance).returns(tarrer)
       Dir.expects(:chdir).with(File.join(path, 'pkg')).yields
       tarrer.expects(:pack).with(release_name, tarball)
 
@@ -28,41 +28,41 @@ describe Puppet::ModuleTool::Applications::Builder do
     end
 
       def create_regular_files
-      Puppet::FileSystem.touch(File.join(path, '.dotfile'))
-      Puppet::FileSystem.touch(File.join(path, 'file.foo'))
-      Puppet::FileSystem.touch(File.join(path, 'REVISION'))
-      Puppet::FileSystem.touch(File.join(path, '~file'))
-      Puppet::FileSystem.touch(File.join(path, '#file'))
-      Puppet::FileSystem.mkpath(File.join(path, 'pkg'))
-      Puppet::FileSystem.mkpath(File.join(path, 'coverage'))
-      Puppet::FileSystem.mkpath(File.join(path, 'sub'))
-      Puppet::FileSystem.touch(File.join(path, 'sub/.dotfile'))
-      Puppet::FileSystem.touch(File.join(path, 'sub/file.foo'))
-      Puppet::FileSystem.touch(File.join(path, 'sub/REVISION'))
-      Puppet::FileSystem.touch(File.join(path, 'sub/~file'))
-      Puppet::FileSystem.touch(File.join(path, 'sub/#file'))
-      Puppet::FileSystem.mkpath(File.join(path, 'sub/pkg'))
-      Puppet::FileSystem.mkpath(File.join(path, 'sub/coverage'))
+      Oregano::FileSystem.touch(File.join(path, '.dotfile'))
+      Oregano::FileSystem.touch(File.join(path, 'file.foo'))
+      Oregano::FileSystem.touch(File.join(path, 'REVISION'))
+      Oregano::FileSystem.touch(File.join(path, '~file'))
+      Oregano::FileSystem.touch(File.join(path, '#file'))
+      Oregano::FileSystem.mkpath(File.join(path, 'pkg'))
+      Oregano::FileSystem.mkpath(File.join(path, 'coverage'))
+      Oregano::FileSystem.mkpath(File.join(path, 'sub'))
+      Oregano::FileSystem.touch(File.join(path, 'sub/.dotfile'))
+      Oregano::FileSystem.touch(File.join(path, 'sub/file.foo'))
+      Oregano::FileSystem.touch(File.join(path, 'sub/REVISION'))
+      Oregano::FileSystem.touch(File.join(path, 'sub/~file'))
+      Oregano::FileSystem.touch(File.join(path, 'sub/#file'))
+      Oregano::FileSystem.mkpath(File.join(path, 'sub/pkg'))
+      Oregano::FileSystem.mkpath(File.join(path, 'sub/coverage'))
     end
 
     def create_symlinks
-      Puppet::FileSystem.touch(File.join(path, 'symlinkedfile'))
-      Puppet::FileSystem.symlink(File.join(path, 'symlinkedfile'), File.join(path, 'symlinkfile'))
+      Oregano::FileSystem.touch(File.join(path, 'symlinkedfile'))
+      Oregano::FileSystem.symlink(File.join(path, 'symlinkedfile'), File.join(path, 'symlinkfile'))
     end
 
     def create_ignored_files
-      Puppet::FileSystem.touch(File.join(path, 'gitignored.foo'))
-      Puppet::FileSystem.mkpath(File.join(path, 'gitdirectory/sub'))
-      Puppet::FileSystem.touch(File.join(path, 'gitdirectory/gitartifact'))
-      Puppet::FileSystem.touch(File.join(path, 'gitdirectory/gitimportantfile'))
-      Puppet::FileSystem.touch(File.join(path, 'gitdirectory/sub/artifact'))
-      Puppet::FileSystem.touch(File.join(path, "git\u16A0\u16C7\u16BB"))
-      Puppet::FileSystem.touch(File.join(path, 'pmtignored.foo'))
-      Puppet::FileSystem.mkpath(File.join(path, 'pmtdirectory/sub'))
-      Puppet::FileSystem.touch(File.join(path, 'pmtdirectory/pmtimportantfile'))
-      Puppet::FileSystem.touch(File.join(path, 'pmtdirectory/pmtartifact'))
-      Puppet::FileSystem.touch(File.join(path, 'pmtdirectory/sub/artifact'))
-      Puppet::FileSystem.touch(File.join(path, "pmt\u16A0\u16C7\u16BB"))
+      Oregano::FileSystem.touch(File.join(path, 'gitignored.foo'))
+      Oregano::FileSystem.mkpath(File.join(path, 'gitdirectory/sub'))
+      Oregano::FileSystem.touch(File.join(path, 'gitdirectory/gitartifact'))
+      Oregano::FileSystem.touch(File.join(path, 'gitdirectory/gitimportantfile'))
+      Oregano::FileSystem.touch(File.join(path, 'gitdirectory/sub/artifact'))
+      Oregano::FileSystem.touch(File.join(path, "git\u16A0\u16C7\u16BB"))
+      Oregano::FileSystem.touch(File.join(path, 'pmtignored.foo'))
+      Oregano::FileSystem.mkpath(File.join(path, 'pmtdirectory/sub'))
+      Oregano::FileSystem.touch(File.join(path, 'pmtdirectory/pmtimportantfile'))
+      Oregano::FileSystem.touch(File.join(path, 'pmtdirectory/pmtartifact'))
+      Oregano::FileSystem.touch(File.join(path, 'pmtdirectory/sub/artifact'))
+      Oregano::FileSystem.touch(File.join(path, "pmt\u16A0\u16C7\u16BB"))
     end
 
     def create_pmtignore_file
@@ -331,7 +331,7 @@ symlinkfile
       it_behaves_like "pmtignored files are not present"
     end
 
-    context "with unignored symlinks", :if => Puppet.features.manages_symlinks? do
+    context "with unignored symlinks", :if => Oregano.features.manages_symlinks? do
       before :each do
         create_regular_files
         create_symlinks
@@ -339,11 +339,11 @@ symlinkfile
       end
 
       it "give an error about symlinks" do
-        expect { builder.run }.to raise_error(Puppet::ModuleTool::Errors::ModuleToolError, /Found symlinks/)
+        expect { builder.run }.to raise_error(Oregano::ModuleTool::Errors::ModuleToolError, /Found symlinks/)
       end
     end
 
-    context "with .gitignore file and ignored symlinks", :if => Puppet.features.manages_symlinks? do
+    context "with .gitignore file and ignored symlinks", :if => Oregano.features.manages_symlinks? do
       before :each do
         create_regular_files
         create_symlinks
@@ -382,30 +382,30 @@ symlinkfile
 
     it_behaves_like "a packagable module"
 
-    it "does not package with a symlink", :if => Puppet.features.manages_symlinks? do
+    it "does not package with a symlink", :if => Oregano.features.manages_symlinks? do
       FileUtils.touch(File.join(path, 'tempfile'))
-      Puppet::FileSystem.symlink(File.join(path, 'tempfile'), File.join(path, 'tempfile2'))
+      Oregano::FileSystem.symlink(File.join(path, 'tempfile'), File.join(path, 'tempfile2'))
 
       expect {
         builder.run
-      }.to raise_error Puppet::ModuleTool::Errors::ModuleToolError, /symlinks/i
+      }.to raise_error Oregano::ModuleTool::Errors::ModuleToolError, /symlinks/i
     end
 
-    it "does not package with a symlink in a subdir", :if => Puppet.features.manages_symlinks? do
+    it "does not package with a symlink in a subdir", :if => Oregano.features.manages_symlinks? do
       FileUtils.mkdir(File.join(path, 'manifests'))
       FileUtils.touch(File.join(path, 'manifests/tempfile.pp'))
-      Puppet::FileSystem.symlink(File.join(path, 'manifests/tempfile.pp'), File.join(path, 'manifests/tempfile2.pp'))
+      Oregano::FileSystem.symlink(File.join(path, 'manifests/tempfile.pp'), File.join(path, 'manifests/tempfile2.pp'))
 
       expect {
         builder.run
-      }.to raise_error Puppet::ModuleTool::Errors::ModuleToolError, /symlinks/i
+      }.to raise_error Oregano::ModuleTool::Errors::ModuleToolError, /symlinks/i
     end
 
     it "writes UTF-8 metdata correctly" do
       # file is written initially in before block, then by builders write_json method
       builder.run
       metadata_path = File.join(path, 'metadata.json')
-      summary = JSON.parse(Puppet::FileSystem.read(metadata_path, :encoding => Encoding::UTF_8))["summary"]
+      summary = JSON.parse(Oregano::FileSystem.read(metadata_path, :encoding => Encoding::UTF_8))["summary"]
       expect(summary).to eq(MIXED_UTF8)
     end
   end
@@ -419,7 +419,7 @@ symlinkfile
           "source" => "https://github.com/testing/#{module_name}",
           "author" => "testing",
           "license" => "Apache License Version 2.0",
-          "summary" => "Puppet testing module",
+          "summary" => "Oregano testing module",
           "description" => "This module can be used for basic testing",
           "project_page" => "https://github.com/testing/#{module_name}",
           "checksums" => {"README.md" => "deadbeef"}

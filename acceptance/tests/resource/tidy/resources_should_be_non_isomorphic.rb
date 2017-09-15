@@ -41,7 +41,7 @@ MANIFEST
     end
 
     teardown do
-      on(agent, puppet("apply -e \"file{'#{dir}': ensure => absent, force => true}\""))
+      on(agent, oregano("apply -e \"file{'#{dir}': ensure => absent, force => true}\""))
     end
   end
 end

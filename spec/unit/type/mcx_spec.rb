@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/type/mcx'
+require 'oregano/type/mcx'
 
-mcx_type = Puppet::Type.type(:mcx)
+mcx_type = Oregano::Type.type(:mcx)
 
 describe mcx_type, "when validating attributes" do
 
@@ -12,7 +12,7 @@ describe mcx_type, "when validating attributes" do
 
   parameters.each do |p|
     it "should have a #{p} parameter" do
-      expect(mcx_type.attrclass(p).ancestors).to be_include(Puppet::Parameter)
+      expect(mcx_type.attrclass(p).ancestors).to be_include(Oregano::Parameter)
     end
     it "should have documentation for its #{p} parameter" do
       expect(mcx_type.attrclass(p).doc).to be_instance_of(String)
@@ -21,7 +21,7 @@ describe mcx_type, "when validating attributes" do
 
   properties.each do |p|
     it "should have a #{p} property" do
-      expect(mcx_type.attrclass(p).ancestors).to be_include(Puppet::Property)
+      expect(mcx_type.attrclass(p).ancestors).to be_include(Oregano::Property)
     end
     it "should have documentation for its #{p} property" do
       expect(mcx_type.attrclass(p).doc).to be_instance_of(String)

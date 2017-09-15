@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-require 'puppet/settings'
+require 'oregano/settings'
 
-describe Puppet::Settings::EnumSetting do
+describe Oregano::Settings::EnumSetting do
   it "allows a configured value" do
     setting = enum_setting_allowing("allowed")
 
@@ -14,12 +14,12 @@ describe Puppet::Settings::EnumSetting do
 
     expect do
       setting.munge("disallowed")
-    end.to raise_error(Puppet::Settings::ValidationError,
+    end.to raise_error(Oregano::Settings::ValidationError,
                        "Invalid value 'disallowed' for parameter testing. Allowed values are 'allowed', 'also allowed'")
   end
 
   def enum_setting_allowing(*values)
-    Puppet::Settings::EnumSetting.new(:settings => mock('settings'),
+    Oregano::Settings::EnumSetting.new(:settings => mock('settings'),
                                       :name => "testing",
                                       :desc => "description of testing",
                                       :values => values)

@@ -3,19 +3,19 @@ require 'spec_helper'
 
 describe "the inline_template function" do
   before :all do
-    Puppet::Parser::Functions.autoloader.loadall
+    Oregano::Parser::Functions.autoloader.loadall
   end
 
-  let(:node) { Puppet::Node.new('localhost') }
-  let(:compiler) { Puppet::Parser::Compiler.new(node) }
-  let(:scope) { Puppet::Parser::Scope.new(compiler) }
+  let(:node) { Oregano::Node.new('localhost') }
+  let(:compiler) { Oregano::Parser::Compiler.new(node) }
+  let(:scope) { Oregano::Parser::Scope.new(compiler) }
 
   it "should concatenate template wrapper outputs for multiple templates" do
     expect(inline_template("template1", "template2")).to eq("template1template2")
   end
 
   it "should raise an error if the template raises an error" do
-    expect { inline_template("<% raise 'error' %>") }.to raise_error(Puppet::ParseError)
+    expect { inline_template("<% raise 'error' %>") }.to raise_error(Oregano::ParseError)
   end
 
   it "is not interfered with by a variable called 'string' (#14093)" do

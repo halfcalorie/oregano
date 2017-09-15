@@ -2,9 +2,9 @@
 #
 
 require 'spec_helper'
-require 'puppet/ssl/configuration'
+require 'oregano/ssl/configuration'
 
-describe Puppet::SSL::Configuration do
+describe Oregano::SSL::Configuration do
   let(:localcacert) { "/path/to/certs/ca.pem" }
 
   let(:ssl_server_ca_auth) { "/path/to/certs/ssl_server_ca_auth.pem" }
@@ -39,7 +39,7 @@ describe Puppet::SSL::Configuration do
       options = {
         :ca_auth_file  => ssl_server_ca_auth,
       }
-      Puppet::SSL::Configuration.new(localcacert, options)
+      Oregano::SSL::Configuration.new(localcacert, options)
     end
 
     it "#ca_chain_file == ssl_server_ca_chain" do
@@ -51,7 +51,7 @@ describe Puppet::SSL::Configuration do
     end
 
     it "#ca_auth_certificates returns an Array<OpenSSL::X509::Certificate>" do
-      Puppet::FileSystem.expects(:read).with(subject.ca_auth_file, :encoding => Encoding::UTF_8).returns(master_ca_pem + root_ca_pem)
+      Oregano::FileSystem.expects(:read).with(subject.ca_auth_file, :encoding => Encoding::UTF_8).returns(master_ca_pem + root_ca_pem)
       certs = subject.ca_auth_certificates
       certs.each { |cert| expect(cert).to be_a_kind_of OpenSSL::X509::Certificate }
     end

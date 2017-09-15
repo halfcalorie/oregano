@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/face'
+require 'oregano/face'
 
-describe Puppet::Face[:help, '0.0.1'] do
+describe Oregano::Face[:help, '0.0.1'] do
   it "has a help action" do
     expect(subject).to be_action :help
   end
@@ -43,13 +43,13 @@ describe Puppet::Face[:help, '0.0.1'] do
   end
 
   it "finds a face by version" do
-    face = Puppet::Face[:huzzah, :current]
+    face = Oregano::Face[:huzzah, :current]
     expect(subject.help(:huzzah, :version => face.version)).
       to eq(subject.help(:huzzah, :version => :current))
   end
 
   it "raises an ArgumentError if the face raises a StandardError" do
-    face = Puppet::Face[:module, :current]
+    face = Oregano::Face[:module, :current]
     face.stubs(:short_description).raises(StandardError, "whoops")
 
     expect {
@@ -58,7 +58,7 @@ describe Puppet::Face[:help, '0.0.1'] do
   end
 
   it "raises an ArgumentError if the face raises a LoadError" do
-    face = Puppet::Face[:module, :current]
+    face = Oregano::Face[:module, :current]
     face.stubs(:short_description).raises(LoadError, "cannot load such file -- yard")
 
     expect {
@@ -67,7 +67,7 @@ describe Puppet::Face[:help, '0.0.1'] do
   end
 
   context "when listing subcommands" do
-    subject { Puppet::Face[:help, :current].help }
+    subject { Oregano::Face[:help, :current].help }
 
     RSpec::Matchers.define :have_a_summary do
       match do |instance|
@@ -79,22 +79,22 @@ describe Puppet::Face[:help, '0.0.1'] do
     # something odd in your set of face, and we skip testing things that
     # matter. --daniel 2011-04-10
     it "has at least one face with a summary" do
-      expect(Puppet::Face.faces).to be_any do |name|
-        Puppet::Face[name, :current].summary
+      expect(Oregano::Face.faces).to be_any do |name|
+        Oregano::Face[name, :current].summary
       end
     end
 
     it "lists all faces which are runnable from the command line" do
-      help_face = Puppet::Face[:help, :current]
+      help_face = Oregano::Face[:help, :current]
       # The main purpose of the help face is to provide documentation for
       #  command line users.  It shouldn't show documentation for faces
       #  that can't be run from the command line, so, rather than iterating
       #  over all available faces, we need to iterate over the subcommands
       #  that are available from the command line.
-      Puppet::Application.available_application_names.each do |name|
+      Oregano::Application.available_application_names.each do |name|
         next unless help_face.is_face_app?(name)
         next if help_face.exclude_from_docs?(name)
-        face = Puppet::Face[name, :current]
+        face = Oregano::Face[name, :current]
         summary = face.summary
 
         expect(subject).to match(%r{ #{name} })
@@ -103,39 +103,39 @@ describe Puppet::Face[:help, '0.0.1'] do
     end
 
     it "returns an 'unavailable' summary if the 'agent' application fails to generate help" do
-      Puppet::Application['agent'].class.any_instance.stubs(:summary).raises(ArgumentError, "whoops")
+      Oregano::Application['agent'].class.any_instance.stubs(:summary).raises(ArgumentError, "whoops")
 
       expect(subject).to match(/agent\s+! Subcommand unavailable due to error\. Check error logs\./)
     end
 
     it "returns an 'unavailable' summary if the legacy application raises a LoadError" do
-      Puppet::Application['agent'].class.any_instance.stubs(:summary).raises(LoadError, "cannot load such file -- yard")
+      Oregano::Application['agent'].class.any_instance.stubs(:summary).raises(LoadError, "cannot load such file -- yard")
 
       expect(subject).to match(/agent\s+! Subcommand unavailable due to error\. Check error logs\./)
     end
 
     context "face summaries" do
       it "can generate face summaries" do
-        faces = Puppet::Face.faces
+        faces = Oregano::Face.faces
         expect(faces.length).to be > 0
         faces.each do |name|
-          expect(Puppet::Face[name, :current]).to have_a_summary
+          expect(Oregano::Face[name, :current]).to have_a_summary
         end
       end
 
       it "returns an 'unavailable' summary if the face application raises a LoadError" do
-        face = Puppet::Face[:module, :current]
+        face = Oregano::Face[:module, :current]
         face.stubs(:summary).raises(LoadError, "cannot load such file -- yard")
 
-        expect(Puppet::Face[:help, :current].help).to match(/module\s+! Subcommand unavailable due to error\. Check error logs\./)
+        expect(Oregano::Face[:help, :current].help).to match(/module\s+! Subcommand unavailable due to error\. Check error logs\./)
       end
     end
 
     it "lists all legacy applications" do
-      Puppet::Face[:help, :current].legacy_applications.each do |appname|
+      Oregano::Face[:help, :current].legacy_applications.each do |appname|
         expect(subject).to match(%r{ #{appname} })
 
-        summary = Puppet::Face[:help, :current].horribly_extract_summary_from(appname)
+        summary = Oregano::Face[:help, :current].horribly_extract_summary_from(appname)
         summary and expect(subject).to match(%r{ #{summary}\b})
       end
     end
@@ -143,23 +143,23 @@ describe Puppet::Face[:help, '0.0.1'] do
 
   context "deprecated faces" do
     it "prints a deprecation warning for deprecated faces" do
-      Puppet::Face[:module, :current].stubs(:deprecated?).returns(true)
-      expect(Puppet::Face[:help, :current].help(:module)).to match(/Warning: 'puppet module' is deprecated/)
+      Oregano::Face[:module, :current].stubs(:deprecated?).returns(true)
+      expect(Oregano::Face[:help, :current].help(:module)).to match(/Warning: 'oregano module' is deprecated/)
     end
   end
 
   context "#all_application_summaries" do
     it "appends a deprecation warning for deprecated faces" do
       # Stub the module face as deprecated
-      Puppet::Face[:module, :current].expects(:deprecated?).returns(true)
-      result = Puppet::Face[:help, :current].all_application_summaries.each do |appname,summary|
+      Oregano::Face[:module, :current].expects(:deprecated?).returns(true)
+      result = Oregano::Face[:help, :current].all_application_summaries.each do |appname,summary|
         expect(summary).to match(/Deprecated/) if appname == 'module'
       end
     end
   end
 
   context "#legacy_applications" do
-    subject { Puppet::Face[:help, :current].legacy_applications }
+    subject { Oregano::Face[:help, :current].legacy_applications }
 
     # If we don't, these tests are ... less than useful, because they assume
     # it.  When this breaks you should consider ditching the entire feature
@@ -176,7 +176,7 @@ describe Puppet::Face[:help, '0.0.1'] do
   end
 
   context "help for legacy applications" do
-    subject { Puppet::Face[:help, :current] }
+    subject { Oregano::Face[:help, :current] }
     let :appname do subject.legacy_applications.first end
 
     # This test is purposely generic, so that as we eliminate legacy commands
@@ -185,7 +185,7 @@ describe Puppet::Face[:help, '0.0.1'] do
     # test and all. --daniel 2011-04-11
     it "returns the legacy help when given the subcommand" do
       help = subject.help(appname)
-      expect(help).to match(/puppet-#{appname}/)
+      expect(help).to match(/oregano-#{appname}/)
       %w{SYNOPSIS USAGE DESCRIPTION OPTIONS COPYRIGHT}.each do |heading|
         expect(help).to match(/^#{heading}$/)
       end
@@ -197,7 +197,7 @@ describe Puppet::Face[:help, '0.0.1'] do
     end
 
     it "raises an ArgumentError if a legacy application raises a StandardError" do
-      Puppet::Application[appname].class.any_instance.stubs(:help).raises(StandardError, "whoops")
+      Oregano::Application[appname].class.any_instance.stubs(:help).raises(StandardError, "whoops")
 
       expect {
         subject.help(appname)
@@ -205,7 +205,7 @@ describe Puppet::Face[:help, '0.0.1'] do
     end
 
     it "raises an ArgumentError if a legacy application raises a LoadError" do
-      Puppet::Application[appname].class.any_instance.stubs(:help).raises(LoadError, "cannot load such file -- yard")
+      Oregano::Application[appname].class.any_instance.stubs(:help).raises(LoadError, "cannot load such file -- yard")
 
       expect {
         subject.help(appname)

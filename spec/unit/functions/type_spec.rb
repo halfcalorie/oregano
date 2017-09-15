@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 describe 'the type function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
 
   it 'produces the type of a given value with default detailed quality' do

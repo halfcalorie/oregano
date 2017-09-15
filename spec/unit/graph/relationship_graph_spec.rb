@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/graph'
+require 'oregano/graph'
 
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/include_in_order'
 require 'matchers/relationship_graph_matchers'
 
-describe Puppet::Graph::RelationshipGraph do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Graph::RelationshipGraph do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
   include RelationshipGraphMatchers
 
-  let(:graph) { Puppet::Graph::RelationshipGraph.new(Puppet::Graph::SequentialPrioritizer.new) }
+  let(:graph) { Oregano::Graph::RelationshipGraph.new(Oregano::Graph::SequentialPrioritizer.new) }
 
   it "allows adding a new vertex with a specific priority" do
     vertex = stub_vertex('something')
@@ -308,7 +308,7 @@ describe Puppet::Graph::RelationshipGraph do
         b { "testing": }
       MANIFEST
 
-      expect(relationship_graph.vertices.find_all { |v| v.is_a?(Puppet::Type.type(:component)) }).to be_empty
+      expect(relationship_graph.vertices.find_all { |v| v.is_a?(Oregano::Type.type(:component)) }).to be_empty
     end
 
     it "should remove all Stage resources from the dependency graph" do
@@ -316,7 +316,7 @@ describe Puppet::Graph::RelationshipGraph do
         notify { "class a": }
       MANIFEST
 
-      expect(relationship_graph.vertices.find_all { |v| v.is_a?(Puppet::Type.type(:stage)) }).to be_empty
+      expect(relationship_graph.vertices.find_all { |v| v.is_a?(Oregano::Type.type(:stage)) }).to be_empty
     end
 
     it "should retain labels on non-containment edges" do

@@ -18,7 +18,7 @@ node default {
 EOM
 
     custom_type_content =<<EOM
-Puppet::Type.newtype(:mycustomtype) do
+Oregano::Type.newtype(:mycustomtype) do
   @doc = "Create a new mycustomtype thing."
 
   newparam(:name, :namevar => true) do
@@ -47,8 +47,8 @@ file {[
   '#{codedir}/environments/#{environment}/modules/mymodule',
   '#{codedir}/environments/#{environment}/modules/mymodule/manifests',
   '#{codedir}/environments/#{environment}/modules/mymodule/lib',
-  '#{codedir}/environments/#{environment}/modules/mymodule/lib/puppet',
-  '#{codedir}/environments/#{environment}/modules/mymodule/lib/puppet/type'
+  '#{codedir}/environments/#{environment}/modules/mymodule/lib/oregano',
+  '#{codedir}/environments/#{environment}/modules/mymodule/lib/oregano/type'
   ]:
 }
 
@@ -57,7 +57,7 @@ file { '#{codedir}/environments/#{environment}/manifests/site.pp':
   content => '#{site_manifest_content}',
 }
 
-file { '#{codedir}/environments/#{environment}/modules/mymodule/lib/puppet/type/mycustomtype.rb':
+file { '#{codedir}/environments/#{environment}/modules/mymodule/lib/oregano/type/mycustomtype.rb':
   ensure => file,
   content => '#{custom_type_content}',
 }
@@ -69,13 +69,13 @@ MANIFEST
       }
     }
 
-    backup_file = backup_the_file(master, master.puppet('master')['confdir'], testdir, 'puppet.conf')
-    lay_down_new_puppet_conf master, conf_opts, testdir
+    backup_file = backup_the_file(master, master.oregano('master')['confdir'], testdir, 'oregano.conf')
+    lay_down_new_oregano_conf master, conf_opts, testdir
 
     teardown do
-      restore_puppet_conf_from_backup( master, backup_file )
+      restore_oregano_conf_from_backup( master, backup_file )
       # See PUP-6995
-      on(master, "rm -f #{master.puppet('master')['yamldir']}/node/*.yaml")
+      on(master, "rm -f #{master.oregano('master')['yamldir']}/node/*.yaml")
     end
     #}}}
 
@@ -83,18 +83,18 @@ MANIFEST
     catalog_results[master.hostname] = { 'ruby_cat' => '', 'pcore_cat' => '' }
 
     step 'compile catalog using ruby resource' do
-      on master, puppet('master', '--compile', master.hostname) do |result|
+      on master, oregano('master', '--compile', master.hostname) do |result|
         assert_match(/running ruby code/, result.stderr)
         catalog_results[master.hostname]['ruby_cat'] = JSON.parse(result.stdout.sub(/^[^{]+/,''))
       end
     end
 
     step 'generate pcore type from ruby type' do
-      on master, puppet('generate', 'types', '--environment', environment)
+      on master, oregano('generate', 'types', '--environment', environment)
     end
 
     step 'compile catalog and make sure that ruby code is NOT executed' do
-      on master, puppet('master', '--compile', master.hostname) do |result|
+      on master, oregano('master', '--compile', master.hostname) do |result|
         assert_no_match(/running ruby code/, result.stderr)
         catalog_results[master.hostname]['pcore_cat'] = JSON.parse(result.stdout.sub(/^[^{]+/,''))
       end

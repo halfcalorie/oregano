@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-component = Puppet::Type.type(:component)
+component = Oregano::Type.type(:component)
 
 describe component do
   it "should have a :name attribute" do

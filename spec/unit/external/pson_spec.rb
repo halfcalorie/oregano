@@ -2,7 +2,7 @@
 # Encoding: UTF-8
 require 'spec_helper'
 
-require 'puppet/external/pson/common'
+require 'oregano/external/pson/common'
 
 describe PSON do
   {

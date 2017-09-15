@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/settings'
-require 'puppet/settings/duration_setting'
+require 'oregano/settings'
+require 'oregano/settings/duration_setting'
 
-describe Puppet::Settings::DurationSetting do
+describe Oregano::Settings::DurationSetting do
   subject { described_class.new(:settings => mock('settings'), :desc => "test") }
 
   describe "when munging the setting" do
@@ -22,7 +22,7 @@ describe Puppet::Settings::DurationSetting do
 
     it "should fail if given anything but a well-formed string, integer, or nil" do
       [ '', 'foo', '2 d', '2d ', true, Time.now, 8.3, [] ].each do |value|
-        expect { subject.munge(value) }.to raise_error(Puppet::Settings::ValidationError)
+        expect { subject.munge(value) }.to raise_error(Oregano::Settings::ValidationError)
       end
     end
 

@@ -5,7 +5,7 @@ If you are running on a Mac and have growlnotify_ installed, install the
 ZenTest_ gem, then copy the ``config`` file to ``~/.autotest`` (or just
 run ``rake`` in this directory).
 
-Once you have ``autotest`` installed, change to the root of your Puppet
+Once you have ``autotest`` installed, change to the root of your Oregano
 git repository and run ``autotest`` with no arguments.  To refresh the list
 of files to scan, hit ``^c`` (that is, control-c).
 

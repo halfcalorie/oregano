@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/status/local'
+require 'oregano/indirector/status/local'
 
-describe Puppet::Indirector::Status::Local do
-  it "should set the puppet version" do
-    Puppet::Status.indirection.terminus_class = :local
-    expect(Puppet::Status.indirection.find('*').version).to eq(Puppet.version)
+describe Oregano::Indirector::Status::Local do
+  it "should set the oregano version" do
+    Oregano::Status.indirection.terminus_class = :local
+    expect(Oregano::Status.indirection.find('*').version).to eq(Oregano.version)
   end
 end

@@ -73,8 +73,8 @@ NEW_YAML
 
 File {
   ensure => file,
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
   mode   => "0644",
 }
 
@@ -298,7 +298,7 @@ end
 
 step 'Setup'
 
-with_puppet_running_on master, @master_opts, @coderoot do
+with_oregano_running_on master, @master_opts, @coderoot do
   res = find_tmp_dirs
   tmp_dirs = res['tmp_dirs']
   host_to_result_dir = res['host_to_result_dir']
@@ -309,7 +309,7 @@ with_puppet_running_on master, @master_opts, @coderoot do
     step "Applying catalog to agent: #{agent}. result files in #{resultdir}"
     on(
       agent,
-      puppet('agent', "-t --server #{master}"),
+      oregano('agent', "-t --server #{master}"),
       :acceptable_exit_codes => [2]
     )
 

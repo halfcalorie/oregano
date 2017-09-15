@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:mcx).provider(:mcxcontent)
+provider_class = Oregano::Type.type(:mcx).provider(:mcxcontent)
 
 # describe creates a new ExampleGroup object.
 describe provider_class do

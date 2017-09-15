@@ -1,9 +1,9 @@
-test_name "puppet module list (with modulepath)"
+test_name "oregano module list (with modulepath)"
 
 tag 'audit:low',
     'audit:unit'
 
-codedir = master.puppet('master')['codedir']
+codedir = master.oregano('master')['codedir']
 
 step "Setup"
 apply_manifest_on master, <<-PP
@@ -60,7 +60,7 @@ on master, "[ -d #{codedir}/modules2/appleseed ]"
 on master, "[ -d #{codedir}/modules2/thelock ]"
 
 step "List the installed modules with relative modulepath"
-on master, "cd #{codedir}/modules2 && puppet module list --modulepath=." do
+on master, "cd #{codedir}/modules2 && oregano module list --modulepath=." do
   assert_equal <<-STDOUT, stdout
 #{codedir}/modules2
 ├── jimmy-appleseed (\e[0;36mv1.1.0\e[0m)
@@ -70,7 +70,7 @@ STDOUT
 end
 
 step "List the installed modules with absolute modulepath"
-on master, puppet("module list --modulepath=#{codedir}/modules2") do
+on master, oregano("module list --modulepath=#{codedir}/modules2") do
   assert_equal <<-STDOUT, stdout
 #{codedir}/modules2
 ├── jimmy-appleseed (\e[0;36mv1.1.0\e[0m)

@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby -S rspec
 require 'spec_helper'
-require 'puppet/settings/value_translator'
+require 'oregano/settings/value_translator'
 
-describe Puppet::Settings::ValueTranslator do
-  let(:translator) { Puppet::Settings::ValueTranslator.new }
+describe Oregano::Settings::ValueTranslator do
+  let(:translator) { Oregano::Settings::ValueTranslator.new }
 
   context "booleans" do
     it "translates strings representing booleans to booleans" do

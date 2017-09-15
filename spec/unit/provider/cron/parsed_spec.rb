@@ -2,14 +2,14 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:cron).provider(:crontab) do
+describe Oregano::Type.type(:cron).provider(:crontab) do
 
   let :provider do
     described_class.new(:command => '/bin/true')
   end
 
   let :resource do
-    Puppet::Type.type(:cron).new(
+    Oregano::Type.type(:cron).new(
       :minute      => %w{0 15 30 45},
       :hour        => %w{8-18 20-22},
       :monthday    => %w{31},
@@ -23,7 +23,7 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
   end
 
   let :resource_special do
-    Puppet::Type.type(:cron).new(
+    Oregano::Type.type(:cron).new(
       :special => 'reboot',
       :name    => 'special',
       :command => '/bin/true',
@@ -32,7 +32,7 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
   end
 
   let :resource_sparse do
-    Puppet::Type.type(:cron).new(
+    Oregano::Type.type(:cron).new(
       :minute => %w{42},
       :target => 'root',
       :name   => 'sparse'
@@ -67,17 +67,17 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
   describe "when determining the correct filetype" do
     it "should use the suntab filetype on Solaris" do
       Facter.stubs(:value).with(:osfamily).returns 'Solaris'
-      expect(described_class.filetype).to eq(Puppet::Util::FileType::FileTypeSuntab)
+      expect(described_class.filetype).to eq(Oregano::Util::FileType::FileTypeSuntab)
     end
 
     it "should use the aixtab filetype on AIX" do
       Facter.stubs(:value).with(:osfamily).returns 'AIX'
-      expect(described_class.filetype).to eq(Puppet::Util::FileType::FileTypeAixtab)
+      expect(described_class.filetype).to eq(Oregano::Util::FileType::FileTypeAixtab)
     end
 
     it "should use the crontab filetype on other platforms" do
       Facter.stubs(:value).with(:osfamily).returns 'Not a real operating system family'
-      expect(described_class.filetype).to eq(Puppet::Util::FileType::FileTypeCrontab)
+      expect(described_class.filetype).to eq(Oregano::Util::FileType::FileTypeCrontab)
     end
   end
 
@@ -119,10 +119,10 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
     end
 
     it "should get the resource name of a PUPPET NAME comment" do
-      expect(described_class.parse_line('# Puppet Name: My Fancy Cronjob')).to eq({
+      expect(described_class.parse_line('# Oregano Name: My Fancy Cronjob')).to eq({
         :record_type => :comment,
         :name        => 'My Fancy Cronjob',
-        :line        => '# Puppet Name: My Fancy Cronjob',
+        :line        => '# Oregano Name: My Fancy Cronjob',
       })
     end
 
@@ -165,7 +165,7 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
       })
       # A percent sign will cause the rest of the string to be passed as
       # standard input and will also act as a newline character. Not sure
-      # if puppet should convert % to a \n as the command property so the
+      # if oregano should convert % to a \n as the command property so the
       # test covers the current behaviour: Do not do any conversions
       expect(described_class.parse_line('0 22 * * 1-5   mail -s "It\'s 10pm" joe%Joe,%%Where are your kids?%')).to eq({
         :record_type => :crontab,
@@ -232,7 +232,7 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
         described_class.stubs(:target_object).returns File.new(my_fixture('simple'))
         parameters = described_class.instances.map do |p|
           h = {:name => p.get(:name)}
-          Puppet::Type.type(:cron).validproperties.each do |property|
+          Oregano::Type.type(:cron).validproperties.each do |property|
             h[property] = p.get(property)
           end
           h
@@ -264,11 +264,11 @@ describe Puppet::Type.type(:cron).provider(:crontab) do
         expect(parameters[1][:target]).to eq('foobar')
       end
 
-      it "should be able to parse puppet managed cronjobs" do
+      it "should be able to parse oregano managed cronjobs" do
         described_class.stubs(:target_object).returns File.new(my_fixture('managed'))
         expect(described_class.instances.map do |p|
           h = {:name => p.get(:name)}
-          Puppet::Type.type(:cron).validproperties.each do |property|
+          Oregano::Type.type(:cron).validproperties.each do |property|
             h[property] = p.get(property)
           end
           h

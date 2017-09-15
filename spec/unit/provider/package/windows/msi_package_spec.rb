@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/provider/package/windows/msi_package'
+require 'oregano/provider/package/windows/msi_package'
 
-describe Puppet::Provider::Package::Windows::MsiPackage do
+describe Oregano::Provider::Package::Windows::MsiPackage do
   subject { described_class }
 
   let (:name)        { 'mysql-5.1.58-win-x64' }
@@ -18,7 +18,7 @@ describe Puppet::Provider::Package::Windows::MsiPackage do
     subject.expects(:installer).returns(inst)
   end
 
-  context '::installer', :if => Puppet.features.microsoft_windows? do
+  context '::installer', :if => Oregano.features.microsoft_windows? do
     it 'should return an instance of the COM interface' do
       expect(subject.installer).not_to be_nil
     end

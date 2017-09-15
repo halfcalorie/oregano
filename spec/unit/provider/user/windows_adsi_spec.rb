@@ -2,9 +2,9 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:user).provider(:windows_adsi), :if => Oregano.features.microsoft_windows? do
   let(:resource) do
-    Puppet::Type.type(:user).new(
+    Oregano::Type.type(:user).new(
       :title => 'testuser',
       :comment => 'Test J. User',
       :provider => :windows_adsi
@@ -16,10 +16,10 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
   let(:connection) { stub 'connection' }
 
   before :each do
-    Puppet::Util::Windows::ADSI.stubs(:computer_name).returns('testcomputername')
-    Puppet::Util::Windows::ADSI.stubs(:connect).returns connection
+    Oregano::Util::Windows::ADSI.stubs(:computer_name).returns('testcomputername')
+    Oregano::Util::Windows::ADSI.stubs(:connect).returns connection
     # this would normally query the system, but not needed for these tests
-    Puppet::Util::Windows::ADSI::User.stubs(:localized_domains).returns([])
+    Oregano::Util::Windows::ADSI::User.stubs(:localized_domains).returns([])
   end
 
   describe ".instances" do
@@ -32,15 +32,15 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
     end
   end
 
-  it "should provide access to a Puppet::Util::Windows::ADSI::User object" do
-    expect(provider.user).to be_a(Puppet::Util::Windows::ADSI::User)
+  it "should provide access to a Oregano::Util::Windows::ADSI::User object" do
+    expect(provider.user).to be_a(Oregano::Util::Windows::ADSI::User)
   end
 
   describe "when retrieving the password property" do
     context "when the resource has a nil password" do
       it "should never issue a logon attempt" do
         resource.stubs(:[]).with(any_of(:name, :password)).returns(nil)
-        Puppet::Util::Windows::User.expects(:logon_user).never
+        Oregano::Util::Windows::User.expects(:logon_user).never
         provider.password
       end
     end
@@ -50,7 +50,7 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
     it 'should return the list of groups as an array of strings' do
       provider.user.stubs(:groups).returns nil
       groups = {'group1' => nil, 'group2' => nil, 'group3' => nil}
-      Puppet::Util::Windows::ADSI::Group.expects(:name_sid_hash).returns(groups)
+      Oregano::Util::Windows::ADSI::Group.expects(:name_sid_hash).returns(groups)
 
       expect(provider.groups).to eq(groups.keys)
     end
@@ -81,9 +81,9 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
     let(:group3) { stub(:account => 'group3', :domain => '.', :sid => 'group3sid') }
 
     before :each do
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with('group1').returns(group1)
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with('group2').returns(group2)
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with('group3').returns(group3)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with('group1').returns(group1)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with('group2').returns(group2)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with('group3').returns(group3)
     end
 
     it "should return true for same lists of members" do
@@ -192,7 +192,7 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
       resource[:home]       = 'C:\Users\testuser'
 
       user = stub 'user'
-      Puppet::Util::Windows::ADSI::User.expects(:create).with('testuser').returns user
+      Oregano::Util::Windows::ADSI::User.expects(:create).with('testuser').returns user
 
       user.stubs(:groups).returns(['group2', 'group3'])
 
@@ -211,8 +211,8 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
       resource[:managehome] = true
 
       user = stub_everything 'user'
-      Puppet::Util::Windows::ADSI::User.expects(:create).with('testuser').returns user
-      Puppet::Util::Windows::User.expects(:load_profile).with('testuser', '0xDeadBeef')
+      Oregano::Util::Windows::ADSI::User.expects(:create).with('testuser').returns user
+      Oregano::Util::Windows::User.expects(:load_profile).with('testuser', '0xDeadBeef')
 
       provider.create
     end
@@ -246,32 +246,32 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
     end
 
     it 'should not create a user if a group by the same name exists' do
-      Puppet::Util::Windows::ADSI::User.expects(:create).with('testuser').raises( Puppet::Error.new("Cannot create user if group 'testuser' exists.") )
-      expect{ provider.create }.to raise_error( Puppet::Error,
+      Oregano::Util::Windows::ADSI::User.expects(:create).with('testuser').raises( Oregano::Error.new("Cannot create user if group 'testuser' exists.") )
+      expect{ provider.create }.to raise_error( Oregano::Error,
         /Cannot create user if group 'testuser' exists./ )
     end
 
     it "should fail with an actionable message when trying to create an active directory user" do
       resource[:name] = 'DOMAIN\testdomainuser'
-      Puppet::Util::Windows::ADSI::Group.expects(:exists?).with(resource[:name]).returns(false)
+      Oregano::Util::Windows::ADSI::Group.expects(:exists?).with(resource[:name]).returns(false)
       connection.expects(:Create)
       connection.expects(:Get).with('UserFlags')
       connection.expects(:Put).with('UserFlags', true)
       connection.expects(:SetInfo).raises( WIN32OLERuntimeError.new("(in OLE method `SetInfo': )\n    OLE error code:8007089A in Active Directory\n      The specified username is invalid.\r\n\n    HRESULT error code:0x80020009\n      Exception occurred."))
 
       expect{ provider.create }.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         /not able to create\/delete domain users/
       )
     end
   end
 
   it 'should be able to test whether a user exists' do
-    Puppet::Util::Windows::SID.stubs(:name_to_sid_object).returns(nil)
-    Puppet::Util::Windows::ADSI.stubs(:connect).returns stub('connection', :Class => 'User')
+    Oregano::Util::Windows::SID.stubs(:name_to_sid_object).returns(nil)
+    Oregano::Util::Windows::ADSI.stubs(:connect).returns stub('connection', :Class => 'User')
     expect(provider).to be_exists
 
-    Puppet::Util::Windows::ADSI.stubs(:connect).returns nil
+    Oregano::Util::Windows::ADSI.stubs(:connect).returns nil
     expect(provider).not_to be_exists
   end
 
@@ -293,8 +293,8 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
     resource[:managehome] = true
 
     sid = 'S-A-B-C'
-    Puppet::Util::Windows::SID.expects(:name_to_sid).with('testuser').returns(sid)
-    Puppet::Util::Windows::ADSI::UserProfile.expects(:delete).with(sid)
+    Oregano::Util::Windows::SID.expects(:name_to_sid).with('testuser').returns(sid)
+    Oregano::Util::Windows::ADSI::UserProfile.expects(:delete).with(sid)
     connection.expects(:Delete).with('user', 'testuser')
 
     provider.delete
@@ -307,7 +307,7 @@ describe Puppet::Type.type(:user).provider(:windows_adsi), :if => Puppet.feature
   end
 
   it "should return the user's SID as uid" do
-    Puppet::Util::Windows::SID.expects(:name_to_sid).with('testuser').returns('S-1-5-21-1362942247-2130103807-3279964888-1111')
+    Oregano::Util::Windows::SID.expects(:name_to_sid).with('testuser').returns('S-1-5-21-1362942247-2130103807-3279964888-1111')
 
     expect(provider.uid).to eq('S-1-5-21-1362942247-2130103807-3279964888-1111')
   end

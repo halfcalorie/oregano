@@ -12,15 +12,15 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
-    config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', config])
+    require 'oregano'
+    config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', config])
   end
 
   def run(args=nil)
-    env = Puppet.lookup(:environments).get('benchmarking')
-    node = Puppet::Node.new("testing", :environment => env)
-    Puppet::Resource::Catalog.indirection.find("testing", :use_node => node)
+    env = Oregano.lookup(:environments).get('benchmarking')
+    node = Oregano::Node.new("testing", :environment => env)
+    Oregano::Resource::Catalog.indirection.find("testing", :use_node => node)
   end
 
   def generate
@@ -59,8 +59,8 @@ class Benchmarker
              :name => module_name)
     end
 
-    render(File.join(templates, 'puppet.conf.erb'),
-           File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+           File.join(@target, 'oregano.conf'),
            :location => @target)
   end
 

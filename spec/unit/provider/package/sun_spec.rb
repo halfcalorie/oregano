@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package).provider(:sun) do
-  let(:resource) { Puppet::Type.type(:package).new(:name => 'dummy', :ensure => :installed, :provider => :sun) }
+describe Oregano::Type.type(:package).provider(:sun) do
+  let(:resource) { Oregano::Type.type(:package).new(:name => 'dummy', :ensure => :installed, :provider => :sun) }
   let(:provider) { resource.provider }
 
   describe 'provider features' do
@@ -79,13 +79,13 @@ describe Puppet::Type.type(:package).provider(:sun) do
     end
 
     it "shouldn't find the package on query if it is not present" do
-      provider.expects(:pkginfo).with('-l', 'dummy').raises Puppet::ExecutionFailure, "Execution of 'pkginfo -l dummy' returned 3: ERROR: information for \"dummy\" not found."
+      provider.expects(:pkginfo).with('-l', 'dummy').raises Oregano::ExecutionFailure, "Execution of 'pkginfo -l dummy' returned 3: ERROR: information for \"dummy\" not found."
       expect(provider.query).to eq({:ensure => :absent})
     end
 
     it "unknown message should raise error." do
       provider.expects(:pkginfo).with('-l', 'dummy').returns 'RANDOM'
-      expect { provider.query }.to raise_error Puppet::Error
+      expect { provider.query }.to raise_error Oregano::Error
     end
   end
 

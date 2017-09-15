@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/errors'
+require 'oregano/util/errors'
 
 class ErrorTester
-  include Puppet::Util::Errors
+  include Oregano::Util::Errors
   attr_accessor :line, :file
 end
 
-describe Puppet::Util::Errors do
+describe Oregano::Util::Errors do
   before do
     @tester = ErrorTester.new
   end
@@ -22,11 +22,11 @@ describe Puppet::Util::Errors do
   end
 
   it "should raise any provided error when failing" do
-    expect { @tester.fail(Puppet::ParseError, "stuff") }.to raise_error(Puppet::ParseError)
+    expect { @tester.fail(Oregano::ParseError, "stuff") }.to raise_error(Oregano::ParseError)
   end
 
-  it "should default to Puppet::Error when failing" do
-    expect { @tester.fail("stuff") }.to raise_error(Puppet::Error)
+  it "should default to Oregano::Error when failing" do
+    expect { @tester.fail("stuff") }.to raise_error(Oregano::Error)
   end
 
   it "should have a method for converting error context into a string" do

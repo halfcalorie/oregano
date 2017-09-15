@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:sshkey).provider(:parsed)
+provider_class = Oregano::Type.type(:sshkey).provider(:parsed)
 
 describe "sshkey parsed provider" do
-  let :type do Puppet::Type.type(:sshkey) end
+  let :type do Oregano::Type.type(:sshkey) end
   let :provider do type.provider(:parsed) end
   subject { provider }
 

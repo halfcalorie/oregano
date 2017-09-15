@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/ldap/manager'
+require 'oregano/util/ldap/manager'
 
 # If the ldap classes aren't available, go ahead and
 # create some, so our tests will pass.
@@ -18,9 +18,9 @@ unless defined?(LDAP::Mod)
   end
 end
 
-describe Puppet::Util::Ldap::Manager do
+describe Oregano::Util::Ldap::Manager do
   before do
-    @manager = Puppet::Util::Ldap::Manager.new
+    @manager = Oregano::Util::Ldap::Manager.new
   end
 
   it "should return self when specifying objectclasses" do
@@ -48,7 +48,7 @@ describe Puppet::Util::Ldap::Manager do
   end
 
   it "should allow specification of the attribute map" do
-    expect(@manager.maps(:one => :two).puppet2ldap).to eq({:one => :two})
+    expect(@manager.maps(:one => :two).oregano2ldap).to eq({:one => :two})
   end
 
   it "should have a no-op 'and' method that just returns self" do
@@ -56,18 +56,18 @@ describe Puppet::Util::Ldap::Manager do
   end
 
   it "should allow specification of generated attributes" do
-    expect(@manager.generates(:thing)).to be_instance_of(Puppet::Util::Ldap::Generator)
+    expect(@manager.generates(:thing)).to be_instance_of(Oregano::Util::Ldap::Generator)
   end
 
   describe "when generating attributes" do
     before do
       @generator = stub 'generator', :source => "one", :name => "myparam"
 
-      Puppet::Util::Ldap::Generator.stubs(:new).with(:myparam).returns @generator
+      Oregano::Util::Ldap::Generator.stubs(:new).with(:myparam).returns @generator
     end
 
     it "should create a generator to do the parameter generation" do
-      Puppet::Util::Ldap::Generator.expects(:new).with(:myparam).returns @generator
+      Oregano::Util::Ldap::Generator.expects(:new).with(:myparam).returns @generator
       @manager.generates(:myparam)
     end
 
@@ -158,20 +158,20 @@ describe Puppet::Util::Ldap::Manager do
   end
 
   it "should calculate an instance's dn using the :ldapbase setting and the relative base" do
-    Puppet[:ldapbase] = "dc=testing"
+    Oregano[:ldapbase] = "dc=testing"
     @manager.at "ou=mybase"
     expect(@manager.dn("me")).to eq("cn=me,ou=mybase,dc=testing")
   end
 
   it "should use the specified rdn when calculating an instance's dn" do
-    Puppet[:ldapbase] = "dc=testing"
+    Oregano[:ldapbase] = "dc=testing"
     @manager.named_by :uid
     @manager.at "ou=mybase"
     expect(@manager.dn("me")).to match(/^uid=me/)
   end
 
   it "should calculate its base using the :ldapbase setting and the relative base" do
-    Puppet[:ldapbase] = "dc=testing"
+    Oregano[:ldapbase] = "dc=testing"
     @manager.at "ou=mybase"
     expect(@manager.base).to eq("ou=mybase,dc=testing")
   end
@@ -188,14 +188,14 @@ describe Puppet::Util::Ldap::Manager do
     end
   end
 
-  it "should have a method for converting a Puppet attribute name to an LDAP attribute name as a string" do
-    @manager.maps :puppet_attr => :ldap_attr
-    expect(@manager.ldap_name(:puppet_attr)).to eq("ldap_attr")
+  it "should have a method for converting a Oregano attribute name to an LDAP attribute name as a string" do
+    @manager.maps :oregano_attr => :ldap_attr
+    expect(@manager.ldap_name(:oregano_attr)).to eq("ldap_attr")
   end
 
-  it "should have a method for converting an LDAP attribute name to a Puppet attribute name" do
-    @manager.maps :puppet_attr => :ldap_attr
-    expect(@manager.puppet_name(:ldap_attr)).to eq(:puppet_attr)
+  it "should have a method for converting an LDAP attribute name to a Oregano attribute name" do
+    @manager.maps :oregano_attr => :ldap_attr
+    expect(@manager.oregano_name(:ldap_attr)).to eq(:oregano_attr)
   end
 
   it "should have a :create method for creating ldap entries" do
@@ -233,11 +233,11 @@ describe Puppet::Util::Ldap::Manager do
       expect(@result["three"]).to be_nil
     end
 
-    it "should rename convert to symbols all attributes to their puppet names" do
+    it "should rename convert to symbols all attributes to their oregano names" do
       expect(@result[:uno]).to eq(%w{two})
     end
 
-    it "should set the value of all unset puppet attributes as :absent" do
+    it "should set the value of all unset oregano attributes as :absent" do
       expect(@result[:dos]).to eq(:absent)
     end
   end
@@ -246,7 +246,7 @@ describe Puppet::Util::Ldap::Manager do
     before do
       @ldapconn = mock 'ldapconn'
       @conn = stub 'connection', :connection => @ldapconn, :start => nil, :close => nil
-      Puppet::Util::Ldap::Connection.stubs(:new).returns(@conn)
+      Oregano::Util::Ldap::Connection.stubs(:new).returns(@conn)
     end
 
     it "should fail unless a block is given" do
@@ -254,64 +254,64 @@ describe Puppet::Util::Ldap::Manager do
     end
 
     it "should open the connection with its server set to :ldapserver" do
-      Puppet[:ldapserver] = "myserver"
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[0] == "myserver" }.returns @conn
+      Oregano[:ldapserver] = "myserver"
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[0] == "myserver" }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should open the connection with its port set to the :ldapport" do
-      Puppet[:ldapport] = "28"
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[1] == "28" }.returns @conn
+      Oregano[:ldapport] = "28"
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[1] == "28" }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should open the connection with no user if :ldapuser is not set" do
-      Puppet[:ldapuser] = ""
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:user].nil? }.returns @conn
+      Oregano[:ldapuser] = ""
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:user].nil? }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should open the connection with its user set to the :ldapuser if it is set" do
-      Puppet[:ldapuser] = "mypass"
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:user] == "mypass" }.returns @conn
+      Oregano[:ldapuser] = "mypass"
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:user] == "mypass" }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should open the connection with no password if :ldappassword is not set" do
-      Puppet[:ldappassword] = ""
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:password].nil? }.returns @conn
+      Oregano[:ldappassword] = ""
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:password].nil? }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should open the connection with its password set to the :ldappassword if it is set" do
-      Puppet[:ldappassword] = "mypass"
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:password] == "mypass" }.returns @conn
+      Oregano[:ldappassword] = "mypass"
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:password] == "mypass" }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should set ssl to :tls if ldaptls is enabled" do
-      Puppet[:ldaptls] = true
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:ssl] == :tls }.returns @conn
+      Oregano[:ldaptls] = true
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:ssl] == :tls }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should set ssl to true if ldapssl is enabled" do
-      Puppet[:ldapssl] = true
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:ssl] == true }.returns @conn
+      Oregano[:ldapssl] = true
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:ssl] == true }.returns @conn
 
       @manager.connect { |c| }
     end
 
     it "should set ssl to false if neither ldaptls nor ldapssl is enabled" do
-      Puppet[:ldapssl] = false
-      Puppet::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:ssl] == false }.returns @conn
+      Oregano[:ldapssl] = false
+      Oregano::Util::Ldap::Connection.expects(:new).with { |*args| args[2][:ssl] == false }.returns @conn
 
       @manager.connect { |c| }
     end
@@ -319,7 +319,7 @@ describe Puppet::Util::Ldap::Manager do
     it "should open, yield, and then close the connection" do
       @conn.expects(:start)
       @conn.expects(:close)
-      Puppet::Util::Ldap::Connection.expects(:new).returns(@conn)
+      Oregano::Util::Ldap::Connection.expects(:new).returns(@conn)
       @ldapconn.expects(:test)
       @manager.connect { |c| c.test }
     end
@@ -370,7 +370,7 @@ describe Puppet::Util::Ldap::Manager do
       it "should add any generated values that are defined" do
         generator = stub 'generator', :source => :one, :name => "myparam"
 
-        Puppet::Util::Ldap::Generator.expects(:new).with(:myparam).returns generator
+        Oregano::Util::Ldap::Generator.expects(:new).with(:myparam).returns generator
 
         @manager.generates(:myparam)
 
@@ -385,7 +385,7 @@ describe Puppet::Util::Ldap::Manager do
       it "should convert any generated values to arrays of strings if necessary" do
         generator = stub 'generator', :source => :one, :name => "myparam"
 
-        Puppet::Util::Ldap::Generator.expects(:new).with(:myparam).returns generator
+        Oregano::Util::Ldap::Generator.expects(:new).with(:myparam).returns generator
 
         @manager.generates(:myparam)
 

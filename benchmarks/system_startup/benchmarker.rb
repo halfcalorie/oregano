@@ -12,6 +12,6 @@ class Benchmarker
     # Just running help is probably a good proxy of a full startup.
     # Simply asking for the version might also be good, but it would miss all
     # of the app searching and loading parts
-    `puppet help`
+    `oregano help`
   end
 end

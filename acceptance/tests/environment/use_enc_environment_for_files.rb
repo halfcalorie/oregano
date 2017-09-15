@@ -20,8 +20,8 @@ apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
   File {
     ensure => directory,
     mode => "0770",
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
   }
   file {
     '#{testdir}/environments':;
@@ -50,14 +50,14 @@ master_opts = {
   },
 }
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
   agents.each do |agent|
     atmp = agent.tmpdir('respect_enc_test')
     logger.debug "agent: #{agent} \tagent.tmpdir => #{atmp}"
 
     create_remote_file master, "#{testdir}/environments/special/manifests/different.pp", <<END
 file { "#{atmp}/special_testy":
-  source => "puppet:///modules/amod/testy",
+  source => "oregano:///modules/amod/testy",
 }
 END
     on master, "chmod 644 #{testdir}/environments/special/manifests/different.pp"

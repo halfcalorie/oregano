@@ -1,19 +1,19 @@
 Node
 ====
 
-The `node` endpoint is used by the puppet agent to get basic information
+The `node` endpoint is used by the oregano agent to get basic information
 about a node. The returned information includes the node name and
 environment, and optionally any classes set by an External Node
 Classifier and a hash of parameters which may include the node's facts.
 The returned node may have a different environment from the one given in
-the request if Puppet is configured with an ENC.
+the request if Oregano is configured with an ENC.
 
 Find
 ----
 
 Retrieve data for a node
 
-    GET /puppet/v3/node/:certname?environment=:environment&transaction_uuid=:transaction_uuid&configured_environment=:environment
+    GET /oregano/v3/node/:certname?environment=:environment&transaction_uuid=:transaction_uuid&configured_environment=:environment
 
 
 ### Supported HTTP Methods
@@ -37,7 +37,7 @@ environment, which might differ from what the client believes is its current env
 
 ### Examples
 
-    > GET /puppet/v3/node/mycertname?environment=production&transaction_uuid=aff261a2-1a34-4647-8c20-ff662ec11c4c&configured_environment=production HTTP/1.1
+    > GET /oregano/v3/node/mycertname?environment=production&transaction_uuid=aff261a2-1a34-4647-8c20-ff662ec11c4c&configured_environment=production HTTP/1.1
     > Accept: application/json, text/pson
 
     < HTTP/1.1 200 OK
@@ -45,7 +45,7 @@ environment, which might differ from what the client believes is its current env
     < Content-Length: 4630
 
     {
-      "name":"thinky.corp.puppetlabs.net",
+      "name":"thinky.corp.oreganolabs.net",
       "parameters":{
         "architecture":"amd64",
         "kernel":"Linux",

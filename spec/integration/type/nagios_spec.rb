@@ -1,17 +1,17 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/file_bucket/dipper'
+require 'oregano/file_bucket/dipper'
 
 describe "Nagios file creation" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   let(:initial_mode) { 0600 }
 
   before :each do
     FileUtils.touch(target_file)
-    Puppet::FileSystem.chmod(initial_mode, target_file)
-    Puppet::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to filebucket
+    Oregano::FileSystem.chmod(initial_mode, target_file)
+    Oregano::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to filebucket
   end
 
   let :target_file do
@@ -20,9 +20,9 @@ describe "Nagios file creation" do
 
   # Copied from the crontab integration spec.
   #
-  # @todo This should probably live in the PuppetSpec module instead then.
+  # @todo This should probably live in the OreganoSpec module instead then.
   def run_in_catalog(*resources)
-    catalog = Puppet::Resource::Catalog.new
+    catalog = Oregano::Resource::Catalog.new
     catalog.host_config = false
     resources.each do |resource|
       resource.expects(:err).never
@@ -38,7 +38,7 @@ describe "Nagios file creation" do
   context "when creating a nagios config file" do
     context "which is not managed" do
       it "should choose the file mode if requested" do
-        resource = Puppet::Type.type(:nagios_host).new(
+        resource = Oregano::Type.type(:nagios_host).new(
           :name   => 'spechost',
           :use    => 'spectemplate',
           :ensure => 'present',
@@ -52,11 +52,11 @@ describe "Nagios file creation" do
 
     context "which is managed" do
       it "should not override the mode" do
-        file_res = Puppet::Type.type(:file).new(
+        file_res = Oregano::Type.type(:file).new(
           :name   => target_file,
           :ensure => :present
         )
-        nag_res = Puppet::Type.type(:nagios_host).new(
+        nag_res = Oregano::Type.type(:nagios_host).new(
           :name   => 'spechost',
           :use    => 'spectemplate',
           :ensure => :present,

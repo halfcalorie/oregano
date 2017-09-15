@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/type/file/ensure'
+require 'oregano/type/file/ensure'
 
-describe Puppet::Type::File::Ensure do
-  include PuppetSpec::Files
+describe Oregano::Type::File::Ensure do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('file_ensure') }
-  let(:resource) { Puppet::Type.type(:file).new(:ensure => 'file', :path => path, :replace => true) }
+  let(:resource) { Oregano::Type.type(:file).new(:ensure => 'file', :path => path, :replace => true) }
   let(:property) { resource.property(:ensure) }
 
   it "should be a subclass of Ensure" do
-    expect(described_class.superclass).to eq(Puppet::Property::Ensure)
+    expect(described_class.superclass).to eq(Oregano::Property::Ensure)
   end
 
   describe "when retrieving the current state" do
@@ -84,7 +84,7 @@ describe Puppet::Type::File::Ensure do
 
         expect {
           property.sync
-        }.to raise_error(Puppet::Error, /Cannot create #{newpath}; parent directory #{File.dirname(newpath)} does not exist/)
+        }.to raise_error(Oregano::Error, /Cannot create #{newpath}; parent directory #{File.dirname(newpath)} does not exist/)
       end
 
       it "should accept octal mode as fixnum" do

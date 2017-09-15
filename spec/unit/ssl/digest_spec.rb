@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/digest'
+require 'oregano/ssl/digest'
 
-describe Puppet::SSL::Digest do
+describe Oregano::SSL::Digest do
   it "defaults to sha256" do
     digest = described_class.new(nil, 'blah')
     expect(digest.name).to eq('SHA256')

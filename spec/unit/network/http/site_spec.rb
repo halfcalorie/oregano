@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/http'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP::Site do
+describe Oregano::Network::HTTP::Site do
   let(:scheme)      { 'https' }
   let(:host)        { 'rubygems.org' }
   let(:port)        { 443 }
 
   def create_site(scheme, host, port)
-    Puppet::Network::HTTP::Site.new(scheme, host, port)
+    Oregano::Network::HTTP::Site.new(scheme, host, port)
   end
 
   it 'accepts scheme, host, and port' do

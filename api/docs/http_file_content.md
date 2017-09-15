@@ -8,15 +8,15 @@ Find
 
 Get a file.
 
-    GET /puppet/v3/file_content/:mount_point/:name
+    GET /oregano/v3/file_content/:mount_point/:name
 
 The endpoint path includes a `:mount_point` which can be one of the following types:
 
-* Custom file serving mounts as specified in fileserver.conf --- see [the docs on configuring mount points](https://docs.puppet.com/puppet/latest/reference/file_serving.html).
-* `modules/<MODULE>` --- a semi-magical mount point which allows access to the `files` subdirectory of `<MODULE>` --- see [the docs on file serving](https://docs.puppet.com/puppet/latest/reference/file_serving.html).
+* Custom file serving mounts as specified in fileserver.conf --- see [the docs on configuring mount points](https://docs.oregano.com/oregano/latest/reference/file_serving.html).
+* `modules/<MODULE>` --- a semi-magical mount point which allows access to the `files` subdirectory of `<MODULE>` --- see [the docs on file serving](https://docs.oregano.com/oregano/latest/reference/file_serving.html).
 * `plugins` --- a highly magical mount point which merges the `lib`  directory of every module together. Used for syncing plugins; not intended for general consumption. Per-module sub-paths can not be specified.
 * `pluginfacts` --- a highly magical mount point which merges the `facts.d` directory of every module together. Used for syncing external facts; not intended for general consumption. Per-module sub-paths can not be specified.
-* `tasks/<MODULE>` --- a semi-magical mount point which allows access to files in the `tasks` subdirectory of `<MODULE>` --- see the [the docs on file serving](https://docs.puppet.com/puppet/latest/reference/file_serving.html).
+* `tasks/<MODULE>` --- a semi-magical mount point which allows access to files in the `tasks` subdirectory of `<MODULE>` --- see the [the docs on file serving](https://docs.oregano.com/oregano/latest/reference/file_serving.html).
 
 `:name` is the path to the file within the `:mount_point` that is requested.
 
@@ -38,7 +38,7 @@ None
 
 #### File found
 
-    GET /puppet/v3/file_content/modules/example/my_file?environment=env
+    GET /oregano/v3/file_content/modules/example/my_file?environment=env
     Accept: application/octet-stream
 
     HTTP/1.1 200 OK
@@ -50,7 +50,7 @@ None
 
 #### File not found
 
-    GET /puppet/v3/file_content/modules/example/not_found?environment=env
+    GET /oregano/v3/file_content/modules/example/not_found?environment=env
     Accept: application/octet-stream
 
     HTTP/1.1 404 Not Found
@@ -60,12 +60,12 @@ None
 
 #### No file name given
 
-    GET /puppet/v3/file_content?environment=env
+    GET /oregano/v3/file_content?environment=env
 
     HTTP/1.1 400 Bad Request
     Content-Type: text/plain
 
-    No request key specified in /puppet/v3/file_content/
+    No request key specified in /oregano/v3/file_content/
 
 Schema
 ------

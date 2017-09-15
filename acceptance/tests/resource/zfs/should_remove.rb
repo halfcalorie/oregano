@@ -6,8 +6,8 @@ tag 'audit:medium',
     'audit:acceptance' # Could be done as integration tests, but would
                        # require drastically changing the system running the test
 
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::ZFSUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::ZFSUtils
 
 teardown do
   step "ZFS: cleanup"

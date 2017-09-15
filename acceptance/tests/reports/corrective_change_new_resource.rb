@@ -1,11 +1,11 @@
 test_name "C98092 - a new resource should not be reported as a corrective change" do
 
   require 'yaml'
-  require 'puppet/acceptance/environment_utils'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils'
+  extend Oregano::Acceptance::EnvironmentUtils
 
-  require 'puppet/acceptance/agent_fqdn_utils'
-  extend Puppet::Acceptance::AgentFqdnUtils
+  require 'oregano/acceptance/agent_fqdn_utils'
+  extend Oregano::Acceptance::AgentFqdnUtils
 
   tag 'audit:medium',
       'audit:integration',
@@ -49,11 +49,11 @@ test_name "C98092 - a new resource should not be reported as a corrective change
   end
 
   step 'run agent(s)' do
-    with_puppet_running_on(master, {}) do
+    with_oregano_running_on(master, {}) do
       agents.each do |agent|
         #Run agent once to create new File resource
         step 'Run agent once to create new File resource' do
-          on(agent, puppet("agent -t --environment '#{tmp_environment}' --server #{master.hostname}"), :acceptable_exit_codes => 2)
+          on(agent, oregano("agent -t --environment '#{tmp_environment}' --server #{master.hostname}"), :acceptable_exit_codes => 2)
         end
 
         #Verify the file resource is created
@@ -69,7 +69,7 @@ test_name "C98092 - a new resource should not be reported as a corrective change
   # Open last_run_report.yaml
   step 'Check report' do
     agents.each do |agent|
-      on(agent, puppet('config print statedir')) do |command_result|
+      on(agent, oregano('config print statedir')) do |command_result|
         report_path = command_result.stdout.chomp + '/last_run_report.yaml'
         on(agent, "cat '#{report_path}'").stdout do |report_contents|
 

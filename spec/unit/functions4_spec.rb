@@ -1,28 +1,28 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/loaders'
-require 'puppet_spec/pops'
-require 'puppet_spec/scope'
+require 'oregano/pops'
+require 'oregano/loaders'
+require 'oregano_spec/pops'
+require 'oregano_spec/scope'
 
 module FunctionAPISpecModule
   class TestDuck
   end
 
-  class TestFunctionLoader < Puppet::Pops::Loader::StaticLoader
+  class TestFunctionLoader < Oregano::Pops::Loader::StaticLoader
     def initialize
       @constants = {}
     end
 
     def add_function(name, function)
-      set_entry(Puppet::Pops::Loader::TypedName.new(:function, name), function, __FILE__)
+      set_entry(Oregano::Pops::Loader::TypedName.new(:function, name), function, __FILE__)
     end
 
     def add_type(name, type)
-      set_entry(Puppet::Pops::Loader::TypedName.new(:type, name), type, __FILE__)
+      set_entry(Oregano::Pops::Loader::TypedName.new(:type, name), type, __FILE__)
     end
 
     def set_entry(typed_name, value, origin = nil)
-      @constants[typed_name] = Puppet::Pops::Loader::Loader::NamedEntry.new(typed_name, value, origin)
+      @constants[typed_name] = Oregano::Pops::Loader::Loader::NamedEntry.new(typed_name, value, origin)
     end
 
     # override StaticLoader
@@ -34,13 +34,13 @@ end
 
 describe 'the 4x function api' do
   include FunctionAPISpecModule
-  include PuppetSpec::Pops
-  include PuppetSpec::Scope
+  include OreganoSpec::Pops
+  include OreganoSpec::Scope
 
   let(:loader) { FunctionAPISpecModule::TestFunctionLoader.new }
 
   it 'allows a simple function to be created without dispatch declaration' do
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       def min(x,y)
         x <= y ? x : y
       end
@@ -48,20 +48,20 @@ describe 'the 4x function api' do
 
     # the produced result is a Class inheriting from Function
     expect(f.class).to be(Class)
-    expect(f.superclass).to be(Puppet::Functions::Function)
+    expect(f.superclass).to be(Oregano::Functions::Function)
     # and this class had the given name (not a real Ruby class name)
     expect(f.name).to eql('min')
   end
 
   it 'refuses to create functions that are not based on the Function class' do
     expect do
-      Puppet::Functions.create_function('testing', Object) {}
-    end.to raise_error(ArgumentError, 'Functions must be based on Puppet::Pops::Functions::Function. Got Object')
+      Oregano::Functions.create_function('testing', Object) {}
+    end.to raise_error(ArgumentError, 'Functions must be based on Oregano::Pops::Functions::Function. Got Object')
   end
 
   it 'refuses to create functions with parameters that are not named with a symbol' do
     expect do
-      Puppet::Functions.create_function('testing') do
+      Oregano::Functions.create_function('testing') do
         dispatch :test do
           param 'Integer', 'not_symbol'
         end
@@ -87,7 +87,7 @@ describe 'the 4x function api' do
     f = create_min_function_class()
     # TODO: Bogus parameters, not yet used
     func = f.new(:closure_scope, :loader)
-    expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+    expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
     expect(func.call({}, 10,20)).to eql(10)
   end
 
@@ -95,7 +95,7 @@ describe 'the 4x function api' do
     f = create_min_function_class()
     # TODO: Bogus parameters, not yet used
     func = f.new(:closure_scope, :loader)
-    expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+    expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
     signature = 'Any x, Any y'
     expect do
       func.call({}, 10)
@@ -106,7 +106,7 @@ describe 'the 4x function api' do
     f = create_min_function_class()
     # TODO: Bogus parameters, not yet used
     func = f.new(:closure_scope, :loader)
-    expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+    expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
     signature = 'Any x, Any y'
     expect do
       func.call({}, 10, 10, 10)
@@ -116,7 +116,7 @@ describe 'the 4x function api' do
   it 'correct dispatch is chosen when zero parameter dispatch exists' do
     f = create_function_with_no_parameter_dispatch
     func = f.new(:closure_scope, :loader)
-    expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+    expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
     expect(func.call({}, 1)).to eql(1)
   end
 
@@ -149,7 +149,7 @@ describe 'the 4x function api' do
       f = create_min_function_class_using_dispatch()
       # TODO: Bogus parameters, not yet used
       func = f.new(:closure_scope, :loader)
-      expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+      expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
       expect do
         func.call({}, 10, 'ten')
       end.to raise_error(ArgumentError, "'min' parameter 'b' expects a Numeric value, got String")
@@ -159,7 +159,7 @@ describe 'the 4x function api' do
       f = create_function_with_optionals_and_repeated_via_multiple_dispatch()
       # TODO: Bogus parameters, not yet used
       func = f.new(:closure_scope, :loader)
-      expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+      expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
       expect do
         func.call({}, 3, 10, 3, "4")
       end.to raise_error(ArgumentError, "'min' expects one of:
@@ -227,7 +227,7 @@ describe 'the 4x function api' do
       f = create_min_function_class_disptaching_to_two_methods()
       # TODO: Bogus parameters, not yet used
       func = f.new(:closure_scope, :loader)
-      expect(func.is_a?(Puppet::Functions::Function)).to be_truthy
+      expect(func.is_a?(Oregano::Functions::Function)).to be_truthy
       expect do
         func.call({}, 10, '20')
       end.to raise_error(ArgumentError, "'min' expects one of:
@@ -255,27 +255,27 @@ describe 'the 4x function api' do
 
     context 'when requesting a type' do
       it 'responds with a Callable for a single signature' do
-        tf = Puppet::Pops::Types::TypeFactory
+        tf = Oregano::Pops::Types::TypeFactory
         fc = create_min_function_class_using_dispatch()
         t = fc.dispatcher.to_type
-        expect(t.class).to be(Puppet::Pops::Types::PCallableType)
-        expect(t.param_types.class).to be(Puppet::Pops::Types::PTupleType)
+        expect(t.class).to be(Oregano::Pops::Types::PCallableType)
+        expect(t.param_types.class).to be(Oregano::Pops::Types::PTupleType)
         expect(t.param_types.types).to eql([tf.numeric(), tf.numeric()])
         expect(t.block_type).to be_nil
       end
 
       it 'responds with a Variant[Callable...] for multiple signatures' do
-        tf = Puppet::Pops::Types::TypeFactory
+        tf = Oregano::Pops::Types::TypeFactory
         fc = create_min_function_class_disptaching_to_two_methods()
         t = fc.dispatcher.to_type
-        expect(t.class).to be(Puppet::Pops::Types::PVariantType)
+        expect(t.class).to be(Oregano::Pops::Types::PVariantType)
         expect(t.types.size).to eql(2)
         t1 = t.types[0]
-        expect(t1.param_types.class).to be(Puppet::Pops::Types::PTupleType)
+        expect(t1.param_types.class).to be(Oregano::Pops::Types::PTupleType)
         expect(t1.param_types.types).to eql([tf.numeric(), tf.numeric()])
         expect(t1.block_type).to be_nil
         t2 = t.types[1]
-        expect(t2.param_types.class).to be(Puppet::Pops::Types::PTupleType)
+        expect(t2.param_types.class).to be(Oregano::Pops::Types::PTupleType)
         expect(t2.param_types.types).to eql([tf.string(), tf.string()])
         expect(t2.block_type).to be_nil
       end
@@ -352,7 +352,7 @@ describe 'the 4x function api' do
       it 'about the type' do
         fc = create_function_with_optional_block_all_defaults
         signature = fc.signatures[0]
-        expect(signature.type.class).to be(Puppet::Pops::Types::PCallableType)
+        expect(signature.type.class).to be(Oregano::Pops::Types::PCallableType)
       end
 
       it 'about parameter names obtained from ruby introspection' do
@@ -392,59 +392,59 @@ describe 'the 4x function api' do
 
     context 'supports calling other functions' do
       before(:all) do
-        Puppet.push_context( {:loaders => Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, []))})
+        Oregano.push_context( {:loaders => Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, []))})
       end
 
       after(:all) do
-        Puppet.pop_context()
+        Oregano.pop_context()
       end
 
       it 'such that, other functions are callable by name' do
-        fc = Puppet::Functions.create_function('test') do
+        fc = Oregano::Functions.create_function('test') do
           def test()
-            # Call a function available in the puppet system
+            # Call a function available in the oregano system
             call_function('assert_type', 'Integer', 10)
           end
         end
         # initiate the function the same way the loader initiates it
-        f = fc.new(:closure_scope, Puppet.lookup(:loaders).puppet_system_loader)
+        f = fc.new(:closure_scope, Oregano.lookup(:loaders).oregano_system_loader)
         expect(f.call({})).to eql(10)
       end
 
       it 'such that, calling a non existing function raises an error' do
-        fc = Puppet::Functions.create_function('test') do
+        fc = Oregano::Functions.create_function('test') do
           def test()
-            # Call a function not available in the puppet system
+            # Call a function not available in the oregano system
             call_function('no_such_function', 'Integer', 'hello')
           end
         end
         # initiate the function the same way the loader initiates it
-        f = fc.new(:closure_scope, Puppet.lookup(:loaders).puppet_system_loader)
+        f = fc.new(:closure_scope, Oregano.lookup(:loaders).oregano_system_loader)
         expect{f.call({})}.to raise_error(ArgumentError, "Function test(): Unknown function: 'no_such_function'")
       end
     end
 
-    context 'supports calling ruby functions with lambda from puppet' do
+    context 'supports calling ruby functions with lambda from oregano' do
       before(:all) do
-        Puppet.push_context( {:loaders => Puppet::Pops::Loaders.new(Puppet::Node::Environment.create(:testing, []))})
+        Oregano.push_context( {:loaders => Oregano::Pops::Loaders.new(Oregano::Node::Environment.create(:testing, []))})
       end
 
       after(:all) do
-        Puppet.pop_context()
+        Oregano.pop_context()
       end
 
       before(:each) do
-        Puppet[:strict_variables] = true
+        Oregano[:strict_variables] = true
       end
 
-      let(:parser) {  Puppet::Pops::Parser::EvaluatingParser.new }
+      let(:parser) {  Oregano::Pops::Parser::EvaluatingParser.new }
       let(:node) { 'node.example.com' }
       let(:scope) { s = create_test_scope_for_node(node); s }
-      let(:loader) { Puppet::Pops::Loaders.find_loader(nil) }
+      let(:loader) { Oregano::Pops::Loaders.find_loader(nil) }
 
       it 'function with required block can be called' do
         # construct ruby function to call
-        fc = Puppet::Functions.create_function('testing::test') do
+        fc = Oregano::Functions.create_function('testing::test') do
           dispatch :test do
             param 'Integer', :x
             # block called 'the_block', and using "all_callables"
@@ -458,23 +458,23 @@ describe 'the 4x function api' do
         # add the function to the loader (as if it had been loaded from somewhere)
         the_loader = loader
         f = fc.new({}, the_loader)
-        loader.set_entry(Puppet::Pops::Loader::TypedName.new(:function, 'testing::test'), f)
-        # evaluate a puppet call
+        loader.set_entry(Oregano::Pops::Loader::TypedName.new(:function, 'testing::test'), f)
+        # evaluate a oregano call
         source = "testing::test(10) |$x| { $x+1 }"
         program = parser.parse_string(source, __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).at_least_once.returns(the_loader)
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).at_least_once.returns(the_loader)
         expect(parser.evaluate(scope, program)).to eql(11)
       end
     end
 
     context 'can use a loader when parsing types in function dispatch, and' do
-      let(:parser) {  Puppet::Pops::Parser::EvaluatingParser.new }
+      let(:parser) {  Oregano::Pops::Parser::EvaluatingParser.new }
 
       it 'uses return_type to validate returned value' do
         the_loader = loader()
         here = get_binding(the_loader)
         fc = eval(<<-CODE, here)
-          Puppet::Functions.create_function('testing::test') do
+          Oregano::Functions.create_function('testing::test') do
             dispatch :test do
               param 'Integer', :x
               return_type 'String'
@@ -486,8 +486,8 @@ describe 'the 4x function api' do
         CODE
         the_loader.add_function('testing::test', fc.new({}, the_loader))
         program = parser.parse_string('testing::test(10)', __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
-        expect { parser.evaluate({}, program) }.to raise_error(Puppet::Error,
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
+        expect { parser.evaluate({}, program) }.to raise_error(Oregano::Error,
           /value returned from function 'test' has wrong type, expects a String value, got Integer/)
       end
 
@@ -496,7 +496,7 @@ describe 'the 4x function api' do
         the_loader.add_type('myalias', type_alias_t('MyAlias', 'Integer'))
         here = get_binding(the_loader)
         fc = eval(<<-CODE, here)
-          Puppet::Functions.create_function('testing::test') do
+          Oregano::Functions.create_function('testing::test') do
             dispatch :test do
               param 'MyAlias', :x
               return_type 'MyAlias'
@@ -508,7 +508,7 @@ describe 'the 4x function api' do
         CODE
         the_loader.add_function('testing::test', fc.new({}, the_loader))
         program = parser.parse_string('testing::test(10)', __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
         expect(parser.evaluate({}, program)).to eql(10)
       end
 
@@ -516,7 +516,7 @@ describe 'the 4x function api' do
         the_loader = loader()
         here = get_binding(the_loader)
         fc = eval(<<-CODE, here)
-          Puppet::Functions.create_function('testing::test') do
+          Oregano::Functions.create_function('testing::test') do
             dispatch :test do
               param 'MyAlias', :x
             end
@@ -527,15 +527,15 @@ describe 'the 4x function api' do
         CODE
         the_loader.add_function('testing::test', fc.new({}, the_loader))
         program = parser.parse_string('testing::test(10)', __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
-        expect { parser.evaluate({}, program) }.to raise_error(Puppet::Error, /parameter 'x' references an unresolved type 'MyAlias'/)
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
+        expect { parser.evaluate({}, program) }.to raise_error(Oregano::Error, /parameter 'x' references an unresolved type 'MyAlias'/)
       end
 
       it 'create local Type aliases' do
         the_loader = loader()
         here = get_binding(the_loader)
         fc = eval(<<-CODE, here)
-          Puppet::Functions.create_function('testing::test') do
+          Oregano::Functions.create_function('testing::test') do
             local_types do
               type 'MyType = Array[Integer]'
             end
@@ -549,7 +549,7 @@ describe 'the 4x function api' do
         CODE
         the_loader.add_function('testing::test', fc.new({}, the_loader))
         program = parser.parse_string('testing::test([10,20])', __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
         expect(parser.evaluate({}, program)).to eq([10,20])
       end
 
@@ -557,7 +557,7 @@ describe 'the 4x function api' do
         the_loader = loader()
         here = get_binding(the_loader)
         fc = eval(<<-CODE, here)
-          Puppet::Functions.create_function('testing::test') do
+          Oregano::Functions.create_function('testing::test') do
             local_types do
               type 'InnerType = Array[Integer]'
               type 'OuterType = Hash[String,InnerType]'
@@ -572,7 +572,7 @@ describe 'the 4x function api' do
         CODE
         the_loader.add_function('testing::test', fc.new({}, the_loader))
         program = parser.parse_string("testing::test({'x' => [10,20]})", __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
         expect(parser.evaluate({}, program)).to eq({'x' => [10,20]})
       end
 
@@ -580,7 +580,7 @@ describe 'the 4x function api' do
         the_loader = loader()
         here = get_binding(the_loader)
         fc = eval(<<-CODE, here)
-          Puppet::Functions.create_function('testing::test') do
+          Oregano::Functions.create_function('testing::test') do
             local_types do
               type 'Tree = Hash[String,Variant[String,Tree]]'
             end
@@ -594,7 +594,7 @@ describe 'the 4x function api' do
         CODE
         the_loader.add_function('testing::test', fc.new({}, the_loader))
         program = parser.parse_string("testing::test({'x' => {'y' => 'n'}})", __FILE__)
-        Puppet::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
+        Oregano::Pops::Adapters::LoaderAdapter.expects(:loader_for_model_object).returns(the_loader)
         expect(parser.evaluate({}, program)).to eq({'x' => {'y' => 'n'}})
       end
     end
@@ -602,7 +602,7 @@ describe 'the 4x function api' do
 
 
   def create_noargs_function_class
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       def test()
         10
       end
@@ -610,7 +610,7 @@ describe 'the 4x function api' do
   end
 
   def create_min_function_class
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       def min(x,y)
         x <= y ? x : y
       end
@@ -618,7 +618,7 @@ describe 'the 4x function api' do
   end
 
   def create_max_function_class
-    f = Puppet::Functions.create_function('max') do
+    f = Oregano::Functions.create_function('max') do
       def max(x,y)
         x >= y ? x : y
       end
@@ -626,7 +626,7 @@ describe 'the 4x function api' do
   end
 
   def create_badly_named_method_function_class
-    f = Puppet::Functions.create_function('mix') do
+    f = Oregano::Functions.create_function('mix') do
       def mix_up(x,y)
         x <= y ? x : y
       end
@@ -634,7 +634,7 @@ describe 'the 4x function api' do
   end
 
   def create_min_function_class_using_dispatch
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
         dispatch :min do
           param 'Numeric', :a
           param 'Numeric', :b
@@ -646,7 +646,7 @@ describe 'the 4x function api' do
   end
 
   def create_min_function_class_disptaching_to_two_methods
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       dispatch :min do
         param 'Numeric', :a
         param 'Numeric', :b
@@ -669,7 +669,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_optionals_and_repeated
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       def min(x,y,a=1, b=1, *c)
         x <= y ? x : y
       end
@@ -677,7 +677,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_optionals_and_repeated_via_dispatch
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       dispatch :min do
         param 'Numeric', :x
         param 'Numeric', :y
@@ -692,7 +692,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_optionals_and_repeated_via_multiple_dispatch
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       dispatch :min do
         param 'Numeric', :x
         param 'Numeric', :y
@@ -712,7 +712,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_required_repeated_via_dispatch
-    f = Puppet::Functions.create_function('min') do
+    f = Oregano::Functions.create_function('min') do
       dispatch :min do
         param 'Numeric', :x
         param 'Numeric', :y
@@ -725,7 +725,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_repeated
-    f = Puppet::Functions.create_function('count_args') do
+    f = Oregano::Functions.create_function('count_args') do
       dispatch :count_args do
         repeated_param 'Any', :c
       end
@@ -736,7 +736,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_optional_repeated
-    f = Puppet::Functions.create_function('count_args') do
+    f = Oregano::Functions.create_function('count_args') do
       dispatch :count_args do
         optional_repeated_param 'Any', :c
       end
@@ -747,7 +747,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_required_repeated
-    f = Puppet::Functions.create_function('count_args') do
+    f = Oregano::Functions.create_function('count_args') do
       dispatch :count_args do
         required_repeated_param 'Any', :c
       end
@@ -758,7 +758,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_inexact_dispatch
-    f = Puppet::Functions.create_function('t1') do
+    f = Oregano::Functions.create_function('t1') do
       dispatch :t1 do
         param 'Numeric', :x
         param 'Numeric', :y
@@ -776,7 +776,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_rq_after_opt
-    f = Puppet::Functions.create_function('t1') do
+    f = Oregano::Functions.create_function('t1') do
       dispatch :t1 do
         optional_param 'Numeric', :x
         param 'Numeric', :y
@@ -788,7 +788,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_rq_repeated_after_opt
-    f = Puppet::Functions.create_function('t1') do
+    f = Oregano::Functions.create_function('t1') do
       dispatch :t1 do
         optional_param 'Numeric', :x
         required_repeated_param 'Numeric', :y
@@ -800,7 +800,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_param_after_repeated
-    f = Puppet::Functions.create_function('t1') do
+    f = Oregano::Functions.create_function('t1') do
       dispatch :t1 do
         repeated_param 'Numeric', :x
         param 'Numeric', :y
@@ -812,14 +812,14 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_param_injection_regular
-    f = Puppet::Functions.create_function('test', Puppet::Functions::InternalFunction) do
-      attr_injected Puppet::Pops::Types::TypeFactory.type_of(FunctionAPISpecModule::TestDuck), :test_attr
-      attr_injected Puppet::Pops::Types::TypeFactory.string(), :test_attr2, "a_string"
-      attr_injected_producer Puppet::Pops::Types::TypeFactory.integer(), :serial, "an_int"
+    f = Oregano::Functions.create_function('test', Oregano::Functions::InternalFunction) do
+      attr_injected Oregano::Pops::Types::TypeFactory.type_of(FunctionAPISpecModule::TestDuck), :test_attr
+      attr_injected Oregano::Pops::Types::TypeFactory.string(), :test_attr2, "a_string"
+      attr_injected_producer Oregano::Pops::Types::TypeFactory.integer(), :serial, "an_int"
 
       dispatch :test do
-        injected_param Puppet::Pops::Types::TypeFactory.string, :x, 'a_string'
-        injected_producer_param Puppet::Pops::Types::TypeFactory.integer, :y, 'an_int'
+        injected_param Oregano::Pops::Types::TypeFactory.string, :x, 'a_string'
+        injected_producer_param Oregano::Pops::Types::TypeFactory.integer, :y, 'an_int'
         param 'Scalar', :a
         param 'Scalar', :b
       end
@@ -832,7 +832,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_required_block_all_defaults
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test do
         param 'Integer', :x
         # use defaults, any callable, name is 'block'
@@ -845,7 +845,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_scope_required_block_all_defaults
-    f = Puppet::Functions.create_function('test', Puppet::Functions::InternalFunction) do
+    f = Oregano::Functions.create_function('test', Oregano::Functions::InternalFunction) do
       dispatch :test do
         scope_param
         param 'Integer', :x
@@ -859,7 +859,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_required_block_default_type
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test do
         param 'Integer', :x
         # use defaults, any callable, name is 'block'
@@ -872,7 +872,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_scope_param_required_repeat
-    f = Puppet::Functions.create_function('test', Puppet::Functions::InternalFunction) do
+    f = Oregano::Functions.create_function('test', Oregano::Functions::InternalFunction) do
       dispatch :test do
         scope_param
         param 'Any', :extra
@@ -885,7 +885,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_required_block_given_type
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test do
         param 'Integer', :x
         required_block_param
@@ -897,7 +897,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_required_block_fully_specified
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test do
         param 'Integer', :x
         # use defaults, any callable, name is 'block'
@@ -910,7 +910,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_optional_block_all_defaults
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test do
         param 'Integer', :x
         # use defaults, any callable, name is 'block'
@@ -923,7 +923,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_no_parameter_dispatch
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test_no_args do
       end
       dispatch :test_one_arg do
@@ -939,7 +939,7 @@ describe 'the 4x function api' do
   end
 
   def create_function_with_mismatch_handler
-    f = Puppet::Functions.create_function('test') do
+    f = Oregano::Functions.create_function('test') do
       dispatch :test do
         param 'Integer', :x
       end
@@ -959,8 +959,8 @@ describe 'the 4x function api' do
   end
 
   def type_alias_t(name, type_string)
-    type_expr = Puppet::Pops::Parser::EvaluatingParser.new.parse_string(type_string)
-    Puppet::Pops::Types::TypeFactory.type_alias(name, type_expr)
+    type_expr = Oregano::Pops::Parser::EvaluatingParser.new.parse_string(type_string)
+    Oregano::Pops::Types::TypeFactory.type_alias(name, type_expr)
   end
 
   def get_binding(loader_injected_arg)

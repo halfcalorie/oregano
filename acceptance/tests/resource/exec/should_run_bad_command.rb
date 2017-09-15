@@ -1,4 +1,4 @@
-test_name "tests that puppet can run badly written scripts that fork and inherit descriptors"
+test_name "tests that oregano can run badly written scripts that fork and inherit descriptors"
 tag 'audit:high',
     'audit:refactor',   # Use block style `test_name`
     'audit:acceptance'
@@ -50,9 +50,9 @@ def stop_sleep_process(targets, accept_no_pid_found = false)
 end
 
 teardown do
-  # On Windows, Puppet waits until the sleep process exits before exiting
+  # On Windows, Oregano waits until the sleep process exits before exiting
   stop_sleep_process(agents.select {|agent| agent['platform'] =~ /win/}, true)
-  # Requiring a sleep process asserts that Puppet exited before the sleep process.
+  # Requiring a sleep process asserts that Oregano exited before the sleep process.
   stop_sleep_process(agents.reject {|agent| agent['platform'] =~ /win/})
 end
 

@@ -1,18 +1,18 @@
 # How to contribute
 
-Third-party patches are essential for keeping Puppet great. We simply can't
+Third-party patches are essential for keeping Oregano great. We simply can't
 access the huge number of platforms and myriad configurations for running
-Puppet. We want to keep it as easy as possible to contribute changes that
+Oregano. We want to keep it as easy as possible to contribute changes that
 get things working in your environment. There are a few guidelines that we
 need contributors to follow so that we can have a chance of keeping on
 top of things.
 
-## Puppet Core vs Modules
+## Oregano Core vs Modules
 
 New functionality is typically directed toward modules to provide a slimmer
-Puppet Core, reducing its surface area, and to allow greater freedom for
+Oregano Core, reducing its surface area, and to allow greater freedom for
 module maintainers to ship releases at their own cadence, rather than
-being held to the cadence of Puppet releases. With Puppet 4's "all in one"
+being held to the cadence of Oregano releases. With Oregano 4's "all in one"
 packaging, a list of modules at specific versions will be packaged with the
 core so that popular types and providers will still be available as part of
 the "out of the box" experience.
@@ -22,14 +22,14 @@ be added in modules. Exceptions would be things like new cross-OS providers
 and updates to existing core types.
 
 If you are unsure of whether your contribution should be implemented as a
-module or part of Puppet Core, you may visit
-[#puppet-dev on Freenode IRC](https://freenode.net) or ask on the
-[puppet-dev mailing list](https://groups.google.com/forum/#!forum/puppet-dev)
+module or part of Oregano Core, you may visit
+[#oregano-dev on Freenode IRC](https://freenode.net) or ask on the
+[oregano-dev mailing list](https://groups.google.com/forum/#!forum/oregano-dev)
 for advice.
 
 ## Getting Started
 
-* Make sure you have a [Jira account](https://tickets.puppetlabs.com)
+* Make sure you have a [Jira account](https://tickets.oreganolabs.com)
 * Make sure you have a [GitHub account](https://github.com/signup/free)
 * Submit a ticket for your issue, assuming one does not already exist.
   * Clearly describe the issue including steps to reproduce when it is a bug.
@@ -68,7 +68,7 @@ for advice.
 
 ## Writing Translatable Code
 
-We use [gettext tooling](https://github.com/puppetlabs/gettext-setup-gem) to
+We use [gettext tooling](https://github.com/oreganolabs/gettext-setup-gem) to
 extract user-facing strings and pull in translations based on the user's locale
 at runtime. In order for this tooling to work, all user-facing strings must be
 wrapped in the `_()` translation function, so they can be extracted into files
@@ -96,7 +96,7 @@ a ticket number.
     (doc) Add documentation commit example to CONTRIBUTING
 
     There is no example for contributing a documentation commit
-    to the Puppet repository. This is a problem because the contributor
+    to the Oregano repository. This is a problem because the contributor
     is left to assume how a commit of this nature may appear.
 
     The first line is a real life imperative statement with '(doc)' in
@@ -107,16 +107,16 @@ a ticket number.
 
 ## Submitting Changes
 
-* Sign the [Contributor License Agreement](http://links.puppet.com/cla).
+* Sign the [Contributor License Agreement](http://links.oregano.com/cla).
 * Push your changes to a topic branch in your fork of the repository.
-* Submit a pull request to the repository in the puppetlabs organization.
+* Submit a pull request to the repository in the oreganolabs organization.
 * Update your Jira ticket to mark that you have submitted code and are ready for it to be reviewed (Status: Ready for Merge).
   * Include a link to the pull request in the ticket.
 * The core team looks at Pull Requests on a regular basis in a weekly triage
   meeting that we hold in a public Google Hangout. The hangout is announced in
-  the weekly status updates that are sent to the puppet-dev list. Notes are
-  posted to the [Puppet Community community-triage
-  repo](https://github.com/puppet-community/community-triage/tree/master/core/notes)
+  the weekly status updates that are sent to the oregano-dev list. Notes are
+  posted to the [Oregano Community community-triage
+  repo](https://github.com/oregano-community/community-triage/tree/master/core/notes)
   and include a link to a YouTube recording of the hangout.
 * After feedback has been given we expect responses within two weeks. After two
   weeks we may close the pull request if it isn't showing any activity.
@@ -132,7 +132,7 @@ to detect in advance.
 If the code change results in a test failure, we will make our best effort to
 correct the error. If a fix cannot be determined and committed within 24 hours
 of its discovery, the commit(s) responsible _may_ be reverted, at the
-discretion of the committer and Puppet maintainers. This action would be taken
+discretion of the committer and Oregano maintainers. This action would be taken
 to help maintain passing states in our testing pipelines.
 
 The original contributor will be notified of the revert in the Jira ticket
@@ -147,11 +147,11 @@ ensure the issue has been resolved.
 
 # Additional Resources
 
-* [Puppet community guidelines](https://docs.puppet.com/community/community_guidelines.html)
-* [Bug tracker (Jira)](https://tickets.puppetlabs.com)
-* [Contributor License Agreement](http://links.puppet.com/cla)
+* [Oregano community guidelines](https://docs.oregano.com/community/community_guidelines.html)
+* [Bug tracker (Jira)](https://tickets.oreganolabs.com)
+* [Contributor License Agreement](http://links.oregano.com/cla)
 * [General GitHub documentation](https://help.github.com/)
 * [GitHub pull request documentation](https://help.github.com/articles/creating-a-pull-request/)
-* #puppet-dev IRC channel on freenode.org ([Archive](https://botbot.me/freenode/puppet-dev/))
-* [puppet-dev mailing list](https://groups.google.com/forum/#!forum/puppet-dev)
-* [Community PR Triage notes](https://github.com/puppet-community/community-triage/tree/master/core/notes)
+* #oregano-dev IRC channel on freenode.org ([Archive](https://botbot.me/freenode/oregano-dev/))
+* [oregano-dev mailing list](https://groups.google.com/forum/#!forum/oregano-dev)
+* [Community PR Triage notes](https://github.com/oregano-community/community-triage/tree/master/core/notes)

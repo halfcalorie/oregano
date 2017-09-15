@@ -13,7 +13,7 @@ Get
 
 Get the catalog for an environment
 
-    GET /puppet/v3/environment/:environment
+    GET /oregano/v3/environment/:environment
 
 ### Supported Response Formats
 
@@ -25,7 +25,7 @@ None
 
 ### Example Request & Response
 
-    GET /puppet/v3/environment/production
+    GET /oregano/v3/environment/production
 
     HTTP 200 OK
     Content-Type: application/json

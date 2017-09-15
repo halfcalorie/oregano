@@ -66,7 +66,7 @@ begin
 # script - only an init script (rabbitmq-server)
   %w(tty2 rsyslog rabbitmq-server).each do |pkg|
 
-    on agent, puppet_resource("package #{pkg} ensure=present")
+    on agent, oregano_resource("package #{pkg} ensure=present")
 
     # Cycle the services
     manage_service_for(pkg, "running", agent)

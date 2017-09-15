@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/property/keyvalue'
+require 'oregano/property/keyvalue'
 
-klass = Puppet::Property::KeyValue
+klass = Oregano::Property::KeyValue
 
 describe klass do
 
   it "should be a subclass of Property" do
-    expect(klass.superclass).to eq(Puppet::Property)
+    expect(klass.superclass).to eq(Oregano::Property)
   end
 
   describe "as an instance" do

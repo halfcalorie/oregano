@@ -1,4 +1,4 @@
-test_name "ensure that puppet does not report removing a user that does not exist"
+test_name "ensure that oregano does not report removing a user that does not exist"
 confine :except, :platform => /^eos-/ # See ARISTA-37
 confine :except, :platform => /^cisco_/ # See PUP-5828
 tag 'audit:medium',
@@ -16,6 +16,6 @@ agents.each do |agent|
 end
 
 step "ensure absent doesn't try and do anything"
-on(agents, puppet_resource('user', name, 'ensure=absent')) do
+on(agents, oregano_resource('user', name, 'ensure=absent')) do
   fail_test "tried to remove the user, apparently" if stdout.include? 'removed'
 end

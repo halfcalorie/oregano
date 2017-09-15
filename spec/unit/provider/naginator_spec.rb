@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/provider/naginator'
+require 'oregano/provider/naginator'
 
-describe Puppet::Provider::Naginator do
+describe Oregano::Provider::Naginator do
   before do
     @resource_type = stub 'resource_type', :name => :nagios_test
-    @class = Class.new(Puppet::Provider::Naginator)
+    @class = Class.new(Oregano::Provider::Naginator)
 
     @class.stubs(:resource_type).returns @resource_type
   end
@@ -65,7 +65,7 @@ describe Nagios::Base do
 end
 
 describe Nagios::Parser do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   subject do
     described_class.new

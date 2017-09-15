@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/interface'
+require 'oregano/interface'
 
 class ActionManagerTester
-  include Puppet::Interface::ActionManager
+  include Oregano::Interface::ActionManager
 end
 
-describe Puppet::Interface::ActionManager do
+describe Oregano::Interface::ActionManager do
   subject { ActionManagerTester.new }
 
   describe "when included in a class" do
@@ -46,7 +46,7 @@ describe Puppet::Interface::ActionManager do
   end
 
   describe "when used to extend a class" do
-    subject { Class.new.extend(Puppet::Interface::ActionManager) }
+    subject { Class.new.extend(Oregano::Interface::ActionManager) }
 
     it "should be able to define an action" do
       subject.action(:foo) do
@@ -75,8 +75,8 @@ describe Puppet::Interface::ActionManager do
   describe "when used both at the class and instance level" do
     before do
       @klass = Class.new do
-        include Puppet::Interface::ActionManager
-        extend Puppet::Interface::ActionManager
+        include Oregano::Interface::ActionManager
+        extend Oregano::Interface::ActionManager
         def __invoke_decorations(*args) true end
         def options() [] end
       end
@@ -218,7 +218,7 @@ describe Puppet::Interface::ActionManager do
   describe "#action" do
     it 'should add an action' do
       subject.action(:foo) { when_invoked do |options| true end }
-      expect(subject.get_action(:foo)).to be_a Puppet::Interface::Action
+      expect(subject.get_action(:foo)).to be_a Oregano::Interface::Action
     end
 
     it 'should support default actions' do
@@ -238,7 +238,7 @@ describe Puppet::Interface::ActionManager do
 
   describe "#get_action" do
     let :parent_class do
-      parent_class = Class.new(Puppet::Interface)
+      parent_class = Class.new(Oregano::Interface)
       parent_class.action(:foo) { when_invoked do |options| true end }
       parent_class
     end

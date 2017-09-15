@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/parser_rspec_helper')

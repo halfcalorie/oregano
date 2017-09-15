@@ -1,4 +1,4 @@
-test_name "puppet module list (with repeated dependencies)"
+test_name "oregano module list (with repeated dependencies)"
 
 tag 'audit:low',
     'audit:unit'
@@ -89,10 +89,10 @@ on master, "[ -d #{master['distmoduledir']}/thelock ]"
 on master, "[ -d #{master['sitemoduledir']}/crick ]"
 
 step "List the installed modules"
-on master, puppet('module list') # assertion is exit code 0
+on master, oregano('module list') # assertion is exit code 0
 
 step "List the installed modules as a dependency tree"
-on master, puppet("module list --tree --modulepath #{master['distmoduledir']}") do
+on master, oregano("module list --tree --modulepath #{master['distmoduledir']}") do
   assert_equal <<-STDOUT, stdout
 #{master['distmoduledir']}
 └─┬ jimmy-thelock (\e[0;36mv1.0.0\e[0m)
@@ -102,7 +102,7 @@ on master, puppet("module list --tree --modulepath #{master['distmoduledir']}") 
 STDOUT
 end
 
-on master, puppet("module list --tree") do
+on master, oregano("module list --tree") do
   assert_match( /jimmy-crakorn.*\[#{master['distmoduledir']}\]/,
                 stdout,
                 'Did not find cross modulepath reference to jimmy-crakorn' )

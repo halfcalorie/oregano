@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/module_tool/applications'
-require 'puppet_spec/modules'
+require 'oregano/module_tool/applications'
+require 'oregano_spec/modules'
 
-describe Puppet::ModuleTool::Applications::Searcher do
-  include PuppetSpec::Files
+describe Oregano::ModuleTool::Applications::Searcher do
+  include OreganoSpec::Files
 
   describe "when searching" do
     let(:forge) { mock 'forge', :host => 'http://nowhe.re' }
@@ -23,7 +23,7 @@ describe Puppet::ModuleTool::Applications::Searcher do
     end
 
     it "should return an error when the forge query throws an exception" do
-      forge.expects(:search).with('search_term').raises Puppet::Forge::Errors::ForgeError.new("something went wrong")
+      forge.expects(:search).with('search_term').raises Oregano::Forge::Errors::ForgeError.new("something went wrong")
 
       search_result = searcher.run
       expect(search_result).to eq({

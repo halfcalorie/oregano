@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CronUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CronUtils
 
 teardown do
   step "Cron: cleanup"
@@ -18,11 +18,11 @@ teardown do
 end
 
 agents.each do |host|
-  step "ensure the user exist via puppet"
+  step "ensure the user exist via oregano"
   setup host
 
-  step "apply the resource on the host using puppet resource"
-  on(host, puppet_resource("cron", "crontest", "user=tstuser",
+  step "apply the resource on the host using oregano resource"
+  on(host, oregano_resource("cron", "crontest", "user=tstuser",
                            "command=/bin/true", "ensure=present")) do
     assert_match(/created/, stdout, "Did not create crontab for tstuser on #{host}")
   end

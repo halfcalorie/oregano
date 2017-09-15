@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby -S rspec
 require 'spec_helper'
-require 'puppet/settings/config_file'
+require 'oregano/settings/config_file'
 
-describe Puppet::Settings::ConfigFile do
+describe Oregano::Settings::ConfigFile do
   NOTHING = {}
 
   def the_parse_of(*lines)
@@ -10,14 +10,14 @@ describe Puppet::Settings::ConfigFile do
   end
 
   let(:identity_transformer) { Proc.new { |value| value } }
-  let(:config) { Puppet::Settings::ConfigFile.new(identity_transformer) }
+  let(:config) { Oregano::Settings::ConfigFile.new(identity_transformer) }
 
   let(:filename) { "a/fake/filename.conf" }
 
-  Conf = Puppet::Settings::ConfigFile::Conf
-  Section = Puppet::Settings::ConfigFile::Section
-  Meta = Puppet::Settings::ConfigFile::Meta
-  NO_META = Puppet::Settings::ConfigFile::NO_META
+  Conf = Oregano::Settings::ConfigFile::Conf
+  Section = Oregano::Settings::ConfigFile::Section
+  Meta = Oregano::Settings::ConfigFile::Meta
+  NO_META = Oregano::Settings::ConfigFile::NO_META
 
   it "interprets an empty file to contain a main section with no entries" do
     result = the_parse_of("")
@@ -73,7 +73,7 @@ describe Puppet::Settings::ConfigFile do
   end
 
   it "errors when a line is not a known form" do
-    expect { the_parse_of("unknown") }.to raise_error Puppet::Settings::ParseError, /Could not match line/
+    expect { the_parse_of("unknown") }.to raise_error Oregano::Settings::ParseError, /Could not match line/
   end
 
   it "errors providing correct line number when line is not a known form" do
@@ -83,7 +83,7 @@ foo=bar
 badline
     EOF
     expect { the_parse_of(multi_line_config) }.to(
-        raise_error(Puppet::Settings::ParseError, /Could not match line/) do |exception|
+        raise_error(Oregano::Settings::ParseError, /Could not match line/) do |exception|
           expect(exception.line).to eq(3)
         end
       )
@@ -122,12 +122,12 @@ badline
     EOF
 
     expect { config.parse_file(filename, text, [:legal]) }.
-      to raise_error Puppet::Error,
+      to raise_error Oregano::Error,
         /Illegal section 'legal' in config file #{filename} at line 1/
   end
 
   it "transforms values with the given function" do
-    config = Puppet::Settings::ConfigFile.new(Proc.new { |value| value + " changed" })
+    config = Oregano::Settings::ConfigFile.new(Proc.new { |value| value + " changed" })
 
     result = config.parse_file(filename, "var = value")
 
@@ -137,7 +137,7 @@ badline
   end
 
   it "does not try to transform an entry named 'mode'" do
-    config = Puppet::Settings::ConfigFile.new(Proc.new { raise "Should not transform" })
+    config = Oregano::Settings::ConfigFile.new(Proc.new { raise "Should not transform" })
 
     result = config.parse_file(filename, "mode = value")
 

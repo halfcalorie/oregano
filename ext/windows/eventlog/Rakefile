@@ -3,13 +3,13 @@ require 'rake'
 require 'fileutils'
 require 'rbconfig'
 
-BASENAME = "puppetres"
+BASENAME = "oreganores"
 
 task :default do
   sh 'rake -T'
 end
 
-desc 'Build puppet eventlog message dll'
+desc 'Build oregano eventlog message dll'
 task :dist => ['out', "#{BASENAME}.dll"]
 
 directory 'out'

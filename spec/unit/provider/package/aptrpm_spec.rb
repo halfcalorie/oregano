@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package).provider(:aptrpm) do
-  let :type do Puppet::Type.type(:package) end
+describe Oregano::Type.type(:package).provider(:aptrpm) do
+  let :type do Oregano::Type.type(:package) end
   let :pkg do
     type.new(:name => 'faff', :provider => :aptrpm, :source => '/tmp/faff.rpm')
   end
@@ -11,9 +11,9 @@ describe Puppet::Type.type(:package).provider(:aptrpm) do
 
   context "when retrieving ensure" do
     before(:each) do
-      Puppet::Util.stubs(:which).with("rpm").returns("/bin/rpm")
+      Oregano::Util.stubs(:which).with("rpm").returns("/bin/rpm")
       pkg.provider.stubs(:which).with("rpm").returns("/bin/rpm")
-      Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "--version"], {:combine => true, :custom_environment => {}, :failonfail => true}).returns("4.10.1\n").at_most_once
+      Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "--version"], {:combine => true, :custom_environment => {}, :failonfail => true}).returns("4.10.1\n").at_most_once
     end
 
     def rpm_args
@@ -25,7 +25,7 @@ describe Puppet::Type.type(:package).provider(:aptrpm) do
     end
 
     it "should report purged packages" do
-      rpm.raises(Puppet::ExecutionFailure, "couldn't find rpm")
+      rpm.raises(Oregano::ExecutionFailure, "couldn't find rpm")
       expect(pkg.property(:ensure).retrieve).to eq(:purged)
     end
 

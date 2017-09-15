@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/file_serving/terminus_selector'
+require 'oregano/file_serving/terminus_selector'
 
-describe Puppet::FileServing::TerminusSelector do
+describe Oregano::FileServing::TerminusSelector do
   before do
     @object = Object.new
-    @object.extend(Puppet::FileServing::TerminusSelector)
+    @object.extend(Oregano::FileServing::TerminusSelector)
 
     @request = stub 'request', :key => "mymod/myfile", :options => {:node => "whatever"}, :server => nil, :protocol => nil
   end
@@ -32,35 +32,35 @@ describe Puppet::FileServing::TerminusSelector do
       expect(@object.select(@request)).to eq :http
     end
 
-    it "should fail when a protocol other than :puppet, :http(s) or :file is used" do
+    it "should fail when a protocol other than :oregano, :http(s) or :file is used" do
       @request.stubs(:protocol).returns "ftp"
       expect { @object.select(@request) }.to raise_error(ArgumentError)
     end
 
-    describe "and the protocol is 'puppet'" do
+    describe "and the protocol is 'oregano'" do
       before do
-        @request.stubs(:protocol).returns "puppet"
+        @request.stubs(:protocol).returns "oregano"
       end
 
       it "should choose :rest when a server is specified" do
-        @request.stubs(:protocol).returns "puppet"
+        @request.stubs(:protocol).returns "oregano"
         @request.expects(:server).returns "foo"
         expect(@object.select(@request)).to eq(:rest)
       end
 
       # This is so a given file location works when bootstrapping with no server.
       it "should choose :rest when default_file_terminus is rest" do
-        @request.stubs(:protocol).returns "puppet"
-        Puppet[:server] = 'localhost'
+        @request.stubs(:protocol).returns "oregano"
+        Oregano[:server] = 'localhost'
         expect(@object.select(@request)).to eq(:rest)
       end
 
       it "should choose :file_server when default_file_terminus is file_server and no server is specified on the request" do
         modules = mock 'modules'
 
-        @request.expects(:protocol).returns "puppet"
+        @request.expects(:protocol).returns "oregano"
         @request.expects(:server).returns nil
-        Puppet[:default_file_terminus] = 'file_server'
+        Oregano[:default_file_terminus] = 'file_server'
         expect(@object.select(@request)).to eq(:file_server)
       end
     end

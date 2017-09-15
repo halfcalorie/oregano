@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate'
+require 'oregano/ssl/certificate'
 
-class TestCertificate < Puppet::SSL::Base
-    wraps(Puppet::SSL::Certificate)
+class TestCertificate < Oregano::SSL::Base
+    wraps(Oregano::SSL::Certificate)
 end
 
-describe Puppet::SSL::Certificate do
+describe Oregano::SSL::Certificate do
   before :each do
     @base = TestCertificate.new("name")
     @class = TestCertificate
@@ -40,7 +40,7 @@ describe Puppet::SSL::Certificate do
   describe "when determining a name from a certificate subject" do
     it "should extract only the CN and not any other components" do
       subject = stub 'sub'
-      Puppet::Util::SSL.expects(:cn_from_subject).with(subject).returns 'host.domain.com'
+      Oregano::Util::SSL.expects(:cn_from_subject).with(subject).returns 'host.domain.com'
       expect(@class.name_from_subject(subject)).to eq('host.domain.com')
     end
   end
@@ -48,8 +48,8 @@ describe Puppet::SSL::Certificate do
   describe "when initializing wrapped class from a file with #read" do
     it "should open the file with ASCII encoding" do
       path = '/foo/bar/cert'
-      Puppet::SSL::Base.stubs(:valid_certname).returns(true)
-      Puppet::FileSystem.expects(:read).with(path, :encoding => Encoding::ASCII).returns("bar")
+      Oregano::SSL::Base.stubs(:valid_certname).returns(true)
+      Oregano::FileSystem.expects(:read).with(path, :encoding => Encoding::ASCII).returns("bar")
       @base.read(path)
     end
   end
@@ -57,7 +57,7 @@ describe Puppet::SSL::Certificate do
   describe "#digest_algorithm" do
     let(:content) { stub 'content' }
     let(:base) {
-      b = Puppet::SSL::Base.new('base')
+      b = Oregano::SSL::Base.new('base')
       b.content = content
       b
     }
@@ -88,7 +88,7 @@ describe Puppet::SSL::Certificate do
       content.stubs(:signature_algorithm).returns("nonsense")
       expect {
         base.digest_algorithm
-      }.to raise_error(Puppet::Error, "Unknown signature algorithm 'nonsense'")
+      }.to raise_error(Oregano::Error, "Unknown signature algorithm 'nonsense'")
     end
   end
 end

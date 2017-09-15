@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
   module Time
     describe 'Timestamp' do
       it 'Does not loose microsecond precision when converted to/from String' do

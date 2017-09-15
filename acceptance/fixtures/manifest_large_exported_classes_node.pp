@@ -22,7 +22,7 @@ hosting_vserver_configuration {
         admin_user => "david", admin_user_name => "David Schmitt",
         admin_user_email => "david@black.co.at",
         customer => "David Schmitt",
-        admin_password => file("/etc/puppet/secrets/hosting/davids_admin_password"),
+        admin_password => file("/etc/oregano/secrets/hosting/davids_admin_password"),
 }
 class davids_black_co_at {
     ## Create users for my parents and my grandmother
@@ -38,13 +38,13 @@ class davids_black_co_at {
     # Install git.black.co.at
     include git::daemon
     include git::web
-    git::web::export { [manifests, "puppet-trunk"]: }
+    git::web::export { [manifests, "oregano-trunk"]: }
 
     # Provision an additional mysql database on the database server
     hosting::database { "fogbugz": type => mysql }
     # Create another VirtualHost
     apache2::site { "local-fogbugz":
-        source => "puppet://$servername/files/hosting/davids/sites/local-fogbugz"
+        source => "oregano://$servername/files/hosting/davids/sites/local-fogbugz"
     }
 }
 node backuppc {

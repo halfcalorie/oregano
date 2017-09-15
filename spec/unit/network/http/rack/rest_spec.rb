@@ -1,22 +1,22 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http/rack' if Puppet.features.rack?
-require 'puppet/network/http/rack/rest'
+require 'oregano/network/http/rack' if Oregano.features.rack?
+require 'oregano/network/http/rack/rest'
 
-describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
-  it "should include the Puppet::Network::HTTP::Handler module" do
-    expect(Puppet::Network::HTTP::RackREST.ancestors).to be_include(Puppet::Network::HTTP::Handler)
+describe "Oregano::Network::HTTP::RackREST", :if => Oregano.features.rack? do
+  it "should include the Oregano::Network::HTTP::Handler module" do
+    expect(Oregano::Network::HTTP::RackREST.ancestors).to be_include(Oregano::Network::HTTP::Handler)
   end
 
   describe "when serving a request" do
     before :all do
       @model_class = stub('indirected model class')
-      Puppet::Indirector::Indirection.stubs(:model).with(:foo).returns(@model_class)
+      Oregano::Indirector::Indirection.stubs(:model).with(:foo).returns(@model_class)
     end
 
     before :each do
       @response = Rack::Response.new
-      @handler = Puppet::Network::HTTP::RackREST.new(:handler => :foo)
+      @handler = Oregano::Network::HTTP::RackREST.new(:handler => :foo)
     end
 
     def mk_req(uri, opts = {})
@@ -26,7 +26,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
 
     let(:minimal_certificate) do
       key = OpenSSL::PKey::RSA.new(512)
-      signer = Puppet::SSL::CertificateSigner.new
+      signer = Oregano::SSL::CertificateSigner.new
       cert = OpenSSL::X509::Certificate.new
       cert.version = 2
       cert.serial = 0
@@ -67,7 +67,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
 
       it "should return the unescaped path for an escaped request path" do
         unescaped_path = '/foo/bar baz'
-        escaped_path = Puppet::Util.uri_encode(unescaped_path)
+        escaped_path = Oregano::Util.uri_encode(unescaped_path)
         req = mk_req(escaped_path)
         expect(@handler.path(req)).to eq(unescaped_path)
       end
@@ -77,7 +77,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
         expect(@handler.body(req)).to eq("mybody")
       end
 
-      it "should return the an Puppet::SSL::Certificate instance as the client_cert" do
+      it "should return the an Oregano::SSL::Certificate instance as the client_cert" do
         req = mk_req('/foo/bar', 'SSL_CLIENT_CERT' => minimal_certificate.to_pem)
         expect(@handler.client_cert(req).content.to_pem).to eq(minimal_certificate.to_pem)
       end
@@ -117,7 +117,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
         end
 
         it "should return a RackFile adapter as body" do
-          @response.expects(:body=).with { |val| val.is_a?(Puppet::Network::HTTP::RackREST::RackFile) }
+          @response.expects(:body=).with { |val| val.is_a?(Oregano::Network::HTTP::RackREST::RackFile) }
 
           @handler.set_response(@response, @file, 200)
         end
@@ -127,7 +127,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
         req = mk_req('/production/report/foo', :method => 'PUT')
         req.body.expects(:read).at_least_once
 
-        Puppet::Transaction::Report.stubs(:save)
+        Oregano::Transaction::Report.stubs(:save)
 
         @handler.process(req, @response)
       end
@@ -170,7 +170,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
       end
 
       it "should CGI-decode the HTTP parameters" do
-        encoding = Puppet::Util.uri_query_encode("foo bar")
+        encoding = Oregano::Util.uri_query_encode("foo bar")
         req = mk_req("/?foo=#{encoding}")
         result = @handler.params(req)
         expect(result[:foo]).to eq("foo bar")
@@ -201,7 +201,7 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
       end
 
       it "should treat YAML encoded parameters like it was any string" do
-        escaping = Puppet::Util.uri_query_encode(YAML.dump(%w{one two}))
+        escaping = Oregano::Util.uri_query_encode(YAML.dump(%w{one two}))
         req = mk_req("/?foo=#{escaping}")
         expect(@handler.params(req)[:foo]).to eq("---\n- one\n- two\n")
       end
@@ -229,61 +229,61 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
 
     describe "with pre-validated certificates" do
       it "should retrieve the hostname by finding the CN given in :ssl_client_header, in the format returned by Apache (RFC2253)" do
-        Puppet[:ssl_client_header] = "myheader"
+        Oregano[:ssl_client_header] = "myheader"
         req = mk_req('/', "myheader" => "O=Foo\\, Inc,CN=host.domain.com")
         expect(@handler.params(req)[:node]).to eq("host.domain.com")
       end
 
       it "should retrieve the hostname by finding the CN given in :ssl_client_header, in the format returned by nginx" do
-        Puppet[:ssl_client_header] = "myheader"
+        Oregano[:ssl_client_header] = "myheader"
         req = mk_req('/', "myheader" => "/CN=host.domain.com")
         expect(@handler.params(req)[:node]).to eq("host.domain.com")
       end
 
       it "should retrieve the hostname by finding the CN given in :ssl_client_header, ignoring other fields" do
-        Puppet[:ssl_client_header] = "myheader"
+        Oregano[:ssl_client_header] = "myheader"
         req = mk_req('/', "myheader" => 'ST=Denial,CN=host.domain.com,O=Domain\\, Inc.')
         expect(@handler.params(req)[:node]).to eq("host.domain.com")
       end
 
       it "should use the :ssl_client_header to determine the parameter for checking whether the host certificate is valid" do
-        Puppet[:ssl_client_header] = "certheader"
-        Puppet[:ssl_client_verify_header] = "myheader"
+        Oregano[:ssl_client_header] = "certheader"
+        Oregano[:ssl_client_verify_header] = "myheader"
         req = mk_req('/', "myheader" => "SUCCESS", "certheader" => "CN=host.domain.com")
         expect(@handler.params(req)[:authenticated]).to be_truthy
       end
 
       it "should consider the host unauthenticated if the validity parameter does not contain 'SUCCESS'" do
-        Puppet[:ssl_client_header] = "certheader"
-        Puppet[:ssl_client_verify_header] = "myheader"
+        Oregano[:ssl_client_header] = "certheader"
+        Oregano[:ssl_client_verify_header] = "myheader"
         req = mk_req('/', "myheader" => "whatever", "certheader" => "CN=host.domain.com")
         expect(@handler.params(req)[:authenticated]).to be_falsey
       end
 
       it "should consider the host unauthenticated if no certificate information is present" do
-        Puppet[:ssl_client_header] = "certheader"
-        Puppet[:ssl_client_verify_header] = "myheader"
+        Oregano[:ssl_client_header] = "certheader"
+        Oregano[:ssl_client_verify_header] = "myheader"
         req = mk_req('/', "myheader" => nil, "certheader" => "CN=host.domain.com")
         expect(@handler.params(req)[:authenticated]).to be_falsey
       end
 
       it "should resolve the node name with an ip address look-up if no certificate is present" do
-        Puppet[:ssl_client_header] = "myheader"
+        Oregano[:ssl_client_header] = "myheader"
         req = mk_req('/', "myheader" => nil)
         @handler.expects(:resolve_node).returns("host.domain.com")
         expect(@handler.params(req)[:node]).to eq("host.domain.com")
       end
 
       it "should resolve the node name with an ip address look-up if a certificate without a CN is present" do
-        Puppet[:ssl_client_header] = "myheader"
+        Oregano[:ssl_client_header] = "myheader"
         req = mk_req('/', "myheader" => "O=no CN")
         @handler.expects(:resolve_node).returns("host.domain.com")
         expect(@handler.params(req)[:node]).to eq("host.domain.com")
       end
 
       it "should not allow authentication via the verify header if there is no CN available" do
-        Puppet[:ssl_client_header] = "dn_header"
-        Puppet[:ssl_client_verify_header] = "verify_header"
+        Oregano[:ssl_client_header] = "dn_header"
+        Oregano[:ssl_client_verify_header] = "verify_header"
         req = mk_req('/', "dn_header" => "O=no CN", "verify_header" => 'SUCCESS')
 
         @handler.expects(:resolve_node).returns("host.domain.com")
@@ -294,11 +294,11 @@ describe "Puppet::Network::HTTP::RackREST", :if => Puppet.features.rack? do
   end
 end
 
-describe Puppet::Network::HTTP::RackREST::RackFile do
+describe Oregano::Network::HTTP::RackREST::RackFile do
   before(:each) do
     stat = stub 'stat', :size => 100
     @file = stub 'file', :stat => stat, :path => "/tmp/path"
-    @rackfile = Puppet::Network::HTTP::RackREST::RackFile.new(@file)
+    @rackfile = Oregano::Network::HTTP::RackREST::RackFile.new(@file)
   end
 
   it "should have an each method" do

@@ -1,4 +1,4 @@
-test_name 'puppet module search should handle multiple search terms sensibly'
+test_name 'oregano module search should handle multiple search terms sensibly'
 
 tag 'audit:low',
     'audit:unit',
@@ -9,16 +9,16 @@ tag 'audit:low',
 
 # FIXME: The Forge doesn't properly handle multi-term searches.
 # step 'Search for a module by description'
-# on master, puppet("module search 'notice here'") do
+# on master, oregano("module search 'notice here'") do
 #   assert stdout !~ /'notice here'/
 # end
 #
 # step 'Search for a module by name'
-# on master, puppet("module search 'ance-geo ance-std'") do
+# on master, oregano("module search 'ance-geo ance-std'") do
 #   assert stdout !~ /'ance-geo ance-std'/
 # end
 #
 # step 'Search for multiple keywords'
-# on master, puppet("module search 'star trek'") do
+# on master, oregano("module search 'star trek'") do
 #   assert stdout !~ /'star trek'/
 # end

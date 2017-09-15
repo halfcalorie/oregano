@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 
 # This file contains basic testing of variable references and assignments
@@ -12,7 +12,7 @@ require 'puppet/pops/evaluator/evaluator_impl'
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Impl::EvaluatorImpl' do
+describe 'Oregano::Pops::Impl::EvaluatorImpl' do
   include EvaluatorRspecHelper
 
   context "When the evaluator deals with variables" do

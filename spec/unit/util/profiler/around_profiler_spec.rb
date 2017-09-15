@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/util/profiler'
+require 'oregano/util/profiler'
 
-describe Puppet::Util::Profiler::AroundProfiler do
+describe Oregano::Util::Profiler::AroundProfiler do
   let(:child) { TestAroundProfiler.new() }
-  let(:profiler) { Puppet::Util::Profiler::AroundProfiler.new }
+  let(:profiler) { Oregano::Util::Profiler::AroundProfiler.new }
 
   before :each do
     profiler.add_profiler(child)

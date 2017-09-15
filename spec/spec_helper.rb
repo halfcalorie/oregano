@@ -1,11 +1,11 @@
-# NOTE: a lot of the stuff in this file is duplicated in the "puppet_spec_helper" in the project
-#  puppetlabs_spec_helper.  We should probably eat our own dog food and get rid of most of this from here,
-#  and have the puppet core itself use puppetlabs_spec_helper
+# NOTE: a lot of the stuff in this file is duplicated in the "oregano_spec_helper" in the project
+#  oreganolabs_spec_helper.  We should probably eat our own dog food and get rid of most of this from here,
+#  and have the oregano core itself use oreganolabs_spec_helper
 
 dir = File.expand_path(File.dirname(__FILE__))
 $LOAD_PATH.unshift File.join(dir, 'lib')
 
-# Don't want puppet getting the command line arguments for rake or autotest
+# Don't want oregano getting the command line arguments for rake or autotest
 ARGV.clear
 
 begin
@@ -13,12 +13,12 @@ begin
 rescue LoadError
 end
 
-require 'puppet'
+require 'oregano'
 
 # Stub out gettext's `_` and `n_()` methods, which attempt to load translations.
 # Several of our mocks (mostly around file system interaction) are broken by
 # FastGettext's implementation of these methods.
-require 'puppet/gettext/stubs'
+require 'oregano/gettext/stubs'
 
 gem 'rspec', '>=3.1.0'
 require 'rspec/expectations'
@@ -26,7 +26,7 @@ require 'rspec/its'
 require 'rspec/collection_matchers'
 
 # So everyone else doesn't have to include this base constant.
-module PuppetSpec
+module OreganoSpec
   FIXTURE_DIR = File.join(dir = File.expand_path(File.dirname(__FILE__)), "fixtures") unless defined?(FIXTURE_DIR)
 end
 
@@ -34,13 +34,13 @@ require 'pathname'
 require 'tmpdir'
 require 'fileutils'
 
-require 'puppet_spec/verbose'
-require 'puppet_spec/files'
-require 'puppet_spec/settings'
-require 'puppet_spec/fixtures'
-require 'puppet_spec/matchers'
-require 'puppet_spec/unindent'
-require 'puppet/test/test_helper'
+require 'oregano_spec/verbose'
+require 'oregano_spec/files'
+require 'oregano_spec/settings'
+require 'oregano_spec/fixtures'
+require 'oregano_spec/matchers'
+require 'oregano_spec/unindent'
+require 'oregano/test/test_helper'
 
 Pathname.glob("#{dir}/shared_contexts/*.rb") do |file|
   require file.relative_path_from(Pathname.new(dir))
@@ -56,13 +56,13 @@ end
 
 require 'vcr'
 VCR.configure do |vcr|
-  vcr.cassette_library_dir = File.expand_path('vcr/cassettes', PuppetSpec::FIXTURE_DIR)
+  vcr.cassette_library_dir = File.expand_path('vcr/cassettes', OreganoSpec::FIXTURE_DIR)
   vcr.hook_into :webmock
   vcr.configure_rspec_metadata!
 end
 
 RSpec.configure do |config|
-  include PuppetSpec::Fixtures
+  include OreganoSpec::Fixtures
 
   # Examples or groups can selectively tag themselves as broken.
   # For example;
@@ -79,14 +79,14 @@ RSpec.configure do |config|
 
   config.mock_with :mocha
 
-  tmpdir = Puppet::FileSystem.expand_path(Dir.mktmpdir("rspecrun"))
-  oldtmpdir = Puppet::FileSystem.expand_path(Dir.tmpdir())
+  tmpdir = Oregano::FileSystem.expand_path(Dir.mktmpdir("rspecrun"))
+  oldtmpdir = Oregano::FileSystem.expand_path(Dir.tmpdir())
   ENV['TMPDIR'] = tmpdir
 
-  Puppet::Test::TestHelper.initialize
+  Oregano::Test::TestHelper.initialize
 
   config.before :all do
-    Puppet::Test::TestHelper.before_all_tests()
+    Oregano::Test::TestHelper.before_all_tests()
     if ENV['PROFILE'] == 'all'
       require 'ruby-prof'
       RubyProf.start
@@ -103,7 +103,7 @@ RSpec.configure do |config|
       end
     end
 
-    Puppet::Test::TestHelper.after_all_tests()
+    Oregano::Test::TestHelper.after_all_tests()
   end
 
   config.before :each do |test|
@@ -129,43 +129,43 @@ RSpec.configure do |config|
     #  obscured by all of the log output
     @logs = []
     if ENV["PUPPET_TEST_LOG_LEVEL"]
-      Puppet::Util::Log.level = ENV["PUPPET_TEST_LOG_LEVEL"].intern
+      Oregano::Util::Log.level = ENV["PUPPET_TEST_LOG_LEVEL"].intern
     end
     if ENV["PUPPET_TEST_LOG"]
-      Puppet::Util::Log.newdestination(ENV["PUPPET_TEST_LOG"])
+      Oregano::Util::Log.newdestination(ENV["PUPPET_TEST_LOG"])
       m = test.metadata
-      Puppet.notice("*** BEGIN TEST #{m[:file_path]}:#{m[:line_number]}")
+      Oregano.notice("*** BEGIN TEST #{m[:file_path]}:#{m[:line_number]}")
     end
-    Puppet::Util::Log.newdestination(Puppet::Test::LogCollector.new(@logs))
+    Oregano::Util::Log.newdestination(Oregano::Test::LogCollector.new(@logs))
 
-    @log_level = Puppet::Util::Log.level
+    @log_level = Oregano::Util::Log.level
 
-    base = PuppetSpec::Files.tmpdir('tmp_settings')
-    Puppet[:vardir] = File.join(base, 'var')
-    Puppet[:confdir] = File.join(base, 'etc')
-    Puppet[:codedir] = File.join(base, 'code')
-    Puppet[:logdir] = "$vardir/log"
-    Puppet[:rundir] = "$vardir/run"
-    Puppet[:hiera_config] = File.join(base, 'hiera')
+    base = OreganoSpec::Files.tmpdir('tmp_settings')
+    Oregano[:vardir] = File.join(base, 'var')
+    Oregano[:confdir] = File.join(base, 'etc')
+    Oregano[:codedir] = File.join(base, 'code')
+    Oregano[:logdir] = "$vardir/log"
+    Oregano[:rundir] = "$vardir/run"
+    Oregano[:hiera_config] = File.join(base, 'hiera')
 
-    FileUtils.mkdir_p Puppet[:statedir]
+    FileUtils.mkdir_p Oregano[:statedir]
 
-    Puppet::Test::TestHelper.before_each_test()
+    Oregano::Test::TestHelper.before_each_test()
   end
 
   config.after :each do
-    Puppet::Test::TestHelper.after_each_test()
+    Oregano::Test::TestHelper.after_each_test()
 
-    # TODO: would like to move this into puppetlabs_spec_helper, but there are namespace issues at the moment.
-    PuppetSpec::Files.cleanup
+    # TODO: would like to move this into oreganolabs_spec_helper, but there are namespace issues at the moment.
+    OreganoSpec::Files.cleanup
 
     # TODO: this should be abstracted in the future--see comments above the '@logs' block in the
     #  "before" code above.
     #
     # clean up after the logging changes that we made before each test.
     @logs.clear
-    Puppet::Util::Log.close_all
-    Puppet::Util::Log.level = @log_level
+    Oregano::Util::Log.close_all
+    Oregano::Util::Log.level = @log_level
 
     # This will perform a GC between tests, but only if actually required.  We
     # experimented with forcing a GC run, and that was less efficient than

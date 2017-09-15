@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops/types/recursion_guard'
+require 'oregano/pops/types/recursion_guard'
 
-module Puppet::Pops::Types
+module Oregano::Pops::Types
 describe 'the RecursionGuard' do
   let(:guard) { RecursionGuard.new }
 

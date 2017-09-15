@@ -1,6 +1,6 @@
-# Profiling Puppet
+# Profiling Oregano
 
-Puppet is a beast. Puppet is at times a very *slow* beast. Maybe we can find
+Oregano is a beast. Oregano is at times a very *slow* beast. Maybe we can find
 what is making it slow and fix it.
 
 ## Coarse Grained Profiling
@@ -14,7 +14,7 @@ are several options:
   startup.
 * To profile a single run for an agent add `--profile` to your agent's options
   for that run.
-* To profile a masterless run add `--profile` to your `puppet apply` options.
+* To profile a masterless run add `--profile` to your `oregano apply` options.
 
 The timing information will be output to the logs and tagged with the word
 "PROFILE".
@@ -33,7 +33,7 @@ Rack::RubyProf, :path => '/temp/profile'` to the config.ru for your master.
 
 ## Running the Benchmarks
 
-Puppet has a number of benchmark scenarios to pinpoint problems in specific,
+Oregano has a number of benchmark scenarios to pinpoint problems in specific,
 known, use cases. The benchmark scenarios live in the `benchmarks` directory.
 
 To run a scenario you do:

@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/parameter'
+require 'oregano/parameter'
 
-describe Puppet::Parameter do
+describe Oregano::Parameter do
   before do
-    @class = Class.new(Puppet::Parameter) do
+    @class = Class.new(Oregano::Parameter) do
       @name = :foo
     end
     @class.initvars
@@ -15,10 +15,10 @@ describe Puppet::Parameter do
   end
 
   it "should create a value collection" do
-    @class = Class.new(Puppet::Parameter)
+    @class = Class.new(Oregano::Parameter)
     expect(@class.value_collection).to be_nil
     @class.initvars
-    expect(@class.value_collection).to be_instance_of(Puppet::Parameter::ValueCollection)
+    expect(@class.value_collection).to be_instance_of(Oregano::Parameter::ValueCollection)
   end
 
   it "should return its name as a string when converted to a string" do
@@ -80,12 +80,12 @@ describe Puppet::Parameter do
 
     it "should catch abnormal failures thrown during validation" do
       @class.validate { |v| raise "This is broken" }
-      expect { @parameter.validate("eh") }.to raise_error(Puppet::DevError)
+      expect { @parameter.validate("eh") }.to raise_error(Oregano::DevError)
     end
 
     it "should fail if the value is not a defined value or alias and does not match a regex" do
       @class.newvalues :foo
-      expect { @parameter.validate("bar") }.to raise_error(Puppet::Error)
+      expect { @parameter.validate("bar") }.to raise_error(Oregano::Error)
     end
 
     it "should succeed if the value is one of the defined values" do
@@ -122,7 +122,7 @@ describe Puppet::Parameter do
 
     it "should catch abnormal failures thrown during munging" do
       @class.munge { |v| raise "This is broken" }
-      expect { @parameter.munge("eh") }.to raise_error(Puppet::DevError)
+      expect { @parameter.munge("eh") }.to raise_error(Oregano::DevError)
     end
 
     it "should return return any matching defined values" do
@@ -213,7 +213,7 @@ describe Puppet::Parameter do
     end
 
     it 'should format hashes with nested Objects appropriately' do
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       type = tf.object({'name' => 'MyType', 'attributes' => { 'qux' => tf.integer, 'quux' => tf.string }})
       expect(described_class.format_value_for_display(
         {1 => 'foo', 'bar' => type.create(1, 'one'), 'baz' => type.create(2, 'two')}
@@ -233,7 +233,7 @@ describe Puppet::Parameter do
     end
 
     it 'should format Objects with nested Objects appropriately' do
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       inner_type = tf.object({'name' => 'MyInnerType', 'attributes' => { 'qux' => tf.integer, 'quux' => tf.string }})
       outer_type = tf.object({'name' => 'MyOuterType', 'attributes' => { 'x' => tf.string, 'inner' => inner_type }})
       expect(described_class.format_value_for_display(

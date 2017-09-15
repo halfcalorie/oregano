@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package).provider(:windows) do
+describe Oregano::Type.type(:package).provider(:windows) do
   let (:name)        { 'mysql-5.1.58-win-x64' }
   let (:source)      { 'E:\mysql-5.1.58-win-x64.msi' }
-  let (:resource)    {  Puppet::Type.type(:package).new(:name => name, :provider => :windows, :source => source) }
+  let (:resource)    {  Oregano::Type.type(:package).new(:name => name, :provider => :windows, :source => source) }
   let (:provider)    { resource.provider }
   let (:execute_options) do {:failonfail => false, :combine => true} end
 
@@ -14,7 +14,7 @@ describe Puppet::Type.type(:package).provider(:windows) do
   end
 
   def expect_execute(command, status)
-    provider.expects(:execute).with(command, execute_options).returns(Puppet::Util::Execution::ProcessOutput.new('',status))
+    provider.expects(:execute).with(command, execute_options).returns(Oregano::Util::Execution::ProcessOutput.new('',status))
   end
 
   describe 'provider features' do
@@ -25,9 +25,9 @@ describe Puppet::Type.type(:package).provider(:windows) do
     it { is_expected.to be_versionable }
   end
 
-  describe 'on Windows', :if => Puppet.features.microsoft_windows? do
+  describe 'on Windows', :if => Oregano.features.microsoft_windows? do
     it 'should be the default provider' do
-      expect(Puppet::Type.type(:package).defaultprovider).to eq(subject.class)
+      expect(Oregano::Type.type(:package).defaultprovider).to eq(subject.class)
     end
   end
 
@@ -39,7 +39,7 @@ describe Puppet::Type.type(:package).provider(:windows) do
       prov1 = stub('prov1', :name => 'pkg1', :version => '1.0.0', :package => pkg1)
       prov2 = stub('prov2', :name => 'pkg2', :version => nil, :package => pkg2)
 
-      Puppet::Provider::Package::Windows::Package.expects(:map).multiple_yields([prov1], [prov2]).returns([prov1, prov2])
+      Oregano::Provider::Package::Windows::Package.expects(:map).multiple_yields([prov1], [prov2]).returns([prov1, prov2])
 
       providers = provider.class.instances
       expect(providers.count).to eq(2)
@@ -53,7 +53,7 @@ describe Puppet::Type.type(:package).provider(:windows) do
     end
 
     it 'should return an empty array if none found' do
-      Puppet::Provider::Package::Windows::Package.expects(:map).returns([])
+      Oregano::Provider::Package::Windows::Package.expects(:map).returns([])
 
       expect(provider.class.instances).to eq([])
     end
@@ -63,7 +63,7 @@ describe Puppet::Type.type(:package).provider(:windows) do
     it 'should return the hash of the matched packaged' do
       pkg = mock(:name => 'pkg1', :version => nil)
       pkg.expects(:match?).returns(true)
-      Puppet::Provider::Package::Windows::Package.expects(:find).yields(pkg)
+      Oregano::Provider::Package::Windows::Package.expects(:find).yields(pkg)
 
       expect(provider.query).to eq({ :name => 'pkg1', :ensure => :installed, :provider => :windows })
     end
@@ -71,13 +71,13 @@ describe Puppet::Type.type(:package).provider(:windows) do
     it 'should include the version string when present' do
       pkg = mock(:name => 'pkg1', :version => '1.0.0')
       pkg.expects(:match?).returns(true)
-      Puppet::Provider::Package::Windows::Package.expects(:find).yields(pkg)
+      Oregano::Provider::Package::Windows::Package.expects(:find).yields(pkg)
 
       expect(provider.query).to eq({ :name => 'pkg1', :ensure => '1.0.0', :provider => :windows })
     end
 
     it 'should return nil if no package was found' do
-      Puppet::Provider::Package::Windows::Package.expects(:find)
+      Oregano::Provider::Package::Windows::Package.expects(:find)
 
       expect(provider.query).to be_nil
     end
@@ -88,7 +88,7 @@ describe Puppet::Type.type(:package).provider(:windows) do
     let(:klass) { mock('installer', :install_command => ['blarg.exe', '/S'] ) }
 
     before :each do
-      Puppet::Provider::Package::Windows::Package.expects(:installer_class).returns(klass)
+      Oregano::Provider::Package::Windows::Package.expects(:installer_class).returns(klass)
     end
 
     it 'should join the install command and options' do
@@ -126,13 +126,13 @@ describe Puppet::Type.type(:package).provider(:windows) do
       provider.install
     end
 
-    it 'should fail otherwise', :if => Puppet.features.microsoft_windows? do
+    it 'should fail otherwise', :if => Oregano.features.microsoft_windows? do
       expect_execute(command, 5)
 
       expect do
         provider.install
       end.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
         expect(error.code).to eq(5) # ERROR_ACCESS_DENIED
       end
     end
@@ -181,13 +181,13 @@ describe Puppet::Type.type(:package).provider(:windows) do
       provider.uninstall
     end
 
-    it 'should fail otherwise', :if => Puppet.features.microsoft_windows? do
+    it 'should fail otherwise', :if => Oregano.features.microsoft_windows? do
       expect_execute(command, 5)
 
       expect do
         provider.uninstall
       end.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
         expect(error.code).to eq(5) # ERROR_ACCESS_DENIED
       end
     end
@@ -197,7 +197,7 @@ describe Puppet::Type.type(:package).provider(:windows) do
     it 'should fail if the source parameter is empty' do
       expect do
         resource[:source] = ''
-      end.to raise_error(Puppet::Error, /The source parameter cannot be empty when using the Windows provider/)
+      end.to raise_error(Oregano::Error, /The source parameter cannot be empty when using the Windows provider/)
     end
 
     it 'should accept a source' do

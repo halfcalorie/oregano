@@ -1,18 +1,18 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/file_bucket/dipper'
+require 'oregano/file_bucket/dipper'
 
-tidy = Puppet::Type.type(:tidy)
+tidy = Oregano::Type.type(:tidy)
 
 describe tidy do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before do
     @basepath = make_absolute("/what/ever")
-    Puppet.settings.stubs(:use)
+    Oregano.settings.stubs(:use)
   end
 
-  context "when normalizing 'path' on windows", :if => Puppet.features.microsoft_windows? do
+  context "when normalizing 'path' on windows", :if => Oregano.features.microsoft_windows? do
     it "replaces backslashes with forward slashes" do
       resource = tidy.new(:path => 'c:\directory')
       expect(resource[:path]).to eq('c:/directory')
@@ -22,7 +22,7 @@ describe tidy do
   it "should use :lstat when stating a file" do
     path = '/foo/bar'
     stat = mock 'stat'
-    Puppet::FileSystem.expects(:lstat).with(path).returns stat
+    Oregano::FileSystem.expects(:lstat).with(path).returns stat
 
     resource = tidy.new :path => path, :age => "1d"
 
@@ -31,18 +31,18 @@ describe tidy do
 
   [:age, :size, :path, :matches, :type, :recurse, :rmdirs].each do |param|
     it "should have a #{param} parameter" do
-      expect(Puppet::Type.type(:tidy).attrclass(param).ancestors).to be_include(Puppet::Parameter)
+      expect(Oregano::Type.type(:tidy).attrclass(param).ancestors).to be_include(Oregano::Parameter)
     end
 
     it "should have documentation for its #{param} param" do
-      expect(Puppet::Type.type(:tidy).attrclass(param).doc).to be_instance_of(String)
+      expect(Oregano::Type.type(:tidy).attrclass(param).doc).to be_instance_of(String)
     end
   end
 
   describe "when validating parameter values" do
     describe "for 'recurse'" do
       before do
-        @tidy = Puppet::Type.type(:tidy).new :path => "/tmp", :age => "100d"
+        @tidy = Oregano::Type.type(:tidy).new :path => "/tmp", :age => "100d"
       end
 
       it "should allow 'true'" do
@@ -66,23 +66,23 @@ describe tidy do
       end
 
       it "should not allow arbitrary values" do
-        expect { @tidy[:recurse] = "whatever" }.to raise_error(Puppet::ResourceError, /Parameter recurse failed/)
+        expect { @tidy[:recurse] = "whatever" }.to raise_error(Oregano::ResourceError, /Parameter recurse failed/)
       end
     end
 
     describe "for 'matches'" do
       before do
-        @tidy = Puppet::Type.type(:tidy).new :path => "/tmp", :age => "100d"
+        @tidy = Oregano::Type.type(:tidy).new :path => "/tmp", :age => "100d"
       end
 
       it "should object if matches is given with recurse is not specified" do
-        expect { @tidy[:matches] = '*.doh' }.to raise_error(Puppet::ResourceError, /Parameter matches failed/)
+        expect { @tidy[:matches] = '*.doh' }.to raise_error(Oregano::ResourceError, /Parameter matches failed/)
       end
       it "should object if matches is given and recurse is 0" do
-        expect { @tidy[:recurse] = 0; @tidy[:matches] = '*.doh' }.to raise_error(Puppet::ResourceError, /Parameter matches failed/)
+        expect { @tidy[:recurse] = 0; @tidy[:matches] = '*.doh' }.to raise_error(Oregano::ResourceError, /Parameter matches failed/)
       end
       it "should object if matches is given and recurse is false" do
-        expect { @tidy[:recurse] = false; @tidy[:matches] = '*.doh' }.to raise_error(Puppet::ResourceError, /Parameter matches failed/)
+        expect { @tidy[:recurse] = false; @tidy[:matches] = '*.doh' }.to raise_error(Oregano::ResourceError, /Parameter matches failed/)
       end
       it "should not object if matches is given and recurse is > 0" do
         expect { @tidy[:recurse] = 1; @tidy[:matches] = '*.doh' }.not_to raise_error
@@ -105,7 +105,7 @@ describe tidy do
 
     convertors.each do |unit, multiple|
       it "should consider a #{unit} to be #{multiple} seconds" do
-        @tidy = Puppet::Type.type(:tidy).new :path => @basepath, :age => "5#{unit.to_s[0..0]}"
+        @tidy = Oregano::Type.type(:tidy).new :path => @basepath, :age => "5#{unit.to_s[0..0]}"
 
         expect(@tidy[:age]).to eq(5 * multiple)
       end
@@ -123,7 +123,7 @@ describe tidy do
 
     convertors.each do |unit, multiple|
       it "should consider a #{unit} to be 1024^#{multiple} bytes" do
-        @tidy = Puppet::Type.type(:tidy).new :path => @basepath, :size => "5#{unit}"
+        @tidy = Oregano::Type.type(:tidy).new :path => @basepath, :size => "5#{unit}"
 
         total = 5
         multiple.times { total *= 1024 }
@@ -134,7 +134,7 @@ describe tidy do
 
   describe "when tidying" do
     before do
-      @tidy = Puppet::Type.type(:tidy).new :path => @basepath
+      @tidy = Oregano::Type.type(:tidy).new :path => @basepath
       @stat = stub 'stat', :ftype => "directory"
       lstat_is(@basepath, @stat)
     end
@@ -142,25 +142,25 @@ describe tidy do
     describe "and generating files" do
       it "should set the backup on the file if backup is set on the tidy instance" do
         @tidy[:backup] = "whatever"
-        Puppet::Type.type(:file).expects(:new).with { |args| args[:backup] == "whatever" }
+        Oregano::Type.type(:file).expects(:new).with { |args| args[:backup] == "whatever" }
 
         @tidy.mkfile(@basepath)
       end
 
       it "should set the file's path to the tidy's path" do
-        Puppet::Type.type(:file).expects(:new).with { |args| args[:path] == @basepath }
+        Oregano::Type.type(:file).expects(:new).with { |args| args[:path] == @basepath }
 
         @tidy.mkfile(@basepath)
       end
 
       it "should configure the file for deletion" do
-        Puppet::Type.type(:file).expects(:new).with { |args| args[:ensure] == :absent }
+        Oregano::Type.type(:file).expects(:new).with { |args| args[:ensure] == :absent }
 
         @tidy.mkfile(@basepath)
       end
 
       it "should force deletion on the file" do
-        Puppet::Type.type(:file).expects(:new).with { |args| args[:force] == true }
+        Oregano::Type.type(:file).expects(:new).with { |args| args[:force] == true }
 
         @tidy.mkfile(@basepath)
       end
@@ -175,7 +175,7 @@ describe tidy do
     describe "and recursion is not used" do
       it "should generate a file resource if the file should be tidied" do
         @tidy.expects(:tidy?).with(@basepath).returns true
-        file = Puppet::Type.type(:file).new(:path => @basepath+"/eh")
+        file = Oregano::Type.type(:file).new(:path => @basepath+"/eh")
         @tidy.expects(:mkfile).with(@basepath).returns file
 
         expect(@tidy.generate).to eq([file])
@@ -192,13 +192,13 @@ describe tidy do
     describe "and recursion is used" do
       before do
         @tidy[:recurse] = true
-        Puppet::FileServing::Fileset.any_instance.stubs(:stat).returns mock("stat")
-        @fileset = Puppet::FileServing::Fileset.new(@basepath)
-        Puppet::FileServing::Fileset.stubs(:new).returns @fileset
+        Oregano::FileServing::Fileset.any_instance.stubs(:stat).returns mock("stat")
+        @fileset = Oregano::FileServing::Fileset.new(@basepath)
+        Oregano::FileServing::Fileset.stubs(:new).returns @fileset
       end
 
       it "should use a Fileset for infinite recursion" do
-        Puppet::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true).returns @fileset
+        Oregano::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true).returns @fileset
         @fileset.expects(:files).returns %w{. one two}
         @tidy.stubs(:tidy?).returns false
 
@@ -207,7 +207,7 @@ describe tidy do
 
       it "should use a Fileset for limited recursion" do
         @tidy[:recurse] = 42
-        Puppet::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true, :recurselimit => 42).returns @fileset
+        Oregano::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true, :recurselimit => 42).returns @fileset
         @fileset.expects(:files).returns %w{. one two}
         @tidy.stubs(:tidy?).returns false
 
@@ -221,7 +221,7 @@ describe tidy do
         @tidy.expects(:tidy?).with(@basepath+"/one").returns true
         @tidy.expects(:tidy?).with(@basepath+"/two").returns false
 
-        file = Puppet::Type.type(:file).new(:path => @basepath+"/eh")
+        file = Oregano::Type.type(:file).new(:path => @basepath+"/eh")
         @tidy.expects(:mkfile).with(@basepath).returns file
         @tidy.expects(:mkfile).with(@basepath+"/one").returns file
 
@@ -231,7 +231,7 @@ describe tidy do
 
     describe "and determining whether a file matches provided glob patterns" do
       before do
-        @tidy = Puppet::Type.type(:tidy).new :path => @basepath, :recurse => 1
+        @tidy = Oregano::Type.type(:tidy).new :path => @basepath, :recurse => 1
         @tidy[:matches] = %w{*foo* *bar*}
 
         @stat = mock 'stat'
@@ -257,7 +257,7 @@ describe tidy do
 
     describe "and determining whether a file is too old" do
       before do
-        @tidy = Puppet::Type.type(:tidy).new :path => @basepath
+        @tidy = Oregano::Type.type(:tidy).new :path => @basepath
         @stat = stub 'stat'
 
         @tidy[:age] = "1s"
@@ -287,7 +287,7 @@ describe tidy do
 
     describe "and determining whether a file is too large" do
       before do
-        @tidy = Puppet::Type.type(:tidy).new :path => @basepath
+        @tidy = Oregano::Type.type(:tidy).new :path => @basepath
         @stat = stub 'stat', :ftype => "file"
 
         @tidy[:size] = "1kb"
@@ -315,7 +315,7 @@ describe tidy do
 
     describe "and determining whether a file should be tidied" do
       before do
-        @tidy = Puppet::Type.type(:tidy).new :path => @basepath
+        @tidy = Oregano::Type.type(:tidy).new :path => @basepath
         @stat = stub 'stat', :ftype => "file"
         lstat_is(@basepath, @stat)
       end
@@ -397,8 +397,8 @@ describe tidy do
       it "should sort the results inversely by path length, so files are added to the catalog before their directories" do
         @tidy[:recurse] = true
         @tidy[:rmdirs] = true
-        fileset = Puppet::FileServing::Fileset.new(@basepath)
-        Puppet::FileServing::Fileset.expects(:new).returns fileset
+        fileset = Oregano::FileServing::Fileset.new(@basepath)
+        Oregano::FileServing::Fileset.expects(:new).returns fileset
         fileset.expects(:files).returns %w{. one one/two}
 
         @tidy.stubs(:tidy?).returns true
@@ -411,7 +411,7 @@ describe tidy do
       @tidy[:recurse] = true
       @tidy[:rmdirs] = true
       fileset = mock 'fileset'
-      Puppet::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true).returns fileset
+      Oregano::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true).returns fileset
       fileset.expects(:files).returns %w{. one two one/subone two/subtwo one/subone/ssone}
       @tidy.stubs(:tidy?).returns true
 
@@ -423,7 +423,7 @@ describe tidy do
         @basepath+"/one/subone" => [@basepath+"/one/subone/ssone"]
       }.each do |parent, children|
         children.each do |child|
-          ref = Puppet::Resource.new(:file, child)
+          ref = Oregano::Resource.new(:file, child)
           expect(result[parent][:require].find { |req| req.to_s == ref.to_s }).not_to be_nil
         end
       end
@@ -433,7 +433,7 @@ describe tidy do
       @tidy[:recurse] = true
       @tidy[:rmdirs] = true
       fileset = mock 'fileset'
-      Puppet::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true).returns fileset
+      Oregano::FileServing::Fileset.expects(:new).with(@basepath, :recurse => true).returns fileset
       fileset.expects(:files).returns %w{. a a/2 a/1 a/3}
       @tidy.stubs(:tidy?).returns true
 
@@ -443,10 +443,10 @@ describe tidy do
   end
 
   def lstat_is(path, stat)
-    Puppet::FileSystem.stubs(:lstat).with(path).returns(stat)
+    Oregano::FileSystem.stubs(:lstat).with(path).returns(stat)
   end
 
   def lstat_raises(path, error_class)
-    Puppet::FileSystem.expects(:lstat).with(path).raises Errno::ENOENT
+    Oregano::FileSystem.expects(:lstat).with(path).raises Errno::ENOENT
   end
 end

@@ -8,15 +8,15 @@ tag 'audit:medium',
 
 confine :to, {:platform => /osx/}, agents
 
-require 'puppet/acceptance/service_utils'
-extend Puppet::Acceptance::ServiceUtils
+require 'oregano/acceptance/service_utils'
+extend Oregano::Acceptance::ServiceUtils
 
 sloth_daemon_script = <<SCRIPT
 #!/usr/bin/env sh
 while true; do sleep 1; done
 SCRIPT
 
-svc = 'com.puppetlabs.sloth'
+svc = 'com.oreganolabs.sloth'
 launchd_script_path = "/Library/LaunchDaemons/#{svc}.plist"
 
 def launchctl_assert_status(host, service, expect_running)
@@ -51,7 +51,7 @@ SCRIPT
   create_remote_file(agent, launchd_script_path, launchd_script)
 
   teardown do
-    on agent, puppet_resource('service', 'com.puppetlabs.sloth', 'ensure=stopped', 'enable=true')
+    on agent, oregano_resource('service', 'com.oreganolabs.sloth', 'ensure=stopped', 'enable=true')
     on agent, "rm #{sloth_daemon_path} #{launchd_script_path}"
   end
 

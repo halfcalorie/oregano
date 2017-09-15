@@ -26,13 +26,13 @@ agents.each do |agent|
   on(agent, "chown $LOGNAME #{auth_keys}")
 
   #------- TESTS -------#
-  step "delete an authorized key entry with puppet (absent)"
+  step "delete an authorized key entry with oregano (absent)"
   args = ['ensure=absent',
           "user=$LOGNAME",
           "type='rsa'",
           "key='mykey'",
          ]
-  on(agent, puppet_resource('ssh_authorized_key', "#{name}", args))
+  on(agent, oregano_resource('ssh_authorized_key', "#{name}", args))
 
   step "verify entry deleted from #{auth_keys}"
   on(agent, "cat #{auth_keys}")  do |res|

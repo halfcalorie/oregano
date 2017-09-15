@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/pidlock'
+require 'oregano/util/pidlock'
 
-describe Puppet::Util::Pidlock do
-  require 'puppet_spec/files'
-  include PuppetSpec::Files
+describe Oregano::Util::Pidlock do
+  require 'oregano_spec/files'
+  include OreganoSpec::Files
 
   before(:each) do
     @lockfile = tmpfile("lock")
-    @lock = Puppet::Util::Pidlock.new(@lockfile)
+    @lock = Oregano::Util::Pidlock.new(@lockfile)
   end
 
   describe "#lock" do
@@ -47,27 +47,27 @@ describe Puppet::Util::Pidlock do
 
     it "should create a lock file" do
       @lock.lock
-      expect(Puppet::FileSystem.exist?(@lockfile)).to be_truthy
+      expect(Oregano::FileSystem.exist?(@lockfile)).to be_truthy
     end
 
     it 'should create an empty lock file even when pid is missing' do
       Process.stubs(:pid).returns('')
       @lock.lock
-      expect(Puppet::FileSystem.exist?(@lock.file_path)).to be_truthy
-      expect(Puppet::FileSystem.read(@lock.file_path)).to be_empty
+      expect(Oregano::FileSystem.exist?(@lock.file_path)).to be_truthy
+      expect(Oregano::FileSystem.read(@lock.file_path)).to be_empty
     end
 
     it 'should replace an existing empty lockfile with a pid, given a subsequent lock call made against a valid pid' do
       # empty pid results in empty lockfile
       Process.stubs(:pid).returns('')
       @lock.lock
-      expect(Puppet::FileSystem.exist?(@lock.file_path)).to be_truthy
+      expect(Oregano::FileSystem.exist?(@lock.file_path)).to be_truthy
 
       # next lock call with valid pid kills existing empty lockfile
       Process.stubs(:pid).returns(1234)
       @lock.lock
-      expect(Puppet::FileSystem.exist?(@lock.file_path)).to be_truthy
-      expect(Puppet::FileSystem.read(@lock.file_path)).to eq('1234')
+      expect(Oregano::FileSystem.exist?(@lock.file_path)).to be_truthy
+      expect(Oregano::FileSystem.read(@lock.file_path)).to eq('1234')
     end
 
     it "should expose the lock file_path" do
@@ -94,7 +94,7 @@ describe Puppet::Util::Pidlock do
     it "should get rid of the lock file" do
       @lock.lock
       @lock.unlock
-      expect(Puppet::FileSystem.exist?(@lockfile)).to be_falsey
+      expect(Oregano::FileSystem.exist?(@lockfile)).to be_falsey
     end
   end
 
@@ -108,7 +108,7 @@ describe Puppet::Util::Pidlock do
       Process.stubs(:pid).returns('')
       @lock.lock
       expect(@lock.locked?).to be_falsey
-      expect(Puppet::FileSystem.exist?(@lock.file_path)).to be_falsey
+      expect(Oregano::FileSystem.exist?(@lock.file_path)).to be_falsey
     end
   end
 
@@ -142,12 +142,12 @@ describe Puppet::Util::Pidlock do
     describe "#lock" do
       it "should clear stale locks" do
         expect(@lock.locked?).to be_falsey
-        expect(Puppet::FileSystem.exist?(@lockfile)).to be_falsey
+        expect(Oregano::FileSystem.exist?(@lockfile)).to be_falsey
       end
 
       it "should replace with new locks" do
         @lock.lock
-        expect(Puppet::FileSystem.exist?(@lockfile)).to be_truthy
+        expect(Oregano::FileSystem.exist?(@lockfile)).to be_truthy
         expect(@lock.lock_pid).to eq(6789)
         expect(@lock).to be_mine
         expect(@lock).to be_locked
@@ -161,7 +161,7 @@ describe Puppet::Util::Pidlock do
 
       it "should not remove the lock file" do
         @lock.unlock
-        expect(Puppet::FileSystem.exist?(@lockfile)).to be_truthy
+        expect(Oregano::FileSystem.exist?(@lockfile)).to be_truthy
       end
     end
   end
@@ -206,7 +206,7 @@ describe Puppet::Util::Pidlock do
 
       it "should not remove the lock file" do
         @lock.unlock
-        expect(Puppet::FileSystem.exist?(@lockfile)).to be_truthy
+        expect(Oregano::FileSystem.exist?(@lockfile)).to be_truthy
       end
 
       it "should still not be our lock" do

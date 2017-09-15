@@ -1,6 +1,6 @@
-test_name "puppet module install (ignoring dependencies)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (ignoring dependencies)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -20,7 +20,7 @@ step 'Setup'
 stub_forge_on(master)
 
 step "Install a module, but ignore dependencies"
-on master, puppet("module install #{module_author}-#{module_name} --ignore-dependencies") do
+on master, oregano("module install #{module_author}-#{module_name} --ignore-dependencies") do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 assert_module_installed_on_disk(master, module_name)

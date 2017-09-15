@@ -2,15 +2,15 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).attrclass(:owner) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:owner) do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('mode_spec') }
-  let(:resource) { Puppet::Type.type(:file).new :path => path, :owner => 'joeuser' }
+  let(:resource) { Oregano::Type.type(:file).new :path => path, :owner => 'joeuser' }
   let(:owner) { resource.property(:owner) }
 
   before :each do
-    Puppet.features.stubs(:root?).returns(true)
+    Oregano.features.stubs(:root?).returns(true)
   end
 
   describe "#insync?" do

@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet/util/profiler'
+require 'oregano/util/profiler'
 
-describe Puppet::Util::Profiler::Logging do
+describe Oregano::Util::Profiler::Logging do
   let(:logger) { SimpleLog.new }
   let(:identifier) { "Profiling ID" }
   let(:logging_profiler) { TestLoggingProfiler.new(logger, identifier) }
   let(:profiler) do
-    p = Puppet::Util::Profiler::AroundProfiler.new
+    p = Oregano::Util::Profiler::AroundProfiler.new
     p.add_profiler(logging_profiler)
     p
   end
@@ -45,7 +45,7 @@ describe Puppet::Util::Profiler::Logging do
     expect(logger.messages[3]).to match(/2 Another measurement/)
   end
 
-  class TestLoggingProfiler < Puppet::Util::Profiler::Logging
+  class TestLoggingProfiler < Oregano::Util::Profiler::Logging
     def do_start(metric, description)
       "the start"
     end

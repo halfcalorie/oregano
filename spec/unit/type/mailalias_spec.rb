@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:mailalias) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:mailalias) do
+  include OreganoSpec::Files
 
   let :tmpfile_path do tmpfile('afile') end
   let :target do tmpfile('mailalias') end
@@ -36,14 +36,14 @@ describe Puppet::Type.type(:mailalias) do
 
   it "should fail when file is not an absolute path" do
     expect {
-      Puppet::Type.type(:mailalias).new(:name => 'x', :file => 'afile')
-    }.to raise_error Puppet::Error, /File paths must be fully qualified/
+      Oregano::Type.type(:mailalias).new(:name => 'x', :file => 'afile')
+    }.to raise_error Oregano::Error, /File paths must be fully qualified/
   end
 
   it "should fail when both file and recipient are specified" do
     expect {
-      Puppet::Type.type(:mailalias).new(:name => 'x', :file => tmpfile_path,
+      Oregano::Type.type(:mailalias).new(:name => 'x', :file => tmpfile_path,
 					:recipient => 'foo@example.com')
-    }.to raise_error Puppet::Error, /cannot specify both a recipient and a file/
+    }.to raise_error Oregano::Error, /cannot specify both a recipient and a file/
   end
 end

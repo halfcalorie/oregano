@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops::Types
+module Oregano::Pops::Types
 describe 'The iterable support' do
 
   [
@@ -52,7 +52,7 @@ describe 'The iterable support' do
     ]
     iterable_types << PTypeType.new(PIntegerType.new(0, 10))
     iterable_types << PTypeType.new(PEnumType.new(%w(yes no)))
-    iterable_types << PRuntimeType.new(:ruby, 'Puppet::Pops::Types::Iterator')
+    iterable_types << PRuntimeType.new(:ruby, 'Oregano::Pops::Types::Iterator')
     iterable_types << PVariantType.new(iterable_types.clone)
 
     not_iterable_types = [
@@ -252,7 +252,7 @@ describe 'The iterable support' do
 
   it 'can not create an Array from an unbounded Iterable' do
     ubi = TestUnboundedIterator.new
-    expect{ Iterable.on(ubi).to_a }.to raise_error(Puppet::Error, /Attempt to create an Array from an unbounded Iterable/)
+    expect{ Iterable.on(ubi).to_a }.to raise_error(Oregano::Error, /Attempt to create an Array from an unbounded Iterable/)
   end
 
   it 'will produce the string Iterator[T] on to_s on an iterator instance with element type T' do

@@ -1,2 +1,2 @@
-Benchmark scenario: running puppet commands from the CLI
-Benchmark target: overhead of loading puppet
+Benchmark scenario: running oregano commands from the CLI
+Benchmark target: overhead of loading oregano

@@ -13,9 +13,9 @@ tag 'audit:medium',
 #
 
 
-require 'puppet/acceptance/temp_file_utils'
+require 'oregano/acceptance/temp_file_utils'
 
-extend Puppet::Acceptance::TempFileUtils
+extend Oregano::Acceptance::TempFileUtils
 
 initialize_temp_dirs()
 
@@ -36,10 +36,10 @@ module_name = "superbogus"
 
 # here we create a custom type, which basically doesn't do anything except for test the value of
 # our custom feature and write the result to a file
-agent_module_type_file = "#{agent_lib_dir}/puppet/type/#{module_name}.rb"
-master_module_type_file = "#{master_module_dir}/#{module_name}/lib/puppet/type/#{module_name}.rb"
+agent_module_type_file = "#{agent_lib_dir}/oregano/type/#{module_name}.rb"
+master_module_type_file = "#{master_module_dir}/#{module_name}/lib/oregano/type/#{module_name}.rb"
 master_module_type_content = <<HERE
-module Puppet
+module Oregano
   Type.newtype(:#{module_name}) do
     newparam(:name) do
       isnamevar
@@ -47,7 +47,7 @@ module Puppet
 
     newproperty(:testfeature) do
       def sync
-        Puppet.info("The value of the #{module_name} feature is: \#{Puppet.features.#{module_name}?}")
+        Oregano.info("The value of the #{module_name} feature is: \#{Oregano.features.#{module_name}?}")
       end
       def retrieve
         :absent
@@ -61,11 +61,11 @@ end
 HERE
 
 # here is our custom feature... it always returns true
-agent_module_feature_file = "#{agent_lib_dir}/puppet/feature/#{module_name}.rb"
-master_module_feature_file = "#{master_module_dir}/#{module_name}/lib/puppet/feature/#{module_name}.rb"
+agent_module_feature_file = "#{agent_lib_dir}/oregano/feature/#{module_name}.rb"
+master_module_feature_file = "#{master_module_dir}/#{module_name}/lib/oregano/feature/#{module_name}.rb"
 master_module_feature_content = <<HERE
-Puppet.features.add(:#{module_name}) do
-  Puppet.info("#{module_name} feature being queried")
+Oregano.features.add(:#{module_name}) do
+  Oregano.info("#{module_name} feature being queried")
   true
 end
 HERE
@@ -128,7 +128,7 @@ begin
       },
     }
 
-    with_puppet_running_on master, master_opts do
+    with_oregano_running_on master, master_opts do
 
       # the module files shouldn't exist on the agent yet because they haven't been synced
       step "verify that the module files don't exist on the agent path" do
@@ -144,7 +144,7 @@ begin
 
       step "run the agent and verify that it loaded the feature" do
         agents.each do |agent|
-          on(agent, puppet('agent', agent_args % get_test_file_path(agent, agent_lib_dir)),
+          on(agent, oregano('agent', agent_args % get_test_file_path(agent, agent_lib_dir)),
                        :acceptable_exit_codes => agent_exit_codes) do
             assert_match(/The value of the #{module_name} feature is: true/, result.stdout,
               "Expected agent stdout to include confirmation that the feature was 'true'")
@@ -164,7 +164,7 @@ begin
 
       step "run the agent again" do
         agents.each do |agent|
-          on(agent, puppet('agent', agent_args % get_test_file_path(agent, agent_lib_dir)),
+          on(agent, oregano('agent', agent_args % get_test_file_path(agent, agent_lib_dir)),
                           :acceptable_exit_codes => agent_exit_codes) do
             assert_match(/The value of the #{module_name} feature is: true/, result.stdout,
                          "Expected agent stdout to include confirmation that the feature was 'true'")

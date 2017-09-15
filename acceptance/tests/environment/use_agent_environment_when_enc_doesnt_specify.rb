@@ -1,6 +1,6 @@
 test_name "Agent should use agent environment if there is an enc that does not specify the environment"
-require 'puppet/acceptance/classifier_utils'
-extend Puppet::Acceptance::ClassifierUtils
+require 'oregano/acceptance/classifier_utils'
+extend Oregano::Acceptance::ClassifierUtils
 
 tag 'audit:medium',
     'audit:integration',
@@ -22,8 +22,8 @@ apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
   File {
     ensure => directory,
     mode => "0770",
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
   }
   file {
     '#{testdir}/environments':;
@@ -52,7 +52,7 @@ master_opts = {
   },
 }
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
 
   agents.each do |agent|
     run_agent_on(agent, "--no-daemonize --onetime --server #{master} --verbose --environment more_different")

@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/external/nagios'
+require 'oregano/external/nagios'
 
 describe "Nagios parser" do
 
@@ -230,62 +230,62 @@ end
 
 describe "Nagios resource types" do
   Nagios::Base.eachtype do |name, nagios_type|
-    puppet_type = Puppet::Type.type("nagios_#{name}")
+    oregano_type = Oregano::Type.type("nagios_#{name}")
 
     it "should have a valid type for #{name}" do
-      expect(puppet_type).not_to be_nil
+      expect(oregano_type).not_to be_nil
     end
 
-    next unless puppet_type
+    next unless oregano_type
 
-    describe puppet_type do
-      it "should be defined as a Puppet resource type" do
-        expect(puppet_type).not_to be_nil
+    describe oregano_type do
+      it "should be defined as a Oregano resource type" do
+        expect(oregano_type).not_to be_nil
       end
 
       it "should have documentation" do
-        expect(puppet_type.instance_variable_get("@doc")).not_to eq("")
+        expect(oregano_type.instance_variable_get("@doc")).not_to eq("")
       end
 
       it "should have #{nagios_type.namevar} as its key attribute" do
-        expect(puppet_type.key_attributes).to eq([nagios_type.namevar])
+        expect(oregano_type.key_attributes).to eq([nagios_type.namevar])
       end
 
       it "should have documentation for its #{nagios_type.namevar} parameter" do
-        expect(puppet_type.attrclass(nagios_type.namevar).instance_variable_get("@doc")).not_to be_nil
+        expect(oregano_type.attrclass(nagios_type.namevar).instance_variable_get("@doc")).not_to be_nil
       end
 
       it "should have an ensure property" do
-        expect(puppet_type).to be_validproperty(:ensure)
+        expect(oregano_type).to be_validproperty(:ensure)
       end
 
       it "should have a target property" do
-        expect(puppet_type).to be_validproperty(:target)
+        expect(oregano_type).to be_validproperty(:target)
       end
 
       it "should have documentation for its target property" do
-        expect(puppet_type.attrclass(:target).instance_variable_get("@doc")).not_to be_nil
+        expect(oregano_type.attrclass(:target).instance_variable_get("@doc")).not_to be_nil
       end
 
       [ :owner, :group, :mode ].each do |fileprop|
         it "should have a #{fileprop} parameter" do
-          expect(puppet_type.parameters).to be_include(fileprop)
+          expect(oregano_type.parameters).to be_include(fileprop)
         end
       end
 
       nagios_type.parameters.reject { |param| param == nagios_type.namevar or param.to_s =~ /^[0-9]/ }.each do |param|
         it "should have a #{param} property" do
-          expect(puppet_type).to be_validproperty(param)
+          expect(oregano_type).to be_validproperty(param)
         end
 
         it "should have documentation for its #{param} property" do
-          expect(puppet_type.attrclass(param).instance_variable_get("@doc")).not_to be_nil
+          expect(oregano_type.attrclass(param).instance_variable_get("@doc")).not_to be_nil
         end
       end
 
       nagios_type.parameters.find_all { |param| param.to_s =~ /^[0-9]/ }.each do |param|
         it "should have not have a #{param} property" do
-          expect(puppet_type).not_to be_validproperty(:param)
+          expect(oregano_type).not_to be_validproperty(:param)
         end
       end
     end

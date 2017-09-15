@@ -2,7 +2,7 @@
 require 'spec_helper'
 
 
-describe Puppet::Type.type(:sshkey) do
+describe Oregano::Type.type(:sshkey) do
 
   it "uses :name as its namevar" do
     expect(described_class.key_attributes).to eq [:name]
@@ -50,7 +50,7 @@ describe Puppet::Type.type(:sshkey) do
     it "doesn't support values other than ssh-dss, ssh-rsa, dsa, rsa for type" do
       expect {
         described_class.new(:name => "whev", :type => :'ssh-dsa')
-      }.to raise_error(Puppet::Error, /Invalid value.*ssh-dsa/)
+      }.to raise_error(Oregano::Error, /Invalid value.*ssh-dsa/)
     end
 
     it "accepts one host_alias" do
@@ -64,13 +64,13 @@ describe Puppet::Type.type(:sshkey) do
     it "doesn't accept spaces in any host_alias" do
       expect {
         described_class.new(:name => "foo", :host_aliases => ['foo.bar.tld','foo bar'])
-      }.to raise_error(Puppet::Error, /cannot include whitespace/)
+      }.to raise_error(Oregano::Error, /cannot include whitespace/)
     end
 
     it "doesn't accept aliases in the resourcename" do
       expect {
         described_class.new(:name => 'host,host.domain,ip')
-      }.to raise_error(Puppet::Error, /No comma in resourcename/)
+      }.to raise_error(Oregano::Error, /No comma in resourcename/)
     end
 
   end

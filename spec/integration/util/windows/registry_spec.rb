@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/windows'
+require 'oregano/util/windows'
 
-if Puppet::Util::Platform.windows?
-describe Puppet::Util::Windows::Registry do
+if Oregano::Util::Platform.windows?
+describe Oregano::Util::Windows::Registry do
   subject do
     class TestRegistry
-      include Puppet::Util::Windows::Registry
+      include Oregano::Util::Windows::Registry
       extend FFI::Library
 
       ffi_lib :advapi32
@@ -21,7 +21,7 @@ describe Puppet::Util::Windows::Registry do
             data_ptr.write_array_of_uchar(bad_data)
             if RegSetValueExW(reg.hkey, name_ptr, 0,
               Win32::Registry::REG_DWORD, data_ptr, data_ptr.size) != 0
-                raise Puppet::Util::Windows::Error.new("Failed to write registry value")
+                raise Oregano::Util::Windows::Error.new("Failed to write registry value")
             end
           end
         end
@@ -40,7 +40,7 @@ describe Puppet::Util::Windows::Registry do
     end
 
     it "should raise for unknown root keys" do
-      expect { subject.root('HKEY_BOGUS') }.to raise_error(Puppet::Error, /Invalid registry key/)
+      expect { subject.root('HKEY_BOGUS') }.to raise_error(Oregano::Error, /Invalid registry key/)
     end
   end
 
@@ -62,7 +62,7 @@ describe Puppet::Util::Windows::Registry do
       expect(yielded).to eq(subkey)
     end
 
-    if Puppet::Util::Platform.windows?
+    if Oregano::Util::Platform.windows?
       [described_class::KEY64, described_class::KEY32].each do |access|
         it "should open the key for read access 0x#{access.to_s(16)}" do
           mode = described_class::KEY_READ | access
@@ -84,7 +84,7 @@ describe Puppet::Util::Windows::Registry do
       hkey.expects(:open).raises(Win32::Registry::Error.new(2)) # file not found
       expect do
         subject.open(hkey, 'doesnotexist') {|hkey| }
-      end.to raise_error(Puppet::Error, /Failed to open registry key 'HKEY_LOCAL_MACHINE\\doesnotexist'/)
+      end.to raise_error(Oregano::Error, /Failed to open registry key 'HKEY_LOCAL_MACHINE\\doesnotexist'/)
     end
   end
 
@@ -128,10 +128,10 @@ describe Puppet::Util::Windows::Registry do
       TM_UTF_16 = [0x2122]
 
       let (:hklm) { Win32::Registry::HKEY_LOCAL_MACHINE }
-      let (:puppet_key) { "SOFTWARE\\Puppet Labs"}
-      let (:subkey_name) { "PuppetRegistryTest#{SecureRandom.uuid}" }
+      let (:oregano_key) { "SOFTWARE\\Oregano Labs"}
+      let (:subkey_name) { "OreganoRegistryTest#{SecureRandom.uuid}" }
       let (:guid) { SecureRandom.uuid }
-      let (:regsam) { Puppet::Util::Windows::Registry::KEY32 }
+      let (:regsam) { Oregano::Util::Windows::Registry::KEY32 }
 
       after(:each) do
         # Ruby 2.1.5 has bugs with deleting registry keys due to using ANSI
@@ -139,14 +139,14 @@ describe Puppet::Util::Windows::Registry do
         # https://github.com/ruby/ruby/blob/v2_1_5/ext/win32/lib/win32/registry.rb#L323-L329
         # therefore, use our own built-in registry helper code
 
-        hklm.open(puppet_key, Win32::Registry::KEY_ALL_ACCESS | regsam) do |reg|
+        hklm.open(oregano_key, Win32::Registry::KEY_ALL_ACCESS | regsam) do |reg|
           subject.delete_key(reg, subkey_name, regsam)
         end
       end
 
       # proof that local encodings (such as IBM437 are no longer relevant)
       it "will return a UTF-8 string from a REG_SZ registry value (written as UTF-16LE)",
-        :if => Puppet::Util::Platform.windows? && RUBY_VERSION >= '2.1' do
+        :if => Oregano::Util::Platform.windows? && RUBY_VERSION >= '2.1' do
 
         # create a UTF-16LE byte array representing "–™"
         utf_16_bytes = ENDASH_UTF_16 + TM_UTF_16
@@ -166,10 +166,10 @@ describe Puppet::Util::Windows::Registry do
         Win32::Registry.expects(:each_key).never
         Win32::Registry.expects(:each_value).never
 
-        hklm.create("#{puppet_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS | regsam) do |reg|
+        hklm.create("#{oregano_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS | regsam) do |reg|
           reg.write("#{guid}", Win32::Registry::REG_SZ, utf_16_str)
 
-          # trigger Puppet::Util::Windows::Registry FFI calls
+          # trigger Oregano::Util::Windows::Registry FFI calls
           keys = subject.keys(reg)
           vals = subject.values(reg)
 
@@ -186,12 +186,12 @@ describe Puppet::Util::Windows::Registry do
 
     context "when reading values" do
       let (:hklm) { Win32::Registry::HKEY_LOCAL_MACHINE }
-      let (:puppet_key) { "SOFTWARE\\Puppet Labs"}
-      let (:subkey_name) { "PuppetRegistryTest#{SecureRandom.uuid}" }
+      let (:oregano_key) { "SOFTWARE\\Oregano Labs"}
+      let (:subkey_name) { "OreganoRegistryTest#{SecureRandom.uuid}" }
       let (:value_name) { SecureRandom.uuid }
 
       after(:each) do
-        hklm.open(puppet_key, Win32::Registry::KEY_ALL_ACCESS) do |reg|
+        hklm.open(oregano_key, Win32::Registry::KEY_ALL_ACCESS) do |reg|
           subject.delete_key(reg, subkey_name)
         end
       end
@@ -206,11 +206,11 @@ describe Puppet::Util::Windows::Registry do
         {:name => 'REG_QWORD', :type => Win32::Registry::REG_QWORD, :value => 0xFFFFFFFFFFFFFFFF},
       ].each do |pair|
         it "should return #{pair[:name]} values" do
-          hklm.create("#{puppet_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS) do |reg|
+          hklm.create("#{oregano_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS) do |reg|
             reg.write(value_name, pair[:type], pair[:value])
           end
 
-          hklm.open("#{puppet_key}\\#{subkey_name}", Win32::Registry::KEY_READ) do |reg|
+          hklm.open("#{oregano_key}\\#{subkey_name}", Win32::Registry::KEY_READ) do |reg|
             vals = subject.values(reg)
 
             expect(vals).to have_key(value_name)
@@ -227,24 +227,24 @@ describe Puppet::Util::Windows::Registry do
 
     context "when reading corrupt values" do
       let (:hklm) { Win32::Registry::HKEY_LOCAL_MACHINE }
-      let (:puppet_key) { "SOFTWARE\\Puppet Labs"}
-      let (:subkey_name) { "PuppetRegistryTest#{SecureRandom.uuid}" }
+      let (:oregano_key) { "SOFTWARE\\Oregano Labs"}
+      let (:subkey_name) { "OreganoRegistryTest#{SecureRandom.uuid}" }
       let (:value_name) { SecureRandom.uuid }
 
       before(:each) do
-        hklm.create("#{puppet_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS) do |reg_key|
+        hklm.create("#{oregano_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS) do |reg_key|
           subject.write_corrupt_dword(reg_key, value_name)
         end
       end
 
       after(:each) do
-        hklm.open(puppet_key, Win32::Registry::KEY_ALL_ACCESS) do |reg_key|
+        hklm.open(oregano_key, Win32::Registry::KEY_ALL_ACCESS) do |reg_key|
           subject.delete_key(reg_key, subkey_name)
         end
       end
 
       it "should return nil for a corrupt DWORD" do
-        hklm.open("#{puppet_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS) do |reg_key|
+        hklm.open("#{oregano_key}\\#{subkey_name}", Win32::Registry::KEY_ALL_ACCESS) do |reg_key|
           vals = subject.values(reg_key)
 
           expect(vals).to have_key(value_name)

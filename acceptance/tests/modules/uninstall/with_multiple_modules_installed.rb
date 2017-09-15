@@ -1,4 +1,4 @@
-test_name "puppet module uninstall (with multiple modules installed)"
+test_name "oregano module uninstall (with multiple modules installed)"
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -24,8 +24,8 @@ environmentpath = "#{testdir}/environments"
 apply_manifest_on(master, %Q{
   File {
     ensure => directory,
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
     mode => "0750",
   }
   file {
@@ -43,10 +43,10 @@ master_opts = {
   }
 }
 
-with_puppet_running_on master, master_opts, testdir do
-  on master, puppet("module install pmtacceptance-java --version 1.6.0 --modulepath #{master['distmoduledir']}")
-  on master, puppet("module install pmtacceptance-java --version 1.7.0 --modulepath #{environmentpath}/production/modules")
-  on master, puppet("module list --modulepath #{master['distmoduledir']}") do
+with_oregano_running_on master, master_opts, testdir do
+  on master, oregano("module install pmtacceptance-java --version 1.6.0 --modulepath #{master['distmoduledir']}")
+  on master, oregano("module install pmtacceptance-java --version 1.7.0 --modulepath #{environmentpath}/production/modules")
+  on master, oregano("module list --modulepath #{master['distmoduledir']}") do
     pattern = Regexp.new([
       "#{master['distmoduledir']}",
       "├── pmtacceptance-java \\(.*v1.6.0.*\\)",
@@ -55,7 +55,7 @@ with_puppet_running_on master, master_opts, testdir do
     assert_match(pattern, result.output)
   end
 
-  on master, puppet("module list --modulepath #{environmentpath}/production/modules") do
+  on master, oregano("module list --modulepath #{environmentpath}/production/modules") do
     pattern = Regexp.new([
       "#{environmentpath}/production/modules",
       "├── pmtacceptance-java \\(.*v1.7.0.*\\)",
@@ -65,7 +65,7 @@ with_puppet_running_on master, master_opts, testdir do
   end
 
   step "Try to uninstall a module that exists in multiple locations in the module path"
-  on master, puppet("module uninstall pmtacceptance-java"), :acceptable_exit_codes => [1] do
+  on master, oregano("module uninstall pmtacceptance-java"), :acceptable_exit_codes => [1] do
     pattern = Regexp.new([
       ".*Notice: Preparing to uninstall 'pmtacceptance-java' .*",
       ".*Error: Could not uninstall module 'pmtacceptance-java'",
@@ -78,7 +78,7 @@ with_puppet_running_on master, master_opts, testdir do
   end
 
   step "Uninstall a module that exists multiple locations by restricting the --modulepath"
-  on master, puppet("module uninstall pmtacceptance-java --modulepath #{master['distmoduledir']}") do
+  on master, oregano("module uninstall pmtacceptance-java --modulepath #{master['distmoduledir']}") do
     pattern = Regexp.new([
       ".*Notice: Preparing to uninstall 'pmtacceptance-java' .*",
       "Removed 'pmtacceptance-java' \\(.*v1.6.0.*\\) from #{master['distmoduledir']}"

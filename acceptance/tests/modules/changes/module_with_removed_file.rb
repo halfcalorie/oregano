@@ -1,4 +1,4 @@
-test_name 'puppet module changes (on a module with a removed file)'
+test_name 'oregano module changes (on a module with a removed file)'
 
 tag 'audit:medium',
     'audit:acceptance',
@@ -10,11 +10,11 @@ step 'Setup'
 stub_forge_on(master)
 testdir = master.tmpdir('module_changes_with_removed_file')
 
-on master, puppet("module install pmtacceptance-nginx --modulepath #{testdir}")
+on master, oregano("module install pmtacceptance-nginx --modulepath #{testdir}")
 on master, "rm -rf #{testdir}/nginx/README"
 
 step 'Run module changes to check a module with a removed file'
-on( master, puppet("module changes #{testdir}/nginx"),
+on( master, oregano("module changes #{testdir}/nginx"),
     :acceptable_exit_codes => [0] ) do
 
   pattern = Regexp.new([

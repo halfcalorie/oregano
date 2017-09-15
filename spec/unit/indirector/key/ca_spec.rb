@@ -1,23 +1,23 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/key/ca'
+require 'oregano/indirector/key/ca'
 
-describe Puppet::SSL::Key::Ca do
+describe Oregano::SSL::Key::Ca do
   it "should have documentation" do
-    expect(Puppet::SSL::Key::Ca.doc).to be_instance_of(String)
+    expect(Oregano::SSL::Key::Ca.doc).to be_instance_of(String)
   end
 
   it "should use the :privatekeydir as the collection directory" do
-    Puppet[:privatekeydir] = "/key/dir"
-    expect(Puppet::SSL::Key::Ca.collection_directory).to eq(Puppet[:privatekeydir])
+    Oregano[:privatekeydir] = "/key/dir"
+    expect(Oregano::SSL::Key::Ca.collection_directory).to eq(Oregano[:privatekeydir])
   end
 
   it "should store the ca key at the :cakey location" do
-    Puppet.settings.stubs(:use)
-    Puppet[:cakey] = "/ca/key"
-    file = Puppet::SSL::Key::Ca.new
+    Oregano.settings.stubs(:use)
+    Oregano[:cakey] = "/ca/key"
+    file = Oregano::SSL::Key::Ca.new
     file.stubs(:ca?).returns true
-    expect(file.path("whatever")).to eq(Puppet[:cakey])
+    expect(file.path("whatever")).to eq(Oregano[:cakey])
   end
 end

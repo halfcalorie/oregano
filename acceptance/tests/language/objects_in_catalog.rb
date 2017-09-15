@@ -1,11 +1,11 @@
 test_name 'C99627: can use Object types in the catalog and apply/agent' do
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:high',
     'audit:integration',
     'audit:refactor'     # The use of apply on a reference system should
-                         # be adequate to test puppet. Running this in
+                         # be adequate to test oregano. Running this in
                          # context of server/agent should not be necessary.
 
   app_type        = File.basename(__FILE__, '.*')
@@ -34,10 +34,10 @@ include mod
     create_sitepp(master, tmp_environment, manifest)
   end
 
-  with_puppet_running_on(master,{}) do
+  with_oregano_running_on(master,{}) do
     agents.each do |agent|
       step "run the agent on #{agent.hostname} and assert notify output" do
-        on(agent, puppet('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert(result.exit_code == 2, "agent didn't exit properly: (#{result.exit_code})")
           assert_match(/A foo/, result.stdout, 'agent didn\'t notify correctly')

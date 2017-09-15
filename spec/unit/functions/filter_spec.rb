@@ -1,12 +1,12 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 require 'shared_behaviours/iterative_functions'
 
 describe 'the filter method' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
 
   it 'should filter on an array (all berries)' do

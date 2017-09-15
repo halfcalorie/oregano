@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package).provider(:pkgdmg) do
-  let(:resource) { Puppet::Type.type(:package).new(:name => 'foo', :provider => :pkgdmg) }
+describe Oregano::Type.type(:package).provider(:pkgdmg) do
+  let(:resource) { Oregano::Type.type(:package).new(:name => 'foo', :provider => :pkgdmg) }
   let(:provider) { described_class.new(resource) }
 
   it { is_expected.not_to be_versionable }
@@ -10,16 +10,16 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
 
   describe "when installing it should fail when" do
     before :each do
-      Puppet::Util.expects(:execute).never
+      Oregano::Util.expects(:execute).never
     end
 
     it "no source is specified" do
-      expect { provider.install }.to raise_error(Puppet::Error, /must specify a package source/)
+      expect { provider.install }.to raise_error(Oregano::Error, /must specify a package source/)
     end
 
     it "the source does not end in .dmg or .pkg" do
       resource[:source] = "bar"
-      expect { provider.install }.to raise_error(Puppet::Error, /must specify a source string ending in .*dmg.*pkg/)
+      expect { provider.install }.to raise_error(Oregano::Error, /must specify a source string ending in .*dmg.*pkg/)
     end
   end
 
@@ -39,22 +39,22 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
 
     it "should fail when a disk image with no system entities is mounted" do
       described_class.stubs(:hdiutil).returns 'empty plist'
-      Puppet::Util::Plist.expects(:parse_plist).with('empty plist').returns({})
-      expect { provider.install }.to raise_error(Puppet::Error, /No disk entities/)
+      Oregano::Util::Plist.expects(:parse_plist).with('empty plist').returns({})
+      expect { provider.install }.to raise_error(Oregano::Error, /No disk entities/)
     end
 
     it "should call hdiutil to mount and eject the disk image" do
       Dir.stubs(:entries).returns []
       provider.class.expects(:hdiutil).with("eject", fake_mountpoint).returns 0
       provider.class.expects(:hdiutil).with("mount", "-plist", "-nobrowse", "-readonly", "-noidme", "-mountrandom", "/tmp", nil).returns 'a plist'
-      Puppet::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
+      Oregano::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
       provider.install
     end
 
     it "should call installpkg if a pkg/mpkg is found on the dmg" do
       Dir.stubs(:entries).returns ["foo.pkg"]
       provider.class.stubs(:hdiutil).returns 'a plist'
-      Puppet::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
+      Oregano::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
       provider.class.expects(:installpkg).with("#{fake_mountpoint}/foo.pkg", resource[:name], "foo.dmg").returns ""
       provider.install
     end
@@ -63,7 +63,7 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
       let(:tmpdir) { "/tmp/good123" }
 
       before :each do
-        resource[:source] = "http://fake.puppetlabs.com/foo.dmg"
+        resource[:source] = "http://fake.oreganolabs.com/foo.dmg"
       end
 
       it "should call tmpdir and then call curl with that directory" do
@@ -73,16 +73,16 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
           args[0] == "-o" && args[1].include?(tmpdir) && args.include?("--fail") && ! args.include?("-k")
         end
         described_class.stubs(:hdiutil).returns 'a plist'
-        Puppet::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
+        Oregano::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
         described_class.expects(:installpkg)
 
         provider.install
       end
 
       it "should use an http proxy host and port if specified" do
-        Puppet::Util::HttpProxy.expects(:no_proxy?).returns false
-        Puppet::Util::HttpProxy.expects(:http_proxy_host).returns 'some_host'
-        Puppet::Util::HttpProxy.expects(:http_proxy_port).returns 'some_port'
+        Oregano::Util::HttpProxy.expects(:no_proxy?).returns false
+        Oregano::Util::HttpProxy.expects(:http_proxy_host).returns 'some_host'
+        Oregano::Util::HttpProxy.expects(:http_proxy_port).returns 'some_port'
         Dir.expects(:mktmpdir).returns tmpdir
         Dir.stubs(:entries).returns ["foo.pkg"]
         described_class.expects(:curl).with do |*args|
@@ -90,16 +90,16 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
           expect(args).to be_include '--proxy'
         end
         described_class.stubs(:hdiutil).returns 'a plist'
-        Puppet::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
+        Oregano::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
         described_class.expects(:installpkg)
 
         provider.install
       end
 
       it "should use an http proxy host only if specified" do
-        Puppet::Util::HttpProxy.expects(:no_proxy?).returns false
-        Puppet::Util::HttpProxy.expects(:http_proxy_host).returns 'some_host'
-        Puppet::Util::HttpProxy.expects(:http_proxy_port).returns nil
+        Oregano::Util::HttpProxy.expects(:no_proxy?).returns false
+        Oregano::Util::HttpProxy.expects(:http_proxy_host).returns 'some_host'
+        Oregano::Util::HttpProxy.expects(:http_proxy_port).returns nil
         Dir.expects(:mktmpdir).returns tmpdir
         Dir.stubs(:entries).returns ["foo.pkg"]
         described_class.expects(:curl).with do |*args|
@@ -107,16 +107,16 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
           expect(args).to be_include '--proxy'
         end
         described_class.stubs(:hdiutil).returns 'a plist'
-        Puppet::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
+        Oregano::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
         described_class.expects(:installpkg)
 
         provider.install
       end
 
       it "should not use the configured proxy if no_proxy contains a match for the destination" do
-        Puppet::Util::HttpProxy.expects(:no_proxy?).returns true
-        Puppet::Util::HttpProxy.expects(:http_proxy_host).never
-        Puppet::Util::HttpProxy.expects(:http_proxy_port).never
+        Oregano::Util::HttpProxy.expects(:no_proxy?).returns true
+        Oregano::Util::HttpProxy.expects(:http_proxy_host).never
+        Oregano::Util::HttpProxy.expects(:http_proxy_port).never
         Dir.expects(:mktmpdir).returns tmpdir
         Dir.stubs(:entries).returns ["foo.pkg"]
         described_class.expects(:curl).with do |*args|
@@ -125,7 +125,7 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
           true
         end
         described_class.stubs(:hdiutil).returns 'a plist'
-        Puppet::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
+        Oregano::Util::Plist.expects(:parse_plist).with('a plist').returns fake_hdiutil_plist
         described_class.expects(:installpkg)
 
         provider.install
@@ -144,7 +144,7 @@ describe Puppet::Type.type(:package).provider(:pkgdmg) do
     end
 
     describe "with a remote source" do
-      let(:remote_source) { 'http://fake.puppetlabs.com/test.pkg' }
+      let(:remote_source) { 'http://fake.oreganolabs.com/test.pkg' }
       let(:tmpdir) { '/path/to/tmpdir' }
       let(:tmpfile) { File.join(tmpdir, 'testpkg.pkg') }
 

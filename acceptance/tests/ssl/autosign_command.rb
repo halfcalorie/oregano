@@ -1,7 +1,7 @@
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CAUtils
-require 'puppet/acceptance/classifier_utils'
-extend Puppet::Acceptance::ClassifierUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CAUtils
+require 'oregano/acceptance/classifier_utils'
+extend Oregano::Acceptance::ClassifierUtils
 
 disable_pe_enterprise_mcollective_agent_classes
 
@@ -29,7 +29,7 @@ test_name "autosign command and csr attributes behavior (#7243,#7244)" do
   teardown do
     step "clear test certs"
     test_certnames.each do |cn|
-      on(master, puppet("cert", "clean", cn), :acceptable_exit_codes => [0,24])
+      on(master, oregano("cert", "clean", cn), :acceptable_exit_codes => [0,24])
     end
   end
 
@@ -56,15 +56,15 @@ EOF
     master_opts = {
       'master' => {
         'autosign' => autosign_true_script_path,
-        'dns_alt_names' => "puppet,#{hostname},#{fqdn}",
+        'dns_alt_names' => "oregano,#{hostname},#{fqdn}",
       }
     }
-    with_puppet_running_on(master, master_opts) do
+    with_oregano_running_on(master, master_opts) do
       agents.each do |agent|
         next if agent == master
 
         test_certnames << (certname = "#{agent}-autosign")
-        on(agent, puppet("agent --test",
+        on(agent, oregano("agent --test",
                   "--server #{master}",
                   "--waitforcert 0",
                   "--ssldir", "'#{testdirs[agent]}/ssldir-autosign'",
@@ -97,15 +97,15 @@ EOF
     master_opts = {
       'master' => {
         'autosign' => autosign_false_script_path,
-        'dns_alt_names' => "puppet,#{hostname},#{fqdn}",
+        'dns_alt_names' => "oregano,#{hostname},#{fqdn}",
       }
     }
-    with_puppet_running_on(master, master_opts) do
+    with_oregano_running_on(master, master_opts) do
       agents.each do |agent|
         next if agent == master
 
         test_certnames << (certname = "#{agent}-reject")
-        on(agent, puppet("agent --test",
+        on(agent, oregano("agent --test",
                         "--server #{master}",
                         "--waitforcert 0",
                         "--ssldir", "'#{testdirs[agent]}/ssldir-reject'",
@@ -165,16 +165,16 @@ custom_attributes:
     master_opts = {
       'master' => {
         'autosign' => autosign_inspect_csr_path,
-        'dns_alt_names' => "puppet,#{hostname},#{fqdn}",
+        'dns_alt_names' => "oregano,#{hostname},#{fqdn}",
       },
     }
-    with_puppet_running_on(master, master_opts) do
+    with_oregano_running_on(master, master_opts) do
       agents.each do |agent|
         next if agent == master
 
         step "attempting to obtain cert for #{agent}"
         test_certnames << (certname = "#{agent}-attrs")
-        on(agent, puppet("agent --test",
+        on(agent, oregano("agent --test",
                          "--server #{master}",
                          "--waitforcert 0",
                          "--ssldir", "'#{testdirs[agent]}/ssldir-attrs'",

@@ -22,11 +22,11 @@ platforms :ruby do
   #gem 'ruby-augeas', :group => :development
 end
 
-gem "puppet", :path => File.dirname(__FILE__), :require => false
+gem "oregano", :path => File.dirname(__FILE__), :require => false
 gem "facter", *location_for(ENV['FACTER_LOCATION'] || ['> 2.0', '< 4'])
 gem "hiera", *location_for(ENV['HIERA_LOCATION'] || ['>= 3.2.1', '< 4'])
-# PUP-7115 - return to a gem dependency in Puppet 5
-# gem "semantic_puppet", *location_for(ENV['SEMANTIC_PUPPET_LOCATION'] || ['>= 0.1.3', '< 2'])
+# PUP-7115 - return to a gem dependency in Oregano 5
+# gem "semantic_oregano", *location_for(ENV['SEMANTIC_PUPPET_LOCATION'] || ['>= 0.1.3', '< 2'])
 # i18n support (gettext-setup and dependencies)
 gem 'gettext-setup', '>= 0.10', '< 1.0', :require => false
 gem 'locale', '~> 2.1', :require => false
@@ -73,7 +73,7 @@ end
 
 group(:extra) do
   gem "rack", "~> 1.4", :require => false
-  gem "puppetlabs_spec_helper", :require => false
+  gem "oreganolabs_spec_helper", :require => false
   gem "msgpack", :require => false
 end
 

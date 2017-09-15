@@ -16,7 +16,7 @@ shared_examples_for 'all iterative functions argument checks' do |func|
       compile_to_catalog(<<-MANIFEST)
         3.14.#{func} |$k, $v| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects an Iterable value, got Float/)
+    end.to raise_error(Oregano::Error, /expects an Iterable value, got Float/)
   end
 
   it 'raises an error when called with any parameters besides a block' do
@@ -24,7 +24,7 @@ shared_examples_for 'all iterative functions argument checks' do |func|
       compile_to_catalog(<<-MANIFEST)
         [1].#{func}(1,2) |$v,$y| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects (?:between 1 and 2 arguments|1 argument), got 3/)
+    end.to raise_error(Oregano::Error, /expects (?:between 1 and 2 arguments|1 argument), got 3/)
   end
 
   it 'raises an error when called without a block' do
@@ -32,7 +32,7 @@ shared_examples_for 'all iterative functions argument checks' do |func|
       compile_to_catalog(<<-MANIFEST)
         [1].#{func}
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects a block/)
+    end.to raise_error(Oregano::Error, /expects a block/)
   end
 
   it 'raises an error when called with something that is not a block' do
@@ -40,7 +40,7 @@ shared_examples_for 'all iterative functions argument checks' do |func|
       compile_to_catalog(<<-MANIFEST)
         [1].#{func}(1,2)
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects (?:between 1 and 2 arguments|1 argument), got 3/)
+    end.to raise_error(Oregano::Error, /expects (?:between 1 and 2 arguments|1 argument), got 3/)
   end
 
   it 'raises an error when called with a block with too many required parameters' do
@@ -48,7 +48,7 @@ shared_examples_for 'all iterative functions argument checks' do |func|
       compile_to_catalog(<<-MANIFEST)
         [1].#{func}() |$v1, $v2, $v3| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /block expects(?: between 1 and)? 2 arguments, got 3/)
+    end.to raise_error(Oregano::Error, /block expects(?: between 1 and)? 2 arguments, got 3/)
   end
 
   it 'raises an error when called with a block with too few parameters' do
@@ -56,7 +56,7 @@ shared_examples_for 'all iterative functions argument checks' do |func|
       compile_to_catalog(<<-MANIFEST)
         [1].#{func}() | | {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /block expects(?: between 1 and)? 2 arguments, got none/)
+    end.to raise_error(Oregano::Error, /block expects(?: between 1 and)? 2 arguments, got none/)
   end
 
   it 'does not raise an error when called with a block with too many but optional arguments' do

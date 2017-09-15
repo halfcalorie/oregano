@@ -1,19 +1,19 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/file_bucket/dipper'
-require 'puppet_spec/compiler'
+require 'oregano/file_bucket/dipper'
+require 'oregano_spec/compiler'
 
-describe Puppet::Type.type(:cron).provider(:crontab), '(integration)', :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Type.type(:cron).provider(:crontab), '(integration)', :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   before :each do
-    Puppet::Type.type(:cron).stubs(:defaultprovider).returns described_class
-    Puppet::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to filebucket
+    Oregano::Type.type(:cron).stubs(:defaultprovider).returns described_class
+    Oregano::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to filebucket
 
     # I don't want to execute anything
-    described_class.stubs(:filetype).returns Puppet::Util::FileType::FileTypeFlat
+    described_class.stubs(:filetype).returns Oregano::Util::FileType::FileTypeFlat
     described_class.stubs(:default_target).returns crontab_user1
 
     # I don't want to stub Time.now to get a static header because I don't know

@@ -1,22 +1,22 @@
-# Quick Start to Developing on Puppet
+# Quick Start to Developing on Oregano
 
 Before diving into the code, you should first take the time to make sure you
-have an environment where you can run puppet as a developer. In a nutshell you
-need: the puppet codebase, ruby versions, and dependencies. Once you've got all
+have an environment where you can run oregano as a developer. In a nutshell you
+need: the oregano codebase, ruby versions, and dependencies. Once you've got all
 of that in place you can make sure that you have a working development system
-by running the puppet spec tests.
+by running the oregano spec tests.
 
-## The Puppet Codebase
+## The Oregano Codebase
 
-In order to contribute to puppet you'll need to have a github account. Once you
-have your account, fork the puppetlabs/puppet repo, and clone it onto your
+In order to contribute to oregano you'll need to have a github account. Once you
+have your account, fork the oreganolabs/oregano repo, and clone it onto your
 local machine. The [github docs have a good
 explanation](https://help.github.com/articles/fork-a-repo) of how to do all of
 this.
 
 ## Ruby versions
 
-Puppet needs to work across a variety of ruby versions, including ruby
+Oregano needs to work across a variety of ruby versions, including ruby
 1.9.3 and up. Ruby 1.8.7 is no longer supported.
 
 Popular ways of making sure you have access to the various versions of ruby are
@@ -35,25 +35,25 @@ Now you can get all of the dependencies using:
 
     $ bundle install --path .bundle/gems/
 
-Once this is done, you can interact with puppet through bundler using `bundle
+Once this is done, you can interact with oregano through bundler using `bundle
 exec <command>` which will ensure that `<command>` is executed in the context
-of puppet's dependencies.
+of oregano's dependencies.
 
 For example to run the specs:
 
     $ bundle exec rake spec
 
-To run puppet itself (for a resource lookup say):
+To run oregano itself (for a resource lookup say):
 
-    $ bundle exec puppet resource host localhost
+    $ bundle exec oregano resource host localhost
 
 To apply a test manifest:
 
-    $ bundle exec puppet apply -e 'notify { "hello world": }'
+    $ bundle exec oregano apply -e 'notify { "hello world": }'
 
 ## Running Spec Tests
 
-Puppet projects use a common convention of using Rake to run unit tests.
+Oregano projects use a common convention of using Rake to run unit tests.
 The tests can be run with the following rake task:
 
     $ bundle exec rake spec
@@ -70,11 +70,11 @@ To run all tests in parallel:
 
     $ bundle exec rake parallel:spec
 
-When tests fail, it is often useful to capture Puppet's log of a test
+When tests fail, it is often useful to capture Oregano's log of a test
 run. The test harness pays attention to two environment variables that can
 be used to send logs to a file, and to adjust the log level:
 
-* `PUPPET_TEST_LOG`: when set, must be an absolute path to a file. Puppet's
+* `PUPPET_TEST_LOG`: when set, must be an absolute path to a file. Oregano's
   log messages will be sent to that file. Note that the log file will
   contain lots of spurious warnings `Unable to set ownership of log file`
   - you can safely ignore them.

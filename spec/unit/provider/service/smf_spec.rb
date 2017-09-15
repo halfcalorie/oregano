@@ -6,13 +6,13 @@
 #
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:service).provider(:smf)
+provider_class = Oregano::Type.type(:service).provider(:smf)
 
-describe provider_class, :if => Puppet.features.posix? do
+describe provider_class, :if => Oregano.features.posix? do
 
   before(:each) do
     # Create a mock resource
-    @resource = Puppet::Type.type(:service).new(
+    @resource = Oregano::Type.type(:service).new(
       :name => "/system/myservice", :ensure => :running, :enable => :true)
     @provider = provider_class.new(@resource)
 
@@ -77,7 +77,7 @@ describe provider_class, :if => Puppet.features.posix? do
       @provider.status
     end
     it "should return absent if svcs can't find the service" do
-      @provider.stubs(:svcs).raises(Puppet::ExecutionFailure.new("no svc found"))
+      @provider.stubs(:svcs).raises(Oregano::ExecutionFailure.new("no svc found"))
       expect(@provider.status).to eq(:absent)
     end
     it "should return running if online in svcs output" do
@@ -102,7 +102,7 @@ describe provider_class, :if => Puppet.features.posix? do
     end
     it "should throw error if it's a legacy service in svcs output" do
       @provider.stubs(:svcs).returns("legacy_run\t-")
-      expect { @provider.status }.to raise_error(Puppet::Error, "Cannot manage legacy services through SMF")
+      expect { @provider.status }.to raise_error(Oregano::Error, "Cannot manage legacy services through SMF")
     end
   end
 
@@ -139,13 +139,13 @@ describe provider_class, :if => Puppet.features.posix? do
       @provider.expects(:status).returns :stopped
       @provider.expects(:texecute).with(:start, ["/usr/sbin/svcadm", :enable, '-rs', "/system/myservice"], true)
       Timeout.expects(:timeout).with(60).raises(Timeout::Error)
-      expect { @provider.start }.to raise_error Puppet::Error, ('Timed out waiting for /system/myservice to transition states')
+      expect { @provider.start }.to raise_error Oregano::Error, ('Timed out waiting for /system/myservice to transition states')
     end
   end
 
   describe "when starting a service with a manifest" do
     before(:each) do
-      @resource = Puppet::Type.type(:service).new(:name => "/system/myservice", :ensure => :running, :enable => :true, :manifest => "/tmp/myservice.xml")
+      @resource = Oregano::Type.type(:service).new(:name => "/system/myservice", :ensure => :running, :enable => :true, :manifest => "/tmp/myservice.xml")
       @provider = provider_class.new(@resource)
       $CHILD_STATUS.stubs(:exitstatus).returns(1)
     end
@@ -159,8 +159,8 @@ describe provider_class, :if => Puppet.features.posix? do
     end
 
     it "should handle failures if importing a manifest" do
-      @provider.expects(:svccfg).raises(Puppet::ExecutionFailure.new("can't svccfg import"))
-      expect { @provider.start }.to raise_error(Puppet::Error, "Cannot config /system/myservice to enable it: can't svccfg import")
+      @provider.expects(:svccfg).raises(Oregano::ExecutionFailure.new("can't svccfg import"))
+      expect { @provider.start }.to raise_error(Oregano::Error, "Cannot config /system/myservice to enable it: can't svccfg import")
     end
   end
 
@@ -174,7 +174,7 @@ describe provider_class, :if => Puppet.features.posix? do
     it "should error if timeout occurs while stopping the service" do
       @provider.expects(:texecute).with(:stop, ["/usr/sbin/svcadm", :disable, '-s', "/system/myservice"], true)
       Timeout.expects(:timeout).with(60).raises(Timeout::Error)
-      expect { @provider.stop }.to raise_error Puppet::Error, ('Timed out waiting for /system/myservice to transition states')
+      expect { @provider.stop }.to raise_error Oregano::Error, ('Timed out waiting for /system/myservice to transition states')
     end
   end
 
@@ -183,7 +183,7 @@ describe provider_class, :if => Puppet.features.posix? do
     it "should error if timeout occurs while restarting the service" do
       @provider.expects(:texecute).with(:restart, ["/usr/sbin/svcadm", :restart, '-s', "/system/myservice"], true)
       Timeout.expects(:timeout).with(60).raises(Timeout::Error)
-      expect { @provider.restart }.to raise_error Puppet::Error, ('Timed out waiting for /system/myservice to transition states')
+      expect { @provider.restart }.to raise_error Oregano::Error, ('Timed out waiting for /system/myservice to transition states')
     end
 
     context 'with :operatingsystemrelease == 10_u10' do

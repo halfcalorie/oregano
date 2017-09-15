@@ -1,6 +1,6 @@
 test_name 'Use a directory environment from environmentpath with an environment.conf'
-require 'puppet/acceptance/classifier_utils'
-extend Puppet::Acceptance::ClassifierUtils
+require 'oregano/acceptance/classifier_utils'
+extend Oregano::Acceptance::ClassifierUtils
 
 tag 'audit:low',
     'audit:integration',
@@ -19,8 +19,8 @@ absolute_globalsdir  = "#{testdir}/global-modules"
 apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
 File {
   ensure => directory,
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
   mode => "0770",
 }
 
@@ -103,10 +103,10 @@ if master.is_pe?
   master_opts['master']['basemodulepath'] << ":#{master['sitemoduledir']}"
 end
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
   agents.each do |agent|
     on(agent,
-       puppet("agent", "-t", "--server", master, "--environment", "direnv"),
+       oregano("agent", "-t", "--server", master, "--environment", "direnv"),
        :acceptable_exit_codes => [2]) do |result|
 
       unless agent['locale'] == 'ja'

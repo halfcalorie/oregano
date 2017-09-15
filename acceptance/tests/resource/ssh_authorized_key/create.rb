@@ -23,13 +23,13 @@ agents.each do |agent|
   on(agent, "chown $LOGNAME #{auth_keys}")
 
   #------- TESTS -------#
-  step "create an authorized key entry with puppet (present)"
+  step "create an authorized key entry with oregano (present)"
   args = ['ensure=present',
           "user=$LOGNAME",
           "type='rsa'",
           "key='mykey'",
          ]
-  on(agent, puppet_resource('ssh_authorized_key', "#{name}", args))
+  on(agent, oregano_resource('ssh_authorized_key', "#{name}", args))
 
   step "verify entry in #{auth_keys}"
   on(agent, "cat #{auth_keys}")  do |res|

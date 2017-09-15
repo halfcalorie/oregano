@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 require 'deep_merge/core'
 
 describe 'lookup' do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   context 'with an environment' do
     let(:env_name) { 'spec' }
@@ -41,9 +41,9 @@ describe 'lookup' do
       }
     end
 
-    let(:app) { Puppet::Application[:lookup] }
-    let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, env_name, 'modules')]) }
-    let(:environments) { Puppet::Environments::Directories.new(populated_env_dir, []) }
+    let(:app) { Oregano::Application[:lookup] }
+    let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, env_name, 'modules')]) }
+    let(:environments) { Oregano::Environments::Directories.new(populated_env_dir, []) }
 
     let(:populated_env_dir) do
       dir_contained_in(env_dir, environment_files)
@@ -81,7 +81,7 @@ describe 'lookup' do
     end
 
     around(:each) do |example|
-      Puppet.override(:environments => environments, :current_environment => env) do
+      Oregano.override(:environments => environments, :current_environment => env) do
         example.run
       end
     end
@@ -91,9 +91,9 @@ describe 'lookup' do
     end
 
     context 'configured with the wrong environment' do
-      let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, env_name, 'modules')]) }
+      let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, env_name, 'modules')]) }
       it 'does not find data in non-existing environment' do
-        Puppet.override(:environments => environments, :current_environment => 'someother') do
+        Oregano.override(:environments => environments, :current_environment => 'someother') do
           expect(lookup('a', {}, true)).to match(/did not find a value for the name 'a'/)
         end
       end

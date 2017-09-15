@@ -1,16 +1,16 @@
 require 'spec_helper'
 require 'hiera/scope'
 
-require 'puppet_spec/scope'
+require 'oregano_spec/scope'
 
 describe Hiera::Scope do
-  include PuppetSpec::Scope
+  include OreganoSpec::Scope
 
   let(:real) { create_test_scope_for_node("test_node") }
   let(:scope) { Hiera::Scope.new(real) }
 
   describe "#initialize" do
-    it "should store the supplied puppet scope" do
+    it "should store the supplied oregano scope" do
       expect(scope.real).to eq(real)
     end
   end
@@ -45,7 +45,7 @@ describe Hiera::Scope do
     end
 
     it "uses the name of the of the scope's class as the calling_class" do
-      real.source = Puppet::Resource::Type.new(:hostclass,
+      real.source = Oregano::Resource::Type.new(:hostclass,
                                                "testing",
                                                :module_name => "the_module")
 
@@ -53,7 +53,7 @@ describe Hiera::Scope do
     end
 
     it "downcases the calling_class" do
-      real.source = Puppet::Resource::Type.new(:hostclass,
+      real.source = Oregano::Resource::Type.new(:hostclass,
                                                "UPPER CASE",
                                                :module_name => "the_module")
 
@@ -63,10 +63,10 @@ describe Hiera::Scope do
     it "looks for the class which includes the defined type as the calling_class" do
       parent = create_test_scope_for_node("parent")
       real.parent = parent
-      parent.source = Puppet::Resource::Type.new(:hostclass,
+      parent.source = Oregano::Resource::Type.new(:hostclass,
                                                  "name_of_the_class_including_the_definition",
                                                  :module_name => "class_module")
-      real.source = Puppet::Resource::Type.new(:definition,
+      real.source = Oregano::Resource::Type.new(:definition,
                                                "definition_name",
                                                :module_name => "definition_module")
 

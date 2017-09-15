@@ -20,9 +20,9 @@
 # saner dependencies
 <transform depend -> edit fmri "@[^ \t\n\r\f\v]*" "">
 
-# make sure /var/log/puppet and /var/lib/puppet are owned by puppet
-<transform dir path=var/(log|lib)/puppet$ -> edit group bin puppet>
-<transform dir path=var/(log|lib)/puppet$ -> edit owner root puppet>
+# make sure /var/log/oregano and /var/lib/oregano are owned by oregano
+<transform dir path=var/(log|lib)/oregano$ -> edit group bin oregano>
+<transform dir path=var/(log|lib)/oregano$ -> edit owner root oregano>
 
 <transform file path=var/svc/manifest/.*\.xml -> add restart_fmri svc:/system/manifest-import:default>
 
@@ -30,5 +30,5 @@
 <transform pkg -> emit depend type=require fmri=application/facter@1.7.0>
 
 # preserve the old conf file on upgrade.
-<transform file path=etc/puppet/(puppet|auth).conf -> add overlay true>
-<transform file path=etc/puppet/(puppet|auth).conf -> add preserve renamenew>
+<transform file path=etc/oregano/(oregano|auth).conf -> add overlay true>
+<transform file path=etc/oregano/(oregano|auth).conf -> add preserve renamenew>

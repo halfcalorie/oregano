@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/json_lockfile'
+require 'oregano/util/json_lockfile'
 
-describe Puppet::Util::JsonLockfile do
-  require 'puppet_spec/files'
-  include PuppetSpec::Files
+describe Oregano::Util::JsonLockfile do
+  require 'oregano_spec/files'
+  include OreganoSpec::Files
 
   before(:each) do
     @lockfile = tmpfile("lock")
-    @lock = Puppet::Util::JsonLockfile.new(@lockfile)
+    @lock = Oregano::Util::JsonLockfile.new(@lockfile)
   end
 
   describe "#lock" do

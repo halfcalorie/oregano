@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_revocation_list'
+require 'oregano/ssl/certificate_revocation_list'
 
-describe Puppet::SSL::CertificateRevocationList do
+describe Oregano::SSL::CertificateRevocationList do
   before do
-    ca = Puppet::SSL::CertificateAuthority.new
+    ca = Oregano::SSL::CertificateAuthority.new
     ca.generate_ca_certificate
     @cert = ca.host.certificate.content
     @key = ca.host.key.content
-    @class = Puppet::SSL::CertificateRevocationList
+    @class = Oregano::SSL::CertificateRevocationList
   end
 
   def expects_time_close_to_now(time)
@@ -17,7 +17,7 @@ describe Puppet::SSL::CertificateRevocationList do
   end
 
   def expects_time_close_to_five_years(time)
-    future = Time.now + Puppet::SSL::CertificateRevocationList::FIVE_YEARS
+    future = Time.now + Oregano::SSL::CertificateRevocationList::FIVE_YEARS
     expect(time.to_i).to be_within(5*60).of(future.to_i)
   end
 
@@ -136,7 +136,7 @@ describe Puppet::SSL::CertificateRevocationList do
       @crl = @class.new("crl")
       @crl.generate(@cert, @key)
 
-      Puppet::SSL::CertificateRevocationList.indirection.stubs :save
+      Oregano::SSL::CertificateRevocationList.indirection.stubs :save
     end
 
     it "should require a serial number and the CA's private key" do
@@ -161,7 +161,7 @@ describe Puppet::SSL::CertificateRevocationList do
     end
 
     it "should save the CRL" do
-      Puppet::SSL::CertificateRevocationList.indirection.expects(:save).with(@crl, nil)
+      Oregano::SSL::CertificateRevocationList.indirection.expects(:save).with(@crl, nil)
       @crl.revoke(1, @key)
     end
 

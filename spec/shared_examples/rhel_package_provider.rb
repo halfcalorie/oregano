@@ -3,7 +3,7 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
 
     let(:name) { 'mypackage' }
     let(:resource) do
-      Puppet::Type.type(:package).new(
+      Oregano::Type.type(:package).new(
         :name     => name,
         :ensure   => :installed,
         :provider => provider_name
@@ -16,7 +16,7 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
     end
     let(:arch) { 'x86_64' }
     let(:arch_resource) do
-      Puppet::Type.type(:package).new(
+      Oregano::Type.type(:package).new(
         :name     => "#{name}.#{arch}",
         :ensure   => :installed,
         :provider => provider_name
@@ -66,14 +66,14 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
     end
     describe 'when installing' do
       before(:each) do
-        Puppet::Util.stubs(:which).with("rpm").returns("/bin/rpm")
+        Oregano::Util.stubs(:which).with("rpm").returns("/bin/rpm")
         provider.stubs(:which).with("rpm").returns("/bin/rpm")
-        Puppet::Util::Execution.expects(:execute).with(["/bin/rpm", "--version"], {:combine => true, :custom_environment => {}, :failonfail => true}).returns("4.10.1\n").at_most_once
+        Oregano::Util::Execution.expects(:execute).with(["/bin/rpm", "--version"], {:combine => true, :custom_environment => {}, :failonfail => true}).returns("4.10.1\n").at_most_once
         Facter.stubs(:value).with(:operatingsystemmajrelease).returns('6')
       end
       it "should call #{provider_name} install for :installed" do
         resource.stubs(:should).with(:ensure).returns :installed
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, 'mypackage'])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, 'mypackage'])
         provider.install
       end
 
@@ -84,10 +84,10 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
           end
           it "should catch #{provider_name} install failures when status code is wrong" do
             resource.stubs(:should).with(:ensure).returns :installed
-            Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-e', error_level, '-y', :install, name]).returns("No package #{name} available.")
+            Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-e', error_level, '-y', :install, name]).returns("No package #{name} available.")
             expect {
               provider.install
-            }.to raise_error(Puppet::Error, "Could not find package #{name}")
+            }.to raise_error(Oregano::Error, "Could not find package #{name}")
           end
         end
       end
@@ -98,14 +98,14 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
       it 'should be able to set version' do
         version = '1.2'
         resource[:ensure] = version
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, "#{name}-#{version}"])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, "#{name}-#{version}"])
         provider.stubs(:query).returns :ensure => version
         provider.install
       end
       it 'should handle partial versions specified' do
         version = '1.3.4'
         resource[:ensure] = version
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, 'mypackage-1.3.4'])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, 'mypackage-1.3.4'])
         provider.stubs(:query).returns :ensure => '1.3.4-1.el6'
         provider.install
       end
@@ -113,7 +113,7 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
         current_version = '1.2'
         version = '1.0'
         resource[:ensure] = '1.0'
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :downgrade, "#{name}-#{version}"])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :downgrade, "#{name}-#{version}"])
         provider.stubs(:query).returns(:ensure => current_version).then.returns(:ensure => version)
         provider.install
       end
@@ -121,7 +121,7 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
         current_version = '1.0'
         version = '1.2'
         resource[:ensure] = '1.2'
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', upgrade_command, "#{name}-#{version}"])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', upgrade_command, "#{name}-#{version}"])
         provider.stubs(:query).returns(:ensure => current_version).then.returns(:ensure => version)
         provider.install
       end
@@ -129,7 +129,7 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
         current_version = ''
         version = '1.2'
         resource[:ensure] = :latest
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, name])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, name])
         provider.stubs(:query).returns(:ensure => current_version).then.returns(:ensure => version)
         provider.install
       end
@@ -137,34 +137,34 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
         current_version = '1.0'
         version = '1.2'
         resource[:ensure] = :latest
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', upgrade_command, name])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', upgrade_command, name])
         provider.stubs(:query).returns(:ensure => current_version).then.returns(:ensure => version)
         provider.install
       end
       it 'should accept install options' do
         resource[:ensure] = :installed
         resource[:install_options] = ['-t', {'-x' => 'expackage'}]
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', ['-t', '-x=expackage'], :install, name])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', ['-t', '-x=expackage'], :install, name])
         provider.install
       end
       it 'allow virtual packages' do
         resource[:ensure] = :installed
         resource[:allow_virtual] = true
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :list, name]).never
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, name])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :list, name]).never
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, name])
         provider.install
       end
       it 'moves architecture to end of version' do
         version = '1.2.3'
         arch_resource[:ensure] = version
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, "#{name}-#{version}.#{arch}"])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-d', '0', '-e', error_level, '-y', :install, "#{name}-#{version}.#{arch}"])
         arch_provider.stubs(:query).returns :ensure => version
         arch_provider.install
       end
     end
     describe 'when uninstalling' do
       it 'should use erase to purge' do
-        Puppet::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-y', :erase, name])
+        Oregano::Util::Execution.expects(:execute).with(["/usr/bin/#{provider_name}", '-y', :erase, name])
         provider.purge
       end
     end
@@ -207,7 +207,7 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
           provider.stubs(:properties).returns({:ensure => :absent})
           expect {
             provider.latest
-          }.to raise_error(Puppet::DevError, 'Tried to get latest on a missing package')
+          }.to raise_error(Oregano::DevError, 'Tried to get latest on a missing package')
         end
         it 'returns version of the currently installed package' do
           provider.stubs(:properties).returns({:ensure => '3.4.5'})
@@ -285,47 +285,47 @@ shared_examples "RHEL package provider" do |provider_class, provider_name|
     end
     describe "executing #{provider_name} check-update" do
       it "passes repos to enable to '#{provider_name} check-update'" do
-        Puppet::Util::Execution.expects(:execute).with do |args, *rest|
+        Oregano::Util::Execution.expects(:execute).with do |args, *rest|
           expect(args).to eq %W[/usr/bin/#{provider_name} check-update --enablerepo=updates --enablerepo=centosplus]
         end.returns(stub(:exitstatus => 0))
         described_class.check_updates([], %W[updates centosplus], [])
       end
       it "passes repos to disable to '#{provider_name} check-update'" do
-        Puppet::Util::Execution.expects(:execute).with do |args, *rest|
+        Oregano::Util::Execution.expects(:execute).with do |args, *rest|
           expect(args).to eq %W[/usr/bin/#{provider_name} check-update --disablerepo=updates --disablerepo=centosplus]
         end.returns(stub(:exitstatus => 0))
         described_class.check_updates(%W[updates centosplus], [], [])
       end
       it "passes a combination of repos to enable and disable to '#{provider_name} check-update'" do
-        Puppet::Util::Execution.expects(:execute).with do |args, *rest|
+        Oregano::Util::Execution.expects(:execute).with do |args, *rest|
           expect(args).to eq %W[/usr/bin/#{provider_name} check-update --disablerepo=updates --disablerepo=centosplus --enablerepo=os --enablerepo=contrib ]
         end.returns(stub(:exitstatus => 0))
         described_class.check_updates(%W[updates centosplus], %W[os contrib], [])
       end
       it "passes disableexcludes to '#{provider_name} check-update'" do
-        Puppet::Util::Execution.expects(:execute).with do |args, *rest|
+        Oregano::Util::Execution.expects(:execute).with do |args, *rest|
           expect(args).to eq %W[/usr/bin/#{provider_name} check-update --disableexcludes=main --disableexcludes=centosplus]
         end.returns(stub(:exitstatus => 0))
         described_class.check_updates([], [], %W[main centosplus])
       end
       it "passes all options to '#{provider_name} check-update'" do
-        Puppet::Util::Execution.expects(:execute).with do |args, *rest|
+        Oregano::Util::Execution.expects(:execute).with do |args, *rest|
           expect(args).to eq %W[/usr/bin/#{provider_name} check-update --disablerepo=a --disablerepo=b --enablerepo=c --enablerepo=d --disableexcludes=e --disableexcludes=f]
         end.returns(stub(:exitstatus => 0))
         described_class.check_updates(%W[a b], %W[c d], %W[e f])
       end
       it "returns an empty hash if '#{provider_name} check-update' returned 0" do
-        Puppet::Util::Execution.expects(:execute).returns(stub :exitstatus => 0)
+        Oregano::Util::Execution.expects(:execute).returns(stub :exitstatus => 0)
         expect(described_class.check_updates([], [], [])).to be_empty
       end
       it "returns a populated hash if '#{provider_name} check-update returned 100'" do
         output = stub(:exitstatus => 100)
-        Puppet::Util::Execution.expects(:execute).returns(output)
+        Oregano::Util::Execution.expects(:execute).returns(output)
         described_class.expects(:parse_updates).with(output).returns({:has => :updates})
         expect(described_class.check_updates([], [], [])).to eq({:has => :updates})
       end
       it "returns an empty hash if '#{provider_name} check-update' returned an exit code that was not 0 or 100" do
-        Puppet::Util::Execution.expects(:execute).returns(stub(:exitstatus => 1))
+        Oregano::Util::Execution.expects(:execute).returns(stub(:exitstatus => 1))
         described_class.expects(:warning).with("Could not check for updates, \'/usr/bin/#{provider_name} check-update\' exited with 1")
         expect(described_class.check_updates([], [], [])).to eq({})
       end

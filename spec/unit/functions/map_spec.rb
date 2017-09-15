@@ -1,12 +1,12 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 require 'shared_behaviours/iterative_functions'
 
 describe 'the map method can' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
 
     it 'map on an array (multiplying each value by 2)' do
@@ -144,7 +144,7 @@ describe 'the map method can' do
       end
 
       it "map gets values that are nil" do
-        Puppet::Parser::Functions.newfunction(:nil_array, :type => :rvalue) do |args|
+        Oregano::Parser::Functions.newfunction(:nil_array, :type => :rvalue) do |args|
           [nil]
         end
         catalog = compile_to_catalog(<<-MANIFEST)

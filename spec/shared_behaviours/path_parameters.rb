@@ -3,7 +3,7 @@
 #
 #    it_should_behave_like "all path parameters", :path do
 #      def instance(path)
-#        Puppet::Type.type(:example).new(
+#        Oregano::Type.type(:example).new(
 #          :name => 'foo', :require => 'bar', :path_param => path
 #        )
 #      end
@@ -46,7 +46,7 @@ shared_examples_for "all pathname parameters with arrays" do |win32|
         it "should #{reject ? 'reject' : 'accept'} #{set.join(", ")}" do
           if reject then
             expect { instance(data) }.
-              to raise_error Puppet::Error, /fully qualified/
+              to raise_error Oregano::Error, /fully qualified/
           else
             instance = instance(data)
             expect(instance[@param]).to eq(data)
@@ -56,7 +56,7 @@ shared_examples_for "all pathname parameters with arrays" do |win32|
         it "should #{reject ? 'reject' : 'accept'} #{set.join(", ")} doubled" do
           if reject then
             expect { instance(data + data) }.
-              to raise_error Puppet::Error, /fully qualified/
+              to raise_error Oregano::Error, /fully qualified/
           else
             instance = instance(data + data)
             expect(instance[@param]).to eq(data + data)
@@ -87,7 +87,7 @@ shared_examples_for "all path parameters" do |param, options|
     @param = param
   end
 
-  describe "on a Unix-like platform it", :if => Puppet.features.posix? do
+  describe "on a Unix-like platform it", :if => Oregano.features.posix? do
     if array then
       it_should_behave_like "all pathname parameters with arrays", false
     end
@@ -101,7 +101,7 @@ shared_examples_for "all path parameters" do |param, options|
     it "should give a useful error when the path is not absolute" do
       path = 'foo'
       expect { instance(path) }.
-        to raise_error Puppet::Error, /fully qualified/
+        to raise_error Oregano::Error, /fully qualified/
     end
 
     { "Unix" => '/', "Win32" => '\\' }.each do |style, slash|
@@ -109,26 +109,26 @@ shared_examples_for "all path parameters" do |param, options|
         it "should reject drive letter '#{drive}' with #{style} path separators" do
           path = "#{drive}:#{slash}Program Files"
           expect { instance(path) }.
-            to raise_error Puppet::Error, /fully qualified/
+            to raise_error Oregano::Error, /fully qualified/
         end
       end
     end
   end
 
-  describe "on a Windows-like platform it", :if => Puppet.features.microsoft_windows? do
+  describe "on a Windows-like platform it", :if => Oregano.features.microsoft_windows? do
     if array then
       it_should_behave_like "all pathname parameters with arrays", true
     end
 
     it "should reject a fully qualified unix path" do
       path = '/foo'
-      expect { instance(path) }.to raise_error(Puppet::Error, /fully qualified/)
+      expect { instance(path) }.to raise_error(Oregano::Error, /fully qualified/)
     end
 
     it "should give a useful error when the path is not absolute" do
       path = 'foo'
       expect { instance(path) }.
-        to raise_error Puppet::Error, /fully qualified/
+        to raise_error Oregano::Error, /fully qualified/
     end
 
     it "also accepts Unix style path separators" do

@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP do
+describe Oregano::Network::HTTP do
   it 'defines an http_pool context' do
-    pool = Puppet.lookup(:http_pool)
-    expect(pool).to be_a(Puppet::Network::HTTP::NoCachePool)
+    pool = Oregano.lookup(:http_pool)
+    expect(pool).to be_a(Oregano::Network::HTTP::NoCachePool)
   end
 end

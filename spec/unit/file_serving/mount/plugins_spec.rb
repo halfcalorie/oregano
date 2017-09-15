@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/file_serving/mount/plugins'
+require 'oregano/file_serving/mount/plugins'
 
-describe Puppet::FileServing::Mount::Plugins do
+describe Oregano::FileServing::Mount::Plugins do
   before do
-    @mount = Puppet::FileServing::Mount::Plugins.new("plugins")
+    @mount = Oregano::FileServing::Mount::Plugins.new("plugins")
 
     @environment = stub 'environment', :module => nil
     @options = { :recurse => true }

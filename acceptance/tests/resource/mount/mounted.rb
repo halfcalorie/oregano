@@ -13,8 +13,8 @@ tag 'audit:low',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/mount_utils'
-extend Puppet::Acceptance::MountUtils
+require 'oregano/acceptance/mount_utils'
+extend Oregano::Acceptance::MountUtils
 
 name = "pl#{rand(999999).to_i}"
 
@@ -48,7 +48,7 @@ agents.each do |agent|
   create_filesystem(agent, name)
 
   #------- TESTS -------#
-  step "create a mount with puppet (mounted)"
+  step "create a mount with oregano (mounted)"
   if agent['platform'] =~ /aix/
     args = ['ensure=mounted',
             "fstype=#{fs_type}",
@@ -63,7 +63,7 @@ agents.each do |agent|
            ]
   end
 
-  on(agent, puppet_resource('mount', "/#{name}", args))
+  on(agent, oregano_resource('mount', "/#{name}", args))
 
   step "verify entry in filesystem table"
   on(agent, "cat #{fs_file}") do |res|

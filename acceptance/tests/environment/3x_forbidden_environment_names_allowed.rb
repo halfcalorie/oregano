@@ -12,8 +12,8 @@ testdir = create_tmpdir_for_user(master, 'forbidden_env')
 manifest = <<-MANIFEST
   File {
     ensure => directory,
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
     mode => "0750",
   }
 
@@ -61,10 +61,10 @@ master_opts = {
 }
 
 environments = ['master','main','agent','user']
-with_puppet_running_on(master, master_opts, testdir) do
+with_oregano_running_on(master, master_opts, testdir) do
   agents.each do |agent|
     environments.each do |environment|
-      on(agent, puppet('agent',
+      on(agent, oregano('agent',
                        "--test --server #{master} --environment #{environment}"),
       :acceptable_exit_codes => 2)
     end

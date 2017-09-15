@@ -1,6 +1,6 @@
-test_name "puppet module install (with existing module directory)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (with existing module directory)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:unit',
@@ -44,7 +44,7 @@ PP
 
 step "Try to install a module with a name collision"
 module_name   = "nginx"
-on master, puppet("module install #{module_author}-#{module_name}"), :acceptable_exit_codes => [1] do
+on master, oregano("module install #{module_author}-#{module_name}"), :acceptable_exit_codes => [1] do
   assert_match(/Installation would overwrite #{default_moduledir}\/#{module_name}/, stderr,
         "Error of module collision was not displayed")
 end
@@ -52,7 +52,7 @@ on master, "[ -f #{default_moduledir}/#{module_name}/extra.json ]"
 
 step "Try to install a module with a path collision"
 module_name   = "apache"
-on master, puppet("module install #{module_author}-#{module_name}"), :acceptable_exit_codes => [1] do
+on master, oregano("module install #{module_author}-#{module_name}"), :acceptable_exit_codes => [1] do
   assert_match(/Installation would overwrite #{default_moduledir}\/#{module_name}/, stderr,
         "Error of module collision was not displayed")
 end
@@ -60,7 +60,7 @@ on master, "[ -f #{default_moduledir}/#{module_name}/extra.json ]"
 
 step "Try to install a module with a dependency that has collides"
 module_name   = "php"
-on master, puppet("module install #{module_author}-#{module_name} --version 0.0.1"), :acceptable_exit_codes => [1] do
+on master, oregano("module install #{module_author}-#{module_name} --version 0.0.1"), :acceptable_exit_codes => [1] do
   assert_match(/Dependency .* would overwrite/, stderr,
         "Error of dependency collision was not displayed")
 end
@@ -68,14 +68,14 @@ on master, "[ -f #{default_moduledir}/apache/extra.json ]"
 
 step "Install a module with a name collision by using --force"
 module_name   = "nginx"
-on master, puppet("module install #{module_author}-#{module_name} --force"), :acceptable_exit_codes => [0] do
+on master, oregano("module install #{module_author}-#{module_name} --force"), :acceptable_exit_codes => [0] do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 on master, "[ ! -f #{default_moduledir}/#{module_name}/extra.json ]"
 
 step "Install an module with a name collision by using --force"
 module_name   = "apache"
-on master, puppet("module install #{module_author}-#{module_name} --force"), :acceptable_exit_codes => [0] do
+on master, oregano("module install #{module_author}-#{module_name} --force"), :acceptable_exit_codes => [0] do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 on master, "[ ! -f #{default_moduledir}/#{module_name}/extra.json ]"

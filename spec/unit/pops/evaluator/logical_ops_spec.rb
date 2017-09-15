@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl' do
   include EvaluatorRspecHelper
 
   context "When the evaluator performs boolean operations" do
@@ -83,7 +83,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
       it "false || false || error == error (false positive test)" do
         # TODO: Change the exception type
-        expect {evaluate(literal(true).and(literal('0xwtf') + literal(1)).or(literal(false)))}.to raise_error(Puppet::ParseError)
+        expect {evaluate(literal(true).and(literal('0xwtf') + literal(1)).or(literal(false)))}.to raise_error(Oregano::ParseError)
       end
     end
   end

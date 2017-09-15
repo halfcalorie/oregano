@@ -33,17 +33,17 @@ end
 step "Create Temp Folder"
 
 agents.each do |agent|
-  on(agent, puppet('apply', '--debug'), :stdin => temp_folder)
+  on(agent, oregano('apply', '--debug'), :stdin => temp_folder)
 end
 
 step "Create Dash Dot File 100 Times"
 
 agents.each do |agent|
-  on(agent, puppet('apply', '--debug'), :stdin => first_run_manifest)
+  on(agent, oregano('apply', '--debug'), :stdin => first_run_manifest)
 end
 
 step "Update Dash Dot File 100 Times"
 
 agents.each do |agent|
-  on(agent, puppet('apply', '--debug'), :stdin => second_run_manifest)
+  on(agent, oregano('apply', '--debug'), :stdin => second_run_manifest)
 end

@@ -1,34 +1,34 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_revocation_list'
+require 'oregano/ssl/certificate_revocation_list'
 
-describe Puppet::SSL::CertificateRevocationList do
-  include PuppetSpec::Files
+describe Oregano::SSL::CertificateRevocationList do
+  include OreganoSpec::Files
 
   before do
     # Get a safe temporary file
     dir = tmpdir("ca_integration_testing")
 
-    Puppet.settings[:confdir] = dir
-    Puppet.settings[:vardir] = dir
+    Oregano.settings[:confdir] = dir
+    Oregano.settings[:vardir] = dir
 
-    Puppet::SSL::Host.ca_location = :local
+    Oregano::SSL::Host.ca_location = :local
   end
 
   after {
-    Puppet::SSL::Host.ca_location = :none
+    Oregano::SSL::Host.ca_location = :none
 
     # This is necessary so the terminus instances don't lie around.
-    Puppet::SSL::Host.indirection.termini.clear
+    Oregano::SSL::Host.indirection.termini.clear
   }
 
   it "should be able to read in written out CRLs with no revoked certificates" do
-    ca = Puppet::SSL::CertificateAuthority.new
+    ca = Oregano::SSL::CertificateAuthority.new
 
-    raise "CRL not created" unless Puppet::FileSystem.exist?(Puppet[:hostcrl])
+    raise "CRL not created" unless Oregano::FileSystem.exist?(Oregano[:hostcrl])
 
-    crl = Puppet::SSL::CertificateRevocationList.new("crl_int_testing")
-    crl.read(Puppet[:hostcrl])
+    crl = Oregano::SSL::CertificateRevocationList.new("crl_int_testing")
+    crl.read(Oregano[:hostcrl])
   end
 end

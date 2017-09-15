@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet'
-require 'puppet/parameter/boolean'
+require 'oregano'
+require 'oregano/parameter/boolean'
 
-describe Puppet::Parameter::Boolean do
+describe Oregano::Parameter::Boolean do
   let (:resource) { mock('resource') }
   describe "after initvars" do
     before { described_class.initvars }
@@ -29,7 +29,7 @@ describe Puppet::Parameter::Boolean do
     end
     [ nil, :undef, 'undef', '0', 0, '1', 1, 9284 ].each do |arg|
       it "should fail to munge #{arg.inspect}" do
-        expect { subject.munge(arg) }.to raise_error Puppet::Error
+        expect { subject.munge(arg) }.to raise_error Oregano::Error
       end
     end
   end

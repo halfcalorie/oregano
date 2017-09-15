@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/ldap'
+require 'oregano/indirector/ldap'
 
-describe Puppet::Indirector::Ldap do
+describe Oregano::Indirector::Ldap do
   before do
     @indirection = stub 'indirection', :name => :testing
-    Puppet::Indirector::Indirection.stubs(:instance).returns(@indirection)
+    Oregano::Indirector::Indirection.stubs(:instance).returns(@indirection)
     module Testing; end
-    @ldap_class = class Testing::MyLdap < Puppet::Indirector::Ldap
+    @ldap_class = class Testing::MyLdap < Oregano::Indirector::Ldap
       self
     end
 
@@ -49,7 +49,7 @@ describe Puppet::Indirector::Ldap do
     end
 
     it "should default to the value of the :search_base setting as the result of the ldapbase method" do
-      Puppet[:ldapbase] = "myldapbase"
+      Oregano[:ldapbase] = "myldapbase"
       searcher = @ldap_class.new
       expect(searcher.search_base).to eq("myldapbase")
     end
@@ -98,7 +98,7 @@ describe Puppet::Indirector::Ldap do
         count += 1
         raise ArgumentError, "yay"
       end
-      expect { @searcher.find(@request) }.to raise_error(Puppet::Error)
+      expect { @searcher.find(@request) }.to raise_error(Oregano::Error)
       expect(count).to eq(2)
     end
 
@@ -108,30 +108,30 @@ describe Puppet::Indirector::Ldap do
     end
   end
 
-  describe "when connecting to ldap", :if => Puppet.features.ldap? do
+  describe "when connecting to ldap", :if => Oregano.features.ldap? do
     it "should create and start a Util::Ldap::Connection instance" do
       conn = double 'connection', :connection => "myconn", :start => nil
-      Puppet::Util::Ldap::Connection.expects(:instance).returns conn
+      Oregano::Util::Ldap::Connection.expects(:instance).returns conn
 
       expect(@searcher.connection).to eq("myconn")
     end
 
     it "should only create the ldap connection when asked for it the first time" do
       conn = double 'connection', :connection => "myconn", :start => nil
-      Puppet::Util::Ldap::Connection.expects(:instance).returns conn
+      Oregano::Util::Ldap::Connection.expects(:instance).returns conn
 
       @searcher.connection
     end
 
     it "should cache the connection" do
       conn = double 'connection', :connection => "myconn", :start => nil
-      Puppet::Util::Ldap::Connection.expects(:instance).returns conn
+      Oregano::Util::Ldap::Connection.expects(:instance).returns conn
 
       expect(@searcher.connection).to equal(@searcher.connection)
     end
   end
 
-  describe "when reconnecting to ldap", :if => (Puppet.features.root? and Facter.value("hostname") == "culain") do
+  describe "when reconnecting to ldap", :if => (Oregano.features.root? and Facter.value("hostname") == "culain") do
     it "should reconnect to ldap when connections are lost"
   end
 end

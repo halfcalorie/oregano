@@ -1,18 +1,18 @@
 require 'spec_helper'
 
-describe Puppet::Util::Execution do
-  include PuppetSpec::Files
+describe Oregano::Util::Execution do
+  include OreganoSpec::Files
 
   describe "#execpipe" do
-    it "should set LANG to C avoid localized output", :if => !Puppet.features.microsoft_windows? do
+    it "should set LANG to C avoid localized output", :if => !Oregano.features.microsoft_windows? do
       out = ""
-      Puppet::Util::Execution.execpipe('echo $LANG'){ |line| out << line.read.chomp }
+      Oregano::Util::Execution.execpipe('echo $LANG'){ |line| out << line.read.chomp }
       expect(out).to eq("C")
     end
 
-    it "should set LC_ALL to C avoid localized output", :if => !Puppet.features.microsoft_windows? do
+    it "should set LC_ALL to C avoid localized output", :if => !Oregano.features.microsoft_windows? do
       out = ""
-      Puppet::Util::Execution.execpipe('echo $LC_ALL'){ |line| out << line.read.chomp }
+      Oregano::Util::Execution.execpipe('echo $LC_ALL'){ |line| out << line.read.chomp }
       expect(out).to eq("C")
     end
 
@@ -20,20 +20,20 @@ describe Puppet::Util::Execution do
       expect {
         failonfail = true
         # NOTE: critical to return l in the block for `output` in method to be #<IO:(closed)>
-        Puppet::Util::Execution.execpipe('conan_the_librarion', failonfail) { |l| l }
-      }.to raise_error(Puppet::ExecutionFailure)
+        Oregano::Util::Execution.execpipe('conan_the_librarion', failonfail) { |l| l }
+      }.to raise_error(Oregano::ExecutionFailure)
     end
   end
 
-  describe "#execute (non-Windows)", :if => !Puppet.features.microsoft_windows? do
+  describe "#execute (non-Windows)", :if => !Oregano.features.microsoft_windows? do
     it "should execute basic shell command" do
-      result = Puppet::Util::Execution.execute("ls /tmp", :failonfail => true)
+      result = Oregano::Util::Execution.execute("ls /tmp", :failonfail => true)
       expect(result.exitstatus).to eq(0)
       expect(result.to_s).to_not be_nil
     end
   end
 
-  describe "#execute (Windows)", :if => Puppet.features.microsoft_windows? do
+  describe "#execute (Windows)", :if => Oregano.features.microsoft_windows? do
     let(:utf8text) do
       # Japanese Lorem Ipsum snippet
       "utf8testfile" + [227, 131, 171, 227, 131, 147, 227, 131, 179, 227, 131, 132, 227,
@@ -47,7 +47,7 @@ describe Puppet::Util::Execution do
     end
 
     it "should execute with non-english characters in command line" do
-      result = Puppet::Util::Execution.execute("cmd /c \"#{temputf8filename}\"", :failonfail => false)
+      result = Oregano::Util::Execution.execute("cmd /c \"#{temputf8filename}\"", :failonfail => false)
       expect(temputf8filename.encoding.name).to eq('UTF-8')
       expect(result.exitstatus).to eq(100)
     end

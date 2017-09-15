@@ -1,4 +1,4 @@
-test_name "tests that puppet correctly captures large and empty output."
+test_name "tests that oregano correctly captures large and empty output."
 tag 'audit:high',
     'audit:refactor',   # Use block style `test_name`
     'audit:acceptance'

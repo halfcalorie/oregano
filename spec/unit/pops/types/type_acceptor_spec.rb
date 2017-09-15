@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet/pops/types/type_acceptor'
+require 'oregano/pops/types/type_acceptor'
 
-class PuppetSpec::TestTypeAcceptor
-  include Puppet::Pops::Types::TypeAcceptor
+class OreganoSpec::TestTypeAcceptor
+  include Oregano::Pops::Types::TypeAcceptor
   attr_reader :visitors, :guard
 
   def initialize
@@ -16,10 +16,10 @@ class PuppetSpec::TestTypeAcceptor
   end
 end
 
-module Puppet::Pops::Types
-describe 'the Puppet::Pops::Types::TypeAcceptor' do
+module Oregano::Pops::Types
+describe 'the Oregano::Pops::Types::TypeAcceptor' do
 
-  let!(:acceptor_class) { PuppetSpec::TestTypeAcceptor }
+  let!(:acceptor_class) { OreganoSpec::TestTypeAcceptor }
 
   let(:acceptor) { acceptor_class.new }
   let(:guard) { RecursionGuard.new }

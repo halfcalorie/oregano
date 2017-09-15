@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider = Puppet::Type.type(:package).provider(:pkgutil)
+provider = Oregano::Type.type(:package).provider(:pkgutil)
 
 describe provider do
   before(:each) do
-    @resource = Puppet::Type.type(:package).new(
+    @resource = Oregano::Type.type(:package).new(
       :name     => "TESTpkg",
       :ensure   => :present,
       :provider => :pkgutil
@@ -185,7 +185,7 @@ Not in catalog"
     it "should warn on unknown pkgutil noise" do
       provider.expects(:pkguti).with(['-a']).returns("testingnoise")
       provider.expects(:pkguti).with(['-c']).returns("testingnoise")
-      Puppet.expects(:warning).times(2)
+      Oregano.expects(:warning).times(2)
       provider.expects(:new).never
       expect(provider.instances).to eq([])
     end

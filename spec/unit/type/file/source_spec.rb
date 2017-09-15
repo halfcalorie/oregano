@@ -1,60 +1,60 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 require 'uri'
-require 'puppet/network/http_pool'
-#require 'puppet/network/resolver'
+require 'oregano/network/http_pool'
+#require 'oregano/network/resolver'
 
-describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:source), :uses_checksums => true do
+  include OreganoSpec::Files
   include_context 'with supported checksum types'
 
   around :each do |example|
-    Puppet.override(:environments => Puppet::Environments::Static.new) do
+    Oregano.override(:environments => Oregano::Environments::Static.new) do
       example.run
     end
   end
 
   let(:filename) { tmpfile('file_source_validate') }
-  let(:environment) { Puppet::Node::Environment.remote("myenv") }
-  let(:catalog) { Puppet::Resource::Catalog.new(:test, environment) }
-  let(:resource) { Puppet::Type.type(:file).new :path => filename, :catalog => catalog }
+  let(:environment) { Oregano::Node::Environment.remote("myenv") }
+  let(:catalog) { Oregano::Resource::Catalog.new(:test, environment) }
+  let(:resource) { Oregano::Type.type(:file).new :path => filename, :catalog => catalog }
 
   before do
     @foobar = make_absolute("/foo/bar baz")
     @feebooz = make_absolute("/fee/booz baz")
 
-    @foobar_uri  = URI.unescape(Puppet::Util.path_to_uri(@foobar).to_s)
-    @feebooz_uri = URI.unescape(Puppet::Util.path_to_uri(@feebooz).to_s)
+    @foobar_uri  = URI.unescape(Oregano::Util.path_to_uri(@foobar).to_s)
+    @feebooz_uri = URI.unescape(Oregano::Util.path_to_uri(@feebooz).to_s)
   end
 
   it "should be a subclass of Parameter" do
-    expect(described_class.superclass).to eq(Puppet::Parameter)
+    expect(described_class.superclass).to eq(Oregano::Parameter)
   end
 
   describe "#validate" do
     it "should fail if the set values are not URLs" do
       URI.expects(:parse).with('foo').raises RuntimeError
 
-      expect(lambda { resource[:source] = %w{foo} }).to raise_error(Puppet::Error)
+      expect(lambda { resource[:source] = %w{foo} }).to raise_error(Oregano::Error)
     end
 
-    it "should fail if the URI is not a local file, file URI, or puppet URI" do
-      expect(lambda { resource[:source] = %w{ftp://foo/bar} }).to raise_error(Puppet::Error, /Cannot use URLs of type 'ftp' as source for fileserving/)
+    it "should fail if the URI is not a local file, file URI, or oregano URI" do
+      expect(lambda { resource[:source] = %w{ftp://foo/bar} }).to raise_error(Oregano::Error, /Cannot use URLs of type 'ftp' as source for fileserving/)
     end
 
-    it "should strip trailing forward slashes", :unless => Puppet.features.microsoft_windows? do
+    it "should strip trailing forward slashes", :unless => Oregano.features.microsoft_windows? do
       resource[:source] = "/foo/bar\\//"
       expect(resource[:source]).to eq(%w{file:/foo/bar\\})
     end
 
-    it "should strip trailing forward and backslashes", :if => Puppet.features.microsoft_windows? do
+    it "should strip trailing forward and backslashes", :if => Oregano.features.microsoft_windows? do
       resource[:source] = "X:/foo/bar\\//"
       expect(resource[:source]).to eq(%w{file:/X:/foo/bar})
     end
 
     it "should accept an array of sources" do
-      resource[:source] = %w{file:///foo/bar puppet://host:8140/foo/bar}
-      expect(resource[:source]).to eq(%w{file:///foo/bar puppet://host:8140/foo/bar})
+      resource[:source] = %w{file:///foo/bar oregano://host:8140/foo/bar}
+      expect(resource[:source]).to eq(%w{file:///foo/bar oregano://host:8140/foo/bar})
     end
 
     it "should accept file path characters that are not valid in URI" do
@@ -62,11 +62,11 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
     end
 
     it "should reject relative URI sources" do
-      expect(lambda { resource[:source] = 'foo/bar' }).to raise_error(Puppet::Error)
+      expect(lambda { resource[:source] = 'foo/bar' }).to raise_error(Oregano::Error)
     end
 
     it "should reject opaque sources" do
-      expect(lambda { resource[:source] = 'mailto:foo@com' }).to raise_error(Puppet::Error)
+      expect(lambda { resource[:source] = 'mailto:foo@com' }).to raise_error(Oregano::Error)
     end
 
     it "should accept URI authority component" do
@@ -83,10 +83,10 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
   describe "#munge" do
     it "should prefix file scheme to absolute paths" do
       resource[:source] = filename
-      expect(resource[:source]).to eq([URI.unescape(Puppet::Util.path_to_uri(filename).to_s)])
+      expect(resource[:source]).to eq([URI.unescape(Oregano::Util.path_to_uri(filename).to_s)])
     end
 
-    %w[file puppet].each do |scheme|
+    %w[file oregano].each do |scheme|
       it "should not prefix valid #{scheme} URIs" do
         resource[:source] = "#{scheme}:///foo bar"
         expect(resource[:source]).to eq(["#{scheme}:///foo bar"])
@@ -115,7 +115,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
     it "should collect its metadata using the Metadata class if it is not already set" do
       @source = described_class.new(:resource => resource, :value => @foobar)
-      Puppet::FileServing::Metadata.indirection.expects(:find).with do |uri, options|
+      Oregano::FileServing::Metadata.indirection.expects(:find).with do |uri, options|
         expect(uri).to eq @foobar_uri
         expect(options[:environment]).to eq environment
         expect(options[:links]).to eq :manage
@@ -134,15 +134,15 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         :source_permissions => :use,
         :checksum_type => :checksum
       }
-      Puppet::FileServing::Metadata.indirection.expects(:find).with(@foobar_uri, options).returns nil
-      Puppet::FileServing::Metadata.indirection.expects(:find).with(@feebooz_uri, options).returns metadata
+      Oregano::FileServing::Metadata.indirection.expects(:find).with(@foobar_uri, options).returns nil
+      Oregano::FileServing::Metadata.indirection.expects(:find).with(@feebooz_uri, options).returns metadata
       expect(@source.metadata).to equal(metadata)
     end
 
     it "should store the found source as the metadata's source" do
       metadata = mock 'metadata'
       @source = described_class.new(:resource => resource, :value => @foobar)
-      Puppet::FileServing::Metadata.indirection.expects(:find).with do |uri, options|
+      Oregano::FileServing::Metadata.indirection.expects(:find).with do |uri, options|
         expect(uri).to eq @foobar_uri
         expect(options[:environment]).to eq environment
         expect(options[:links]).to eq :manage
@@ -155,7 +155,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
     it "should fail intelligently if an exception is encountered while querying for metadata" do
       @source = described_class.new(:resource => resource, :value => @foobar)
-      Puppet::FileServing::Metadata.indirection.expects(:find).with do |uri, options|
+      Oregano::FileServing::Metadata.indirection.expects(:find).with do |uri, options|
         expect(uri).to eq @foobar_uri
         expect(options[:environment]).to eq environment
         expect(options[:links]).to eq :manage
@@ -168,7 +168,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
     it "should fail if no specified sources can be found" do
       @source = described_class.new(:resource => resource, :value => @foobar)
-      Puppet::FileServing::Metadata.indirection.expects(:find).with  do |uri, options|
+      Oregano::FileServing::Metadata.indirection.expects(:find).with  do |uri, options|
         expect(uri).to eq @foobar_uri
         expect(options[:environment]).to eq environment
         expect(options[:links]).to eq :manage
@@ -187,19 +187,19 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
   describe "when copying the source values" do
     before :each do
-      @resource = Puppet::Type.type(:file).new :path => @foobar
+      @resource = Oregano::Type.type(:file).new :path => @foobar
 
       @source = described_class.new(:resource => @resource)
       @metadata = stub 'metadata', :owner => 100, :group => 200, :mode => "173", :checksum => "{md5}asdfasdf", :checksum_type => "md5", :ftype => "file", :source => @foobar
       @source.stubs(:metadata).returns @metadata
 
-      Puppet.features.stubs(:root?).returns true
+      Oregano.features.stubs(:root?).returns true
     end
 
     it "should not issue an error - except on Windows - if the source mode value is a Numeric" do
       @metadata.stubs(:mode).returns 0173
       @resource[:source_permissions] = :use
-      if Puppet::Util::Platform.windows?
+      if Oregano::Util::Platform.windows?
         expect { @source.copy_source_values }.to raise_error("Should not have tried to use source owner/mode/group on Windows")
       else
         expect { @source.copy_source_values }.not_to raise_error
@@ -209,7 +209,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
     it "should not issue an error - except on Windows - if the source mode value is a String" do
       @metadata.stubs(:mode).returns "173"
       @resource[:source_permissions] = :use
-      if Puppet::Util::Platform.windows?
+      if Oregano::Util::Platform.windows?
         expect { @source.copy_source_values }.to raise_error("Should not have tried to use source owner/mode/group on Windows")
       else
         expect { @source.copy_source_values }.not_to raise_error
@@ -240,7 +240,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
     describe "and the source is a file" do
       before do
         @metadata.stubs(:ftype).returns "file"
-        Puppet.features.stubs(:microsoft_windows?).returns false
+        Oregano.features.stubs(:microsoft_windows?).returns false
       end
 
       context "when source_permissions is `use`" do
@@ -276,9 +276,9 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
           expect(@resource[:checksum]).not_to eq(@metadata.checksum_type.to_sym)
         end
 
-        describe "and puppet is not running as root" do
+        describe "and oregano is not running as root" do
           before do
-            Puppet.features.stubs(:root?).returns false
+            Oregano.features.stubs(:root?).returns false
           end
 
           it "should not try to set the owner" do
@@ -296,7 +296,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
       context "when source_permissions is `use_when_creating`" do
         before :each do
           @resource[:source_permissions] = "use_when_creating"
-          Puppet.features.expects(:root?).returns true
+          Oregano.features.expects(:root?).returns true
           @source.stubs(:local?).returns(false)
         end
 
@@ -332,7 +332,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
         context "when managing an existing file" do
           before :each do
-            Puppet::FileSystem.stubs(:exist?).with(@resource[:path]).returns(true)
+            Oregano::FileSystem.stubs(:exist?).with(@resource[:path]).returns(true)
           end
 
           it "should not copy owner, group or mode from local sources" do
@@ -368,7 +368,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
       context "when source_permissions is default" do
         before :each do
           @source.stubs(:local?).returns(false)
-          Puppet.features.expects(:root?).returns true
+          Oregano.features.expects(:root?).returns true
         end
 
         it "should not copy owner, group or mode from local sources" do
@@ -403,7 +403,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
     describe "and the source is a link" do
       before do
-        Puppet.features.stubs(:microsoft_windows?).returns false
+        Oregano.features.stubs(:microsoft_windows?).returns false
       end
 
       it "should set the target to the link destination" do
@@ -426,9 +426,9 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
   end
 
   context "when accessing source properties" do
-    let(:catalog) { Puppet::Resource::Catalog.new }
+    let(:catalog) { Oregano::Resource::Catalog.new }
     let(:path) { tmpfile('file_resource') }
-    let(:resource) { Puppet::Type.type(:file).new(:path => path, :catalog => catalog) }
+    let(:resource) { Oregano::Type.type(:file).new(:path => path, :catalog => catalog) }
     let(:sourcepath) { tmpfile('file_source') }
 
     describe "for local sources" do
@@ -436,7 +436,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         FileUtils.touch(sourcepath)
       end
 
-      describe "on POSIX systems", :if => Puppet.features.posix? do
+      describe "on POSIX systems", :if => Oregano.features.posix? do
         ['', "file:", "file://"].each do |prefix|
           it "with prefix '#{prefix}' should be local" do
             resource[:source] = "#{prefix}#{sourcepath}"
@@ -450,7 +450,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         end
       end
 
-      describe "on Windows systems", :if => Puppet.features.microsoft_windows? do
+      describe "on Windows systems", :if => Oregano.features.microsoft_windows? do
         ['', "file:/", "file:///"].each do |prefix|
           it "should be local with prefix '#{prefix}'" do
             resource[:source] = "#{prefix}#{sourcepath}"
@@ -471,17 +471,17 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
       end
     end
 
-    %w{puppet http}.each do |scheme|
+    %w{oregano http}.each do |scheme|
       describe "for remote (#{scheme}) sources" do
         let(:sourcepath) { "/path/to/source" }
         let(:uri) { URI::Generic.build(:scheme => scheme, :host => 'server', :port => 8192, :path => sourcepath).to_s }
 
         before(:each) do
-          metadata = Puppet::FileServing::Metadata.new(path, :source => uri, 'type' => 'file')
+          metadata = Oregano::FileServing::Metadata.new(path, :source => uri, 'type' => 'file')
           #metadata = stub('remote', :ftype => "file", :source => uri)
-          Puppet::FileServing::Metadata.indirection.stubs(:find).
+          Oregano::FileServing::Metadata.indirection.stubs(:find).
             with(uri,all_of(has_key(:environment), has_key(:links))).returns metadata
-          Puppet::FileServing::Metadata.indirection.stubs(:find).
+          Oregano::FileServing::Metadata.indirection.stubs(:find).
             with(uri,all_of(has_key(:environment), has_key(:links))).returns metadata
           resource[:source] = uri
         end
@@ -502,17 +502,17 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
           expect(resource.parameter(:source).port).to eq(8192)
         end
 
-        if scheme == 'puppet'
+        if scheme == 'oregano'
           describe "which don't specify server or port" do
-            let(:uri) { "puppet:///path/to/source" }
+            let(:uri) { "oregano:///path/to/source" }
 
             it "should return the default source server" do
-              Puppet[:server] = "myserver"
+              Oregano[:server] = "myserver"
               expect(resource.parameter(:source).server).to eq("myserver")
             end
 
             it "should return the default source port" do
-              Puppet[:masterport] = 1234
+              Oregano[:masterport] = 1234
               expect(resource.parameter(:source).port).to eq(1234)
             end
           end
@@ -522,10 +522,10 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
   end
 
   describe "when writing" do
-    describe "as puppet apply" do
+    describe "as oregano apply" do
       let(:source_content) { "source file content\r\n"*10 }
       before do
-        Puppet[:default_file_terminus] = "file_server"
+        Oregano[:default_file_terminus] = "file_server"
         resource[:source] = file_containing('apply', source_content)
       end
 
@@ -533,7 +533,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         source = resource.parameter(:source)
         resource.write(source)
 
-        expect(Puppet::FileSystem.binread(filename)).to eq(source_content)
+        expect(Oregano::FileSystem.binread(filename)).to eq(source_content)
       end
 
       with_digest_algorithms do
@@ -558,7 +558,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         source = resource.parameter(:source)
         resource.write(source)
 
-        expect(Puppet::FileSystem.binread(filename)).to eq(source_content)
+        expect(Oregano::FileSystem.binread(filename)).to eq(source_content)
       end
 
       with_digest_algorithms do
@@ -585,37 +585,37 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         conn.stubs(:request_get).yields(response)
       end
 
-      it 'should use an explicit fileserver if source starts with puppet://' do
+      it 'should use an explicit fileserver if source starts with oregano://' do
         response.stubs(:code).returns('200')
-        source.stubs(:metadata).returns stub_everything('metadata', :source => 'puppet://somehostname/test/foo', :ftype => 'file')
-        Puppet::Network::HttpPool.expects(:http_instance).with('somehostname', anything).returns(conn)
+        source.stubs(:metadata).returns stub_everything('metadata', :source => 'oregano://somehostname/test/foo', :ftype => 'file')
+        Oregano::Network::HttpPool.expects(:http_instance).with('somehostname', anything).returns(conn)
 
         resource.write(source)
       end
 
-      it 'should use the default fileserver if source starts with puppet:///' do
+      it 'should use the default fileserver if source starts with oregano:///' do
         response.stubs(:code).returns('200')
-        source.stubs(:metadata).returns stub_everything('metadata', :source => 'puppet:///test/foo', :ftype => 'file')
-        Puppet::Network::HttpPool.expects(:http_instance).with(Puppet.settings[:server], anything).returns(conn)
+        source.stubs(:metadata).returns stub_everything('metadata', :source => 'oregano:///test/foo', :ftype => 'file')
+        Oregano::Network::HttpPool.expects(:http_instance).with(Oregano.settings[:server], anything).returns(conn)
 
         resource.write(source)
       end
 
       it 'should percent encode reserved characters' do
         response.stubs(:code).returns('200')
-        Puppet::Network::HttpPool.stubs(:http_instance).returns(conn)
-        source.stubs(:metadata).returns stub_everything('metadata', :source => 'puppet:///test/foo bar', :ftype => 'file')
+        Oregano::Network::HttpPool.stubs(:http_instance).returns(conn)
+        source.stubs(:metadata).returns stub_everything('metadata', :source => 'oregano:///test/foo bar', :ftype => 'file')
 
         conn.unstub(:request_get)
-        conn.expects(:request_get).with("#{Puppet::Network::HTTP::MASTER_URL_PREFIX}/v3/file_content/test/foo%20bar?environment=myenv&", anything).yields(response)
+        conn.expects(:request_get).with("#{Oregano::Network::HTTP::MASTER_URL_PREFIX}/v3/file_content/test/foo%20bar?environment=myenv&", anything).yields(response)
 
         resource.write(source)
       end
 
       it 'should request binary content' do
         response.stubs(:code).returns('200')
-        Puppet::Network::HttpPool.stubs(:http_instance).returns(conn)
-        source.stubs(:metadata).returns stub_everything('metadata', :source => 'puppet:///test/foo bar', :ftype => 'file')
+        Oregano::Network::HttpPool.stubs(:http_instance).returns(conn)
+        source.stubs(:metadata).returns stub_everything('metadata', :source => 'oregano:///test/foo bar', :ftype => 'file')
 
         conn.unstub(:request_get)
         conn.expects(:request_get).with do |_, options|
@@ -631,8 +631,8 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
         end
 
         before(:each) do
-          Puppet::Network::HttpPool.stubs(:http_instance).returns(conn)
-          source.stubs(:metadata).returns stub_everything('metadata', :source => 'puppet:///test/foo', :ftype => 'file')
+          Oregano::Network::HttpPool.stubs(:http_instance).returns(conn)
+          source.stubs(:metadata).returns stub_everything('metadata', :source => 'oregano:///test/foo', :ftype => 'file')
         end
 
         it 'should not write anything if source is not found' do
@@ -653,7 +653,7 @@ describe Puppet::Type.type(:file).attrclass(:source), :uses_checksums => true do
 
           it 'should write the contents to the file' do
             resource.write(source)
-            expect(Puppet::FileSystem.binread(filename)).to eq(source_content)
+            expect(Oregano::FileSystem.binread(filename)).to eq(source_content)
           end
 
           with_digest_algorithms do

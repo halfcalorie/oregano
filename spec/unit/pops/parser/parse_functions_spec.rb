@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 require_relative 'parser_rspec_helper'
 
 describe 'egrammar parsing function definitions' do

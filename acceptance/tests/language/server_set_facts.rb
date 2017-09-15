@@ -1,6 +1,6 @@
 test_name 'C64667: ensure server_facts is set and error if any value is overwritten by an agent' do
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:medium',
     'audit:acceptance', # Validating server/client interaction
@@ -16,9 +16,9 @@ tag 'audit:medium',
     SITE
 
     master_opts = {}
-    with_puppet_running_on(master, master_opts) do
+    with_oregano_running_on(master, master_opts) do
       agents.each do |agent|
-        on(agent, puppet("agent -t --server #{master} --environment #{tmp_environment}"),
+        on(agent, oregano("agent -t --server #{master} --environment #{tmp_environment}"),
            :acceptable_exit_codes => 2) do |result|
           assert_match(/abc{serverversion/, result.stdout,
                        "#{agent}: $server_facts should have some stuff" )
@@ -27,9 +27,9 @@ tag 'audit:medium',
     end
   end
 
-  step 'ensure puppet issues a warning if an agent overwrites a server fact' do
+  step 'ensure oregano issues a warning if an agent overwrites a server fact' do
     agents.each do |agent|
-      on(agent, puppet("agent -t --server #{master}",
+      on(agent, oregano("agent -t --server #{master}",
                        'ENV' => { 'FACTER_server_facts' => 'overwrite' }),
         :acceptable_exit_codes => 1) do |result|
           # Do not perform this check on non-English hosts

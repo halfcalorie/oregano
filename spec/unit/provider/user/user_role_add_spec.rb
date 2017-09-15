@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 require 'tempfile'
 
-describe Puppet::Type.type(:user).provider(:user_role_add), :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
-  let(:resource) { Puppet::Type.type(:user).new(:name => 'myuser', :managehome => false, :allowdupe => false) }
+describe Oregano::Type.type(:user).provider(:user_role_add), :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
+  let(:resource) { Oregano::Type.type(:user).new(:name => 'myuser', :managehome => false, :allowdupe => false) }
   let(:provider) { described_class.new(resource) }
 
   before do
@@ -70,7 +70,7 @@ describe Puppet::Type.type(:user).provider(:user_role_add), :unless => Puppet.fe
     end
 
     it "should set password age rules" do
-      resource = Puppet::Type.type(:user).new :name => "myuser", :password_min_age => 5, :password_max_age => 10, :provider => :user_role_add
+      resource = Oregano::Type.type(:user).new :name => "myuser", :password_min_age => 5, :password_max_age => 10, :provider => :user_role_add
       provider = described_class.new(resource)
       provider.stubs(:user_attributes)
       provider.stubs(:execute)

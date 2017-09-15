@@ -41,10 +41,10 @@ agents.each do |agent|
   on agent, "echo 'This is the checksum file contents' > #{target}"
 
   step "Backup file into the filebucket"
-  on agent, puppet_filebucket("backup --local #{target}")
+  on agent, oregano_filebucket("backup --local #{target}")
 
   bucketdir="not set"
-  on agent, puppet_filebucket("--configprint bucketdir") do
+  on agent, oregano_filebucket("--configprint bucketdir") do
     bucketdir = stdout.chomp
   end
 

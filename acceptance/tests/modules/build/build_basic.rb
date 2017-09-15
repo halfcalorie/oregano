@@ -12,26 +12,26 @@ metadata_json_file_path = File.join(temp_module_path, 'metadata.json')
 #In-line File
 metadata_json_file = <<-FILE
 {
-  "name": "puppetlabs-nginx",
+  "name": "oreganolabs-nginx",
   "version": "0.0.1",
-  "author": "Puppet Labs",
+  "author": "Oregano Labs",
   "summary": "Nginx Module",
   "license": "Apache Version 2.0",
-  "source": "git://github.com/puppetlabs/puppetlabs-nginx.git",
-  "project_page": "https://github.com/puppetlabs/puppetlabs-nginx",
-  "issues_url": "https://github.com/puppetlabs/puppetlabs-nginx",
+  "source": "git://github.com/oreganolabs/oreganolabs-nginx.git",
+  "project_page": "https://github.com/oreganolabs/oreganolabs-nginx",
+  "issues_url": "https://github.com/oreganolabs/oreganolabs-nginx",
   "dependencies": [
-    {"name":"puppetlabs-stdlub","version_requirement":">= 1.0.0"}
+    {"name":"oreganolabs-stdlub","version_requirement":">= 1.0.0"}
   ]
 }
 FILE
 
 #Verification
 build_message_1_regex = /Notice: Building #{temp_module_path} for release/
-build_message_2_regex = /Module built: #{temp_module_path}\/pkg\/puppetlabs-nginx-0.0.1.tar.gz/
+build_message_2_regex = /Module built: #{temp_module_path}\/pkg\/oreganolabs-nginx-0.0.1.tar.gz/
 
-verify_pkg_dir_command = "[ -d #{temp_module_path}/pkg/puppetlabs-nginx-0.0.1 ]"
-verify_tarball_command = "[ -f #{temp_module_path}/pkg/puppetlabs-nginx-0.0.1.tar.gz ]"
+verify_pkg_dir_command = "[ -d #{temp_module_path}/pkg/oreganolabs-nginx-0.0.1 ]"
+verify_tarball_command = "[ -f #{temp_module_path}/pkg/oreganolabs-nginx-0.0.1.tar.gz ]"
 
 #Teardown
 teardown do
@@ -48,7 +48,7 @@ create_remote_file(master, metadata_json_file_path, metadata_json_file)
 
 #Tests
 step 'Build Module with Absolute Path'
-on(master, puppet("module build #{temp_module_path}")) do |result|
+on(master, oregano("module build #{temp_module_path}")) do |result|
   assert_no_match(/Error:/, result.output, 'Unexpected error was detected!')
   assert_no_match(/Warning:/, result.output, 'Unexpected warning was detected!')
   assert_match(build_message_1_regex, result.stdout, 'Expected message not found!')
@@ -63,7 +63,7 @@ step 'Clean-up Artifacts'
 on(master, "rm -rf #{temp_module_path}/pkg")
 
 step "Build Module with Relative Path"
-on(master, ("cd #{temp_module_path} && puppet module build")) do |result|
+on(master, ("cd #{temp_module_path} && oregano module build")) do |result|
   assert_no_match(/Error:/, result.output, 'Unexpected error was detected!')
   assert_no_match(/Warning:/, result.output, 'Unexpected warning was detected!')
   assert_match(build_message_1_regex, result.stdout, 'Expected message not found!')

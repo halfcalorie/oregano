@@ -15,7 +15,7 @@ agents.each do |agent|
   agent.user_present(name)
 
   step "modify the user"
-  on agent, puppet_resource('user', name, ["ensure=present", "comment=comment#{name}"])
+  on agent, oregano_resource('user', name, ["ensure=present", "comment=comment#{name}"])
 
   step "verify the user was modified"
   agent.user_get(name) do |result|

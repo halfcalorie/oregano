@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/file_serving/terminus_helper'
+require 'oregano/file_serving/terminus_helper'
 
-describe Puppet::FileServing::TerminusHelper do
+describe Oregano::FileServing::TerminusHelper do
   before do
     @helper = Object.new
-    @helper.extend(Puppet::FileServing::TerminusHelper)
+    @helper.extend(Oregano::FileServing::TerminusHelper)
 
     @model = mock 'model'
     @helper.stubs(:model).returns(@model)
@@ -14,7 +14,7 @@ describe Puppet::FileServing::TerminusHelper do
     @request = stub 'request', :key => "url", :options => {}
 
     @fileset = stub 'fileset', :files => [], :path => "/my/file"
-    Puppet::FileServing::Fileset.stubs(:new).with("/my/file", {}).returns(@fileset)
+    Oregano::FileServing::Fileset.stubs(:new).with("/my/file", {}).returns(@fileset)
   end
 
   it "should find a file with absolute path" do
@@ -37,35 +37,35 @@ describe Puppet::FileServing::TerminusHelper do
 
   it "should use a fileset to find paths" do
     @fileset = stub 'fileset', :files => [], :path => "/my/files"
-    Puppet::FileServing::Fileset.expects(:new).with { |key, options| key == "/my/file" }.returns(@fileset)
+    Oregano::FileServing::Fileset.expects(:new).with { |key, options| key == "/my/file" }.returns(@fileset)
     @helper.path2instances(@request, "/my/file")
   end
 
   it "should support finding across multiple paths by merging the filesets" do
     first = stub 'fileset', :files => [], :path => "/first/file"
-    Puppet::FileServing::Fileset.expects(:new).with { |path, options| path == "/first/file" }.returns(first)
+    Oregano::FileServing::Fileset.expects(:new).with { |path, options| path == "/first/file" }.returns(first)
     second = stub 'fileset', :files => [], :path => "/second/file"
-    Puppet::FileServing::Fileset.expects(:new).with { |path, options| path == "/second/file" }.returns(second)
+    Oregano::FileServing::Fileset.expects(:new).with { |path, options| path == "/second/file" }.returns(second)
 
-    Puppet::FileServing::Fileset.expects(:merge).with(first, second).returns({})
+    Oregano::FileServing::Fileset.expects(:merge).with(first, second).returns({})
 
     @helper.path2instances(@request, "/first/file", "/second/file")
   end
 
   it "should pass the indirection request to the Fileset at initialization" do
-    Puppet::FileServing::Fileset.expects(:new).with { |path, options| options == @request }.returns @fileset
+    Oregano::FileServing::Fileset.expects(:new).with { |path, options| options == @request }.returns @fileset
     @helper.path2instances(@request, "/my/file")
   end
 
   describe "when creating instances" do
     before do
-      @request.stubs(:key).returns "puppet://host/mount/dir"
+      @request.stubs(:key).returns "oregano://host/mount/dir"
 
       @one = stub 'one', :links= => nil, :collect => nil
       @two = stub 'two', :links= => nil, :collect => nil
 
       @fileset = stub 'fileset', :files => %w{one two}, :path => "/my/file"
-      Puppet::FileServing::Fileset.stubs(:new).returns(@fileset)
+      Oregano::FileServing::Fileset.stubs(:new).returns(@fileset)
     end
 
     it "should set each returned instance's path to the original path" do

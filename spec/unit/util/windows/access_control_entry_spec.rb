@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/windows'
+require 'oregano/util/windows'
 
-describe "Puppet::Util::Windows::AccessControlEntry", :if => Puppet.features.microsoft_windows? do
-  let(:klass) { Puppet::Util::Windows::AccessControlEntry }
+describe "Oregano::Util::Windows::AccessControlEntry", :if => Oregano.features.microsoft_windows? do
+  let(:klass) { Oregano::Util::Windows::AccessControlEntry }
   let(:sid) { 'S-1-5-18' }
-  let(:mask) { Puppet::Util::Windows::File::FILE_ALL_ACCESS }
+  let(:mask) { Oregano::Util::Windows::File::FILE_ALL_ACCESS }
 
   it "creates an access allowed ace" do
     ace = klass.new(sid, mask)

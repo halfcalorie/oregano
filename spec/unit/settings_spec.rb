@@ -1,25 +1,25 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 require 'ostruct'
-require 'puppet/settings/errors'
-require 'puppet_spec/files'
+require 'oregano/settings/errors'
+require 'oregano_spec/files'
 require 'matchers/resource'
 
-describe Puppet::Settings do
-  include PuppetSpec::Files
+describe Oregano::Settings do
+  include OreganoSpec::Files
   include Matchers::Resource
 
   let(:main_config_file_default_location) do
-    File.join(Puppet::Util::RunMode[:master].conf_dir, "puppet.conf")
+    File.join(Oregano::Util::RunMode[:master].conf_dir, "oregano.conf")
   end
 
   let(:user_config_file_default_location) do
-    File.join(Puppet::Util::RunMode[:user].conf_dir, "puppet.conf")
+    File.join(Oregano::Util::RunMode[:user].conf_dir, "oregano.conf")
   end
 
   # Return a given object's file metadata.
   def metadata(setting)
-    if setting.is_a?(Puppet::Settings::FileSetting)
+    if setting.is_a?(Oregano::Settings::FileSetting)
       {
         :owner => setting.owner,
         :group => setting.group,
@@ -32,7 +32,7 @@ describe Puppet::Settings do
 
   describe "when specifying defaults" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
     end
 
     it "should start with no defined sections or parameters" do
@@ -75,7 +75,7 @@ describe Puppet::Settings do
 
     it "should support specifying the setting type" do
       @settings.define_settings(:section, :myvalue => {:default => "/w", :desc => "b", :type => :string})
-      expect(@settings.setting(:myvalue)).to be_instance_of(Puppet::Settings::StringSetting)
+      expect(@settings.setting(:myvalue)).to be_instance_of(Oregano::Settings::StringSetting)
     end
 
     it "should fail if an invalid setting type is specified" do
@@ -92,22 +92,22 @@ describe Puppet::Settings do
   describe "when initializing application defaults do" do
     let(:default_values) do
       values = {}
-      PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS.keys.each do |key|
+      OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS.keys.each do |key|
         values[key] = 'default value'
       end
       values
     end
 
     before do
-      @settings = Puppet::Settings.new
-      @settings.define_settings(:main, PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS)
+      @settings = Oregano::Settings.new
+      @settings.define_settings(:main, OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS)
     end
 
     it "should fail if the app defaults hash is missing any required values" do
       incomplete_default_values = default_values.reject { |key, _| key == :confdir }
       expect {
         @settings.initialize_app_defaults(default_values.reject { |key, _| key == :confdir })
-      }.to raise_error(Puppet::Settings::SettingsError)
+      }.to raise_error(Oregano::Settings::SettingsError)
     end
 
     # ultimately I'd like to stop treating "run_mode" as a normal setting, because it has so many special
@@ -125,8 +125,8 @@ describe Puppet::Settings do
       # to do.
       @settings.initialize_app_defaults(default_values)
 
-      Puppet::Settings::REQUIRED_APP_SETTINGS.each do |key|
-        expect(File).to exist(File.dirname(Puppet[key]))
+      Oregano::Settings::REQUIRED_APP_SETTINGS.each do |key|
+        expect(File).to exist(File.dirname(Oregano[key]))
       end
     end
   end
@@ -135,7 +135,7 @@ describe Puppet::Settings do
     let(:good_default) { "yay" }
     let(:bad_default) { "$doesntexist" }
     before(:each) do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
     end
 
     describe "when ignoring dependency interpolation errors" do
@@ -177,7 +177,7 @@ describe Puppet::Settings do
             )
             expect do
               @settings.send(:call_hooks_deferred_to_application_initialization, options)
-            end.to raise_error(Puppet::Settings::InterpolationError)
+            end.to raise_error(Oregano::Settings::InterpolationError)
           end
           it "should contain the setting name in error message" do
             hook_values = []
@@ -192,7 +192,7 @@ describe Puppet::Settings do
             )
             expect do
               @settings.send(:call_hooks_deferred_to_application_initialization, options)
-            end.to raise_error(Puppet::Settings::InterpolationError, /badhook/)
+            end.to raise_error(Oregano::Settings::InterpolationError, /badhook/)
           end
         end
         describe "if no interpolation error" do
@@ -218,7 +218,7 @@ describe Puppet::Settings do
 
   describe "when setting values" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.define_settings :main, :myval => { :default => "val", :desc => "desc" }
       @settings.define_settings :main, :bool => { :type => :boolean, :default => true, :desc => "desc" }
     end
@@ -302,22 +302,22 @@ describe Puppet::Settings do
     end
 
     it "should not identify configured settings from environment by default" do
-      Puppet.lookup(:environments).expects(:get_conf).with(Puppet[:environment].to_sym).never
+      Oregano.lookup(:environments).expects(:get_conf).with(Oregano[:environment].to_sym).never
       expect(@settings.set_by_config?(:manifest)).to be_falsey
     end
 
     it "should identify configured settings from environment by when an environment is specified" do
       foo = mock('environment', :manifest => 'foo')
-      Puppet.lookup(:environments).expects(:get_conf).with(Puppet[:environment].to_sym).returns(foo)
-      expect(@settings.set_by_config?(:manifest, Puppet[:environment])).to be_truthy
+      Oregano.lookup(:environments).expects(:get_conf).with(Oregano[:environment].to_sym).returns(foo)
+      expect(@settings.set_by_config?(:manifest, Oregano[:environment])).to be_truthy
     end
 
     it "should identify configured settings from the preferred run mode" do
       user_config_text = "[#{@settings.preferred_run_mode}]\nmyval = foo"
       seq = sequence "config_file_sequence"
 
-      Puppet.features.stubs(:root?).returns(false)
-      Puppet::FileSystem.expects(:exist?).
+      Oregano.features.stubs(:root?).returns(false)
+      Oregano::FileSystem.expects(:exist?).
         with(user_config_file_default_location).
         returns(true).in_sequence(seq)
       @settings.expects(:read_file).
@@ -332,8 +332,8 @@ describe Puppet::Settings do
       user_config_text = "[master]\nmyval = foo"
       seq = sequence "config_file_sequence"
 
-      Puppet.features.stubs(:root?).returns(false)
-      Puppet::FileSystem.expects(:exist?).
+      Oregano.features.stubs(:root?).returns(false)
+      Oregano::FileSystem.expects(:exist?).
         with(user_config_file_default_location).
         returns(true).in_sequence(seq)
       @settings.expects(:read_file).
@@ -348,8 +348,8 @@ describe Puppet::Settings do
       user_config_text = "[zaz]\nmyval = foo"
       seq = sequence "config_file_sequence"
 
-      Puppet.features.stubs(:root?).returns(false)
-      Puppet::FileSystem.expects(:exist?).
+      Oregano.features.stubs(:root?).returns(false)
+      Oregano::FileSystem.expects(:exist?).
         with(user_config_file_default_location).
         returns(true).in_sequence(seq)
       @settings.expects(:read_file).
@@ -364,8 +364,8 @@ describe Puppet::Settings do
       user_config_text = "[main]\nmyval = foo"
       seq = sequence "config_file_sequence"
 
-      Puppet.features.stubs(:root?).returns(false)
-      Puppet::FileSystem.expects(:exist?).
+      Oregano.features.stubs(:root?).returns(false)
+      Oregano::FileSystem.expects(:exist?).
         with(user_config_file_default_location).
         returns(true).in_sequence(seq)
       @settings.expects(:read_file).
@@ -403,7 +403,7 @@ describe Puppet::Settings do
     end
 
     describe "call_hook" do
-      Puppet::Settings::StringSetting.available_call_hook_values.each do |val|
+      Oregano::Settings::StringSetting.available_call_hook_values.each do |val|
         describe "when :#{val}" do
           describe "and definition invalid" do
             it "should raise error if no hook defined" do
@@ -438,7 +438,7 @@ describe Puppet::Settings do
 
       describe "when nil" do
         it "should generate a warning" do
-          Puppet.expects(:warning)
+          Oregano.expects(:warning)
           @settings.define_settings(:section, :hooker => {:default => "yay", :desc => "boo", :call_hook => nil, :hook => lambda { |v| hook_values << v  }})
         end
         it "should use default" do
@@ -477,11 +477,11 @@ describe Puppet::Settings do
 
         it "should call the hook at initialization" do
           app_defaults = {}
-          Puppet::Settings::REQUIRED_APP_SETTINGS.each do |key|
+          Oregano::Settings::REQUIRED_APP_SETTINGS.each do |key|
             app_defaults[key] = "foo"
           end
           app_defaults[:run_mode] = :user
-          @settings.define_settings(:main, PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS)
+          @settings.define_settings(:main, OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS)
 
           @settings.setting(:hooker).expects(:handle).with("yay").once
 
@@ -549,7 +549,7 @@ describe Puppet::Settings do
 
   describe "when returning values" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.define_settings :section,
           :config => { :type => :file, :default => "/my/file", :desc => "eh" },
           :one    => { :default => "ONE", :desc => "a" },
@@ -557,7 +557,7 @@ describe Puppet::Settings do
           :three  => { :default => "$one $two THREE", :desc => "c"},
           :four   => { :default => "$two $three FOUR", :desc => "d"},
           :five   => { :default => nil, :desc => "e" }
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
     end
 
     it "should provide a mechanism for returning set values" do
@@ -570,7 +570,7 @@ describe Puppet::Settings do
       [:logdir, :confdir, :codedir, :vardir].each do |key|
         default_values[key] = 'default value'
       end
-      @settings.define_settings :main, PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS
+      @settings.define_settings :main, OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS
       @settings.initialize_app_defaults(default_values)
       @settings[:one] = "value will disappear"
 
@@ -626,12 +626,12 @@ describe Puppet::Settings do
 
   describe "when choosing which value to return" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.define_settings :section,
         :config => { :type => :file, :default => "/my/file", :desc => "a" },
         :one => { :default => "ONE", :desc => "a" },
         :two => { :default => "TWO", :desc => "b" }
-      Puppet::FileSystem.stubs(:exist?).returns true
+      Oregano::FileSystem.stubs(:exist?).returns true
       @settings.preferred_run_mode = :agent
     end
 
@@ -673,14 +673,14 @@ describe Puppet::Settings do
 
   describe "when locating config files" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
     end
 
     describe "when root" do
       it "should look for the main config file default location config settings haven't been overridden'" do
-        Puppet.features.stubs(:root?).returns(true)
-        Puppet::FileSystem.expects(:exist?).with(main_config_file_default_location).returns(false)
-        Puppet::FileSystem.expects(:exist?).with(user_config_file_default_location).never
+        Oregano.features.stubs(:root?).returns(true)
+        Oregano::FileSystem.expects(:exist?).with(main_config_file_default_location).returns(false)
+        Oregano::FileSystem.expects(:exist?).with(user_config_file_default_location).never
 
         @settings.send(:parse_config_files)
       end
@@ -688,10 +688,10 @@ describe Puppet::Settings do
 
     describe "when not root" do
       it "should look for user config file default location if config settings haven't been overridden'" do
-        Puppet.features.stubs(:root?).returns(false)
+        Oregano.features.stubs(:root?).returns(false)
 
         seq = sequence "load config files"
-        Puppet::FileSystem.expects(:exist?).with(user_config_file_default_location).returns(false).in_sequence(seq)
+        Oregano::FileSystem.expects(:exist?).with(user_config_file_default_location).returns(false).in_sequence(seq)
 
         @settings.send(:parse_config_files)
       end
@@ -700,7 +700,7 @@ describe Puppet::Settings do
 
   describe "when parsing its configuration" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.stubs(:service_user_available?).returns true
       @settings.stubs(:service_group_available?).returns true
       @file = make_absolute("/some/file")
@@ -712,8 +712,8 @@ describe Puppet::Settings do
           :two => { :default => "$one TWO", :desc => "b" },
           :three => { :default => "$one $two THREE", :desc => "c" }
       @settings.stubs(:user_config_file).returns(@userconfig)
-      Puppet::FileSystem.stubs(:exist?).with(@file).returns true
-      Puppet::FileSystem.stubs(:exist?).with(@userconfig).returns false
+      Oregano::FileSystem.stubs(:exist?).with(@file).returns true
+      Oregano::FileSystem.stubs(:exist?).with(@userconfig).returns false
     end
 
     it "should not ignore the report setting" do
@@ -722,10 +722,10 @@ describe Puppet::Settings do
       myfile = File.expand_path(@file)
       @settings[:config] = myfile
       text = <<-CONF
-        [puppetd]
+        [oreganod]
           report=true
       CONF
-      Puppet::FileSystem.expects(:exist?).with(myfile).returns(true)
+      Oregano::FileSystem.expects(:exist?).with(myfile).returns(true)
       @settings.expects(:read_file).returns(text)
       @settings.send(:parse_config_files)
       expect(@settings[:report]).to be_truthy
@@ -735,15 +735,15 @@ describe Puppet::Settings do
       myfile = make_absolute("/my/file") # do not stub expand_path here, as this leads to a stack overflow, when mocha tries to use it
       @settings[:config] = myfile
 
-      Puppet::FileSystem.expects(:exist?).with(myfile).returns(true)
+      Oregano::FileSystem.expects(:exist?).with(myfile).returns(true)
 
-      Puppet::FileSystem.expects(:read).with(myfile, :encoding => 'utf-8').returns "[main]"
+      Oregano::FileSystem.expects(:read).with(myfile, :encoding => 'utf-8').returns "[main]"
 
       @settings.send(:parse_config_files)
     end
 
     it "should not try to parse non-existent files" do
-      Puppet::FileSystem.expects(:exist?).with(@file).returns false
+      Oregano::FileSystem.expects(:exist?).with(@file).returns false
 
       File.expects(:read).with(@file).never
 
@@ -814,10 +814,10 @@ describe Puppet::Settings do
 
     it "should support loading metadata (owner, group, or mode) from a run_mode section in the configuration file" do
       default_values = {}
-      PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS.keys.each do |key|
+      OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS.keys.each do |key|
         default_values[key] = 'default value'
       end
-      @settings.define_settings :main, PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS
+      @settings.define_settings :main, OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS
       @settings.define_settings :master, :myfile => { :type => :file, :default => make_absolute("/myfile"), :desc => "a" }
 
       otherfile = make_absolute("/other/file")
@@ -841,13 +841,13 @@ describe Puppet::Settings do
 
     it "does not use the metadata from the same setting in a different section" do
       default_values = {}
-      PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS.keys.each do |key|
+      OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS.keys.each do |key|
         default_values[key] = 'default value'
       end
 
       file = make_absolute("/file")
       default_mode = "0600"
-      @settings.define_settings :main, PuppetSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS
+      @settings.define_settings :main, OreganoSpec::Settings::TEST_APP_DEFAULT_DEFINITIONS
       @settings.define_settings :master, :myfile => { :type => :file, :default => file, :desc => "a", :mode => default_mode }
 
       text = "[master]
@@ -971,7 +971,7 @@ describe Puppet::Settings do
     end
 
     describe "deprecations" do
-      let(:settings) { Puppet::Settings.new }
+      let(:settings) { Oregano::Settings.new }
       let(:app_defaults) {
         {
           :logdir     => "/dev/null",
@@ -982,8 +982,8 @@ describe Puppet::Settings do
       }
 
       def assert_accessing_setting_is_deprecated(settings, setting)
-        Puppet.expects(:deprecation_warning).with("Accessing '#{setting}' as a setting is deprecated.")
-        Puppet.expects(:deprecation_warning).with("Modifying '#{setting}' as a setting is deprecated.")
+        Oregano.expects(:deprecation_warning).with("Accessing '#{setting}' as a setting is deprecated.")
+        Oregano.expects(:deprecation_warning).with("Modifying '#{setting}' as a setting is deprecated.")
         settings[setting.intern] = apath = File.expand_path('foo')
         expect(settings[setting.intern]).to eq(apath)
       end
@@ -1009,8 +1009,8 @@ describe Puppet::Settings do
           settings
         end
 
-        it "warns when set in puppet.conf" do
-          Puppet.expects(:deprecation_warning).with(regexp_matches(/completely_deprecated_setting is deprecated\./), 'setting-completely_deprecated_setting')
+        it "warns when set in oregano.conf" do
+          Oregano.expects(:deprecation_warning).with(regexp_matches(/completely_deprecated_setting is deprecated\./), 'setting-completely_deprecated_setting')
 
           completely_deprecated_settings.parse_config(<<-CONF)
             completely_deprecated_setting='should warn'
@@ -1019,7 +1019,7 @@ describe Puppet::Settings do
         end
 
         it "warns when set on the commandline" do
-          Puppet.expects(:deprecation_warning).with(regexp_matches(/completely_deprecated_setting is deprecated\./), 'setting-completely_deprecated_setting')
+          Oregano.expects(:deprecation_warning).with(regexp_matches(/completely_deprecated_setting is deprecated\./), 'setting-completely_deprecated_setting')
 
           args = ["--completely_deprecated_setting", "/some/value"]
           completely_deprecated_settings.send(:parse_global_options, args)
@@ -1043,8 +1043,8 @@ describe Puppet::Settings do
           settings
         end
 
-        it "warns for a deprecated setting allowed on the command line set in puppet.conf" do
-          Puppet.expects(:deprecation_warning).with(regexp_matches(/partially_deprecated_setting is deprecated in puppet\.conf/), 'puppet-conf-setting-partially_deprecated_setting')
+        it "warns for a deprecated setting allowed on the command line set in oregano.conf" do
+          Oregano.expects(:deprecation_warning).with(regexp_matches(/partially_deprecated_setting is deprecated in oregano\.conf/), 'oregano-conf-setting-partially_deprecated_setting')
           partially_deprecated_settings.parse_config(<<-CONF)
             partially_deprecated_setting='should warn'
           CONF
@@ -1052,7 +1052,7 @@ describe Puppet::Settings do
         end
 
         it "does not warn when manifest is set on command line" do
-          Puppet.expects(:deprecation_warning).never
+          Oregano.expects(:deprecation_warning).never
 
           args = ["--partially_deprecated_setting", "/some/value"]
           partially_deprecated_settings.send(:parse_global_options, args)
@@ -1072,18 +1072,18 @@ describe Puppet::Settings do
     let(:seq) { sequence "config_file_sequence" }
 
     before :each do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.define_settings(:section,
           { :confdir => { :default => nil,                    :desc => "Conf dir" },
-            :config  => { :default => "$confdir/puppet.conf", :desc => "Config" },
+            :config  => { :default => "$confdir/oregano.conf", :desc => "Config" },
             :one     => { :default => "ONE",                  :desc => "a" },
             :two     => { :default => "TWO",                  :desc => "b" }, })
     end
 
     context "running non-root without explicit config file" do
       before :each do
-        Puppet.features.stubs(:root?).returns(false)
-        Puppet::FileSystem.expects(:exist?).
+        Oregano.features.stubs(:root?).returns(false)
+        Oregano::FileSystem.expects(:exist?).
           with(user_config_file_default_location).
           returns(true).in_sequence(seq)
         @settings.expects(:read_file).
@@ -1104,8 +1104,8 @@ describe Puppet::Settings do
 
     context "running as root without explicit config file" do
       before :each do
-        Puppet.features.stubs(:root?).returns(true)
-        Puppet::FileSystem.expects(:exist?).
+        Oregano.features.stubs(:root?).returns(true)
+        Oregano::FileSystem.expects(:exist?).
           with(main_config_file_default_location).
           returns(true).in_sequence(seq)
         @settings.expects(:read_file).
@@ -1126,9 +1126,9 @@ describe Puppet::Settings do
 
     context "running with an explicit config file as a user (e.g. Apache + Passenger)" do
       before :each do
-        Puppet.features.stubs(:root?).returns(false)
+        Oregano.features.stubs(:root?).returns(false)
         @settings[:confdir] = File.dirname(main_config_file_default_location)
-        Puppet::FileSystem.expects(:exist?).
+        Oregano::FileSystem.expects(:exist?).
           with(main_config_file_default_location).
           returns(true).in_sequence(seq)
         @settings.expects(:read_file).
@@ -1152,20 +1152,20 @@ describe Puppet::Settings do
     before do
       @file = make_absolute("/test/file")
       @userconfig = make_absolute("/test/userconfigfile")
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.define_settings :section,
           :config => { :type => :file, :default => @file, :desc => "a" },
           :one => { :default => "ONE", :desc => "a" },
           :two => { :default => "$one TWO", :desc => "b" },
           :three => { :default => "$one $two THREE", :desc => "c" }
-      Puppet::FileSystem.stubs(:exist?).with(@file).returns true
-      Puppet::FileSystem.stubs(:exist?).with(@userconfig).returns false
+      Oregano::FileSystem.stubs(:exist?).with(@file).returns true
+      Oregano::FileSystem.stubs(:exist?).with(@userconfig).returns false
       @settings.stubs(:user_config_file).returns(@userconfig)
     end
 
     it "does not create the WatchedFile instance and should not parse if the file does not exist" do
-      Puppet::FileSystem.expects(:exist?).with(@file).returns false
-      Puppet::Util::WatchedFile.expects(:new).never
+      Oregano::FileSystem.expects(:exist?).with(@file).returns false
+      Oregano::Util::WatchedFile.expects(:new).never
 
       @settings.expects(:parse_config_files).never
 
@@ -1174,8 +1174,8 @@ describe Puppet::Settings do
 
     context "and watched file exists" do
       before do
-        @watched_file = Puppet::Util::WatchedFile.new(@file)
-        Puppet::Util::WatchedFile.expects(:new).with(@file).returns @watched_file
+        @watched_file = Oregano::Util::WatchedFile.new(@file)
+        Oregano::Util::WatchedFile.expects(:new).with(@file).returns @watched_file
       end
 
       it "uses a WatchedFile instance to determine if the file has changed" do
@@ -1262,14 +1262,14 @@ describe Puppet::Settings do
   end
 
   it "should provide a method for creating a catalog of resources from its configuration" do
-    expect(Puppet::Settings.new).to respond_to(:to_catalog)
+    expect(Oregano::Settings.new).to respond_to(:to_catalog)
   end
 
   describe "when creating a catalog" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.stubs(:service_user_available?).returns true
-      @prefix = Puppet.features.posix? ? "" : "C:"
+      @prefix = Oregano.features.posix? ? "" : "C:"
     end
 
     it "should add all file resources to the catalog if no sections have been specified" do
@@ -1282,7 +1282,7 @@ describe Puppet::Settings do
       catalog = @settings.to_catalog
 
       [@prefix+"/maindir", @prefix+"/seconddir", @prefix+"/otherdir"].each do |path|
-        expect(catalog.resource(:file, path)).to be_instance_of(Puppet::Resource)
+        expect(catalog.resource(:file, path)).to be_instance_of(Oregano::Resource)
       end
     end
 
@@ -1291,7 +1291,7 @@ describe Puppet::Settings do
       @settings.define_settings :other, :otherdir => { :type => :directory, :default => @prefix+"/otherdir", :desc => "a" }
       catalog = @settings.to_catalog(:main)
       expect(catalog.resource(:file, @prefix+"/otherdir")).to be_nil
-      expect(catalog.resource(:file, @prefix+"/maindir")).to be_instance_of(Puppet::Resource)
+      expect(catalog.resource(:file, @prefix+"/maindir")).to be_instance_of(Oregano::Resource)
     end
 
     it "should not try to add the same file twice" do
@@ -1304,13 +1304,13 @@ describe Puppet::Settings do
       @settings.define_settings :main, :maindir => { :type => :directory, :default => @prefix+"/maindir", :desc => "a" }
       @settings.setting(:maindir).expects(:to_resource).returns nil
 
-      Puppet::Resource::Catalog.any_instance.expects(:add_resource).never
+      Oregano::Resource::Catalog.any_instance.expects(:add_resource).never
       @settings.to_catalog
     end
 
-    describe "on Microsoft Windows", :if => Puppet.features.microsoft_windows? do
+    describe "on Microsoft Windows", :if => Oregano.features.microsoft_windows? do
       before :each do
-        Puppet.features.stubs(:root?).returns true
+        Oregano.features.stubs(:root?).returns true
 
         @settings.define_settings :foo,
             :mkusers => { :type => :boolean, :default => true, :desc => "e" },
@@ -1365,9 +1365,9 @@ describe Puppet::Settings do
         expect(catalog.resource_keys).to include(["File", "#{default_path}/production"])
       end
 
-      it "does not add if the path to the default directory environment exists as a symlink", :if => Puppet.features.manages_symlinks? do
+      it "does not add if the path to the default directory environment exists as a symlink", :if => Oregano.features.manages_symlinks? do
         Dir.mkdir(default_path)
-        Puppet::FileSystem.symlink("#{tmpenv}/nowhere", File.join(default_path, 'production'))
+        Oregano::FileSystem.symlink("#{tmpenv}/nowhere", File.join(default_path, 'production'))
         catalog = @settings.to_catalog
         expect(catalog.resource_keys).to_not include(["File", "#{default_path}/production"])
       end
@@ -1378,18 +1378,18 @@ describe Puppet::Settings do
         # when this spec is run in isolation to build a settings catalog
         # it will not be able to autorequire and load types for the first time
         # on Windows with microsoft_windows? stubbed to false, because
-        # Puppet::Util.path_to_uri is called to generate a URI to load code
+        # Oregano::Util.path_to_uri is called to generate a URI to load code
         # and it manipulates the path based on OS
         # so instead we forcefully "prime" the cached types
-        Puppet::Type.type(:user).new(:name => 'foo')
-        Puppet::Type.type(:group).new(:name => 'bar')
-        Puppet::Type.type(:file).new(:name => Dir.pwd) # appropriate for OS
+        Oregano::Type.type(:user).new(:name => 'foo')
+        Oregano::Type.type(:group).new(:name => 'bar')
+        Oregano::Type.type(:file).new(:name => Dir.pwd) # appropriate for OS
       end
 
       before do
-        Puppet.features.stubs(:root?).returns true
+        Oregano.features.stubs(:root?).returns true
         # stubbed to false, as Windows catalogs don't add users / groups
-        Puppet.features.stubs(:microsoft_windows?).returns false
+        Oregano.features.stubs(:microsoft_windows?).returns false
 
         @settings.define_settings :foo,
             :mkusers => { :type => :boolean, :default => true, :desc => "e" },
@@ -1401,8 +1401,8 @@ describe Puppet::Settings do
       end
 
       it "should add each specified user and group to the catalog if :mkusers is a valid setting, is enabled, and we're running as root" do
-        expect(@catalog.resource(:user, "suser")).to be_instance_of(Puppet::Resource)
-        expect(@catalog.resource(:group, "sgroup")).to be_instance_of(Puppet::Resource)
+        expect(@catalog.resource(:user, "suser")).to be_instance_of(Oregano::Resource)
+        expect(@catalog.resource(:group, "sgroup")).to be_instance_of(Oregano::Resource)
       end
 
       it "should only add users and groups to the catalog from specified sections" do
@@ -1413,7 +1413,7 @@ describe Puppet::Settings do
       end
 
       it "should not add users or groups to the catalog if :mkusers not running as root" do
-        Puppet.features.stubs(:root?).returns false
+        Oregano.features.stubs(:root?).returns false
 
         catalog = @settings.to_catalog
         expect(catalog.resource(:user, "suser")).to be_nil
@@ -1421,8 +1421,8 @@ describe Puppet::Settings do
       end
 
       it "should not add users or groups to the catalog if :mkusers is not a valid setting" do
-        Puppet.features.stubs(:root?).returns true
-        settings = Puppet::Settings.new
+        Oregano.features.stubs(:root?).returns true
+        settings = Oregano::Settings.new
         settings.define_settings :other, :otherdir => {:type => :directory, :default => "/otherdir", :desc => "a", :owner => "service", :group => "service"}
 
         catalog = settings.to_catalog
@@ -1455,7 +1455,7 @@ describe Puppet::Settings do
       end
 
       it "should not attempt to manage the root user" do
-        Puppet.features.stubs(:root?).returns true
+        Oregano.features.stubs(:root?).returns true
         @settings.define_settings :foo, :foodir => {:type => :directory, :default => "/foodir", :desc => "a", :owner => "root", :group => "service"}
 
         expect(@settings.to_catalog.resource(:user, "root")).to be_nil
@@ -1464,12 +1464,12 @@ describe Puppet::Settings do
   end
 
   it "should be able to be converted to a manifest" do
-    expect(Puppet::Settings.new).to respond_to(:to_manifest)
+    expect(Oregano::Settings.new).to respond_to(:to_manifest)
   end
 
   describe "when being converted to a manifest" do
     it "should produce a string with the code for each resource joined by two carriage returns" do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.define_settings :main,
           :maindir => { :type => :directory, :default => "/maindir", :desc => "a"},
           :seconddir => { :type => :directory, :default => "/seconddir", :desc => "a"}
@@ -1490,7 +1490,7 @@ describe Puppet::Settings do
 
   describe "when using sections of the configuration to manage the local host" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       @settings.stubs(:service_user_available?).returns true
       @settings.stubs(:service_group_available?).returns true
       @settings.define_settings :main, :noop => { :default => false, :desc => "", :type => :boolean }
@@ -1504,24 +1504,24 @@ describe Puppet::Settings do
     end
 
     it "should create a catalog with the specified sections" do
-      @settings.expects(:to_catalog).with(:main, :other).returns Puppet::Resource::Catalog.new("foo")
+      @settings.expects(:to_catalog).with(:main, :other).returns Oregano::Resource::Catalog.new("foo")
       @settings.use(:main, :other)
     end
 
     it "should canonicalize the sections" do
-      @settings.expects(:to_catalog).with(:main, :other).returns Puppet::Resource::Catalog.new("foo")
+      @settings.expects(:to_catalog).with(:main, :other).returns Oregano::Resource::Catalog.new("foo")
       @settings.use("main", "other")
     end
 
     it "should ignore sections that have already been used" do
-      @settings.expects(:to_catalog).with(:main).returns Puppet::Resource::Catalog.new("foo")
+      @settings.expects(:to_catalog).with(:main).returns Oregano::Resource::Catalog.new("foo")
       @settings.use(:main)
-      @settings.expects(:to_catalog).with(:other).returns Puppet::Resource::Catalog.new("foo")
+      @settings.expects(:to_catalog).with(:other).returns Oregano::Resource::Catalog.new("foo")
       @settings.use(:main, :other)
     end
 
     it "should convert the created catalog to a RAL catalog" do
-      @catalog = Puppet::Resource::Catalog.new("foo")
+      @catalog = Oregano::Resource::Catalog.new("foo")
       @settings.expects(:to_catalog).with(:main).returns @catalog
 
       @catalog.expects(:to_ral).returns @catalog
@@ -1529,7 +1529,7 @@ describe Puppet::Settings do
     end
 
     it "should specify that it is not managing a host catalog" do
-      catalog = Puppet::Resource::Catalog.new("foo")
+      catalog = Oregano::Resource::Catalog.new("foo")
       catalog.expects(:apply)
       @settings.expects(:to_catalog).returns catalog
 
@@ -1541,14 +1541,14 @@ describe Puppet::Settings do
     end
 
     it "should support a method for re-using all currently used sections" do
-      @settings.expects(:to_catalog).with(:main, :third).times(2).returns Puppet::Resource::Catalog.new("foo")
+      @settings.expects(:to_catalog).with(:main, :third).times(2).returns Oregano::Resource::Catalog.new("foo")
 
       @settings.use(:main, :third)
       @settings.reuse
     end
 
     it "should fail with an appropriate message if any resources fail" do
-      @catalog = Puppet::Resource::Catalog.new("foo")
+      @catalog = Oregano::Resource::Catalog.new("foo")
       @catalog.stubs(:to_ral).returns @catalog
       @settings.expects(:to_catalog).returns @catalog
 
@@ -1557,15 +1557,15 @@ describe Puppet::Settings do
 
       @trans.expects(:any_failed?).returns(true)
 
-      resource = Puppet::Type.type(:notify).new(:title => 'failed')
-      status = Puppet::Resource::Status.new(resource)
-      event = Puppet::Transaction::Event.new(
+      resource = Oregano::Type.type(:notify).new(:title => 'failed')
+      status = Oregano::Resource::Status.new(resource)
+      event = Oregano::Transaction::Event.new(
         :name => 'failure',
         :status => 'failure',
         :message => 'My failure')
       status.add_event(event)
 
-      report = Puppet::Transaction::Report.new('apply')
+      report = Oregano::Transaction::Report.new('apply')
       report.add_resource_status(status)
 
       @trans.expects(:report).returns report
@@ -1577,7 +1577,7 @@ describe Puppet::Settings do
 
   describe "when dealing with printing configs" do
     before do
-      @settings = Puppet::Settings.new
+      @settings = Oregano::Settings.new
       #these are the magic default values
       @settings.stubs(:value).with(:configprint).returns("")
       @settings.stubs(:value).with(:genconfig).returns(false)
@@ -1698,14 +1698,14 @@ describe Puppet::Settings do
 
   describe "when determining if the service user is available" do
     let(:settings) do
-      settings = Puppet::Settings.new
+      settings = Oregano::Settings.new
       settings.define_settings :main, :user => { :default => nil, :desc => "doc" }
       settings
     end
 
     def a_user_type_for(username)
       user = mock 'user'
-      Puppet::Type.type(:user).expects(:new).with { |args| args[:name] == username }.returns user
+      Oregano::Type.type(:user).expects(:new).with { |args| args[:name] == username }.returns user
       user
     end
 
@@ -1741,14 +1741,14 @@ describe Puppet::Settings do
 
   describe "when determining if the service group is available" do
     let(:settings) do
-      settings = Puppet::Settings.new
+      settings = Oregano::Settings.new
       settings.define_settings :main, :group => { :default => nil, :desc => "doc" }
       settings
     end
 
     def a_group_type_for(groupname)
       group = mock 'group'
-      Puppet::Type.type(:group).expects(:new).with { |args| args[:name] == groupname }.returns group
+      Oregano::Type.type(:group).expects(:new).with { |args| args[:name] == groupname }.returns group
       group
     end
 
@@ -1783,9 +1783,9 @@ describe Puppet::Settings do
   end
 
   describe "when dealing with command-line options" do
-    let(:settings) { Puppet::Settings.new }
+    let(:settings) { Oregano::Settings.new }
 
-    it "should get options from Puppet.settings.optparse_addargs" do
+    it "should get options from Oregano.settings.optparse_addargs" do
       settings.expects(:optparse_addargs).returns([])
 
       settings.send(:parse_global_options, [])
@@ -1798,33 +1798,33 @@ describe Puppet::Settings do
     end
 
     it "should not die if it sees an unrecognized option, because the app/face may handle it later" do
-      expect { settings.send(:parse_global_options, ["--topuppet", "value"]) } .to_not raise_error
+      expect { settings.send(:parse_global_options, ["--tooregano", "value"]) } .to_not raise_error
     end
 
     it "should not pass an unrecognized option to handleargs" do
-      settings.expects(:handlearg).with("--topuppet", "value").never
-      expect { settings.send(:parse_global_options, ["--topuppet", "value"]) } .to_not raise_error
+      settings.expects(:handlearg).with("--tooregano", "value").never
+      expect { settings.send(:parse_global_options, ["--tooregano", "value"]) } .to_not raise_error
     end
 
-    it "should pass valid puppet settings options to handlearg even if they appear after an unrecognized option" do
+    it "should pass valid oregano settings options to handlearg even if they appear after an unrecognized option" do
       settings.stubs(:optparse_addargs).returns( [["--option","-o", "Funny Option", :NONE]])
       settings.expects(:handlearg).with("--option", true)
       settings.send(:parse_global_options, ["--invalidoption", "--option"])
     end
 
     it "should transform boolean option to normal form" do
-      expect(Puppet::Settings.clean_opt("--[no-]option", true)).to eq(["--option", true])
+      expect(Oregano::Settings.clean_opt("--[no-]option", true)).to eq(["--option", true])
     end
 
     it "should transform boolean option to no- form" do
-      expect(Puppet::Settings.clean_opt("--[no-]option", false)).to eq(["--no-option", false])
+      expect(Oregano::Settings.clean_opt("--[no-]option", false)).to eq(["--no-option", false])
     end
 
     it "should set preferred run mode from --run_mode <foo> string without error" do
       args = ["--run_mode", "master"]
       settings.expects(:handlearg).with("--run_mode", "master").never
       expect { settings.send(:parse_global_options, args) } .to_not raise_error
-      expect(Puppet.settings.preferred_run_mode).to eq(:master)
+      expect(Oregano.settings.preferred_run_mode).to eq(:master)
       expect(args.empty?).to eq(true)
     end
 
@@ -1832,7 +1832,7 @@ describe Puppet::Settings do
       args = ["--run_mode=master"]
       settings.expects(:handlearg).with("--run_mode", "master").never
       expect { settings.send(:parse_global_options, args) } .to_not raise_error
-      expect(Puppet.settings.preferred_run_mode).to eq(:master)
+      expect(Oregano.settings.preferred_run_mode).to eq(:master)
       expect(args.empty?).to eq(true)
     end
   end
@@ -1840,29 +1840,29 @@ describe Puppet::Settings do
   describe "default_certname" do
     describe "using hostname and domain" do
       before :each do
-        Puppet::Settings.stubs(:hostname_fact).returns("testhostname")
-        Puppet::Settings.stubs(:domain_fact).returns("domain.test.")
+        Oregano::Settings.stubs(:hostname_fact).returns("testhostname")
+        Oregano::Settings.stubs(:domain_fact).returns("domain.test.")
       end
 
       it "should use both to generate fqdn" do
-        expect(Puppet::Settings.default_certname).to match(/testhostname\.domain\.test/)
+        expect(Oregano::Settings.default_certname).to match(/testhostname\.domain\.test/)
       end
       it "should remove trailing dots from fqdn" do
-        expect(Puppet::Settings.default_certname).to eq('testhostname.domain.test')
+        expect(Oregano::Settings.default_certname).to eq('testhostname.domain.test')
       end
     end
 
     describe "using just hostname" do
       before :each do
-        Puppet::Settings.stubs(:hostname_fact).returns("testhostname")
-        Puppet::Settings.stubs(:domain_fact).returns("")
+        Oregano::Settings.stubs(:hostname_fact).returns("testhostname")
+        Oregano::Settings.stubs(:domain_fact).returns("")
       end
 
       it "should use only hostname to generate fqdn" do
-        expect(Puppet::Settings.default_certname).to eq("testhostname")
+        expect(Oregano::Settings.default_certname).to eq("testhostname")
       end
       it "should removing trailing dots from fqdn" do
-        expect(Puppet::Settings.default_certname).to eq("testhostname")
+        expect(Oregano::Settings.default_certname).to eq("testhostname")
       end
     end
   end

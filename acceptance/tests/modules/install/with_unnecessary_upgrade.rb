@@ -1,6 +1,6 @@
-test_name "puppet module install (with unnecessary dependency upgrade)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (with unnecessary dependency upgrade)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -24,7 +24,7 @@ stub_forge_on(master)
 
 step "Install an older module version"
 module_version = '1.7.0'
-on master, puppet("module install #{module_author}-#{module_name} --version #{module_version}") do
+on master, oregano("module install #{module_author}-#{module_name} --version #{module_version}") do
   assert_match(/#{module_author}-#{module_name} \(.*v#{module_version}.*\)/, stdout,
         "Notice of specific version installed was not displayed")
 end
@@ -33,11 +33,11 @@ on master, "grep \"version '#{module_version}'\" #{default_moduledir}/#{module_n
 
 step "Install a module that depends on a dependency that could be upgraded, but already satisfies constraints"
 module_name   = "apollo"
-on master, puppet("module install #{module_author}-#{module_name}") do
+on master, oregano("module install #{module_author}-#{module_name}") do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 
-on master, puppet("module list --modulepath #{default_moduledir}") do
+on master, oregano("module list --modulepath #{default_moduledir}") do
   module_name   = "java"
   assert_module_installed_ui(stdout, module_author, module_name, module_version, '==')
 end

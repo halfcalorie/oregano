@@ -13,7 +13,7 @@ agents.each do |agent|
   agent.group_present(name)
 
   step "delete the group"
-  on agent, puppet_resource('group', name, 'ensure=absent')
+  on agent, oregano_resource('group', name, 'ensure=absent')
 
   step "verify the group was deleted"
   agent.group_absent(name)

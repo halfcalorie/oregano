@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
   module Types
     describe 'The TypeSet Type' do
-      include PuppetSpec::Compiler
+      include OreganoSpec::Compiler
 
       let(:parser) { TypeParser.singleton }
       let(:pp_parser) { Parser::EvaluatingParser.new }
-      let(:env) { Puppet::Node::Environment.create('test', []) }
+      let(:env) { Oregano::Node::Environment.create('test', []) }
       let(:loaders) { Loaders.new(env) }
       let(:loader) { loaders.find_loader(nil) }
 
@@ -115,7 +115,7 @@ module Puppet::Pops
             version => '1.x',
             pcore_version => '1.0.0',
             OBJECT
-            expect { parse_type_set('MySet', ts) }.to raise_error(SemanticPuppet::Version::ValidationFailure)
+            expect { parse_type_set('MySet', ts) }.to raise_error(SemanticOregano::Version::ValidationFailure)
           end
 
           it 'the pcore_version is an invalid semantic version' do
@@ -123,7 +123,7 @@ module Puppet::Pops
             version => '1.0.0',
             pcore_version => '1.x',
             OBJECT
-            expect { parse_type_set('MySet', ts) }.to raise_error(SemanticPuppet::Version::ValidationFailure)
+            expect { parse_type_set('MySet', ts) }.to raise_error(SemanticOregano::Version::ValidationFailure)
           end
 
           it 'the pcore_version is outside of the range of that is parsable by this runtime' do
@@ -162,7 +162,7 @@ module Puppet::Pops
                 version => '1.0.0',
                 types => []
               OBJECT
-              expect { parse_type_set('MySet', ts) }.to raise_error(Puppet::Error,
+              expect { parse_type_set('MySet', ts) }.to raise_error(Oregano::Error,
                 /entry 'types' expects a Hash value, got Array/)
             end
 
@@ -174,7 +174,7 @@ module Puppet::Pops
                   Car => 'brum'
                 }
               OBJECT
-              expect { parse_type_set('MySet', ts) }.to raise_error(Puppet::Error,
+              expect { parse_type_set('MySet', ts) }.to raise_error(Oregano::Error,
                 /The expression <'brum'> is not a valid type specification/)
             end
 
@@ -232,7 +232,7 @@ module Puppet::Pops
                 }
               OBJECT
               expect { parse_type_set('MySet', ts) }.to raise_error(ArgumentError,
-                /references TypeSet 'http:\/\/puppet\.com\/2016\.1\/runtime\/Vehicle::Cars' more than once using overlapping version ranges/)
+                /references TypeSet 'http:\/\/oregano\.com\/2016\.1\/runtime\/Vehicle::Cars' more than once using overlapping version ranges/)
             end
 
             it 'contains an initialization maps with an alias that collides with a type name' do

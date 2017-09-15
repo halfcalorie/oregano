@@ -5,12 +5,12 @@
 
 require 'spec_helper'
 
-require 'puppet'
+require 'oregano'
 
-module Puppet::Util::Plist
+module Oregano::Util::Plist
 end
 
-provider_class = Puppet::Type.type(:macauthorization).provider(:macauthorization)
+provider_class = Oregano::Type.type(:macauthorization).provider(:macauthorization)
 
 describe provider_class do
 
@@ -18,7 +18,7 @@ describe provider_class do
     # Create a mock resource
     @resource = stub 'resource'
 
-    @authname = "foo.spam.eggs.puppettest"
+    @authname = "foo.spam.eggs.oreganotest"
     @authplist = {}
 
     @rules = {@authname => @authplist}
@@ -28,8 +28,8 @@ describe provider_class do
     authdb["rights"] = { "fooright" => "foo" }
 
     # Stub out Plist::parse_xml
-    Puppet::Util::Plist.stubs(:parse_plist).returns(authdb)
-    Puppet::Util::Plist.stubs(:write_plist_file)
+    Oregano::Util::Plist.stubs(:parse_plist).returns(authdb)
+    Oregano::Util::Plist.stubs(:write_plist_file)
 
     # A catch all; no parameters set
     @resource.stubs(:[]).returns(nil)

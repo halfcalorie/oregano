@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
-shared_examples_for "Puppet::Indirector::FileServerTerminus" do
+shared_examples_for "Oregano::Indirector::FileServerTerminus" do
   # This only works if the shared behaviour is included before
   # the 'before' block in the including context.
   before do
-    Puppet::FileServing::Configuration.instance_variable_set(:@configuration, nil)
-    Puppet::FileSystem.stubs(:exist?).returns true
-    Puppet::FileSystem.stubs(:exist?).with(Puppet[:fileserverconfig]).returns(true)
+    Oregano::FileServing::Configuration.instance_variable_set(:@configuration, nil)
+    Oregano::FileSystem.stubs(:exist?).returns true
+    Oregano::FileSystem.stubs(:exist?).with(Oregano[:fileserverconfig]).returns(true)
 
     @path = Tempfile.new("file_server_testing")
     path = @path.path
@@ -16,18 +16,18 @@ shared_examples_for "Puppet::Indirector::FileServerTerminus" do
     File.open(File.join(@path, "myfile"), "w") { |f| f.print "my content" }
 
     # Use a real mount, so the integration is a bit deeper.
-    @mount1 = Puppet::FileServing::Configuration::Mount::File.new("one")
+    @mount1 = Oregano::FileServing::Configuration::Mount::File.new("one")
     @mount1.path = @path
 
     @parser = stub 'parser', :changed? => false
     @parser.stubs(:parse).returns("one" => @mount1)
 
-    Puppet::FileServing::Configuration::Parser.stubs(:new).returns(@parser)
+    Oregano::FileServing::Configuration::Parser.stubs(:new).returns(@parser)
 
     # Stub out the modules terminus
     @modules = mock 'modules terminus'
 
-    @request = Puppet::Indirector::Request.new(:indirection, :method, "puppet://myhost/one/myfile", nil)
+    @request = Oregano::Indirector::Request.new(:indirection, :method, "oregano://myhost/one/myfile", nil)
   end
 
   it "should use the file server configuration to find files" do

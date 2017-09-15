@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/util/inifile'
+require 'oregano/util/inifile'
 
-describe Puppet::Util::IniConfig::Section do
+describe Oregano::Util::IniConfig::Section do
 
   subject { described_class.new('testsection', '/some/imaginary/file') }
 
@@ -94,17 +94,17 @@ describe Puppet::Util::IniConfig::Section do
   end
 end
 
-describe Puppet::Util::IniConfig::PhysicalFile do
+describe Oregano::Util::IniConfig::PhysicalFile do
   subject { described_class.new('/some/nonexistent/file') }
 
   let(:first_sect) do
-    sect = Puppet::Util::IniConfig::Section.new('firstsection', '/some/imaginary/file')
+    sect = Oregano::Util::IniConfig::Section.new('firstsection', '/some/imaginary/file')
     sect.entries << "# comment\n" << ['onefish', 'redfish'] << "\n"
     sect
   end
 
   let(:second_sect) do
-    sect = Puppet::Util::IniConfig::Section.new('secondsection', '/some/imaginary/file')
+    sect = Oregano::Util::IniConfig::Section.new('secondsection', '/some/imaginary/file')
     sect.entries << ['twofish', 'bluefish']
     sect
   end
@@ -143,7 +143,7 @@ describe Puppet::Util::IniConfig::PhysicalFile do
 
         expect {
           subject.parse(text)
-        }.to raise_error(Puppet::Util::IniConfig::IniParseError,
+        }.to raise_error(Oregano::Util::IniConfig::IniParseError,
                          /Section "mysect" is already defined, cannot redefine/)
       end
 
@@ -153,7 +153,7 @@ describe Puppet::Util::IniConfig::PhysicalFile do
 
         expect {
           subject.parse(text)
-        }.to raise_error(Puppet::Util::IniConfig::IniParseError,
+        }.to raise_error(Oregano::Util::IniConfig::IniParseError,
                          /Section "mysect" is already defined, cannot redefine/)
       end
 
@@ -165,7 +165,7 @@ describe Puppet::Util::IniConfig::PhysicalFile do
 
         expect {
           subject.parse(text)
-        }.to raise_error(Puppet::Util::IniConfig::IniParseError,
+        }.to raise_error(Oregano::Util::IniConfig::IniParseError,
                          /Property with key "key" outside of a section/)
       end
 
@@ -353,19 +353,19 @@ describe Puppet::Util::IniConfig::PhysicalFile do
   end
 end
 
-describe Puppet::Util::IniConfig::FileCollection do
+describe Oregano::Util::IniConfig::FileCollection do
 
   let(:path_a) { '/some/nonexistent/file/a' }
   let(:path_b) { '/some/nonexistent/file/b' }
 
-  let(:file_a) { Puppet::Util::IniConfig::PhysicalFile.new(path_a) }
-  let(:file_b) { Puppet::Util::IniConfig::PhysicalFile.new(path_b) }
+  let(:file_a) { Oregano::Util::IniConfig::PhysicalFile.new(path_a) }
+  let(:file_b) { Oregano::Util::IniConfig::PhysicalFile.new(path_b) }
 
-  let(:sect_a1) { Puppet::Util::IniConfig::Section.new('sect_a1', path_a) }
-  let(:sect_a2) { Puppet::Util::IniConfig::Section.new('sect_a2', path_a) }
+  let(:sect_a1) { Oregano::Util::IniConfig::Section.new('sect_a1', path_a) }
+  let(:sect_a2) { Oregano::Util::IniConfig::Section.new('sect_a2', path_a) }
 
-  let(:sect_b1) { Puppet::Util::IniConfig::Section.new('sect_b1', path_b) }
-  let(:sect_b2) { Puppet::Util::IniConfig::Section.new('sect_b2', path_b) }
+  let(:sect_b1) { Oregano::Util::IniConfig::Section.new('sect_b1', path_b) }
+  let(:sect_b2) { Oregano::Util::IniConfig::Section.new('sect_b2', path_b) }
 
   before do
     file_a.contents << sect_a1 << sect_a2
@@ -378,7 +378,7 @@ describe Puppet::Util::IniConfig::FileCollection do
     it "creates a new PhysicalFile and uses that to read the file" do
       stub_file.expects(:read)
       stub_file.expects(:file_collection=)
-      Puppet::Util::IniConfig::PhysicalFile.expects(:new).with(path_a).returns stub_file
+      Oregano::Util::IniConfig::PhysicalFile.expects(:new).with(path_a).returns stub_file
 
       subject.read(path_a)
     end
@@ -386,7 +386,7 @@ describe Puppet::Util::IniConfig::FileCollection do
     it "stores the PhysicalFile and the path to the file" do
       stub_file.stubs(:read)
       stub_file.stubs(:file_collection=)
-      Puppet::Util::IniConfig::PhysicalFile.stubs(:new).with(path_a).returns stub_file
+      Oregano::Util::IniConfig::PhysicalFile.stubs(:new).with(path_a).returns stub_file
       subject.read(path_a)
 
       path, physical_file = subject.files.first

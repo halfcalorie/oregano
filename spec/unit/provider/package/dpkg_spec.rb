@@ -2,7 +2,7 @@
 require 'spec_helper'
 require 'stringio'
 
-provider_class = Puppet::Type.type(:package).provider(:dpkg)
+provider_class = Oregano::Type.type(:package).provider(:dpkg)
 
 describe provider_class do
   let(:bash_version) { '4.2-5ubuntu3' }
@@ -30,7 +30,7 @@ describe provider_class do
     end
 
     it "creates and return an instance for a single dpkg-query entry" do
-      Puppet::Util::Execution.expects(:execpipe).with(execpipe_args).yields bash_installed_io
+      Oregano::Util::Execution.expects(:execpipe).with(execpipe_args).yields bash_installed_io
 
       installed = mock 'bash'
       provider_class.expects(:new).with(:ensure => "4.2-5ubuntu3", :error => "ok", :desired => "install", :name => "bash", :status => "installed", :provider => :dpkg).returns installed
@@ -39,7 +39,7 @@ describe provider_class do
     end
 
     it "parses multiple dpkg-query multi-line entries in the output" do
-      Puppet::Util::Execution.expects(:execpipe).with(execpipe_args).yields all_installed_io
+      Oregano::Util::Execution.expects(:execpipe).with(execpipe_args).yields all_installed_io
 
       bash = mock 'bash'
       provider_class.expects(:new).with(:ensure => "4.2-5ubuntu3", :error => "ok", :desired => "install", :name => "bash", :status => "installed", :provider => :dpkg).returns bash
@@ -50,7 +50,7 @@ describe provider_class do
     end
 
     it "continues without failing if it encounters bad lines between good entries" do
-      Puppet::Util::Execution.expects(:execpipe).with(execpipe_args).yields StringIO.new([bash_installed_output, "foobar\n", vim_installed_output].join)
+      Oregano::Util::Execution.expects(:execpipe).with(execpipe_args).yields StringIO.new([bash_installed_output, "foobar\n", vim_installed_output].join)
 
       bash = mock 'bash'
       vim = mock 'vim'
@@ -68,15 +68,15 @@ describe provider_class do
     end
 
     def dpkg_query_execution_returns(output)
-      Puppet::Util::Execution.expects(:execute).with(query_args, execute_options).returns(output)
+      Oregano::Util::Execution.expects(:execute).with(query_args, execute_options).returns(output)
     end
 
     before do
-      Puppet::Util.stubs(:which).with('/usr/bin/dpkg-query').returns(dpkgquery_path)
+      Oregano::Util.stubs(:which).with('/usr/bin/dpkg-query').returns(dpkgquery_path)
     end
 
     it "considers the package purged if dpkg-query fails" do
-      Puppet::Util::Execution.expects(:execute).with(query_args, execute_options).raises Puppet::ExecutionFailure.new("eh")
+      Oregano::Util::Execution.expects(:execute).with(query_args, execute_options).raises Oregano::ExecutionFailure.new("eh")
 
       expect(provider.query[:ensure]).to eq(:purged)
     end
@@ -96,7 +96,7 @@ describe provider_class do
     it "fails if an error is discovered" do
       dpkg_query_execution_returns(bash_installed_output.gsub("ok","error"))
 
-      expect { provider.query }.to raise_error(Puppet::Error)
+      expect { provider.query }.to raise_error(Oregano::Error)
     end
 
     it "considers the package purged if it is marked 'not-installed'" do
@@ -150,8 +150,8 @@ describe provider_class do
 
       def parser_test(dpkg_output_string, gold_hash, number_of_debug_logs = 0)
         dpkg_query_execution_returns(dpkg_output_string)
-        Puppet.expects(:warning).never
-        Puppet.expects(:debug).times(number_of_debug_logs)
+        Oregano.expects(:warning).never
+        Oregano.expects(:debug).times(number_of_debug_logs)
 
         expect(provider.query).to eq(gold_hash)
       end
@@ -166,8 +166,8 @@ describe provider_class do
       end
 
       it "does not log if execution returns with non-zero exit code" do
-        Puppet::Util::Execution.expects(:execute).with(query_args, execute_options).raises Puppet::ExecutionFailure.new("failed")
-        Puppet::expects(:debug).never
+        Oregano::Util::Execution.expects(:execute).with(query_args, execute_options).raises Oregano::ExecutionFailure.new("failed")
+        Oregano::expects(:debug).never
 
         expect(provider.query).to eq(package_not_found_hash)
       end

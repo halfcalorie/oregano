@@ -1,4 +1,4 @@
-test_name "puppet module uninstall (using directory name)"
+test_name "oregano module uninstall (using directory name)"
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -33,7 +33,7 @@ on master, "[ -d #{master['distmoduledir']}/apache ]"
 on master, "[ -d #{master['distmoduledir']}/crakorn ]"
 
 step "Try to uninstall the module apache"
-on master, puppet('module uninstall apache') do
+on master, oregano('module uninstall apache') do
   assert_equal <<-OUTPUT, stdout
 \e[mNotice: Preparing to uninstall 'apache' ...\e[0m
 Removed 'apache' from #{master['distmoduledir']}
@@ -42,12 +42,12 @@ end
 on master, "[ ! -d #{master['distmoduledir']}/apache ]"
 
 step "Try to uninstall the module crakorn"
-on master, puppet('module uninstall crakorn'), :acceptable_exit_codes => [1] do
+on master, oregano('module uninstall crakorn'), :acceptable_exit_codes => [1] do
   pattern = Regexp.new([
     %Q{.*Notice: Preparing to uninstall 'crakorn' ....*},
     %Q{.*Error: Could not uninstall module 'crakorn'},
     %Q{  Module 'crakorn' is not installed},
-    %Q{    You may have meant `puppet module uninstall jimmy-crakorn`.*},
+    %Q{    You may have meant `oregano module uninstall jimmy-crakorn`.*},
   ].join("\n"), Regexp::MULTILINE)
   assert_match(pattern, result.output)
 end

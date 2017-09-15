@@ -16,17 +16,17 @@ directories:
     perms: '0755'
 files:
   'conf/auth.conf':
-    path: 'private/etc/puppet'
+    path: 'private/etc/oregano'
     owner: 'root'
     group: 'wheel'
     perms: '0644'
-  'man/man5/puppet.conf.5':
+  'man/man5/oregano.conf.5':
     path: 'usr/share/man/man5'
     owner: 'root'
     group: 'wheel'
     perms: '0644'
   '[A-Z]*':
-    path: 'usr/share/doc/puppet'
+    path: 'usr/share/doc/oregano'
     owner: 'root'
     group: 'wheel'
     perms: '0644'

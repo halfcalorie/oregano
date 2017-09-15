@@ -1,12 +1,12 @@
 # encoding: UTF-8
 
 require 'spec_helper'
-require 'puppet/face'
-require 'puppet/module_tool'
-require 'puppet_spec/modules'
+require 'oregano/face'
+require 'oregano/module_tool'
+require 'oregano_spec/modules'
 
-describe "puppet module list" do
-  include PuppetSpec::Files
+describe "oregano module list" do
+  include OreganoSpec::Files
 
   around do |example|
     dir = tmpdir("deep_path")
@@ -15,49 +15,49 @@ describe "puppet module list" do
     FileUtils.mkdir_p(@modpath2 = File.join(dir, "modpath2"))
     FileUtils.mkdir_p(@modpath3 = File.join(dir, "modpath3"))
 
-    env = Puppet::Node::Environment.create(:env, [@modpath1, @modpath2])
-    Puppet.override(:current_environment => env) do
+    env = Oregano::Node::Environment.create(:env, [@modpath1, @modpath2])
+    Oregano.override(:current_environment => env) do
       example.run
     end
   end
 
   it "should return an empty list per dir in path if there are no modules" do
-    expect(Puppet::Face[:module, :current].list[:modules_by_path]).to eq({
+    expect(Oregano::Face[:module, :current].list[:modules_by_path]).to eq({
       @modpath1 => [],
       @modpath2 => []
     })
   end
 
   it "should include modules separated by the environment's modulepath" do
-    foomod1 = PuppetSpec::Modules.create('foo', @modpath1)
-    barmod1 = PuppetSpec::Modules.create('bar', @modpath1)
-    foomod2 = PuppetSpec::Modules.create('foo', @modpath2)
+    foomod1 = OreganoSpec::Modules.create('foo', @modpath1)
+    barmod1 = OreganoSpec::Modules.create('bar', @modpath1)
+    foomod2 = OreganoSpec::Modules.create('foo', @modpath2)
 
-    usedenv = Puppet::Node::Environment.create(:useme, [@modpath1, @modpath2, @modpath3])
+    usedenv = Oregano::Node::Environment.create(:useme, [@modpath1, @modpath2, @modpath3])
 
-    Puppet.override(:environments => Puppet::Environments::Static.new(usedenv)) do
-      expect(Puppet::Face[:module, :current].list(:environment => 'useme')[:modules_by_path]).to eq({
+    Oregano.override(:environments => Oregano::Environments::Static.new(usedenv)) do
+      expect(Oregano::Face[:module, :current].list(:environment => 'useme')[:modules_by_path]).to eq({
         @modpath1 => [
-          Puppet::Module.new('bar', barmod1.path, usedenv),
-          Puppet::Module.new('foo', foomod1.path, usedenv)
+          Oregano::Module.new('bar', barmod1.path, usedenv),
+          Oregano::Module.new('foo', foomod1.path, usedenv)
         ],
-        @modpath2 => [Puppet::Module.new('foo', foomod2.path, usedenv)],
+        @modpath2 => [Oregano::Module.new('foo', foomod2.path, usedenv)],
         @modpath3 => [],
       })
     end
   end
 
   it "should use the specified environment" do
-    foomod = PuppetSpec::Modules.create('foo', @modpath1)
-    barmod = PuppetSpec::Modules.create('bar', @modpath1)
+    foomod = OreganoSpec::Modules.create('foo', @modpath1)
+    barmod = OreganoSpec::Modules.create('bar', @modpath1)
 
-    usedenv = Puppet::Node::Environment.create(:useme, [@modpath1, @modpath2, @modpath3])
+    usedenv = Oregano::Node::Environment.create(:useme, [@modpath1, @modpath2, @modpath3])
 
-    Puppet.override(:environments => Puppet::Environments::Static.new(usedenv)) do
-      expect(Puppet::Face[:module, :current].list(:environment => 'useme')[:modules_by_path]).to eq({
+    Oregano.override(:environments => Oregano::Environments::Static.new(usedenv)) do
+      expect(Oregano::Face[:module, :current].list(:environment => 'useme')[:modules_by_path]).to eq({
         @modpath1 => [
-          Puppet::Module.new('bar', barmod.path, usedenv),
-          Puppet::Module.new('foo', foomod.path, usedenv)
+          Oregano::Module.new('bar', barmod.path, usedenv),
+          Oregano::Module.new('foo', foomod.path, usedenv)
         ],
         @modpath2 => [],
         @modpath3 => [],
@@ -66,10 +66,10 @@ describe "puppet module list" do
   end
 
   it "should use the specified modulepath" do
-    foomod = PuppetSpec::Modules.create('foo', @modpath1)
-    barmod = PuppetSpec::Modules.create('bar', @modpath2)
+    foomod = OreganoSpec::Modules.create('foo', @modpath1)
+    barmod = OreganoSpec::Modules.create('bar', @modpath2)
 
-    modules = Puppet::Face[:module, :current].list(:modulepath => "#{@modpath1}#{File::PATH_SEPARATOR}#{@modpath2}")[:modules_by_path]
+    modules = Oregano::Face[:module, :current].list(:modulepath => "#{@modpath1}#{File::PATH_SEPARATOR}#{@modpath2}")[:modules_by_path]
 
     expect(modules[@modpath1].first.name).to eq('foo')
     expect(modules[@modpath1].first.path).to eq(foomod.path)
@@ -81,11 +81,11 @@ describe "puppet module list" do
   end
 
   it "prefers a given modulepath over the modulepath from the given environment" do
-    foomod = PuppetSpec::Modules.create('foo', @modpath1)
-    barmod = PuppetSpec::Modules.create('bar', @modpath2)
-    env = Puppet::Node::Environment.create(:myenv, ['/tmp/notused'])
+    foomod = OreganoSpec::Modules.create('foo', @modpath1)
+    barmod = OreganoSpec::Modules.create('bar', @modpath2)
+    env = Oregano::Node::Environment.create(:myenv, ['/tmp/notused'])
 
-    modules = Puppet::Face[:module, :current].list(:environment => 'myenv', :modulepath => "#{@modpath1}#{File::PATH_SEPARATOR}#{@modpath2}")[:modules_by_path]
+    modules = Oregano::Face[:module, :current].list(:environment => 'myenv', :modulepath => "#{@modpath1}#{File::PATH_SEPARATOR}#{@modpath2}")[:modules_by_path]
 
     expect(modules[@modpath1].first.name).to eq('foo')
     expect(modules[@modpath1].first.path).to eq(foomod.path)
@@ -99,7 +99,7 @@ describe "puppet module list" do
   end
 
   describe "inline documentation" do
-    subject { Puppet::Face[:module, :current].get_action(:list) }
+    subject { Oregano::Face[:module, :current].get_action(:list) }
 
     its(:summary)     { should =~ /list.*module/im }
     its(:description) { should =~ /list.*module/im }
@@ -108,7 +108,7 @@ describe "puppet module list" do
   end
 
   describe "when rendering to console" do
-    let(:face) { Puppet::Face[:module, :current] }
+    let(:face) { Oregano::Face[:module, :current] }
     let(:action) { face.get_action(:list) }
 
     def console_output(options={})
@@ -129,11 +129,11 @@ describe "puppet module list" do
     it "should print both modules with and without metadata" do
       modpath = tmpdir('modpath')
 
-      PuppetSpec::Modules.create('nometadata', modpath)
-      PuppetSpec::Modules.create('metadata', modpath, :metadata => {:author => 'metaman'})
+      OreganoSpec::Modules.create('nometadata', modpath)
+      OreganoSpec::Modules.create('metadata', modpath, :metadata => {:author => 'metaman'})
 
-      env = Puppet::Node::Environment.create(:environ, [modpath])
-      Puppet.override(:current_environment => env) do
+      env = Oregano::Node::Environment.create(:environ, [modpath])
+      Oregano.override(:current_environment => env) do
         expected = <<-HEREDOC.gsub('          ', '')
           #{modpath}
           ├── metaman-metadata (\e[0;36mv9.9.9\e[0m)
@@ -149,8 +149,8 @@ describe "puppet module list" do
       path2 = tmpdir('c')
       path3 = tmpdir('a')
 
-      env = Puppet::Node::Environment.create(:environ, [path1, path2, path3])
-      Puppet.override(:current_environment => env) do
+      env = Oregano::Node::Environment.create(:environ, [path1, path2, path3])
+      Oregano.override(:current_environment => env) do
         expected = <<-HEREDOC.gsub('          ', '')
           #{path1} (no modules installed)
           #{path2} (no modules installed)
@@ -162,23 +162,23 @@ describe "puppet module list" do
     end
 
     it "should print dependencies as a tree" do
-      PuppetSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '0.0.5'})
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '0.0.5'})
+      OreganoSpec::Modules.create(
         'other_mod',
         @modpath1,
         :metadata => {
           :version => '1.0.0',
           :dependencies => [{
             "version_requirement" => ">= 0.0.5",
-            "name"                => "puppetlabs/dependable"
+            "name"                => "oreganolabs/dependable"
           }]
         }
       )
 
       expected = <<-HEREDOC.gsub('        ', '')
         #{@modpath1}
-        └─┬ puppetlabs-other_mod (\e[0;36mv1.0.0\e[0m)
-          └── puppetlabs-dependable (\e[0;36mv0.0.5\e[0m)
+        └─┬ oreganolabs-other_mod (\e[0;36mv1.0.0\e[0m)
+          └── oreganolabs-dependable (\e[0;36mv0.0.5\e[0m)
         #{@modpath2} (no modules installed)
       HEREDOC
 
@@ -186,8 +186,8 @@ describe "puppet module list" do
     end
 
     it "should print both modules with and without metadata as a tree" do
-      PuppetSpec::Modules.create('nometadata', @modpath1)
-      PuppetSpec::Modules.create('metadata', @modpath1, :metadata => {:author => 'metaman'})
+      OreganoSpec::Modules.create('nometadata', @modpath1)
+      OreganoSpec::Modules.create('metadata', @modpath1, :metadata => {:author => 'metaman'})
 
       expected = <<-HEREDOC.gsub('        ', '')
         #{@modpath1}
@@ -200,38 +200,38 @@ describe "puppet module list" do
     end
 
     it "should warn about missing dependencies" do
-      PuppetSpec::Modules.create('depender', @modpath1, :metadata => {
+      OreganoSpec::Modules.create('depender', @modpath1, :metadata => {
         :version => '1.0.0',
         :dependencies => [{
           "version_requirement" => ">= 0.0.5",
-          "name"                => "puppetlabs/dependable"
+          "name"                => "oreganolabs/dependable"
         }]
       })
 
       warning_expectations = [
-        regexp_matches(/Missing dependency 'puppetlabs-dependable'/),
-        regexp_matches(/'puppetlabs-depender' \(v1\.0\.0\) requires 'puppetlabs-dependable' \(>= 0\.0\.5\)/)
+        regexp_matches(/Missing dependency 'oreganolabs-dependable'/),
+        regexp_matches(/'oreganolabs-depender' \(v1\.0\.0\) requires 'oreganolabs-dependable' \(>= 0\.0\.5\)/)
       ]
 
-      Puppet.expects(:warning).with(all_of(*warning_expectations))
+      Oregano.expects(:warning).with(all_of(*warning_expectations))
 
       console_output(:tree => true)
     end
 
     it 'should not warn about dependent module with pre-release version by default' do
-      PuppetSpec::Modules.create('depender', @modpath1, :metadata => {
+      OreganoSpec::Modules.create('depender', @modpath1, :metadata => {
         :version => '1.0.0',
         :dependencies => [{
           "version_requirement" => ">= 1.0.0",
-          "name"                => "puppetlabs/dependable"
+          "name"                => "oreganolabs/dependable"
         }]
       })
-      PuppetSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '1.0.0-rc1' })
+      OreganoSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '1.0.0-rc1' })
 
       expected = <<-OUTPUT.unindent
       #{@modpath1}
-      ├── puppetlabs-dependable (\e[0;36mv1.0.0-rc1\e[0m)
-      └── puppetlabs-depender (\e[0;36mv1.0.0\e[0m)
+      ├── oreganolabs-dependable (\e[0;36mv1.0.0-rc1\e[0m)
+      └── oreganolabs-depender (\e[0;36mv1.0.0\e[0m)
       #{@modpath2} (no modules installed)
       OUTPUT
 
@@ -239,19 +239,19 @@ describe "puppet module list" do
     end
 
     it 'should warn about dependent module with pre-release version by if pre-release is less than given pre-release' do
-      PuppetSpec::Modules.create('depender', @modpath1, :metadata => {
+      OreganoSpec::Modules.create('depender', @modpath1, :metadata => {
         :version => '1.0.0',
         :dependencies => [{
           "version_requirement" => ">= 1.0.0-rc1",
-          "name"                => "puppetlabs/dependable"
+          "name"                => "oreganolabs/dependable"
         }]
       })
-      PuppetSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '1.0.0-rc0' })
+      OreganoSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '1.0.0-rc0' })
 
       expected = <<-OUTPUT.unindent
       #{@modpath1}
-      ├── puppetlabs-dependable (\e[0;36mv1.0.0-rc0\e[0m)  \e[0;31minvalid\e[0m
-      └── puppetlabs-depender (\e[0;36mv1.0.0\e[0m)
+      ├── oreganolabs-dependable (\e[0;36mv1.0.0-rc0\e[0m)  \e[0;31minvalid\e[0m
+      └── oreganolabs-depender (\e[0;36mv1.0.0\e[0m)
       #{@modpath2} (no modules installed)
       OUTPUT
 
@@ -259,19 +259,19 @@ describe "puppet module list" do
     end
 
     it 'should warn about dependent module with pre-release version when using strict SemVer' do
-      PuppetSpec::Modules.create('depender', @modpath1, :metadata => {
+      OreganoSpec::Modules.create('depender', @modpath1, :metadata => {
         :version => '1.0.0',
         :dependencies => [{
           "version_requirement" => ">= 1.0.0",
-          "name"                => "puppetlabs/dependable"
+          "name"                => "oreganolabs/dependable"
         }]
       })
-      PuppetSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '1.0.0-rc1' })
+      OreganoSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '1.0.0-rc1' })
 
       expected = <<-OUTPUT.unindent
       #{@modpath1}
-      ├── puppetlabs-dependable (\e[0;36mv1.0.0-rc1\e[0m)  \e[0;31minvalid\e[0m
-      └── puppetlabs-depender (\e[0;36mv1.0.0\e[0m)
+      ├── oreganolabs-dependable (\e[0;36mv1.0.0-rc1\e[0m)  \e[0;31minvalid\e[0m
+      └── oreganolabs-depender (\e[0;36mv1.0.0\e[0m)
       #{@modpath2} (no modules installed)
       OUTPUT
 
@@ -279,21 +279,21 @@ describe "puppet module list" do
     end
 
     it "should warn about out of range dependencies" do
-      PuppetSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '0.0.1'})
-      PuppetSpec::Modules.create('depender', @modpath1, :metadata => {
+      OreganoSpec::Modules.create('dependable', @modpath1, :metadata => { :version => '0.0.1'})
+      OreganoSpec::Modules.create('depender', @modpath1, :metadata => {
         :version => '1.0.0',
         :dependencies => [{
           "version_requirement" => ">= 0.0.5",
-          "name"                => "puppetlabs/dependable"
+          "name"                => "oreganolabs/dependable"
         }]
       })
 
       warning_expectations = [
-        regexp_matches(/Module 'puppetlabs-dependable' \(v0\.0\.1\) fails to meet some dependencies/),
-        regexp_matches(/'puppetlabs-depender' \(v1\.0\.0\) requires 'puppetlabs-dependable' \(>= 0\.0\.5\)/)
+        regexp_matches(/Module 'oreganolabs-dependable' \(v0\.0\.1\) fails to meet some dependencies/),
+        regexp_matches(/'oreganolabs-depender' \(v1\.0\.0\) requires 'oreganolabs-dependable' \(>= 0\.0\.5\)/)
       ]
 
-      Puppet.expects(:warning).with(all_of(*warning_expectations))
+      Oregano.expects(:warning).with(all_of(*warning_expectations))
 
       console_output(:tree => true)
     end

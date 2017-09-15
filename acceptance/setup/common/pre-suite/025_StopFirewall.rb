@@ -1,6 +1,6 @@
-require 'puppet/acceptance/install_utils'
+require 'oregano/acceptance/install_utils'
 
-extend Puppet::Acceptance::InstallUtils
+extend Oregano::Acceptance::InstallUtils
 
 test_name "Stop firewall" do
   hosts.each do |host|

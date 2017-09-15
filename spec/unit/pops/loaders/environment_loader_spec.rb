@@ -1,28 +1,28 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet/pops'
-require 'puppet/loaders'
+require 'oregano_spec/files'
+require 'oregano/pops'
+require 'oregano/loaders'
 
 describe 'Environment loader' do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   let(:env_name) { 'spec' }
-  let(:code_dir) { Puppet[:environmentpath] }
+  let(:code_dir) { Oregano[:environmentpath] }
   let(:env_dir) { File.join(code_dir, env_name) }
-  let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_code_dir, env_name, 'modules')]) }
+  let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_code_dir, env_name, 'modules')]) }
   let(:populated_code_dir) do
     dir_contained_in(code_dir, env_name => env_content)
-    PuppetSpec::Files.record_tmp(env_dir)
+    OreganoSpec::Files.record_tmp(env_dir)
     code_dir
   end
 
   let(:env_content) {
     {
       'lib' => {
-        'puppet' => {
+        'oregano' => {
           'functions' => {
             'ruby_foo.rb' => <<-RUBY.unindent,
-              Puppet::Functions.create_function(:ruby_foo) do
+              Oregano::Functions.create_function(:ruby_foo) do
                 def ruby_foo()
                   'ruby_foo'
                 end
@@ -30,7 +30,7 @@ describe 'Environment loader' do
               RUBY
             'environment' => {
               'ruby_foo.rb' => <<-RUBY.unindent
-                Puppet::Functions.create_function(:'environment::ruby_foo') do
+                Oregano::Functions.create_function(:'environment::ruby_foo') do
                   def ruby_foo()
                     'environment::ruby_foo'
                   end
@@ -39,7 +39,7 @@ describe 'Environment loader' do
             },
             'someother' => {
               'ruby_foo.rb' => <<-RUBY.unindent
-                Puppet::Functions.create_function(:'someother::ruby_foo') do
+                Oregano::Functions.create_function(:'someother::ruby_foo') do
                   def ruby_foo()
                     'someother::ruby_foo'
                   end
@@ -50,22 +50,22 @@ describe 'Environment loader' do
         }
       },
       'functions' => {
-        'puppet_foo.pp' => <<-PUPPET.unindent,
-          function puppet_foo() {
-            'puppet_foo'
+        'oregano_foo.pp' => <<-PUPPET.unindent,
+          function oregano_foo() {
+            'oregano_foo'
           }
           PUPPET
         'environment' => {
-          'puppet_foo.pp' => <<-PUPPET.unindent,
-            function environment::puppet_foo() {
-              'environment::puppet_foo'
+          'oregano_foo.pp' => <<-PUPPET.unindent,
+            function environment::oregano_foo() {
+              'environment::oregano_foo'
             }
             PUPPET
         },
         'someother' => {
-          'puppet_foo.pp' => <<-PUPPET.unindent,
-            function somether::puppet_foo() {
-              'someother::puppet_foo'
+          'oregano_foo.pp' => <<-PUPPET.unindent,
+            function somether::oregano_foo() {
+              'someother::oregano_foo'
             }
             PUPPET
         }
@@ -89,15 +89,15 @@ describe 'Environment loader' do
   }
 
   before(:each) do
-    Puppet.push_context(:loaders => Puppet::Pops::Loaders.new(env))
+    Oregano.push_context(:loaders => Oregano::Pops::Loaders.new(env))
   end
 
   after(:each) do
-    Puppet.pop_context
+    Oregano.pop_context
   end
 
   def load_or_nil(type, name)
-    found = Puppet::Pops::Loaders.find_loader(nil).load_typed(Puppet::Pops::Loader::TypedName.new(type, name))
+    found = Oregano::Pops::Loaders.find_loader(nil).load_typed(Oregano::Pops::Loader::TypedName.new(type, name))
     found.nil? ? nil : found.value
   end
 
@@ -107,7 +107,7 @@ describe 'Environment loader' do
       expect(function).not_to be_nil
 
       expect(function.class.name).to eq('ruby_foo')
-      expect(function).to be_a(Puppet::Functions::Function)
+      expect(function).to be_a(Oregano::Functions::Function)
     end
 
     it 'loads from environment name space' do
@@ -115,7 +115,7 @@ describe 'Environment loader' do
       expect(function).not_to be_nil
 
       expect(function.class.name).to eq('environment::ruby_foo')
-      expect(function).to be_a(Puppet::Functions::Function)
+      expect(function).to be_a(Oregano::Functions::Function)
     end
 
     it 'fails to load from namespaces other than global or environment' do
@@ -124,35 +124,35 @@ describe 'Environment loader' do
     end
   end
 
-  context 'loading a Puppet function' do
+  context 'loading a Oregano function' do
     it 'loads from global name space' do
-      function = load_or_nil(:function, 'puppet_foo')
+      function = load_or_nil(:function, 'oregano_foo')
       expect(function).not_to be_nil
 
-      expect(function.class.name).to eq('puppet_foo')
-      expect(function).to be_a(Puppet::Functions::PuppetFunction)
+      expect(function.class.name).to eq('oregano_foo')
+      expect(function).to be_a(Oregano::Functions::OreganoFunction)
     end
 
     it 'loads from environment name space' do
-      function = load_or_nil(:function, 'environment::puppet_foo')
+      function = load_or_nil(:function, 'environment::oregano_foo')
       expect(function).not_to be_nil
 
-      expect(function.class.name).to eq('environment::puppet_foo')
-      expect(function).to be_a(Puppet::Functions::PuppetFunction)
+      expect(function.class.name).to eq('environment::oregano_foo')
+      expect(function).to be_a(Oregano::Functions::OreganoFunction)
     end
 
     it 'fails to load from namespaces other than global or environment' do
-      function = load_or_nil(:function, 'someother::puppet_foo')
+      function = load_or_nil(:function, 'someother::oregano_foo')
       expect(function).to be_nil
     end
   end
 
-  context 'loading a Puppet type' do
+  context 'loading a Oregano type' do
     it 'loads from global name space' do
       type = load_or_nil(:type, 'footype')
       expect(type).not_to be_nil
 
-      expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
+      expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
       expect(type.name).to eq('FooType')
     end
 
@@ -160,7 +160,7 @@ describe 'Environment loader' do
       type = load_or_nil(:type, 'environment::footype')
       expect(type).not_to be_nil
 
-      expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
+      expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
       expect(type.name).to eq('Environment::FooType')
     end
 

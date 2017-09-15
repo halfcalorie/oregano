@@ -1,20 +1,20 @@
 require 'spec_helper'
-require 'puppet/face'
-require 'puppet/interface'
+require 'oregano/face'
+require 'oregano/interface'
 
-describe Puppet::Interface do
-  subject { Puppet::Interface }
+describe Oregano::Interface do
+  subject { Oregano::Interface }
 
   before :each do
-    @faces = Puppet::Interface::FaceCollection.
+    @faces = Oregano::Interface::FaceCollection.
       instance_variable_get("@faces").dup
     @dq = $".dup
     $".delete_if do |path| path =~ %r{/face/.*\.rb$} end
-    Puppet::Interface::FaceCollection.instance_variable_get("@faces").clear
+    Oregano::Interface::FaceCollection.instance_variable_get("@faces").clear
   end
 
   after :each do
-    Puppet::Interface::FaceCollection.instance_variable_set("@faces", @faces)
+    Oregano::Interface::FaceCollection.instance_variable_set("@faces", @faces)
     $".clear ; @dq.each do |item| $" << item end
   end
 
@@ -24,11 +24,11 @@ describe Puppet::Interface do
     end
 
     it "should raise an exception when the requested version is unavailable" do
-      expect { subject[:huzzah, '17.0.0'] }.to raise_error(Puppet::Error, /Could not find version/)
+      expect { subject[:huzzah, '17.0.0'] }.to raise_error(Oregano::Error, /Could not find version/)
     end
 
     it "should raise an exception when the requested face doesn't exist" do
-      expect { subject[:burrble_toot, :current] }.to raise_error(Puppet::Error, /Could not find Puppet Face/)
+      expect { subject[:burrble_toot, :current] }.to raise_error(Oregano::Error, /Could not find Oregano Face/)
     end
 
     describe "version matching" do
@@ -48,7 +48,7 @@ describe Puppet::Interface do
       %w{1.0.2 1.2}.each do |input|
         it "should not match #{input.inspect} to any version" do
           expect { subject[:version_matching, input] }.
-            to raise_error Puppet::Error, /Could not find version/
+            to raise_error Oregano::Error, /Could not find version/
         end
       end
     end
@@ -123,7 +123,7 @@ describe Puppet::Interface do
   it "should try to require faces that are not known" do
     subject::FaceCollection.expects(:load_face).with(:foo, :current)
     subject::FaceCollection.expects(:load_face).with(:foo, '0.0.1')
-    expect { subject[:foo, '0.0.1'] }.to raise_error Puppet::Error
+    expect { subject[:foo, '0.0.1'] }.to raise_error Oregano::Error
   end
 
   it_should_behave_like "things that declare options" do
@@ -287,7 +287,7 @@ describe Puppet::Interface do
 
   it_should_behave_like "documentation on faces" do
     subject do
-      Puppet::Interface.new(:face_documentation, '0.0.1')
+      Oregano::Interface.new(:face_documentation, '0.0.1')
     end
   end
 end

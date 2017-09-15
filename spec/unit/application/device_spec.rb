@@ -1,22 +1,22 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/application/device'
-require 'puppet/util/network_device/config'
+require 'oregano/application/device'
+require 'oregano/util/network_device/config'
 require 'ostruct'
-require 'puppet/configurer'
+require 'oregano/configurer'
 
-describe Puppet::Application::Device do
-  include PuppetSpec::Files
+describe Oregano::Application::Device do
+  include OreganoSpec::Files
 
   before :each do
-    @device = Puppet::Application[:device]
+    @device = Oregano::Application[:device]
     @device.preinit
-    Puppet::Util::Log.stubs(:newdestination)
+    Oregano::Util::Log.stubs(:newdestination)
 
-    Puppet::Node.indirection.stubs(:terminus_class=)
-    Puppet::Node.indirection.stubs(:cache_class=)
-    Puppet::Node::Facts.indirection.stubs(:terminus_class=)
+    Oregano::Node.indirection.stubs(:terminus_class=)
+    Oregano::Node.indirection.stubs(:cache_class=)
+    Oregano::Node::Facts.indirection.stubs(:terminus_class=)
   end
 
   it "should operate in agent run_mode" do
@@ -72,32 +72,32 @@ describe Puppet::Application::Device do
     end
 
     it "should set waitforcert to 0 with --onetime and if --waitforcert wasn't given" do
-      Puppet[:onetime] = true
-      Puppet::SSL::Host.any_instance.expects(:wait_for_cert).with(0)
+      Oregano[:onetime] = true
+      Oregano::SSL::Host.any_instance.expects(:wait_for_cert).with(0)
       @device.setup_host
     end
 
     it "should use supplied waitforcert when --onetime is specified" do
-      Puppet[:onetime] = true
+      Oregano[:onetime] = true
       @device.handle_waitforcert(60)
-      Puppet::SSL::Host.any_instance.expects(:wait_for_cert).with(60)
+      Oregano::SSL::Host.any_instance.expects(:wait_for_cert).with(60)
       @device.setup_host
     end
 
     it "should use a default value for waitforcert when --onetime and --waitforcert are not specified" do
-      Puppet::SSL::Host.any_instance.expects(:wait_for_cert).with(120)
+      Oregano::SSL::Host.any_instance.expects(:wait_for_cert).with(120)
       @device.setup_host
     end
 
     it "should use the waitforcert setting when checking for a signed certificate" do
-      Puppet[:waitforcert] = 10
-      Puppet::SSL::Host.any_instance.expects(:wait_for_cert).with(10)
+      Oregano[:waitforcert] = 10
+      Oregano::SSL::Host.any_instance.expects(:wait_for_cert).with(10)
       @device.setup_host
     end
 
     it "should set the log destination with --logdest" do
       @device.options.stubs(:[]=).with { |opt,val| opt == :setdest }
-      Puppet::Log.expects(:newdestination).with("console")
+      Oregano::Log.expects(:newdestination).with("console")
 
       @device.handle_logdest("console")
     end
@@ -111,7 +111,7 @@ describe Puppet::Application::Device do
     it "should parse the log destination from the command line" do
       @device.command_line.stubs(:args).returns(%w{--logdest /my/file})
 
-      Puppet::Util::Log.expects(:newdestination).with("/my/file")
+      Oregano::Util::Log.expects(:newdestination).with("/my/file")
 
       @device.parse_options
     end
@@ -132,15 +132,15 @@ describe Puppet::Application::Device do
   describe "during setup" do
     before :each do
       @device.options.stubs(:[])
-      Puppet[:libdir] = "/dev/null/lib"
-      Puppet::SSL::Host.stubs(:ca_location=)
-      Puppet::Transaction::Report.indirection.stubs(:terminus_class=)
-      Puppet::Resource::Catalog.indirection.stubs(:terminus_class=)
-      Puppet::Resource::Catalog.indirection.stubs(:cache_class=)
-      Puppet::Node::Facts.indirection.stubs(:terminus_class=)
+      Oregano[:libdir] = "/dev/null/lib"
+      Oregano::SSL::Host.stubs(:ca_location=)
+      Oregano::Transaction::Report.indirection.stubs(:terminus_class=)
+      Oregano::Resource::Catalog.indirection.stubs(:terminus_class=)
+      Oregano::Resource::Catalog.indirection.stubs(:cache_class=)
+      Oregano::Node::Facts.indirection.stubs(:terminus_class=)
       @host = stub_everything 'host'
-      Puppet::SSL::Host.stubs(:new).returns(@host)
-      Puppet.stubs(:settraps)
+      Oregano::SSL::Host.stubs(:new).returns(@host)
+      Oregano.stubs(:settraps)
     end
 
     it "should call setup_logs" do
@@ -150,26 +150,26 @@ describe Puppet::Application::Device do
 
     describe "when setting up logs" do
       before :each do
-        Puppet::Util::Log.stubs(:newdestination)
+        Oregano::Util::Log.stubs(:newdestination)
       end
 
       it "should set log level to debug if --debug was passed" do
         @device.options.stubs(:[]).with(:debug).returns(true)
         @device.setup_logs
-        expect(Puppet::Util::Log.level).to eq(:debug)
+        expect(Oregano::Util::Log.level).to eq(:debug)
       end
 
       it "should set log level to info if --verbose was passed" do
         @device.options.stubs(:[]).with(:verbose).returns(true)
         @device.setup_logs
-        expect(Puppet::Util::Log.level).to eq(:info)
+        expect(Oregano::Util::Log.level).to eq(:info)
       end
 
       [:verbose, :debug].each do |level|
         it "should set console as the log destination with level #{level}" do
           @device.options.stubs(:[]).with(level).returns(true)
 
-          Puppet::Util::Log.expects(:newdestination).with(:console)
+          Oregano::Util::Log.expects(:newdestination).with(:console)
 
           @device.setup_logs
         end
@@ -178,7 +178,7 @@ describe Puppet::Application::Device do
       it "should set a default log destination if no --logdest" do
         @device.options.stubs(:[]).with(:setdest).returns(false)
 
-        Puppet::Util::Log.expects(:setup_default)
+        Oregano::Util::Log.expects(:setup_default)
 
         @device.setup_logs
       end
@@ -187,60 +187,60 @@ describe Puppet::Application::Device do
 
     it "should set a central log destination with --centrallogs" do
       @device.options.stubs(:[]).with(:centrallogs).returns(true)
-      Puppet[:server] = "puppet.reductivelabs.com"
-      Puppet::Util::Log.stubs(:newdestination).with(:syslog)
+      Oregano[:server] = "oregano.reductivelabs.com"
+      Oregano::Util::Log.stubs(:newdestination).with(:syslog)
 
-      Puppet::Util::Log.expects(:newdestination).with("puppet.reductivelabs.com")
+      Oregano::Util::Log.expects(:newdestination).with("oregano.reductivelabs.com")
 
       @device.setup
     end
 
     it "should use :main, :agent, :device and :ssl config" do
-      Puppet.settings.expects(:use).with(:main, :agent, :device, :ssl)
+      Oregano.settings.expects(:use).with(:main, :agent, :device, :ssl)
 
       @device.setup
     end
 
     it "should install a remote ca location" do
-      Puppet::SSL::Host.expects(:ca_location=).with(:remote)
+      Oregano::SSL::Host.expects(:ca_location=).with(:remote)
 
       @device.setup
     end
 
     it "should tell the report handler to use REST" do
-      Puppet::Transaction::Report.indirection.expects(:terminus_class=).with(:rest)
+      Oregano::Transaction::Report.indirection.expects(:terminus_class=).with(:rest)
 
       @device.setup
     end
 
     it "should default the catalog_terminus setting to 'rest'" do
       @device.initialize_app_defaults
-      expect(Puppet[:catalog_terminus]).to eq(:rest)
+      expect(Oregano[:catalog_terminus]).to eq(:rest)
     end
 
     it "should default the node_terminus setting to 'rest'" do
       @device.initialize_app_defaults
-      expect(Puppet[:node_terminus]).to eq(:rest)
+      expect(Oregano[:node_terminus]).to eq(:rest)
     end
 
     it "has an application default :catalog_cache_terminus setting of 'json'" do
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(:json)
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(:json)
 
       @device.initialize_app_defaults
       @device.setup
     end
 
     it "should tell the catalog cache class based on the :catalog_cache_terminus setting" do
-      Puppet[:catalog_cache_terminus] = "yaml"
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(:yaml)
+      Oregano[:catalog_cache_terminus] = "yaml"
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(:yaml)
 
       @device.initialize_app_defaults
       @device.setup
     end
 
     it "should not set catalog cache class if :catalog_cache_terminus is explicitly nil" do
-      Puppet[:catalog_cache_terminus] = nil
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).never
+      Oregano[:catalog_cache_terminus] = nil
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).never
 
       @device.initialize_app_defaults
       @device.setup
@@ -248,18 +248,18 @@ describe Puppet::Application::Device do
 
     it "should default the facts_terminus setting to 'network_device'" do
       @device.initialize_app_defaults
-      expect(Puppet[:facts_terminus]).to eq(:network_device)
+      expect(Oregano[:facts_terminus]).to eq(:network_device)
     end
   end
 
   describe "when initializing each devices SSL" do
     before(:each) do
       @host = stub_everything 'host'
-      Puppet::SSL::Host.stubs(:new).returns(@host)
+      Oregano::SSL::Host.stubs(:new).returns(@host)
     end
 
     it "should create a new ssl host" do
-      Puppet::SSL::Host.expects(:new).returns(@host)
+      Oregano::SSL::Host.expects(:new).returns(@host)
       @device.setup_host
     end
 
@@ -274,11 +274,11 @@ describe Puppet::Application::Device do
   describe "when running" do
     before :each do
       @device.options.stubs(:[]).with(:fingerprint).returns(false)
-      Puppet.stubs(:notice)
+      Oregano.stubs(:notice)
       @device.options.stubs(:[]).with(:detailed_exitcodes).returns(false)
       @device.options.stubs(:[]).with(:target).returns(nil)
       @device.options.stubs(:[]).with(:client)
-      Puppet::Util::NetworkDevice::Config.stubs(:devices).returns({})
+      Oregano::Util::NetworkDevice::Config.stubs(:devices).returns({})
     end
 
     it "should dispatch to main" do
@@ -288,7 +288,7 @@ describe Puppet::Application::Device do
 
     it "should get the device list" do
       device_hash = stub_everything 'device hash'
-      Puppet::Util::NetworkDevice::Config.expects(:devices).returns(device_hash)
+      Oregano::Util::NetworkDevice::Config.expects(:devices).returns(device_hash)
       expect { @device.main }.to exit_with 1
     end
 
@@ -300,9 +300,9 @@ describe Puppet::Application::Device do
         "device2" => OpenStruct.new(:name => "device2", :url => "https://user:pass@testhost/some/path", :provider => "rest"),
       }
 
-      Puppet::Util::NetworkDevice::Config.expects(:devices).returns(device_hash)
-      Puppet.expects(:info).with("starting applying configuration to device1 at ssh://testhost")
-      Puppet.expects(:info).with("starting applying configuration to device2 at https://testhost:443/some/path").never
+      Oregano::Util::NetworkDevice::Config.expects(:devices).returns(device_hash)
+      Oregano.expects(:info).with("starting applying configuration to device1 at ssh://testhost")
+      Oregano.expects(:info).with("starting applying configuration to device2 at https://testhost:443/some/path").never
       expect { @device.main }.to exit_with 1
     end
 
@@ -312,9 +312,9 @@ describe Puppet::Application::Device do
         "device1" => OpenStruct.new(:name => "device1", :url => "ssh://user:pass@testhost", :provider => "cisco"),
       }
 
-      Puppet::Util::NetworkDevice::Config.expects(:devices).returns(device_hash)
-      Puppet.expects(:info).with(regexp_matches(/starting applying configuration to/)).never
-      Puppet.expects(:err).with(regexp_matches(/Target device \/ certificate 'bla' not found in .*\.conf/))
+      Oregano::Util::NetworkDevice::Config.expects(:devices).returns(device_hash)
+      Oregano.expects(:info).with(regexp_matches(/starting applying configuration to/)).never
+      Oregano.expects(:err).with(regexp_matches(/Target device \/ certificate 'bla' not found in .*\.conf/))
       expect { @device.main }.to exit_with 1
     end
 
@@ -324,51 +324,51 @@ describe Puppet::Application::Device do
 
     describe "for each device" do
       before(:each) do
-        Puppet[:vardir] = make_absolute("/dummy")
-        Puppet[:confdir] = make_absolute("/dummy")
-        Puppet[:certname] = "certname"
+        Oregano[:vardir] = make_absolute("/dummy")
+        Oregano[:confdir] = make_absolute("/dummy")
+        Oregano[:certname] = "certname"
         @device_hash = {
           "device1" => OpenStruct.new(:name => "device1", :url => "ssh://user:pass@testhost", :provider => "cisco"),
           "device2" => OpenStruct.new(:name => "device2", :url => "https://user:pass@testhost/some/path", :provider => "rest"),
         }
-        Puppet::Util::NetworkDevice::Config.stubs(:devices).returns(@device_hash)
-        Puppet.stubs(:[]=)
-        Puppet.settings.stubs(:use)
+        Oregano::Util::NetworkDevice::Config.stubs(:devices).returns(@device_hash)
+        Oregano.stubs(:[]=)
+        Oregano.settings.stubs(:use)
         @device.stubs(:setup_host)
-        Puppet::Util::NetworkDevice.stubs(:init)
+        Oregano::Util::NetworkDevice.stubs(:init)
         @configurer = stub_everything 'configurer'
-        Puppet::Configurer.stubs(:new).returns(@configurer)
+        Oregano::Configurer.stubs(:new).returns(@configurer)
       end
 
       it "should set vardir to the device vardir" do
-        Puppet.expects(:[]=).with(:vardir, make_absolute("/dummy/devices/device1"))
+        Oregano.expects(:[]=).with(:vardir, make_absolute("/dummy/devices/device1"))
         expect { @device.main }.to exit_with 1
       end
 
       it "should set confdir to the device confdir" do
-        Puppet.expects(:[]=).with(:confdir, make_absolute("/dummy/devices/device1"))
+        Oregano.expects(:[]=).with(:confdir, make_absolute("/dummy/devices/device1"))
         expect { @device.main }.to exit_with 1
       end
 
       it "should set certname to the device certname" do
-        Puppet.expects(:[]=).with(:certname, "device1")
-        Puppet.expects(:[]=).with(:certname, "device2")
+        Oregano.expects(:[]=).with(:certname, "device1")
+        Oregano.expects(:[]=).with(:certname, "device2")
         expect { @device.main }.to exit_with 1
       end
 
       it "should make sure all the required folders and files are created" do
-        Puppet.settings.expects(:use).with(:main, :agent, :ssl).twice
+        Oregano.settings.expects(:use).with(:main, :agent, :ssl).twice
         expect { @device.main }.to exit_with 1
       end
 
       it "should initialize the device singleton" do
-        Puppet::Util::NetworkDevice.expects(:init).with(@device_hash["device1"]).then.with(@device_hash["device2"])
+        Oregano::Util::NetworkDevice.expects(:init).with(@device_hash["device1"]).then.with(@device_hash["device2"])
         expect { @device.main }.to exit_with 1
       end
 
       it "should print the device url scheme, host, and port" do
-        Puppet.expects(:info).with "starting applying configuration to device1 at ssh://testhost"
-        Puppet.expects(:info).with "starting applying configuration to device2 at https://testhost:443/some/path"
+        Oregano.expects(:info).with "starting applying configuration to device1 at ssh://testhost"
+        Oregano.expects(:info).with "starting applying configuration to device2 at https://testhost:443/some/path"
         expect { @device.main }.to exit_with 1
       end
 
@@ -383,18 +383,18 @@ describe Puppet::Application::Device do
       end
 
       it "exits 1 when configurer raises error" do
-        @configurer.stubs(:run).raises(Puppet::Error).then.returns(0)
+        @configurer.stubs(:run).raises(Oregano::Error).then.returns(0)
         expect { @device.main }.to exit_with 1
       end
 
-      it "exits 0 when run happens without puppet errors but with failed run" do
+      it "exits 0 when run happens without oregano errors but with failed run" do
         @configurer.stubs(:run).returns(6,2)
         expect { @device.main }.to exit_with 0
       end
 
-      it "should make the Puppet::Pops::Loaaders available" do
+      it "should make the Oregano::Pops::Loaaders available" do
         @configurer.expects(:run).with(:network_device => true, :pluginsync => true) do
-          fail('Loaders not available') unless Puppet.lookup(:loaders) { nil }.is_a?(Puppet::Pops::Loaders)
+          fail('Loaders not available') unless Oregano.lookup(:loaders) { nil }.is_a?(Oregano::Pops::Loaders)
           true
         end.at_least_once.returns(6,2)
         expect { @device.main }.to exit_with 0
@@ -408,7 +408,7 @@ describe Puppet::Application::Device do
 
       it "exits 1 when --detailed-exitcodes and failed parse" do
         @configurer = stub_everything 'configurer'
-        Puppet::Configurer.stubs(:new).returns(@configurer)
+        Oregano::Configurer.stubs(:new).returns(@configurer)
         @device.options.stubs(:[]).with(:detailed_exitcodes).returns(true)
         @configurer.stubs(:run).returns(6,1)
         expect { @device.main }.to exit_with 7
@@ -416,7 +416,7 @@ describe Puppet::Application::Device do
 
       it "exits 6 when --detailed-exitcodes and failed run" do
         @configurer = stub_everything 'configurer'
-        Puppet::Configurer.stubs(:new).returns(@configurer)
+        Oregano::Configurer.stubs(:new).returns(@configurer)
         @device.options.stubs(:[]).with(:detailed_exitcodes).returns(true)
         @configurer.stubs(:run).returns(6,2)
         expect { @device.main }.to exit_with 6
@@ -441,9 +441,9 @@ describe Puppet::Application::Device do
 
           all_devices.size.times do
             ## one occurrence of set / run / set("/dummy") for each device
-            Puppet.expects(:[]=).with(&p).in_sequence(seq)
+            Oregano.expects(:[]=).with(&p).in_sequence(seq)
             @configurer.expects(:run).in_sequence(seq)
-            Puppet.expects(:[]=).with(setting, make_absolute("/dummy")).in_sequence(seq)
+            Oregano.expects(:[]=).with(setting, make_absolute("/dummy")).in_sequence(seq)
           end
 
           expect { @device.main }.to exit_with 1
@@ -470,9 +470,9 @@ describe Puppet::Application::Device do
 
         all_devices.size.times do
           ## one occurrence of set / run / set("certname") for each device
-          Puppet.expects(:[]=).with(&p).in_sequence(seq)
+          Oregano.expects(:[]=).with(&p).in_sequence(seq)
           @configurer.expects(:run).in_sequence(seq)
-          Puppet.expects(:[]=).with(:certname, "certname").in_sequence(seq)
+          Oregano.expects(:[]=).with(:certname, "certname").in_sequence(seq)
         end
 
 
@@ -483,7 +483,7 @@ describe Puppet::Application::Device do
       end
 
       it "should expire all cached attributes" do
-        Puppet::SSL::Host.expects(:reset).twice
+        Oregano::SSL::Host.expects(:reset).twice
 
         expect { @device.main }.to exit_with 1
       end

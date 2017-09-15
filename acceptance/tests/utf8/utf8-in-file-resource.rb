@@ -20,7 +20,7 @@ test_name 'utf-8 characters in resource title and param values' do
     teardown do
       on(agent, "rm -rf #{agent_file}")
     end
-    # remove this file, so puppet can create it and not merely correct
+    # remove this file, so oregano can create it and not merely correct
     # its drift.
     on(agent, "rm -rf #{agent_file}", :environment => {:LANG => "en_US.UTF-8"})
 

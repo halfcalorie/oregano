@@ -4,9 +4,9 @@ confine :to, {}, hosts.select { |host| host[:roles].include?('master') }
 
 step 'install Cumulus Modules on masters' do
   hosts.each do |node|
-    on(node, puppet('module','install','cumuluslinux-cumulus_license'))
-    on(node, puppet('module','install','cumuluslinux-cumulus_interfaces'))
-    on(node, puppet('module','install','cumuluslinux-cumulus_interface_policy'))
-    on(node, puppet('module','install','cumuluslinux-cumulus_ports'))
+    on(node, oregano('module','install','cumuluslinux-cumulus_license'))
+    on(node, oregano('module','install','cumuluslinux-cumulus_interfaces'))
+    on(node, oregano('module','install','cumuluslinux-cumulus_interface_policy'))
+    on(node, oregano('module','install','cumuluslinux-cumulus_ports'))
   end
 end

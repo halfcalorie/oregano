@@ -13,7 +13,7 @@ agents.each do |agent|
   on agent, "rm -f #{target}"
 
   step "create the record"
-  on(agent, puppet_resource('host', 'test', "ensure=present",
+  on(agent, oregano_resource('host', 'test', "ensure=present",
               "ip=127.0.0.7", "target=#{target}", "host_aliases=alias"))
 
   step "verify that the aliases were added"

@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:user).provider(:pw)
+provider_class = Oregano::Type.type(:user).provider(:pw)
 
 describe provider_class do
   let :resource do
-    Puppet::Type.type(:user).new(:name => "testuser", :provider => :pw)
+    Oregano::Type.type(:user).new(:name => "testuser", :provider => :pw)
   end
 
   describe "when creating users" do

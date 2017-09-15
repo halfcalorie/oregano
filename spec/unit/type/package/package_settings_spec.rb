@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package) do
+describe Oregano::Type.type(:package) do
 
   before do
-    Puppet::Util::Storage.stubs(:store)
+    Oregano::Util::Storage.stubs(:store)
   end
 
   it "should have a :package_settings feature that requires :package_settings_insync?, :package_settings and :package_settings=" do
@@ -63,7 +63,7 @@ describe Puppet::Type.type(:package) do
             described_class.new :name => 'foo', :package_settings => :invalid_value
           end
           it do
-            expect { resource }.to raise_error Puppet::Error,
+            expect { resource }.to raise_error Oregano::Error,
               /package_settings must be a Hash, not Symbol/
           end
         end

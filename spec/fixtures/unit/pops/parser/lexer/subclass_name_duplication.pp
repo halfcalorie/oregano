@@ -1,4 +1,4 @@
-#!/usr/bin/env puppet
+#!/usr/bin/env oregano
 
 class one::fake {
     file { "/tmp/subclass_name_duplication1": ensure => present }

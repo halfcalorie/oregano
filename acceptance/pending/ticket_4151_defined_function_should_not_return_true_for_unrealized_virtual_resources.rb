@@ -1,6 +1,6 @@
 test_name "#4151: defined function should not return true for unrealized virtual resources"
 
-# Jeff McCune <jeff@puppetlabs.com>
+# Jeff McCune <jeff@oreganolabs.com>
 # 2010-07-06
 #
 # This script is expected to exit non-zero if ticket 4151 has not been

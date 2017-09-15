@@ -1,6 +1,6 @@
 test_name 'C99578: hiera5 lookup config with interpolated scoped nested variables' do
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:medium',
     'audit:integration',
@@ -92,10 +92,10 @@ notify{"hiera_array_data2: ${hiera_array_data2}":}
     on(master, "chmod -R 775 #{fq_tmp_environmentpath}")
   end
 
-  with_puppet_running_on(master,{}) do
+  with_oregano_running_on(master,{}) do
     agents.each do |agent|
       step "agent lookups: #{agent.hostname}, hiera5" do
-        on(agent, puppet('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert(result.exit_code == 2, "agent lookup didn't exit properly: (#{result.exit_code})")
           assert_match(/data: \[from global, from test1/, result.stdout,

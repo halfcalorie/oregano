@@ -4,5 +4,5 @@
 # commend with blankline above and below
 
 
-# Puppet Name: only managed entry
+# Oregano Name: only managed entry
 * * * * * /bin/true

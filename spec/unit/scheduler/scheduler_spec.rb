@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/scheduler'
+require 'oregano/scheduler'
 
-describe Puppet::Scheduler::Scheduler do
+describe Oregano::Scheduler::Scheduler do
   let(:now) { 183550 }
   let(:timer) { MockTimer.new(now) }
 
@@ -25,16 +25,16 @@ describe Puppet::Scheduler::Scheduler do
   end
 
   def one_time_job(interval)
-    Puppet::Scheduler::Job.new(interval) { |j| j.disable }
+    Oregano::Scheduler::Job.new(interval) { |j| j.disable }
   end
 
   def disabled_job(interval)
-    job = Puppet::Scheduler::Job.new(interval) { |j| j.disable }
+    job = Oregano::Scheduler::Job.new(interval) { |j| j.disable }
     job.disable
     job
   end
 
-  let(:scheduler) { Puppet::Scheduler::Scheduler.new(timer) }
+  let(:scheduler) { Oregano::Scheduler::Scheduler.new(timer) }
 
   it "uses the minimum interval" do
     later_job = one_time_job(7)
@@ -73,7 +73,7 @@ describe Puppet::Scheduler::Scheduler do
   end
 
   it "does not run when there are only disabled jobs" do
-    disabled_job = Puppet::Scheduler::Job.new(0)
+    disabled_job = Oregano::Scheduler::Job.new(0)
     disabled_job.disable
 
     scheduler.run_loop([disabled_job])
@@ -82,7 +82,7 @@ describe Puppet::Scheduler::Scheduler do
   end
 
   it "stops running when there are no more enabled jobs" do
-    disabling_job = Puppet::Scheduler::Job.new(0) do |j|
+    disabling_job = Oregano::Scheduler::Job.new(0) do |j|
       j.disable
     end
 
@@ -92,7 +92,7 @@ describe Puppet::Scheduler::Scheduler do
   end
 
   it "marks the start of the run loop" do
-    disabled_job = Puppet::Scheduler::Job.new(0)
+    disabled_job = Oregano::Scheduler::Job.new(0)
 
     disabled_job.disable
 
@@ -103,7 +103,7 @@ describe Puppet::Scheduler::Scheduler do
 
   it "calculates the next interval from the start of a job" do
     countdown = 2
-    slow_job = Puppet::Scheduler::Job.new(10) do |job|
+    slow_job = Oregano::Scheduler::Job.new(10) do |job|
       timer.wait_for(3)
       countdown -= 1
       job.disable if countdown == 0

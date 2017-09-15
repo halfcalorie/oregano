@@ -2,9 +2,9 @@
 
 require 'spec_helper'
 
-require 'puppet/graph'
+require 'oregano/graph'
 
-describe Puppet::Graph::RbTreeMap do
+describe Oregano::Graph::RbTreeMap do
   describe "#push" do
     it "should allow a new element to be added" do
       subject[5] = 'foo'
@@ -32,7 +32,7 @@ describe Puppet::Graph::RbTreeMap do
 
       subject[5] = 'foo'
 
-      expect(subject.instance_variable_get(:@root)).to be_a(Puppet::Graph::RbTreeMap::Node)
+      expect(subject.instance_variable_get(:@root)).to be_a(Oregano::Graph::RbTreeMap::Node)
     end
   end
 
@@ -395,14 +395,14 @@ describe Puppet::Graph::RbTreeMap do
 
   describe "#isred" do
     it "should return true if the node is red" do
-      node = Puppet::Graph::RbTreeMap::Node.new(1,2)
+      node = Oregano::Graph::RbTreeMap::Node.new(1,2)
       node.color = :red
 
       expect(subject.send(:isred, node)).to eq(true)
     end
 
     it "should return false if the node is black" do
-      node = Puppet::Graph::RbTreeMap::Node.new(1,2)
+      node = Oregano::Graph::RbTreeMap::Node.new(1,2)
       node.color = :black
 
       expect(subject.send(:isred, node)).to eq(false)
@@ -414,8 +414,8 @@ describe Puppet::Graph::RbTreeMap do
   end
 end
 
-describe Puppet::Graph::RbTreeMap::Node do
-  let(:tree) { Puppet::Graph::RbTreeMap.new }
+describe Oregano::Graph::RbTreeMap::Node do
+  let(:tree) { Oregano::Graph::RbTreeMap.new }
   let(:subject) { tree.instance_variable_get(:@root) }
 
   before :each do

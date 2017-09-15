@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/provider/nameservice'
-require 'puppet/etc'
-require 'puppet_spec/character_encoding'
+require 'oregano/provider/nameservice'
+require 'oregano/etc'
+require 'oregano_spec/character_encoding'
 
-describe Puppet::Provider::NameService do
+describe Oregano::Provider::NameService do
 
   before :each do
     described_class.initvars
@@ -43,7 +43,7 @@ describe Puppet::Provider::NameService do
   # The provider sometimes relies on @resource for valid properties so let's
   # create a fake type with properties that match our fake struct.
   let :faketype do
-    Puppet::Type.newtype(:nameservice_dummytype) do
+    Oregano::Type.newtype(:nameservice_dummytype) do
       newparam(:name)
       ensurable
       newproperty(:foo)
@@ -102,7 +102,7 @@ describe Puppet::Provider::NameService do
 
     it "should raise an error for an invalid property" do
       expect { described_class.options :baz, :key1 => 'val1' }.to raise_error(
-        Puppet::Error, 'baz is not a valid attribute for nameservice_dummytype')
+        Oregano::Error, 'baz is not a valid attribute for nameservice_dummytype')
     end
   end
 
@@ -135,38 +135,38 @@ describe Puppet::Provider::NameService do
   describe "#section" do
     it "should raise an error if resource_type has not been set" do
       described_class.expects(:resource_type).returns nil
-      expect { described_class.section }.to raise_error Puppet::Error, 'Cannot determine Etc section without a resource type'
+      expect { described_class.section }.to raise_error Oregano::Error, 'Cannot determine Etc section without a resource type'
     end
 
     # the return values are hard coded so I am using types that actually make
     # use of the nameservice provider
     it "should return pw for users" do
-      described_class.resource_type = Puppet::Type.type(:user)
+      described_class.resource_type = Oregano::Type.type(:user)
       expect(described_class.section).to eq('pw')
     end
 
     it "should return gr for groups" do
-      described_class.resource_type = Puppet::Type.type(:group)
+      described_class.resource_type = Oregano::Type.type(:group)
       expect(described_class.section).to eq('gr')
     end
   end
 
   describe "#listbyname" do
     it "should be deprecated" do
-      Puppet.expects(:deprecation_warning).with(regexp_matches(/listbyname is deprecated/))
+      Oregano.expects(:deprecation_warning).with(regexp_matches(/listbyname is deprecated/))
       described_class.listbyname
     end
 
     it "should return a list of users if resource_type is user" do
-      described_class.resource_type = Puppet::Type.type(:user)
-      Puppet::Etc.expects(:setpwent)
-      Puppet::Etc.stubs(:getpwent).returns *users
-      Puppet::Etc.expects(:endpwent)
+      described_class.resource_type = Oregano::Type.type(:user)
+      Oregano::Etc.expects(:setpwent)
+      Oregano::Etc.stubs(:getpwent).returns *users
+      Oregano::Etc.expects(:endpwent)
       expect(described_class.listbyname).to eq(%w{root foo})
     end
 
     context "encoding handling" do
-      described_class.resource_type = Puppet::Type.type(:user)
+      described_class.resource_type = Oregano::Type.type(:user)
 
       # These two tests simulate an environment where there are two users with
       # the same name on disk, but each name is stored on disk in a different
@@ -174,7 +174,7 @@ describe Puppet::Provider::NameService do
       it "should return names with invalid byte sequences replaced with '?'" do
         Etc.stubs(:getpwent).returns *utf_8_mixed_users
         expect(invalid_utf_8_jose).to_not be_valid_encoding
-        result = PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
+        result = OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
           described_class.listbyname
         end
         expect(result).to eq(['root', 'foo', utf_8_jose, escaped_utf_8_jose])
@@ -182,27 +182,27 @@ describe Puppet::Provider::NameService do
 
       it "should return names in their original encoding/bytes if they would not be valid UTF-8" do
         Etc.stubs(:getpwent).returns *latin_1_mixed_users
-        result = PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::ISO_8859_1) do
+        result = OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::ISO_8859_1) do
           described_class.listbyname
         end
         expect(result).to eq(['root'.force_encoding(Encoding::UTF_8), 'foo'.force_encoding(Encoding::UTF_8), utf_8_jose, valid_latin1_jose])
       end
     end
 
-    it "should return a list of groups if resource_type is group", :unless => Puppet.features.microsoft_windows? do
-      described_class.resource_type = Puppet::Type.type(:group)
-      Puppet::Etc.expects(:setgrent)
-      Puppet::Etc.stubs(:getgrent).returns *groups
-      Puppet::Etc.expects(:endgrent)
+    it "should return a list of groups if resource_type is group", :unless => Oregano.features.microsoft_windows? do
+      described_class.resource_type = Oregano::Type.type(:group)
+      Oregano::Etc.expects(:setgrent)
+      Oregano::Etc.stubs(:getgrent).returns *groups
+      Oregano::Etc.expects(:endgrent)
       expect(described_class.listbyname).to eq(%w{root bin})
     end
 
     it "should yield if a block given" do
       yield_results = []
-      described_class.resource_type = Puppet::Type.type(:user)
-      Puppet::Etc.expects(:setpwent)
-      Puppet::Etc.stubs(:getpwent).returns *users
-      Puppet::Etc.expects(:endpwent)
+      described_class.resource_type = Oregano::Type.type(:user)
+      Oregano::Etc.expects(:setpwent)
+      Oregano::Etc.stubs(:getpwent).returns *users
+      Oregano::Etc.expects(:endpwent)
       described_class.listbyname {|x| yield_results << x }
       expect(yield_results).to eq(%w{root foo})
     end
@@ -214,7 +214,7 @@ describe Puppet::Provider::NameService do
       # the same name on disk, but each name is stored on disk in a different
       # encoding
       Etc.stubs(:getpwent).returns(*utf_8_mixed_users)
-      result = PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
+      result = OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
         described_class.instances
       end
       expect(result.map(&:name)).to eq(
@@ -229,7 +229,7 @@ describe Puppet::Provider::NameService do
 
     it "should have object names in their original encoding/bytes if they would not be valid UTF-8" do
       Etc.stubs(:getpwent).returns(*latin_1_mixed_users)
-      result = PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::ISO_8859_1) do
+      result = OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::ISO_8859_1) do
         described_class.instances
       end
       expect(result.map(&:name)).to eq(
@@ -242,7 +242,7 @@ describe Puppet::Provider::NameService do
       )
     end
 
-    it "should pass the Puppet::Etc :canonical_name Struct member to the constructor" do
+    it "should pass the Oregano::Etc :canonical_name Struct member to the constructor" do
       users = [ Struct::Passwd.new(invalid_utf_8_jose, invalid_utf_8_jose, 1002, 2000), nil ]
       Etc.stubs(:getpwent).returns(*users)
       described_class.expects(:new).with(:name => escaped_utf_8_jose, :canonical_name => invalid_utf_8_jose, :ensure => :present)
@@ -283,13 +283,13 @@ describe Puppet::Provider::NameService do
     end
 
     it "should return a hash if we can retrieve something" do
-      Puppet::Etc.expects(:send).with(:getfoonam, 'bob').returns fakeetcobject
+      Oregano::Etc.expects(:send).with(:getfoonam, 'bob').returns fakeetcobject
       provider.expects(:info2hash).with(fakeetcobject).returns(:foo => 'fooval', :bar => 'barval')
       expect(provider.getinfo(true)).to eq({:foo => 'fooval', :bar => 'barval'})
     end
 
     it "should return nil if we cannot retrieve anything" do
-      Puppet::Etc.expects(:send).with(:getfoonam, 'bob').raises(ArgumentError, "can't find bob")
+      Oregano::Etc.expects(:send).with(:getfoonam, 'bob').raises(ArgumentError, "can't find bob")
       provider.expects(:info2hash).never
       expect(provider.getinfo(true)).to be_nil
     end
@@ -299,13 +299,13 @@ describe Puppet::Provider::NameService do
     # again if needed
     it "should use the instance's @canonical_name to query the system" do
       provider_instance = described_class.new(:name => 'foo', :canonical_name => 'original_foo', :ensure => :present)
-      Puppet::Etc.expects(:send).with(:getfoonam, 'original_foo')
+      Oregano::Etc.expects(:send).with(:getfoonam, 'original_foo')
       provider_instance.getinfo(true)
     end
 
     it "should use the instance's name instead of canonical_name if not supplied during instantiation" do
       provider_instance = described_class.new(:name => 'foo', :ensure => :present)
-      Puppet::Etc.expects(:send).with(:getfoonam, 'foo')
+      Oregano::Etc.expects(:send).with(:getfoonam, 'foo')
       provider_instance.getinfo(true)
     end
   end
@@ -406,14 +406,14 @@ describe Puppet::Provider::NameService do
 
     it "should fail if the modify command fails" do
       provider.expects(:modifycmd).with(:foo, 100).returns ['/bin/modify', '-f', '100' ]
-      provider.expects(:execute).with(['/bin/modify', '-f', '100']).raises(Puppet::ExecutionFailure, "Execution of '/bin/modify' returned 1: some_failure")
-      expect { provider.set(:foo, 100) }.to raise_error Puppet::Error, /Could not set foo/
+      provider.expects(:execute).with(['/bin/modify', '-f', '100']).raises(Oregano::ExecutionFailure, "Execution of '/bin/modify' returned 1: some_failure")
+      expect { provider.set(:foo, 100) }.to raise_error Oregano::Error, /Could not set foo/
     end
   end
 
   describe "comments_insync?" do
-    # comments_insync? overrides Puppet::Property#insync? and will act on an
-    # array containing a should value (the expected value of Puppet::Property
+    # comments_insync? overrides Oregano::Property#insync? and will act on an
+    # array containing a should value (the expected value of Oregano::Property
     # @should)
     context "given strings with compatible encodings" do
       it "should return false if the is-value and should-value are not equal" do

@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/node/memory'
+require 'oregano/indirector/node/memory'
 
 require 'shared_behaviours/memory_terminus'
 
-describe Puppet::Node::Memory do
+describe Oregano::Node::Memory do
   before do
     @name = "me"
-    @searcher = Puppet::Node::Memory.new
+    @searcher = Oregano::Node::Memory.new
     @instance = stub 'instance', :name => @name
 
     @request = stub 'request', :key => @name, :instance => @instance

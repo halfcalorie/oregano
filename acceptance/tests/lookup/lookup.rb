@@ -1,11 +1,11 @@
 test_name "Lookup data using the agnostic lookup function" do
   # pre-docs:
-  # https://puppet-on-the-edge.blogspot.com/2015/01/puppet-40-data-in-modules-and.html
+  # https://oregano-on-the-edge.blogspot.com/2015/01/oregano-40-data-in-modules-and.html
 
 tag 'audit:medium',
     'audit:acceptance',
     'audit:refactor',  # Master is not needed for this test. Refactor
-                       # to use puppet apply with a local module tree.
+                       # to use oregano apply with a local module tree.
                        # Use mk_tmp_environment_with_teardown to create environment.
 
   testdir = master.tmpdir('lookup')
@@ -60,10 +60,10 @@ tag 'audit:medium',
     if module_name
       module_files_manifest = <<PP
       # the function to provide data for this module
-      file { '#{testdir}/environments/production/modules/#{module_name}/lib/puppet/functions/#{module_name}/data.rb':
+      file { '#{testdir}/environments/production/modules/#{module_name}/lib/oregano/functions/#{module_name}/data.rb':
         ensure => file,
         content => "
-          Puppet::Functions.create_function(:'#{module_name}::data') do
+          Oregano::Functions.create_function(:'#{module_name}::data') do
             def data()
               { '#{module_name}::#{module_data_implied_key}' => '#{module_data_implied_value}',
                 '#{module_name}::#{module_data_key}' => '#{module_data_value}',
@@ -102,7 +102,7 @@ PP
         ',
         mode => "0644",
       }
-      file { '#{testdir}/environments/production/modules/#{module_name}/lib/puppet/bindings':
+      file { '#{testdir}/environments/production/modules/#{module_name}/lib/oregano/bindings':
         ensure => absent,
 	force  => true,
       }
@@ -125,8 +125,8 @@ PPmetadata
 File {
   ensure => directory,
   mode => "0750",
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
 }
 
 file {
@@ -137,25 +137,25 @@ file {
   '#{testdir}/environments/production/manifests':;
   '#{testdir}/environments/production/modules':;
   '#{testdir}/environments/production/lib':;
-  '#{testdir}/environments/production/lib/puppet':;
-  '#{testdir}/environments/production/lib/puppet/functions':;
-  '#{testdir}/environments/production/lib/puppet/functions/environment':;
+  '#{testdir}/environments/production/lib/oregano':;
+  '#{testdir}/environments/production/lib/oregano/functions':;
+  '#{testdir}/environments/production/lib/oregano/functions/environment':;
   '#{testdir}/environments/production/modules/#{module_name}':;
   '#{testdir}/environments/production/modules/#{module_name}/manifests':;
   '#{testdir}/environments/production/modules/#{module_name}/lib':;
-  '#{testdir}/environments/production/modules/#{module_name}/lib/puppet':;
-  '#{testdir}/environments/production/modules/#{module_name}/lib/puppet/bindings':;
-  '#{testdir}/environments/production/modules/#{module_name}/lib/puppet/bindings/#{module_name}':;
-  '#{testdir}/environments/production/modules/#{module_name}/lib/puppet/functions':;
-  '#{testdir}/environments/production/modules/#{module_name}/lib/puppet/functions/#{module_name}':;
+  '#{testdir}/environments/production/modules/#{module_name}/lib/oregano':;
+  '#{testdir}/environments/production/modules/#{module_name}/lib/oregano/bindings':;
+  '#{testdir}/environments/production/modules/#{module_name}/lib/oregano/bindings/#{module_name}':;
+  '#{testdir}/environments/production/modules/#{module_name}/lib/oregano/functions':;
+  '#{testdir}/environments/production/modules/#{module_name}/lib/oregano/functions/#{module_name}':;
   '#{testdir}/environments/production/modules/#{module_name2}':;
   '#{testdir}/environments/production/modules/#{module_name2}/manifests':;
   '#{testdir}/environments/production/modules/#{module_name2}/lib':;
-  '#{testdir}/environments/production/modules/#{module_name2}/lib/puppet':;
-  '#{testdir}/environments/production/modules/#{module_name2}/lib/puppet/bindings':;
-  '#{testdir}/environments/production/modules/#{module_name2}/lib/puppet/bindings/#{module_name2}':;
-  '#{testdir}/environments/production/modules/#{module_name2}/lib/puppet/functions':;
-  '#{testdir}/environments/production/modules/#{module_name2}/lib/puppet/functions/#{module_name2}':;
+  '#{testdir}/environments/production/modules/#{module_name2}/lib/oregano':;
+  '#{testdir}/environments/production/modules/#{module_name2}/lib/oregano/bindings':;
+  '#{testdir}/environments/production/modules/#{module_name2}/lib/oregano/bindings/#{module_name2}':;
+  '#{testdir}/environments/production/modules/#{module_name2}/lib/oregano/functions':;
+  '#{testdir}/environments/production/modules/#{module_name2}/lib/oregano/functions/#{module_name2}':;
 }
 
 file { '#{testdir}/hiera.yaml':
@@ -193,7 +193,7 @@ file { '#{testdir}/environments/production/environment.conf':
   content => '
     environment_timeout = 0
     # for this environment, provide our own function to supply data to lookup
-    # implies a ruby function in <environment>/lib/puppet/functions/environment/data.rb
+    # implies a ruby function in <environment>/lib/oregano/functions/environment/data.rb
     #   named environment::data()
     environment_data_provider = "function"
   ',
@@ -201,10 +201,10 @@ file { '#{testdir}/environments/production/environment.conf':
 }
 
 # the function to provide data for this environment
-file { '#{testdir}/environments/production/lib/puppet/functions/environment/data.rb':
+file { '#{testdir}/environments/production/lib/oregano/functions/environment/data.rb':
   ensure => file,
   content => "
-    Puppet::Functions.create_function(:'environment::data') do
+    Oregano::Functions.create_function(:'environment::data') do
       def data()
         { '#{module_name}::#{env_data_implied_key}' => '#{env_data_implied_value}',
           '#{module_name}::#{env_data_override_implied_key}' => '#{env_data_override_implied_value}',
@@ -303,10 +303,10 @@ PP
       'app_management' => true,
     },
   }
-  with_puppet_running_on master, master_opts, testdir do
+  with_oregano_running_on master, master_opts, testdir do
     step "Lookup string data, binding specified in metadata.json" do
       agents.each do |agent|
-        on(agent, puppet('agent', "-t --server #{master}"), :acceptable_exit_codes => [0, 2])
+        on(agent, oregano('agent', "-t --server #{master}"), :acceptable_exit_codes => [0, 2])
         assert_match("#{env_data_implied_key} #{env_data_implied_value}", stdout)
         assert_match("#{env_data_key} #{env_data_value}", stdout)
 

@@ -16,7 +16,7 @@ agents.each do |agent|
   agent.group_absent(name)
 
   step "create the user"
-  on agent, puppet_resource('user', name, 'ensure=present')
+  on agent, oregano_resource('user', name, 'ensure=present')
 
   step "verify the user exists"
   agent.user_get(name)

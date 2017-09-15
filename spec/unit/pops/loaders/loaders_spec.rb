@@ -1,13 +1,13 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-require 'puppet/pops'
-require 'puppet/loaders'
+require 'oregano/pops'
+require 'oregano/loaders'
 
 describe 'loader helper classes' do
   it 'NamedEntry holds values and is frozen' do
-    ne = Puppet::Pops::Loader::Loader::NamedEntry.new('name', 'value', 'origin')
+    ne = Oregano::Pops::Loader::Loader::NamedEntry.new('name', 'value', 'origin')
     expect(ne.frozen?).to be_truthy
     expect(ne.typed_name).to eql('name')
     expect(ne.origin).to eq('origin')
@@ -15,7 +15,7 @@ describe 'loader helper classes' do
   end
 
   it 'TypedName holds values and is frozen' do
-    tn = Puppet::Pops::Loader::TypedName.new(:function, '::foo::bar')
+    tn = Oregano::Pops::Loader::TypedName.new(:function, '::foo::bar')
     expect(tn.frozen?).to be_truthy
     expect(tn.type).to eq(:function)
     expect(tn.name_parts).to eq(['foo', 'bar'])
@@ -24,19 +24,19 @@ describe 'loader helper classes' do
   end
 
   it 'TypedName converts name to lower case' do
-    tn = Puppet::Pops::Loader::TypedName.new(:type, '::Foo::Bar')
+    tn = Oregano::Pops::Loader::TypedName.new(:type, '::Foo::Bar')
     expect(tn.name_parts).to eq(['foo', 'bar'])
     expect(tn.name).to eq('foo::bar')
   end
 
   it 'TypedName is case insensitive' do
-    expect(Puppet::Pops::Loader::TypedName.new(:type, '::Foo::Bar')).to eq(Puppet::Pops::Loader::TypedName.new(:type, '::foo::bar'))
+    expect(Oregano::Pops::Loader::TypedName.new(:type, '::Foo::Bar')).to eq(Oregano::Pops::Loader::TypedName.new(:type, '::foo::bar'))
   end
 end
 
 describe 'loaders' do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   let(:module_without_metadata) { File.join(config_dir('wo_metadata_module'), 'modules') }
   let(:module_without_lib) { File.join(config_dir('module_no_lib'), 'modules') }
@@ -50,18 +50,18 @@ describe 'loaders' do
 
   let(:empty_test_env) { environment_for() }
 
-  # Loaders caches the puppet_system_loader, must reset between tests
-  before(:each) { Puppet::Pops::Loaders.clear() }
+  # Loaders caches the oregano_system_loader, must reset between tests
+  before(:each) { Oregano::Pops::Loaders.clear() }
 
   context 'when loading pp resource types using auto loading' do
     let(:pp_resources) { config_dir('pp_resources') }
-    let(:environments) { Puppet::Environments::Directories.new(my_fixture_dir, []) }
-    let(:env) { Puppet::Node::Environment.create(:'pp_resources', [File.join(pp_resources, 'modules')]) }
-    let(:compiler) { Puppet::Parser::Compiler.new(Puppet::Node.new("test", :environment => env)) }
-    let(:loader) { Puppet::Pops::Loaders.loaders.find_loader(nil) }
+    let(:environments) { Oregano::Environments::Directories.new(my_fixture_dir, []) }
+    let(:env) { Oregano::Node::Environment.create(:'pp_resources', [File.join(pp_resources, 'modules')]) }
+    let(:compiler) { Oregano::Parser::Compiler.new(Oregano::Node.new("test", :environment => env)) }
+    let(:loader) { Oregano::Pops::Loaders.loaders.find_loader(nil) }
     around(:each) do |example|
-      Puppet.override(:environments => environments) do
-        Puppet.override(:loaders => compiler.loaders) do
+      Oregano.override(:environments => environments) do
+        Oregano.override(:loaders => compiler.loaders) do
           example.run
         end
       end
@@ -69,15 +69,15 @@ describe 'loaders' do
 
     it 'finds a resource type that resides under <environment root>/.resource_types' do
       rt = loader.load(:resource_type_pp, 'myresource')
-      expect(rt).to be_a(Puppet::Pops::Resource::ResourceTypeImpl)
+      expect(rt).to be_a(Oregano::Pops::Resource::ResourceTypeImpl)
     end
 
     it 'does not allow additional logic in the file' do
       expect{loader.load(:resource_type_pp, 'addlogic')}.to raise_error(ArgumentError, /it has additional logic/)
     end
 
-    it 'does not allow creation of classes other than Puppet::Resource::ResourceType3' do
-      expect{loader.load(:resource_type_pp, 'badcall')}.to raise_error(ArgumentError, /no call to Puppet::Resource::ResourceType3.new found/)
+    it 'does not allow creation of classes other than Oregano::Resource::ResourceType3' do
+      expect{loader.load(:resource_type_pp, 'badcall')}.to raise_error(ArgumentError, /no call to Oregano::Resource::ResourceType3.new found/)
     end
 
     it 'does not allow creation of other types' do
@@ -89,66 +89,66 @@ describe 'loaders' do
     end
   end
 
-  it 'creates a puppet_system loader' do
-    loaders = Puppet::Pops::Loaders.new(empty_test_env)
-    expect(loaders.puppet_system_loader()).to be_a(Puppet::Pops::Loader::ModuleLoaders::FileBased)
+  it 'creates a oregano_system loader' do
+    loaders = Oregano::Pops::Loaders.new(empty_test_env)
+    expect(loaders.oregano_system_loader()).to be_a(Oregano::Pops::Loader::ModuleLoaders::FileBased)
   end
 
   it 'creates an environment loader' do
-    loaders = Puppet::Pops::Loaders.new(empty_test_env)
+    loaders = Oregano::Pops::Loaders.new(empty_test_env)
 
-    expect(loaders.public_environment_loader()).to be_a(Puppet::Pops::Loader::SimpleEnvironmentLoader)
+    expect(loaders.public_environment_loader()).to be_a(Oregano::Pops::Loader::SimpleEnvironmentLoader)
     expect(loaders.public_environment_loader().to_s).to eql("(SimpleEnvironmentLoader 'environment')")
-    expect(loaders.private_environment_loader()).to be_a(Puppet::Pops::Loader::DependencyLoader)
+    expect(loaders.private_environment_loader()).to be_a(Oregano::Pops::Loader::DependencyLoader)
     expect(loaders.private_environment_loader().to_s).to eql("(DependencyLoader 'environment private' [])")
   end
 
   context 'when loading from a module' do
     it 'loads a ruby function using a qualified or unqualified name' do
-      loaders = Puppet::Pops::Loaders.new(environment_for(module_with_metadata))
+      loaders = Oregano::Pops::Loaders.new(environment_for(module_with_metadata))
       modulea_loader = loaders.public_loader_for_module('modulea')
 
       unqualified_function = modulea_loader.load_typed(typed_name(:function, 'rb_func_a')).value
       qualified_function = modulea_loader.load_typed(typed_name(:function, 'modulea::rb_func_a')).value
 
-      expect(unqualified_function).to be_a(Puppet::Functions::Function)
-      expect(qualified_function).to be_a(Puppet::Functions::Function)
+      expect(unqualified_function).to be_a(Oregano::Functions::Function)
+      expect(qualified_function).to be_a(Oregano::Functions::Function)
       expect(unqualified_function.class.name).to eq('rb_func_a')
       expect(qualified_function.class.name).to eq('modulea::rb_func_a')
     end
 
-    it 'loads a puppet function using a qualified name in module' do
-      loaders = Puppet::Pops::Loaders.new(environment_for(module_with_metadata))
+    it 'loads a oregano function using a qualified name in module' do
+      loaders = Oregano::Pops::Loaders.new(environment_for(module_with_metadata))
       modulea_loader = loaders.public_loader_for_module('modulea')
 
       qualified_function = modulea_loader.load_typed(typed_name(:function, 'modulea::hello')).value
 
-      expect(qualified_function).to be_a(Puppet::Functions::Function)
+      expect(qualified_function).to be_a(Oregano::Functions::Function)
       expect(qualified_function.class.name).to eq('modulea::hello')
     end
 
-    it 'loads a puppet function from a module without a lib directory' do
-      loaders = Puppet::Pops::Loaders.new(environment_for(module_without_lib))
+    it 'loads a oregano function from a module without a lib directory' do
+      loaders = Oregano::Pops::Loaders.new(environment_for(module_without_lib))
       modulea_loader = loaders.public_loader_for_module('modulea')
 
       qualified_function = modulea_loader.load_typed(typed_name(:function, 'modulea::hello')).value
 
-      expect(qualified_function).to be_a(Puppet::Functions::Function)
+      expect(qualified_function).to be_a(Oregano::Functions::Function)
       expect(qualified_function.class.name).to eq('modulea::hello')
     end
 
-    it 'loads a puppet function in a sub namespace of module' do
-      loaders = Puppet::Pops::Loaders.new(environment_for(module_with_metadata))
+    it 'loads a oregano function in a sub namespace of module' do
+      loaders = Oregano::Pops::Loaders.new(environment_for(module_with_metadata))
       modulea_loader = loaders.public_loader_for_module('modulea')
 
       qualified_function = modulea_loader.load_typed(typed_name(:function, 'modulea::subspace::hello')).value
 
-      expect(qualified_function).to be_a(Puppet::Functions::Function)
+      expect(qualified_function).to be_a(Oregano::Functions::Function)
       expect(qualified_function.class.name).to eq('modulea::subspace::hello')
     end
 
     it 'loader does not add namespace if not given' do
-      loaders = Puppet::Pops::Loaders.new(environment_for(module_without_metadata))
+      loaders = Oregano::Pops::Loaders.new(environment_for(module_without_metadata))
 
       moduleb_loader = loaders.public_loader_for_module('moduleb')
 
@@ -161,7 +161,7 @@ describe 'loaders' do
       File.stubs(:read).with(usee2_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
 
       env = environment_for(File.join(dependent_modules_with_metadata, 'modules'))
-      loaders = Puppet::Pops::Loaders.new(env)
+      loaders = Oregano::Pops::Loaders.new(env)
 
       moduleb_loader = loaders.private_loader_for_module('user')
       function = moduleb_loader.load_typed(typed_name(:function, 'user::caller')).value
@@ -174,11 +174,11 @@ describe 'loaders' do
 
   context 'when loading from a module with metadata' do
     let(:env) { environment_for(File.join(dependent_modules_with_metadata, 'modules')) }
-    let(:scope) { Puppet::Parser::Compiler.new(Puppet::Node.new("test", :environment => env)).newscope(nil) }
+    let(:scope) { Oregano::Parser::Compiler.new(Oregano::Node.new("test", :environment => env)).newscope(nil) }
 
     let(:environmentpath) { my_fixture_dir }
-    let(:node) { Puppet::Node.new('test', :facts => Puppet::Node::Facts.new('facts', {}), :environment => 'dependent_modules_with_metadata') }
-    let(:compiler) { Puppet::Parser::Compiler.new(node) }
+    let(:node) { Oregano::Node.new('test', :facts => Oregano::Node::Facts.new('facts', {}), :environment => 'dependent_modules_with_metadata') }
+    let(:compiler) { Oregano::Parser::Compiler.new(node) }
 
     let(:user_metadata) {
       {
@@ -193,7 +193,7 @@ describe 'loaders' do
     }
 
     def compile_and_get_notifications(code)
-      Puppet[:code] = code
+      Oregano[:code] = code
       catalog = block_given? ? compiler.compile { |catalog| yield(compiler.topscope); catalog } : compiler.compile
       catalog.resources.map(&:ref).select { |r| r.start_with?('Notify[') }.map { |r| r[7..-2] }
     end
@@ -201,17 +201,17 @@ describe 'loaders' do
     around(:each) do |example|
       # Initialize settings to get a full compile as close as possible to a real
       # environment load
-      Puppet.settings.initialize_global_settings
+      Oregano.settings.initialize_global_settings
 
       # Initialize loaders based on the environmentpath. It does not work to
       # just set the setting environmentpath for some reason - this achieves the same:
       # - first a loader is created, loading directory environments from the fixture (there is
       # one environment, 'sample', which will be loaded since the node references this
       # environment by name).
-      # - secondly, the created env loader is set as 'environments' in the puppet context.
+      # - secondly, the created env loader is set as 'environments' in the oregano context.
       #
-      environments = Puppet::Environments::Directories.new(environmentpath, [])
-      Puppet.override(:environments => environments) do
+      environments = Oregano::Environments::Directories.new(environmentpath, [])
+      Oregano.override(:environments => environments) do
         example.run
       end
     end
@@ -220,7 +220,7 @@ describe 'loaders' do
       File.stubs(:read).with(user_metadata_path, {:encoding => 'utf-8'}).returns user_metadata.merge('dependencies' => [ { 'name' => 'test-usee'}, { 'name' => 'test-usee2'} ]).to_pson
       File.stubs(:read).with(usee_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
       File.stubs(:read).with(usee2_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
-      loaders = Puppet::Pops::Loaders.new(env)
+      loaders = Oregano::Pops::Loaders.new(env)
 
       moduleb_loader = loaders.private_loader_for_module('user')
       function = moduleb_loader.load_typed(typed_name(:function, 'user::caller')).value
@@ -230,16 +230,16 @@ describe 'loaders' do
       expect(function.call({})).to eql("usee2::callee() was told 'passed value' + I am user::caller2()")
     end
 
-    [ 'outside a function', 'a puppet function declared under functions', 'a puppet function declared in init.pp', 'a ruby function'].each_with_index do |from, from_idx|
-      [ {:from => from, :called => 'a puppet function declared under functions', :expects => "I'm the function usee::usee_puppet()"},
-        {:from => from, :called => 'a puppet function declared in init.pp', :expects => "I'm the function usee::usee_puppet_init()"},
+    [ 'outside a function', 'a oregano function declared under functions', 'a oregano function declared in init.pp', 'a ruby function'].each_with_index do |from, from_idx|
+      [ {:from => from, :called => 'a oregano function declared under functions', :expects => "I'm the function usee::usee_oregano()"},
+        {:from => from, :called => 'a oregano function declared in init.pp', :expects => "I'm the function usee::usee_oregano_init()"},
         {:from => from, :called => 'a ruby function', :expects => "I'm the function usee::usee_ruby()"} ].each_with_index do |desc, called_idx|
         case_number = from_idx * 3 + called_idx + 1
         it "can call #{desc[:called]} from #{desc[:from]} when dependency is present in metadata.json" do
           File.stubs(:read).with(user_metadata_path, {:encoding => 'utf-8'}).returns user_metadata.merge('dependencies' => [ { 'name' => 'test-usee'} ]).to_pson
           File.stubs(:read).with(usee_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
           File.stubs(:read).with(usee2_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
-          Puppet[:code] = "$case_number = #{case_number}\ninclude ::user"
+          Oregano[:code] = "$case_number = #{case_number}\ninclude ::user"
           catalog = compiler.compile
           resource = catalog.resource('Notify', "case_#{case_number}")
           expect(resource).not_to be_nil
@@ -247,8 +247,8 @@ describe 'loaders' do
         end
 
         it "can call #{desc[:called]} from #{desc[:from]} when no metadata is present" do
-          Puppet::Module.any_instance.expects('has_metadata?').at_least_once.returns(false)
-          Puppet[:code] = "$case_number = #{case_number}\ninclude ::user"
+          Oregano::Module.any_instance.expects('has_metadata?').at_least_once.returns(false)
+          Oregano[:code] = "$case_number = #{case_number}\ninclude ::user"
           catalog = compiler.compile
           resource = catalog.resource('Notify', "case_#{case_number}")
           expect(resource).not_to be_nil
@@ -259,8 +259,8 @@ describe 'loaders' do
           File.stubs(:read).with(user_metadata_path, {:encoding => 'utf-8'}).returns user_metadata.merge('dependencies' => []).to_pson
           File.stubs(:read).with(usee_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
           File.stubs(:read).with(usee2_metadata_path, {:encoding => 'utf-8'}).raises Errno::ENOENT
-          Puppet[:code] = "$case_number = #{case_number}\ninclude ::user"
-          expect { catalog = compiler.compile }.to raise_error(Puppet::Error, /Unknown function/)
+          Oregano[:code] = "$case_number = #{case_number}\ninclude ::user"
+          expect { catalog = compiler.compile }.to raise_error(Oregano::Error, /Unknown function/)
         end
       end
     end
@@ -276,7 +276,7 @@ describe 'loaders' do
     end
 
     it "a type can reference an autoloaded type alias from another module when no metadata is present" do
-      Puppet::Module.any_instance.expects('has_metadata?').at_least_once.returns(false)
+      Oregano::Module.any_instance.expects('has_metadata?').at_least_once.returns(false)
       expect(eval_and_collect_notices(<<-CODE, node)).to eq(['ok'])
         assert_type(Usee::Zero, 0)
         notice(ok)
@@ -318,19 +318,19 @@ describe 'loaders' do
 
   context 'when loading from a module without metadata' do
     it 'loads a ruby function with a qualified name' do
-      loaders = Puppet::Pops::Loaders.new(environment_for(module_without_metadata))
+      loaders = Oregano::Pops::Loaders.new(environment_for(module_without_metadata))
 
       moduleb_loader = loaders.public_loader_for_module('moduleb')
       function = moduleb_loader.load_typed(typed_name(:function, 'moduleb::rb_func_b')).value
 
-      expect(function).to be_a(Puppet::Functions::Function)
+      expect(function).to be_a(Oregano::Functions::Function)
       expect(function.class.name).to eq('moduleb::rb_func_b')
     end
 
 
     it 'all other modules are visible' do
       env = environment_for(module_with_metadata, module_without_metadata)
-      loaders = Puppet::Pops::Loaders.new(env)
+      loaders = Oregano::Pops::Loaders.new(env)
 
       moduleb_loader = loaders.private_loader_for_module('moduleb')
       function = moduleb_loader.load_typed(typed_name(:function, 'moduleb::rb_func_b')).value
@@ -340,35 +340,35 @@ describe 'loaders' do
   end
 
   context 'when loading from an environment without modules' do
-    let(:node) { Puppet::Node.new('test', :facts => Puppet::Node::Facts.new('facts', {}), :environment => 'no_modules') }
+    let(:node) { Oregano::Node.new('test', :facts => Oregano::Node::Facts.new('facts', {}), :environment => 'no_modules') }
 
     it 'can load the same function twice with two different compilations and produce different values' do
-      Puppet.settings.initialize_global_settings
-      environments = Puppet::Environments::Directories.new(my_fixture_dir, [])
-      Puppet.override(:environments => environments) do
-        compiler = Puppet::Parser::Compiler.new(node)
+      Oregano.settings.initialize_global_settings
+      environments = Oregano::Environments::Directories.new(my_fixture_dir, [])
+      Oregano.override(:environments => environments) do
+        compiler = Oregano::Parser::Compiler.new(node)
         compiler.topscope['value_from_scope'] = 'first'
         catalog = compiler.compile
-        expect(catalog.resource('Notify[first]')).to be_a(Puppet::Resource)
+        expect(catalog.resource('Notify[first]')).to be_a(Oregano::Resource)
 
-        Puppet::Pops::Loader::RubyFunctionInstantiator.expects(:create).never
-        compiler = Puppet::Parser::Compiler.new(node)
+        Oregano::Pops::Loader::RubyFunctionInstantiator.expects(:create).never
+        compiler = Oregano::Parser::Compiler.new(node)
         compiler.topscope['value_from_scope'] = 'second'
         catalog = compiler.compile
         expect(catalog.resource('Notify[first]')).to be_nil
-        expect(catalog.resource('Notify[second]')).to be_a(Puppet::Resource)
+        expect(catalog.resource('Notify[second]')).to be_a(Oregano::Resource)
       end
     end
   end
 
   context 'when calling' do
     let(:env) { environment_for(mix_4x_and_3x_functions) }
-    let(:compiler) { Puppet::Parser::Compiler.new(Puppet::Node.new("test", :environment => env)) }
+    let(:compiler) { Oregano::Parser::Compiler.new(Oregano::Node.new("test", :environment => env)) }
     let(:scope) { compiler.topscope }
     let(:loader) { compiler.loaders.private_loader_for_module('user') }
 
     around(:each) do |example|
-      Puppet.override(:current_environment => scope.environment, :global_scope => scope, :loaders => compiler.loaders) do
+      Oregano.override(:current_environment => scope.environment, :global_scope => scope, :loaders => compiler.loaders) do
         example.run
       end
     end
@@ -378,18 +378,18 @@ describe 'loaders' do
       expect(function.call(scope)).to eql("usee::callee() got 'first' - usee::callee() got 'second'")
     end
 
-    it 'a 3x function in dependent module can be called from a puppet function' do
-      function = loader.load_typed(typed_name(:function, 'user::puppetcaller')).value
+    it 'a 3x function in dependent module can be called from a oregano function' do
+      function = loader.load_typed(typed_name(:function, 'user::oreganocaller')).value
       expect(function.call(scope)).to eql("usee::callee() got 'first' - usee::callee() got 'second'")
     end
 
-    it 'a 4x function can be called from a puppet function' do
-      function = loader.load_typed(typed_name(:function, 'user::puppetcaller4')).value
+    it 'a 4x function can be called from a oregano function' do
+      function = loader.load_typed(typed_name(:function, 'user::oreganocaller4')).value
       expect(function.call(scope)).to eql("usee::callee() got 'first' - usee::callee() got 'second'")
     end
 
-    it 'a puppet function can be called from a 4x function' do
-      function = loader.load_typed(typed_name(:function, 'user::callingpuppet')).value
+    it 'a oregano function can be called from a 4x function' do
+      function = loader.load_typed(typed_name(:function, 'user::callingoregano')).value
       expect(function.call(scope)).to eql("Did you call to say you love me?")
     end
 
@@ -401,15 +401,15 @@ describe 'loaders' do
 
   context 'loading' do
     let(:env_name) { 'testenv' }
-    let(:environments_dir) { Puppet[:environmentpath] }
+    let(:environments_dir) { Oregano[:environmentpath] }
     let(:env_dir) { File.join(environments_dir, env_name) }
-    let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
-    let(:node) { Puppet::Node.new("test", :environment => env) }
+    let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
+    let(:node) { Oregano::Node.new("test", :environment => env) }
     let(:env_dir_files) {}
 
     let(:populated_env_dir) do
       dir_contained_in(environments_dir, env_name => env_dir_files)
-      PuppetSpec::Files.record_tmp(env_dir)
+      OreganoSpec::Files.record_tmp(env_dir)
       env_dir
     end
 
@@ -458,9 +458,9 @@ describe 'loaders' do
 
     context 'types' do
       let(:env_name) { 'testenv' }
-      let(:environments_dir) { Puppet[:environmentpath] }
+      let(:environments_dir) { Oregano[:environmentpath] }
       let(:env_dir) { File.join(environments_dir, env_name) }
-      let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
+      let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
       let(:metadata_json) {
         <<-JSON
         {
@@ -528,100 +528,100 @@ describe 'loaders' do
       end
 
       before(:each) do
-        Puppet.push_context(:loaders => Puppet::Pops::Loaders.new(env))
+        Oregano.push_context(:loaders => Oregano::Pops::Loaders.new(env))
       end
 
       after(:each) do
-        Puppet.pop_context
+        Oregano.pop_context
       end
 
       it 'resolves types using the loader that loaded the type a -> b -> c' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('A::A', Puppet::Pops::Loaders.find_loader('a'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('A::A', Oregano::Pops::Loaders.find_loader('a'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
         expect(type.name).to eql('A::A')
         type = type.resolved_type
-        expect(type).to be_a(Puppet::Pops::Types::PVariantType)
+        expect(type).to be_a(Oregano::Pops::Types::PVariantType)
         type = type.types[0]
         expect(type.name).to eql('B::B')
         type = type.resolved_type
-        expect(type).to be_a(Puppet::Pops::Types::PVariantType)
+        expect(type).to be_a(Oregano::Pops::Types::PVariantType)
         type = type.types[0]
         expect(type.name).to eql('C::C')
         type = type.resolved_type
-        expect(type).to be_a(Puppet::Pops::Types::PIntegerType)
+        expect(type).to be_a(Oregano::Pops::Types::PIntegerType)
       end
 
       it 'will not resolve implicit transitive dependencies, a -> c' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('A::N', Puppet::Pops::Loaders.find_loader('a'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('A::N', Oregano::Pops::Loaders.find_loader('a'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
         expect(type.name).to eql('A::N')
         type = type.resolved_type
-        expect(type).to be_a(Puppet::Pops::Types::PTypeReferenceType)
+        expect(type).to be_a(Oregano::Pops::Types::PTypeReferenceType)
         expect(type.type_string).to eql('C::C')
       end
 
       it 'will not resolve reverse dependencies, b -> a' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('B::X', Puppet::Pops::Loaders.find_loader('b'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('B::X', Oregano::Pops::Loaders.find_loader('b'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
         expect(type.name).to eql('B::X')
         type = type.resolved_type
-        expect(type).to be_a(Puppet::Pops::Types::PTypeReferenceType)
+        expect(type).to be_a(Oregano::Pops::Types::PTypeReferenceType)
         expect(type.type_string).to eql('A::A')
       end
 
       it 'does not resolve init_typeset when more qualified type is found in typeset' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('C::D::X', Puppet::Pops::Loaders.find_loader('c'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
-        expect(type.resolved_type).to be_a(Puppet::Pops::Types::PStringType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('C::D::X', Oregano::Pops::Loaders.find_loader('c'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
+        expect(type.resolved_type).to be_a(Oregano::Pops::Types::PStringType)
       end
 
       it 'defined TypeSet type shadows type defined inside of TypeSet' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('C::D', Puppet::Pops::Loaders.find_loader('c'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeSetType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('C::D', Oregano::Pops::Loaders.find_loader('c'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeSetType)
       end
 
       it 'parent name search does not traverse parent loaders' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('C::C', Puppet::Pops::Loaders.find_loader('c'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
-        expect(type.resolved_type).to be_a(Puppet::Pops::Types::PIntegerType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('C::C', Oregano::Pops::Loaders.find_loader('c'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
+        expect(type.resolved_type).to be_a(Oregano::Pops::Types::PIntegerType)
       end
 
       it 'global type defined in environment trumps modules init_typeset type' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('C', Puppet::Pops::Loaders.find_loader('c'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
-        expect(type.resolved_type).to be_a(Puppet::Pops::Types::PIntegerType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('C', Oregano::Pops::Loaders.find_loader('c'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
+        expect(type.resolved_type).to be_a(Oregano::Pops::Types::PIntegerType)
       end
 
       it 'hit on qualified name trumps hit on typeset using parent name + traversal' do
-        type = Puppet::Pops::Types::TypeParser.singleton.parse('C::D::Y', Puppet::Pops::Loaders.find_loader('c'))
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
-        expect(type.resolved_type).to be_a(Puppet::Pops::Types::PIntegerType)
+        type = Oregano::Pops::Types::TypeParser.singleton.parse('C::D::Y', Oregano::Pops::Loaders.find_loader('c'))
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
+        expect(type.resolved_type).to be_a(Oregano::Pops::Types::PIntegerType)
       end
 
       it 'hit on qualified name and subsequent hit in typeset when searching for other name causes collision' do
-        l = Puppet::Pops::Loaders.find_loader('c')
-        p = Puppet::Pops::Types::TypeParser.singleton
+        l = Oregano::Pops::Loaders.find_loader('c')
+        p = Oregano::Pops::Types::TypeParser.singleton
         p.parse('C::D::Y', l)
-        expect { p.parse('C::D::X', l) }.to raise_error(/Attempt to redefine entity 'http:\/\/puppet.com\/2016.1\/runtime\/type\/c::d::y'/)
+        expect { p.parse('C::D::X', l) }.to raise_error(/Attempt to redefine entity 'http:\/\/oregano.com\/2016.1\/runtime\/type\/c::d::y'/)
       end
 
       it 'hit in typeset using parent name and subsequent search that would cause hit on fqn does not cause collision (fqn already loaded from typeset)' do
-        l = Puppet::Pops::Loaders.find_loader('c')
-        p = Puppet::Pops::Types::TypeParser.singleton
+        l = Oregano::Pops::Loaders.find_loader('c')
+        p = Oregano::Pops::Types::TypeParser.singleton
         p.parse('C::D::X', l)
         type = p.parse('C::D::Y', l)
-        expect(type).to be_a(Puppet::Pops::Types::PTypeAliasType)
-        expect(type.resolved_type).to be_a(Puppet::Pops::Types::PFloatType)
+        expect(type).to be_a(Oregano::Pops::Types::PTypeAliasType)
+        expect(type.resolved_type).to be_a(Oregano::Pops::Types::PFloatType)
       end
     end
   end
 
   def environment_for(*module_paths)
-    Puppet::Node::Environment.create(:'*test*', module_paths)
+    Oregano::Node::Environment.create(:'*test*', module_paths)
   end
 
   def typed_name(type, name)
-    Puppet::Pops::Loader::TypedName.new(type, name)
+    Oregano::Pops::Loader::TypedName.new(type, name)
   end
 
   def config_dir(config_name)

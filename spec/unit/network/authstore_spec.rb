@@ -2,11 +2,11 @@
 require 'spec_helper'
 require 'rbconfig'
 
-require 'puppet/network/authconfig'
+require 'oregano/network/authconfig'
 
-describe Puppet::Network::AuthStore do
+describe Oregano::Network::AuthStore do
   before :each do
-    @authstore = Puppet::Network::AuthStore.new
+    @authstore = Oregano::Network::AuthStore.new
     @authstore.reset_interpolation
   end
 
@@ -66,12 +66,12 @@ describe Puppet::Network::AuthStore do
   end
 end
 
-describe Puppet::Network::AuthStore::Declaration do
+describe Oregano::Network::AuthStore::Declaration do
 
   ['100.101.99.98','100.100.100.100','1.2.3.4','11.22.33.44'].each { |ip|
     describe "when the pattern is a simple numeric IP such as #{ip}" do
       before :each do
-        @declaration = Puppet::Network::AuthStore::Declaration.new(:allow_ip,ip)
+        @declaration = Oregano::Network::AuthStore::Declaration.new(:allow_ip,ip)
       end
       it "should match the specified IP" do
         expect(@declaration).to be_match('www.testsite.org',ip)
@@ -85,7 +85,7 @@ describe Puppet::Network::AuthStore::Declaration do
       describe "when the pattern is an IP mask with #{n} numeric segments and a *" do
         before :each do
           @ip_pattern = ip.split('.')[0,n].join('.')+'.*'
-          @declaration = Puppet::Network::AuthStore::Declaration.new(:allow_ip,@ip_pattern)
+          @declaration = Oregano::Network::AuthStore::Declaration.new(:allow_ip,@ip_pattern)
         end
         it "should match an IP in the range" do
           expect(@declaration).to be_match('www.testsite.org',ip)
@@ -106,7 +106,7 @@ describe Puppet::Network::AuthStore::Declaration do
     pending("implementation of backreferences for IP") do
       before :each do
         @ip = '100.101.$1'
-        @declaration = Puppet::Network::AuthStore::Declaration.new(:allow_ip,@ip).interpolate('12.34'.match(/(.*)/))
+        @declaration = Oregano::Network::AuthStore::Declaration.new(:allow_ip,@ip).interpolate('12.34'.match(/(.*)/))
       end
       it "should match an IP with the appropriate interpolation" do
         @declaration.should be_match('www.testsite.org',@ip.sub(/\$1/,'12.34'))
@@ -180,7 +180,7 @@ describe Puppet::Network::AuthStore::Declaration do
   ].each { |invalid_ip|
     describe "when the pattern is an invalid IPv6 address such as #{invalid_ip}" do
       it "should raise an exception" do
-        expect { Puppet::Network::AuthStore::Declaration.new(:allow,invalid_ip) }.to raise_error(Puppet::AuthStoreError, /Invalid pattern/)
+        expect { Oregano::Network::AuthStore::Declaration.new(:allow,invalid_ip) }.to raise_error(Oregano::AuthStoreError, /Invalid pattern/)
       end
     end
   }
@@ -280,7 +280,7 @@ describe Puppet::Network::AuthStore::Declaration do
   ].each { |ip|
     describe "when the pattern is a valid IP such as #{ip}" do
       before :each do
-        @declaration = Puppet::Network::AuthStore::Declaration.new(:allow_ip,ip)
+        @declaration = Oregano::Network::AuthStore::Declaration.new(:allow_ip,ip)
       end
       it "should match the specified IP" do
         expect(@declaration).to be_match('www.testsite.org',ip)
@@ -296,7 +296,7 @@ describe Puppet::Network::AuthStore::Declaration do
   ].each { |ip|
     describe "when the pattern is a valid IP such as #{ip}" do
       let(:declaration) do
-        Puppet::Network::AuthStore::Declaration.new(:allow_ip,ip)
+        Oregano::Network::AuthStore::Declaration.new(:allow_ip,ip)
       end
 
       issue_7477 = !(IPAddr.new(ip) rescue false)
@@ -319,7 +319,7 @@ describe Puppet::Network::AuthStore::Declaration do
     describe "when the pattern is #{desc}" do
       before :each do
         @host = pqdn
-        @declaration = Puppet::Network::AuthStore::Declaration.new(:allow,@host)
+        @declaration = Oregano::Network::AuthStore::Declaration.new(:allow,@host)
       end
       it "should match the specified PQDN" do
         expect(@declaration).to be_match(@host,'200.101.99.98')
@@ -336,7 +336,7 @@ describe Puppet::Network::AuthStore::Declaration do
       describe "when the pattern is #{"*."+host.split('.')[-n,n].join('.')}" do
         before :each do
           @pattern = "*."+host.split('.')[-n,n].join('.')
-          @declaration = Puppet::Network::AuthStore::Declaration.new(:allow,@pattern)
+          @declaration = Oregano::Network::AuthStore::Declaration.new(:allow,@pattern)
         end
         it "should match #{host}" do
           expect(@declaration).to be_match(host,'1.2.3.4')
@@ -356,7 +356,7 @@ describe Puppet::Network::AuthStore::Declaration do
   describe "when the pattern is a FQDN" do
     before :each do
       @host = 'spirit.mars.nasa.gov.'
-      @declaration = Puppet::Network::AuthStore::Declaration.new(:allow,@host)
+      @declaration = Oregano::Network::AuthStore::Declaration.new(:allow,@host)
     end
     it "should match the specified FQDN" do
       pending "FQDN consensus"
@@ -373,7 +373,7 @@ describe Puppet::Network::AuthStore::Declaration do
       @host = 'c216f41a-f902-4bfb-a222-850dd957bebb'
       @item = "/catalog/#{@host}"
       @pattern = %{^/catalog/([^/]+)$}
-      @declaration = Puppet::Network::AuthStore::Declaration.new(:allow,'$1')
+      @declaration = Oregano::Network::AuthStore::Declaration.new(:allow,'$1')
     end
     it "should match an IP with the appropriate interpolation" do
       expect(@declaration.interpolate(@item.match(@pattern))).to be_match(@host,'10.0.0.5')
@@ -385,7 +385,7 @@ describe Puppet::Network::AuthStore::Declaration do
       @host = 'admin.mgmt.nym1'
       @item = "/catalog/#{@host}"
       @pattern = %{^/catalog/([^/]+)$}
-      @declaration = Puppet::Network::AuthStore::Declaration.new(:allow,'$1')
+      @declaration = Oregano::Network::AuthStore::Declaration.new(:allow,'$1')
     end
     it "should match a name with the appropriate interpolation" do
       expect(@declaration.interpolate(@item.match(@pattern))).to be_match(@host,'10.0.0.5')
@@ -397,7 +397,7 @@ describe Puppet::Network::AuthStore::Declaration do
       @host = '01.admin.mgmt.nym1'
       @item = "/catalog/#{@host}"
       @pattern = %{^/catalog/([^/]+)$}
-      @declaration = Puppet::Network::AuthStore::Declaration.new(:allow,'$1')
+      @declaration = Oregano::Network::AuthStore::Declaration.new(:allow,'$1')
     end
     it "should match a name with the appropriate interpolation" do
       expect(@declaration.interpolate(@item.match(@pattern))).to be_match(@host,'10.0.0.5')
@@ -406,9 +406,9 @@ describe Puppet::Network::AuthStore::Declaration do
 
   describe "when comparing patterns" do
     before :each do
-      @ip        = Puppet::Network::AuthStore::Declaration.new(:allow,'127.0.0.1')
-      @host_name = Puppet::Network::AuthStore::Declaration.new(:allow,'www.hard_knocks.edu')
-      @opaque    = Puppet::Network::AuthStore::Declaration.new(:allow,'hey_dude')
+      @ip        = Oregano::Network::AuthStore::Declaration.new(:allow,'127.0.0.1')
+      @host_name = Oregano::Network::AuthStore::Declaration.new(:allow,'www.hard_knocks.edu')
+      @opaque    = Oregano::Network::AuthStore::Declaration.new(:allow,'hey_dude')
     end
     it "should consider ip addresses before host names" do
       expect(@ip < @host_name).to be_truthy

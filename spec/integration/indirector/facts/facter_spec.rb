@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-describe Puppet::Node::Facts::Facter do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Node::Facts::Facter do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   it "preserves case in fact values" do
     Facter.add(:downcase_test) do
@@ -18,7 +18,7 @@ describe Puppet::Node::Facts::Facter do
     Facter.stubs(:reset)
 
     cat = compile_to_catalog('notify { $downcase_test: }',
-                             Puppet::Node.indirection.find('foo'))
+                             Oregano::Node.indirection.find('foo'))
     expect(cat.resource("Notify[AaBbCc]")).to be
   end
 
@@ -32,23 +32,23 @@ describe Puppet::Node::Facts::Facter do
       File.open(File.join(test_module, 'custom.rb'), 'wb') { |file| file.write(<<-EOF)}
       Facter.add(:custom) do
         setcode do
-          Facter.value('puppetversion')
+          Facter.value('oreganoversion')
         end
       end
       EOF
 
-      Puppet.initialize_settings(['--modulepath', factdir])
-      apply = Puppet::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => ['--modulepath', factdir, '-e', 'notify { $custom: }']))
+      Oregano.initialize_settings(['--modulepath', factdir])
+      apply = Oregano::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => ['--modulepath', factdir, '-e', 'notify { $custom: }']))
 
       expect do
         expect { apply.run }.to exit_with(0)
-      end.to have_printed(Puppet.version)
+      end.to have_printed(Oregano.version)
     end
 
     it "should resolve external facts" do
       external_fact = File.join(factdir, 'external')
 
-      if Puppet.features.microsoft_windows?
+      if Oregano.features.microsoft_windows?
         external_fact += '.bat'
         File.open(external_fact, 'wb') { |file| file.write(<<-EOF)}
         @echo foo=bar
@@ -59,11 +59,11 @@ describe Puppet::Node::Facts::Facter do
         echo "foo=bar"
         EOF
 
-        Puppet::FileSystem.chmod(0755, external_fact)
+        Oregano::FileSystem.chmod(0755, external_fact)
       end
 
-      Puppet.initialize_settings(['--pluginfactdest', factdir])
-      apply = Puppet::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => ['--pluginfactdest', factdir, '-e', 'notify { $foo: }']))
+      Oregano.initialize_settings(['--pluginfactdest', factdir])
+      apply = Oregano::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => ['--pluginfactdest', factdir, '-e', 'notify { $foo: }']))
 
       expect do
         expect { apply.run }.to exit_with(0)
@@ -71,49 +71,49 @@ describe Puppet::Node::Facts::Facter do
     end
   end
 
-  it "adds the puppetversion fact" do
+  it "adds the oreganoversion fact" do
     Facter.stubs(:reset)
 
-    cat = compile_to_catalog('notify { $::puppetversion: }',
-                             Puppet::Node.indirection.find('foo'))
-    expect(cat.resource("Notify[#{Puppet.version.to_s}]")).to be
+    cat = compile_to_catalog('notify { $::oreganoversion: }',
+                             Oregano::Node.indirection.find('foo'))
+    expect(cat.resource("Notify[#{Oregano.version.to_s}]")).to be
   end
 
   it "the agent_specified_environment fact is nil when not set" do
     expect do
       compile_to_catalog('notify { $::agent_specified_environment: }',
-                         Puppet::Node.indirection.find('foo'))
-    end.to raise_error(Puppet::PreformattedError)
+                         Oregano::Node.indirection.find('foo'))
+    end.to raise_error(Oregano::PreformattedError)
   end
 
-  it "adds the agent_specified_environment fact when set in puppet.conf" do
-    FileUtils.mkdir_p(Puppet[:confdir])
-    File.open(File.join(Puppet[:confdir], 'puppet.conf'), 'w') do |f|
+  it "adds the agent_specified_environment fact when set in oregano.conf" do
+    FileUtils.mkdir_p(Oregano[:confdir])
+    File.open(File.join(Oregano[:confdir], 'oregano.conf'), 'w') do |f|
       f.puts("environment=bar")
     end
 
-    Puppet.initialize_settings
+    Oregano.initialize_settings
     cat = compile_to_catalog('notify { $::agent_specified_environment: }',
-                             Puppet::Node.indirection.find('foo'))
+                             Oregano::Node.indirection.find('foo'))
     expect(cat.resource("Notify[bar]")).to be
   end
 
   it "adds the agent_specified_environment fact when set via command-line" do
-    Puppet.initialize_settings(['--environment', 'bar'])
+    Oregano.initialize_settings(['--environment', 'bar'])
     cat = compile_to_catalog('notify { $::agent_specified_environment: }',
-                             Puppet::Node.indirection.find('foo'))
+                             Oregano::Node.indirection.find('foo'))
     expect(cat.resource("Notify[bar]")).to be
   end
 
-  it "adds the agent_specified_environment fact, preferring cli, when set in puppet.conf and via command-line" do
-    FileUtils.mkdir_p(Puppet[:confdir])
-    File.open(File.join(Puppet[:confdir], 'puppet.conf'), 'w') do |f|
+  it "adds the agent_specified_environment fact, preferring cli, when set in oregano.conf and via command-line" do
+    FileUtils.mkdir_p(Oregano[:confdir])
+    File.open(File.join(Oregano[:confdir], 'oregano.conf'), 'w') do |f|
       f.puts("environment=bar")
     end
 
-    Puppet.initialize_settings(['--environment', 'baz'])
+    Oregano.initialize_settings(['--environment', 'baz'])
     cat = compile_to_catalog('notify { $::agent_specified_environment: }',
-                             Puppet::Node.indirection.find('foo'))
+                             Oregano::Node.indirection.find('foo'))
     expect(cat.resource("Notify[baz]")).to be
   end
 end

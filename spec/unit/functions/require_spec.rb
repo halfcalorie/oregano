@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet/parser/functions'
+require 'oregano_spec/compiler'
+require 'oregano/parser/functions'
 require 'matchers/containment_matchers'
 require 'matchers/resource'
 require 'matchers/include_in_order'
@@ -9,12 +9,12 @@ require 'unit/functions/shared'
 
 
 describe 'The "require" function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include ContainmentMatchers
   include Matchers::Resource
 
   before(:each) do
-    compiler  = Puppet::Parser::Compiler.new(Puppet::Node.new("foo"))
+    compiler  = Oregano::Parser::Compiler.new(Oregano::Node.new("foo"))
     @scope = compiler.topscope
   end
 
@@ -42,7 +42,7 @@ describe 'The "require" function' do
 
     requiring = catalog.resource("Class", "requiring")
     expect(requiring["require"]).to be_instance_of(Array)
-    expect(requiring["require"][0]).to be_instance_of(Puppet::Resource)
+    expect(requiring["require"][0]).to be_instance_of(Oregano::Resource)
     expect(requiring["require"][0].to_s).to eql("Class[Required]")
   end
 
@@ -61,9 +61,9 @@ describe 'The "require" function' do
 
     requiring = catalog.resource("Class", "requiring")
     expect(requiring["require"]).to be_instance_of(Array)
-    expect(requiring["require"][0]).to be_instance_of(Puppet::Resource)
+    expect(requiring["require"][0]).to be_instance_of(Oregano::Resource)
     expect(requiring["require"][0].to_s).to eql("Class[Required]")
-    expect(requiring["require"][1]).to be_instance_of(Puppet::Resource)
+    expect(requiring["require"][1]).to be_instance_of(Oregano::Resource)
     expect(requiring["require"][1].to_s).to eql("Class[Also_required]")
   end
 

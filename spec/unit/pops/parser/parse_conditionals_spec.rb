@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/parser_rspec_helper')
@@ -74,7 +74,7 @@ describe "egrammar parsing conditionals" do
     end
 
     it "unless true { $a = 10 } elsif false { $a = 15} else {$a = 20} # is illegal" do
-      expect { parse("unless true { $a = 10 } elsif false { $a = 15} else {$a = 20}")}.to raise_error(Puppet::ParseError)
+      expect { parse("unless true { $a = 10 } elsif false { $a = 15} else {$a = 20}")}.to raise_error(Oregano::ParseError)
     end
   end
 

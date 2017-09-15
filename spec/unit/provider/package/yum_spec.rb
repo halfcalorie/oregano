@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:yum)
+provider_class = Oregano::Type.type(:package).provider(:yum)
 
 describe provider_class do
-  include PuppetSpec::Fixtures
+  include OreganoSpec::Fixtures
   it_behaves_like 'RHEL package provider', provider_class, 'yum'
 
   describe "parsing the output of check-update" do

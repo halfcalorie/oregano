@@ -1,6 +1,6 @@
-test_name "puppet module upgrade (not upgradable)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module upgrade (not upgradable)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -37,8 +37,8 @@ apply_manifest_on master, <<-PP
   }
 PP
 
-on master, puppet("module install pmtacceptance-java --version 1.6.0")
-on master, puppet("module list --modulepath #{default_moduledir}") do
+on master, oregano("module install pmtacceptance-java --version 1.6.0")
+on master, oregano("module list --modulepath #{default_moduledir}") do
   assert_equal <<-OUTPUT, stdout
 #{default_moduledir}
 ├── nginx (\e[0;36m???\e[0m)
@@ -49,31 +49,31 @@ on master, puppet("module list --modulepath #{default_moduledir}") do
 end
 
 step "Try to upgrade a module that is not installed"
-on master, puppet("module upgrade pmtacceptance-nginx"), :acceptable_exit_codes => [1] do
+on master, oregano("module upgrade pmtacceptance-nginx"), :acceptable_exit_codes => [1] do
   pattern = Regexp.new([
     %Q{.*Notice: Preparing to upgrade 'pmtacceptance-nginx' .*},
     %Q{.*Error: Could not upgrade module 'pmtacceptance-nginx'},
     %Q{  Module 'pmtacceptance-nginx' is not installed},
-    %Q{    Use `puppet module install` to install this module.*},
+    %Q{    Use `oregano module install` to install this module.*},
   ].join("\n"), Regexp::MULTILINE)
   assert_match(pattern, result.output)
 end
 
 # TODO: Determine the appropriate response for this test.
 # step "Try to upgrade a local module"
-# on master, puppet("module upgrade nginx"), :acceptable_exit_codes => [1] do
+# on master, oregano("module upgrade nginx"), :acceptable_exit_codes => [1] do
 #   pattern = Regexp.new([
 #     %Q{.*Notice: Preparing to upgrade 'nginx' .*},
 #     %Q{.*Notice: Found 'nginx' \\(.*\\?\\?\\?.*\\) in #{default_moduledir} .*},
-#     %Q{.*Notice: Downloading from https://forgeapi.puppet.com .*},
+#     %Q{.*Notice: Downloading from https://forgeapi.oregano.com .*},
 #     %Q{.*Error: Could not upgrade module 'nginx' \\(\\?\\?\\? -> latest\\)},
-#     %Q{  Module 'nginx' does not exist on https://forgeapi.puppet.com.*},
+#     %Q{  Module 'nginx' does not exist on https://forgeapi.oregano.com.*},
 #   ].join("\n"), Regexp::MULTILINE)
 #   assert_match(pattern, result.output)
 # end
 
 step "Try to upgrade a module that doesn't exist in module_repository"
-on master, puppet("module upgrade notpmtacceptance-unicorns"), :acceptable_exit_codes => [1] do
+on master, oregano("module upgrade notpmtacceptance-unicorns"), :acceptable_exit_codes => [1] do
   assert_match(/could not upgrade 'notpmtacceptance-unicorns'/i, stderr,
     'Could not upgrade error not shown')
 
@@ -82,7 +82,7 @@ on master, puppet("module upgrade notpmtacceptance-unicorns"), :acceptable_exit_
 end
 
 step "Try to upgrade an installed module to a version that doesn't exist in module_repository"
-on master, puppet("module upgrade pmtacceptance-java --version 2.0.0"), :acceptable_exit_codes => [1] do
+on master, oregano("module upgrade pmtacceptance-java --version 2.0.0"), :acceptable_exit_codes => [1] do
   assert_match(/could not upgrade 'pmtacceptance-java'/i, stderr,
     'Could not upgrade error not shown')
 

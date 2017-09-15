@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/file_serving/mount/file'
+require 'oregano/file_serving/mount/file'
 
 module FileServingMountTesting
   def stub_facter(hostname)
@@ -9,22 +9,22 @@ module FileServingMountTesting
   end
 end
 
-describe Puppet::FileServing::Mount::File do
+describe Oregano::FileServing::Mount::File do
   it "should be invalid if it does not have a path" do
-    expect { Puppet::FileServing::Mount::File.new("foo").validate }.to raise_error(ArgumentError)
+    expect { Oregano::FileServing::Mount::File.new("foo").validate }.to raise_error(ArgumentError)
   end
 
   it "should be valid if it has a path" do
     FileTest.stubs(:directory?).returns true
     FileTest.stubs(:readable?).returns true
-    mount = Puppet::FileServing::Mount::File.new("foo")
+    mount = Oregano::FileServing::Mount::File.new("foo")
     mount.path = "/foo"
     expect { mount.validate }.not_to raise_error
   end
 
   describe "when setting the path" do
     before do
-      @mount = Puppet::FileServing::Mount::File.new("test")
+      @mount = Oregano::FileServing::Mount::File.new("test")
       @dir = "/this/path/does/not/exist"
     end
 
@@ -46,12 +46,12 @@ describe Puppet::FileServing::Mount::File do
     before do
       FileTest.stubs(:directory?).returns(true)
       FileTest.stubs(:readable?).returns(true)
-      @mount = Puppet::FileServing::Mount::File.new("test")
+      @mount = Oregano::FileServing::Mount::File.new("test")
       @host = "host.domain.com"
     end
 
     after :each do
-      Puppet::FileServing::Mount::File.instance_variable_set(:@localmap, nil)
+      Oregano::FileServing::Mount::File.instance_variable_set(:@localmap, nil)
     end
 
     it "should replace incidences of %h in the path with the client's short name" do
@@ -85,35 +85,35 @@ describe Puppet::FileServing::Mount::File do
     include FileServingMountTesting
 
     before do
-      Puppet::FileSystem.stubs(:exist?).returns(true)
+      Oregano::FileSystem.stubs(:exist?).returns(true)
       FileTest.stubs(:directory?).returns(true)
       FileTest.stubs(:readable?).returns(true)
-      @mount = Puppet::FileServing::Mount::File.new("test")
+      @mount = Oregano::FileServing::Mount::File.new("test")
       @mount.path = "/mount"
       stub_facter("myhost.mydomain.com")
       @host = "host.domain.com"
     end
 
     it "should return nil if the file is absent" do
-      Puppet::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
       expect(@mount.complete_path("/my/path", nil)).to be_nil
     end
 
     it "should write a log message if the file is absent" do
-      Puppet::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
 
-      Puppet.expects(:info).with("File does not exist or is not accessible: /mount/my/path")
+      Oregano.expects(:info).with("File does not exist or is not accessible: /mount/my/path")
 
       @mount.complete_path("/my/path", nil)
     end
 
     it "should return the file path if the file is present" do
-      Puppet::FileSystem.stubs(:exist?).with("/my/path").returns(true)
+      Oregano::FileSystem.stubs(:exist?).with("/my/path").returns(true)
       expect(@mount.complete_path("/my/path", nil)).to eq("/mount/my/path")
     end
 
     it "should treat a nil file name as the path to the mount itself" do
-      Puppet::FileSystem.stubs(:exist?).returns(true)
+      Oregano::FileSystem.stubs(:exist?).returns(true)
       expect(@mount.complete_path(nil, nil)).to eq("/mount")
     end
 
@@ -141,10 +141,10 @@ describe Puppet::FileServing::Mount::File do
     include FileServingMountTesting
 
     before do
-      Puppet::FileSystem.stubs(:exist?).returns(true)
+      Oregano::FileSystem.stubs(:exist?).returns(true)
       FileTest.stubs(:directory?).returns(true)
       FileTest.stubs(:readable?).returns(true)
-      @mount = Puppet::FileServing::Mount::File.new("test")
+      @mount = Oregano::FileServing::Mount::File.new("test")
       @mount.path = "/mount"
       stub_facter("myhost.mydomain.com")
       @host = "host.domain.com"
@@ -153,7 +153,7 @@ describe Puppet::FileServing::Mount::File do
     end
 
     it "should return the results of the complete file path" do
-      Puppet::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
       @mount.expects(:complete_path).with("/my/path", "foo").returns "eh"
       expect(@mount.find("/my/path", @request)).to eq("eh")
     end
@@ -163,10 +163,10 @@ describe Puppet::FileServing::Mount::File do
     include FileServingMountTesting
 
     before do
-      Puppet::FileSystem.stubs(:exist?).returns(true)
+      Oregano::FileSystem.stubs(:exist?).returns(true)
       FileTest.stubs(:directory?).returns(true)
       FileTest.stubs(:readable?).returns(true)
-      @mount = Puppet::FileServing::Mount::File.new("test")
+      @mount = Oregano::FileServing::Mount::File.new("test")
       @mount.path = "/mount"
       stub_facter("myhost.mydomain.com")
       @host = "host.domain.com"
@@ -175,13 +175,13 @@ describe Puppet::FileServing::Mount::File do
     end
 
     it "should return the results of the complete file path as an array" do
-      Puppet::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
       @mount.expects(:complete_path).with("/my/path", "foo").returns "eh"
       expect(@mount.search("/my/path", @request)).to eq(["eh"])
     end
 
     it "should return nil if the complete path is nil" do
-      Puppet::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
       @mount.expects(:complete_path).with("/my/path", "foo").returns nil
       expect(@mount.search("/my/path", @request)).to be_nil
     end

@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet_spec/scope'
+require 'oregano_spec/compiler'
+require 'oregano_spec/scope'
 
-describe Puppet::Parser::Scope do
-  include PuppetSpec::Scope
+describe Oregano::Parser::Scope do
+  include OreganoSpec::Scope
 
   before :each do
-    @scope = Puppet::Parser::Scope.new(
-      Puppet::Parser::Compiler.new(Puppet::Node.new("foo"))
+    @scope = Oregano::Parser::Scope.new(
+      Oregano::Parser::Compiler.new(Oregano::Node.new("foo"))
     )
-    @scope.source = Puppet::Resource::Type.new(:node, :foo)
+    @scope.source = Oregano::Resource::Type.new(:node, :foo)
     @topscope = @scope.compiler.topscope
     @scope.parent = @topscope
   end
@@ -20,13 +20,13 @@ describe Puppet::Parser::Scope do
     let(:scope) { create_test_scope_for_node(node_name) }
 
     it "should be a kind of Scope" do
-      expect(scope).to be_a_kind_of(Puppet::Parser::Scope)
+      expect(scope).to be_a_kind_of(Oregano::Parser::Scope)
     end
     it "should set the source to a node resource" do
-      expect(scope.source).to be_a_kind_of(Puppet::Resource::Type)
+      expect(scope.source).to be_a_kind_of(Oregano::Resource::Type)
     end
     it "should have a compiler" do
-      expect(scope.compiler).to be_a_kind_of(Puppet::Parser::Compiler)
+      expect(scope.compiler).to be_a_kind_of(Oregano::Parser::Compiler)
     end
     it "should set the parent to the compiler topscope" do
       expect(scope.parent).to be(scope.compiler.topscope)
@@ -43,7 +43,7 @@ describe Puppet::Parser::Scope do
   end
 
   it "should return a scope for use in a test harness" do
-    expect(create_test_scope_for_node("node_name_foo")).to be_a_kind_of(Puppet::Parser::Scope)
+    expect(create_test_scope_for_node("node_name_foo")).to be_a_kind_of(Oregano::Parser::Scope)
   end
 
   it "should be able to retrieve class scopes by name" do
@@ -59,7 +59,7 @@ describe Puppet::Parser::Scope do
   end
 
   it "should be able to retrieve its parent module name from the source of its parent type" do
-    @topscope.source = Puppet::Resource::Type.new(:hostclass, :foo, :module_name => "foo")
+    @topscope.source = Oregano::Resource::Type.new(:hostclass, :foo, :module_name => "foo")
 
     expect(@scope.parent_module_name).to eq("foo")
   end
@@ -73,28 +73,28 @@ describe Puppet::Parser::Scope do
   end
 
   it "should get its environment from its compiler" do
-    env = Puppet::Node::Environment.create(:testing, [])
+    env = Oregano::Node::Environment.create(:testing, [])
     compiler = stub 'compiler', :environment => env, :is_a? => true
-    scope = Puppet::Parser::Scope.new(compiler)
+    scope = Oregano::Parser::Scope.new(compiler)
     expect(scope.environment).to equal(env)
   end
 
   it "should fail if no compiler is supplied" do
     expect {
-      Puppet::Parser::Scope.new
+      Oregano::Parser::Scope.new
     }.to raise_error(ArgumentError, /wrong number of arguments/)
   end
 
   it "should fail if something that isn't a compiler is supplied" do
     expect {
-      Puppet::Parser::Scope.new(:compiler => true)
-    }.to raise_error(Puppet::DevError, /you must pass a compiler instance/)
+      Oregano::Parser::Scope.new(:compiler => true)
+    }.to raise_error(Oregano::DevError, /you must pass a compiler instance/)
   end
 
   describe "when custom functions are called" do
-    let(:env) { Puppet::Node::Environment.create(:testing, []) }
-    let(:compiler) { Puppet::Parser::Compiler.new(Puppet::Node.new('foo', :environment => env)) }
-    let(:scope) { Puppet::Parser::Scope.new(compiler) }
+    let(:env) { Oregano::Node::Environment.create(:testing, []) }
+    let(:compiler) { Oregano::Parser::Compiler.new(Oregano::Node.new('foo', :environment => env)) }
+    let(:scope) { Oregano::Parser::Scope.new(compiler) }
 
     it "calls methods prefixed with function_ as custom functions" do
       expect(scope.function_sprintf(["%b", 123])).to eq("1111011")
@@ -125,21 +125,21 @@ describe Puppet::Parser::Scope do
 
   describe "when initializing" do
     it "should extend itself with its environment's Functions module as well as the default" do
-      env = Puppet::Node::Environment.create(:myenv, [])
-      root = Puppet.lookup(:root_environment)
+      env = Oregano::Node::Environment.create(:myenv, [])
+      root = Oregano.lookup(:root_environment)
       compiler = stub 'compiler', :environment => env, :is_a? => true
 
-      scope = Puppet::Parser::Scope.new(compiler)
-      expect(scope.singleton_class.ancestors).to be_include(Puppet::Parser::Functions.environment_module(env))
-      expect(scope.singleton_class.ancestors).to be_include(Puppet::Parser::Functions.environment_module(root))
+      scope = Oregano::Parser::Scope.new(compiler)
+      expect(scope.singleton_class.ancestors).to be_include(Oregano::Parser::Functions.environment_module(env))
+      expect(scope.singleton_class.ancestors).to be_include(Oregano::Parser::Functions.environment_module(root))
     end
 
     it "should extend itself with the default Functions module if its environment is the default" do
-      root     = Puppet.lookup(:root_environment)
-      node     = Puppet::Node.new('localhost')
-      compiler = Puppet::Parser::Compiler.new(node)
-      scope    = Puppet::Parser::Scope.new(compiler)
-      expect(scope.singleton_class.ancestors).to be_include(Puppet::Parser::Functions.environment_module(root))
+      root     = Oregano.lookup(:root_environment)
+      node     = Oregano::Node.new('localhost')
+      compiler = Oregano::Parser::Compiler.new(node)
+      scope    = Oregano::Parser::Scope.new(compiler)
+      expect(scope.singleton_class.ancestors).to be_include(Oregano::Parser::Functions.environment_module(root))
     end
   end
 
@@ -150,8 +150,8 @@ describe Puppet::Parser::Scope do
     end
 
     it "should fail if invoked with a non-string name" do
-      expect { @scope[:foo] }.to raise_error(Puppet::ParseError, /Scope variable name .* not a string/)
-      expect { @scope[:foo] = 12 }.to raise_error(Puppet::ParseError, /Scope variable name .* not a string/)
+      expect { @scope[:foo] }.to raise_error(Oregano::ParseError, /Scope variable name .* not a string/)
+      expect { @scope[:foo] = 12 }.to raise_error(Oregano::ParseError, /Scope variable name .* not a string/)
     end
 
     it "should return nil for unset variables when --strict variables is not in effect" do
@@ -197,7 +197,7 @@ describe Puppet::Parser::Scope do
       @scope["var"] = "childval"
       expect {
         @scope["var"] = "change"
-      }.to raise_error(Puppet::Error, "Cannot reassign variable '$var'")
+      }.to raise_error(Oregano::Error, "Cannot reassign variable '$var'")
     end
 
     it "should be able to detect when variables are not set" do
@@ -205,22 +205,22 @@ describe Puppet::Parser::Scope do
     end
 
     it "warns and return nil for non found unqualified variable" do
-      Puppet.expects(:warn_once)
+      Oregano.expects(:warn_once)
       expect(@scope["santa_clause"]).to be_nil
     end
 
     it "warns once for a non found variable" do
-      Puppet.expects(:send_log).with(:warning, is_a(String)).once
+      Oregano.expects(:send_log).with(:warning, is_a(String)).once
       expect([@scope["santa_claus"],@scope["santa_claus"]]).to eq([nil, nil])
     end
 
     it "warns and return nil for non found qualified variable" do
-      Puppet.expects(:warn_once)
+      Oregano.expects(:warn_once)
       expect(@scope["north_pole::santa_clause"]).to be_nil
     end
 
     it "does not warn when a numeric variable is missing - they always exist" do
-      Puppet.expects(:warn_once).never
+      Oregano.expects(:warn_once).never
       expect(@scope["1"]).to be_nil
     end
 
@@ -228,27 +228,27 @@ describe Puppet::Parser::Scope do
       before :each do
         @known_resource_types = @scope.environment.known_resource_types
 
-        node      = Puppet::Node.new('localhost')
-        @compiler = Puppet::Parser::Compiler.new(node)
+        node      = Oregano::Node.new('localhost')
+        @compiler = Oregano::Parser::Compiler.new(node)
       end
 
       def newclass(name)
-        @known_resource_types.add Puppet::Resource::Type.new(:hostclass, name)
+        @known_resource_types.add Oregano::Resource::Type.new(:hostclass, name)
       end
 
       def create_class_scope(name)
         klass = newclass(name)
 
-        catalog = Puppet::Resource::Catalog.new
-        catalog.add_resource(Puppet::Parser::Resource.new("stage", :main, :scope => Puppet::Parser::Scope.new(@compiler)))
+        catalog = Oregano::Resource::Catalog.new
+        catalog.add_resource(Oregano::Parser::Resource.new("stage", :main, :scope => Oregano::Parser::Scope.new(@compiler)))
 
-        Puppet::Parser::Resource.new("class", name, :scope => @scope, :source => mock('source'), :catalog => catalog).evaluate
+        Oregano::Parser::Resource.new("class", name, :scope => @scope, :source => mock('source'), :catalog => catalog).evaluate
 
         @scope.class_scope(klass)
       end
 
       it "should be able to look up explicitly fully qualified variables from compiler's top scope" do
-        Puppet.expects(:deprecation_warning).never
+        Oregano.expects(:deprecation_warning).never
         other_scope = @scope.compiler.topscope
 
         other_scope["othervar"] = "otherval"
@@ -257,7 +257,7 @@ describe Puppet::Parser::Scope do
       end
 
       it "should be able to look up explicitly fully qualified variables from other scopes" do
-        Puppet.expects(:deprecation_warning).never
+        Oregano.expects(:deprecation_warning).never
         other_scope = create_class_scope("other")
 
         other_scope["var"] = "otherval"
@@ -266,7 +266,7 @@ describe Puppet::Parser::Scope do
       end
 
       it "should be able to look up deeply qualified variables" do
-        Puppet.expects(:deprecation_warning).never
+        Oregano.expects(:deprecation_warning).never
         other_scope = create_class_scope("other::deep::klass")
 
         other_scope["var"] = "otherval"
@@ -282,12 +282,12 @@ describe Puppet::Parser::Scope do
 
       it "should warn and return nil for qualified variables whose classes have not been evaluated" do
         klass = newclass("other::deep::klass")
-        Puppet.expects(:warn_once)
+        Oregano.expects(:warn_once)
         expect(@scope["other::deep::klass::var"]).to be_nil
       end
 
       it "should warn and return nil for qualified variables whose classes do not exist" do
-        Puppet.expects(:warn_once)
+        Oregano.expects(:warn_once)
         expect(@scope["other::deep::klass::var"]).to be_nil
       end
 
@@ -304,7 +304,7 @@ describe Puppet::Parser::Scope do
 
     context "and strict_variables is true" do
       before(:each) do
-        Puppet[:strict_variables] = true
+        Oregano[:strict_variables] = true
       end
 
       it "should throw a symbol when unknown variable is looked up" do
@@ -323,8 +323,8 @@ describe Puppet::Parser::Scope do
 
     context "and strict_variables is false and --strict=off" do
       before(:each) do
-        Puppet[:strict_variables] = false
-        Puppet[:strict] = :off
+        Oregano[:strict_variables] = false
+        Oregano[:strict] = :off
       end
 
       it "should not error when unknown variable is looked up and produce nil" do
@@ -338,8 +338,8 @@ describe Puppet::Parser::Scope do
 
     context "and strict_variables is false and --strict=warning" do
       before(:each) do
-        Puppet[:strict_variables] = false
-        Puppet[:strict] = :warning
+        Oregano[:strict_variables] = false
+        Oregano[:strict] = :warning
       end
 
       it "should not error when unknown variable is looked up" do
@@ -353,8 +353,8 @@ describe Puppet::Parser::Scope do
 
     context "and strict_variables is false and --strict=error" do
       before(:each) do
-        Puppet[:strict_variables] = false
-        Puppet[:strict] = :error
+        Oregano[:strict_variables] = false
+        Oregano[:strict] = :error
       end
 
       it "should raise error when unknown variable is looked up" do
@@ -369,63 +369,63 @@ describe Puppet::Parser::Scope do
 
   describe "when calling number?" do
     it "should return nil if called with anything not a number" do
-      expect(Puppet::Parser::Scope.number?([2])).to be_nil
+      expect(Oregano::Parser::Scope.number?([2])).to be_nil
     end
 
     it "should return a Integer for an Integer" do
-      expect(Puppet::Parser::Scope.number?(2)).to be_a(Integer)
+      expect(Oregano::Parser::Scope.number?(2)).to be_a(Integer)
     end
 
     it "should return a Float for a Float" do
-      expect(Puppet::Parser::Scope.number?(2.34)).to be_an_instance_of(Float)
+      expect(Oregano::Parser::Scope.number?(2.34)).to be_an_instance_of(Float)
     end
 
     it "should return 234 for '234'" do
-      expect(Puppet::Parser::Scope.number?("234")).to eq(234)
+      expect(Oregano::Parser::Scope.number?("234")).to eq(234)
     end
 
     it "should return nil for 'not a number'" do
-      expect(Puppet::Parser::Scope.number?("not a number")).to be_nil
+      expect(Oregano::Parser::Scope.number?("not a number")).to be_nil
     end
 
     it "should return 23.4 for '23.4'" do
-      expect(Puppet::Parser::Scope.number?("23.4")).to eq(23.4)
+      expect(Oregano::Parser::Scope.number?("23.4")).to eq(23.4)
     end
 
     it "should return 23.4e13 for '23.4e13'" do
-      expect(Puppet::Parser::Scope.number?("23.4e13")).to eq(23.4e13)
+      expect(Oregano::Parser::Scope.number?("23.4e13")).to eq(23.4e13)
     end
 
     it "should understand negative numbers" do
-      expect(Puppet::Parser::Scope.number?("-234")).to eq(-234)
+      expect(Oregano::Parser::Scope.number?("-234")).to eq(-234)
     end
 
     it "should know how to convert exponential float numbers ala '23e13'" do
-      expect(Puppet::Parser::Scope.number?("23e13")).to eq(23e13)
+      expect(Oregano::Parser::Scope.number?("23e13")).to eq(23e13)
     end
 
     it "should understand hexadecimal numbers" do
-      expect(Puppet::Parser::Scope.number?("0x234")).to eq(0x234)
+      expect(Oregano::Parser::Scope.number?("0x234")).to eq(0x234)
     end
 
     it "should understand octal numbers" do
-      expect(Puppet::Parser::Scope.number?("0755")).to eq(0755)
+      expect(Oregano::Parser::Scope.number?("0755")).to eq(0755)
     end
 
     it "should return nil on malformed integers" do
-      expect(Puppet::Parser::Scope.number?("0.24.5")).to be_nil
+      expect(Oregano::Parser::Scope.number?("0.24.5")).to be_nil
     end
 
     it "should convert strings with leading 0 to integer if they are not octal" do
-      expect(Puppet::Parser::Scope.number?("0788")).to eq(788)
+      expect(Oregano::Parser::Scope.number?("0788")).to eq(788)
     end
 
     it "should convert strings of negative integers" do
-      expect(Puppet::Parser::Scope.number?("-0788")).to eq(-788)
+      expect(Oregano::Parser::Scope.number?("-0788")).to eq(-788)
     end
 
     it "should return nil on malformed hexadecimal numbers" do
-      expect(Puppet::Parser::Scope.number?("0x89g")).to be_nil
+      expect(Oregano::Parser::Scope.number?("0x89g")).to be_nil
     end
   end
 
@@ -438,7 +438,7 @@ describe Puppet::Parser::Scope do
     it "should raise an error when setting numerical variable" do
       expect {
         @scope.setvar("1", :value3, :ephemeral => true)
-      }.to raise_error(Puppet::ParseError, /Cannot assign to a numeric match result variable/)
+      }.to raise_error(Oregano::ParseError, /Cannot assign to a numeric match result variable/)
     end
 
     describe "with more than one level" do
@@ -567,34 +567,34 @@ describe Puppet::Parser::Scope do
 
   describe "when managing defaults" do
     it "should be able to set and lookup defaults" do
-      param = Puppet::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
+      param = Oregano::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
       @scope.define_settings(:mytype, param)
       expect(@scope.lookupdefaults(:mytype)).to eq({:myparam => param})
     end
 
     it "should fail if a default is already defined and a new default is being defined" do
-      param = Puppet::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
+      param = Oregano::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
       @scope.define_settings(:mytype, param)
       expect {
         @scope.define_settings(:mytype, param)
-      }.to raise_error(Puppet::ParseError, /Default already defined .* cannot redefine/)
+      }.to raise_error(Oregano::ParseError, /Default already defined .* cannot redefine/)
     end
 
     it "should return multiple defaults at once" do
-      param1 = Puppet::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
+      param1 = Oregano::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
       @scope.define_settings(:mytype, param1)
-      param2 = Puppet::Parser::Resource::Param.new(:name => :other, :value => "myvalue", :source => stub("source"))
+      param2 = Oregano::Parser::Resource::Param.new(:name => :other, :value => "myvalue", :source => stub("source"))
       @scope.define_settings(:mytype, param2)
 
       expect(@scope.lookupdefaults(:mytype)).to eq({:myparam => param1, :other => param2})
     end
 
     it "should look up defaults defined in parent scopes" do
-      param1 = Puppet::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
+      param1 = Oregano::Parser::Resource::Param.new(:name => :myparam, :value => "myvalue", :source => stub("source"))
       @scope.define_settings(:mytype, param1)
 
       child_scope = @scope.newscope
-      param2 = Puppet::Parser::Resource::Param.new(:name => :other, :value => "myvalue", :source => stub("source"))
+      param2 = Oregano::Parser::Resource::Param.new(:name => :other, :value => "myvalue", :source => stub("source"))
       child_scope.define_settings(:mytype, param2)
 
       expect(child_scope.lookupdefaults(:mytype)).to eq({:myparam => param1, :other => param2})
@@ -611,7 +611,7 @@ describe Puppet::Parser::Scope do
       nil        => false
     }.each do |input, output|
       it "should treat #{input.inspect} as #{output}" do
-        expect(Puppet::Parser::Scope.true?(input)).to eq(output)
+        expect(Oregano::Parser::Scope.true?(input)).to eq(output)
       end
     end
   end

@@ -1,25 +1,25 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/configurer/downloader'
+require 'oregano/configurer/downloader'
 
-describe Puppet::Configurer::Downloader do
-  require 'puppet_spec/files'
-  include PuppetSpec::Files
+describe Oregano::Configurer::Downloader do
+  require 'oregano_spec/files'
+  include OreganoSpec::Files
 
-  let(:path)   { Puppet[:plugindest] }
-  let(:source) { 'puppet://puppet/plugins' }
+  let(:path)   { Oregano[:plugindest] }
+  let(:source) { 'oregano://oregano/plugins' }
 
   it "should require a name" do
-    expect { Puppet::Configurer::Downloader.new }.to raise_error(ArgumentError)
+    expect { Oregano::Configurer::Downloader.new }.to raise_error(ArgumentError)
   end
 
   it "should require a path and a source at initialization" do
-    expect { Puppet::Configurer::Downloader.new("name") }.to raise_error(ArgumentError)
+    expect { Oregano::Configurer::Downloader.new("name") }.to raise_error(ArgumentError)
   end
 
   it "should set the name, path and source appropriately" do
-    dler = Puppet::Configurer::Downloader.new("facts", "path", "source")
+    dler = Oregano::Configurer::Downloader.new("facts", "path", "source")
     expect(dler.name).to eq("facts")
     expect(dler.path).to eq("path")
     expect(dler.source).to eq("source")
@@ -29,7 +29,7 @@ describe Puppet::Configurer::Downloader do
     options[:name] ||= "facts"
     options[:path] ||= path
     options[:source_permissions] ||= :ignore
-    Puppet::Configurer::Downloader.new(options[:name], options[:path], source, options[:ignore], options[:environment], options[:source_permissions])
+    Oregano::Configurer::Downloader.new(options[:name], options[:path], source, options[:ignore], options[:environment], options[:source_permissions])
   end
 
   def generate_file_resource(options = {})
@@ -82,7 +82,7 @@ describe Puppet::Configurer::Downloader do
       expect(file[:source_permissions]).to eq(:ignore)
     end
 
-    describe "on POSIX", :if => Puppet.features.posix? do
+    describe "on POSIX", :if => Oregano.features.posix? do
       it "should allow source_permissions to be overridden" do
         file = generate_file_resource(:source_permissions => :use)
 
@@ -104,7 +104,7 @@ describe Puppet::Configurer::Downloader do
       end
     end
 
-    describe "on Windows", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows", :if => Oregano.features.microsoft_windows? do
       it "should omit the owner" do
         file = generate_file_resource(:path => 'C:/path')
 
@@ -146,13 +146,13 @@ describe Puppet::Configurer::Downloader do
   describe "when creating the catalog to do the downloading" do
     before do
       @path = make_absolute("/download/path")
-      @dler = Puppet::Configurer::Downloader.new("foo", @path, make_absolute("source"))
+      @dler = Oregano::Configurer::Downloader.new("foo", @path, make_absolute("source"))
     end
 
     it "should create a catalog and add the file to it" do
       catalog = @dler.catalog
       expect(catalog.resources.size).to eq(1)
-      expect(catalog.resources.first.class).to eq(Puppet::Type::File)
+      expect(catalog.resources.first.class).to eq(Oregano::Type::File)
       expect(catalog.resources.first.name).to eq(@path)
     end
 
@@ -167,19 +167,19 @@ describe Puppet::Configurer::Downloader do
       @dl_name = tmpfile("downloadpath")
       source_name = tmpfile("source")
       File.open(source_name, 'w') {|f| f.write('hola mundo') }
-      env = Puppet::Node::Environment.remote('foo')
-      @dler = Puppet::Configurer::Downloader.new("foo", @dl_name, source_name, Puppet[:pluginsignore], env)
+      env = Oregano::Node::Environment.remote('foo')
+      @dler = Oregano::Configurer::Downloader.new("foo", @dl_name, source_name, Oregano[:pluginsignore], env)
     end
 
     it "should not skip downloaded resources when filtering on tags" do
-      Puppet[:tags] = 'maytag'
+      Oregano[:tags] = 'maytag'
       @dler.evaluate
 
-      expect(Puppet::FileSystem.exist?(@dl_name)).to be_truthy
+      expect(Oregano::FileSystem.exist?(@dl_name)).to be_truthy
     end
 
     it "should log that it is downloading" do
-      Puppet.expects(:info)
+      Oregano.expects(:info)
 
       @dler.evaluate
     end
@@ -217,10 +217,10 @@ describe Puppet::Configurer::Downloader do
     end
 
     it "should catch and log exceptions" do
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       # The downloader creates a new catalog for each apply, and really the only object
-      # that it is possible to stub for the purpose of generating a puppet error
-      Puppet::Resource::Catalog.any_instance.stubs(:apply).raises(Puppet::Error, "testing")
+      # that it is possible to stub for the purpose of generating a oregano error
+      Oregano::Resource::Catalog.any_instance.stubs(:apply).raises(Oregano::Error, "testing")
 
       expect { @dler.evaluate }.not_to raise_error
     end

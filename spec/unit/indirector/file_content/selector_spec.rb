@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/file_content/selector'
+require 'oregano/indirector/file_content/selector'
 
-describe Puppet::Indirector::FileContent::Selector do
-  include PuppetSpec::Files
+describe Oregano::Indirector::FileContent::Selector do
+  include OreganoSpec::Files
 
-  it_should_behave_like "Puppet::FileServing::Files", :file_content
+  it_should_behave_like "Oregano::FileServing::Files", :file_content
 end

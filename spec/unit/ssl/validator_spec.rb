@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'puppet/ssl'
+require 'oregano/ssl'
 
-describe Puppet::SSL::Validator::DefaultValidator do
+describe Oregano::SSL::Validator::DefaultValidator do
   let(:ssl_context) do
     mock('OpenSSL::X509::StoreContext')
   end
 
   let(:ssl_configuration) do
-    Puppet::SSL::Configuration.new(
-      Puppet[:localcacert],
-      :ca_auth_file  => Puppet[:ssl_client_ca_auth])
+    Oregano::SSL::Configuration.new(
+      Oregano[:localcacert],
+      :ca_auth_file  => Oregano[:ssl_client_ca_auth])
   end
 
   let(:ssl_host) do
@@ -26,7 +26,7 @@ describe Puppet::SSL::Validator::DefaultValidator do
 
   before :each do
     ssl_configuration.stubs(:read_file).
-      with(Puppet[:localcacert]).
+      with(Oregano[:localcacert]).
       returns(root_ca)
   end
 
@@ -87,17 +87,17 @@ describe Puppet::SSL::Validator::DefaultValidator do
 
           it 'includes the CRL issuer in the verify error message' do
             crl = OpenSSL::X509::CRL.new
-            crl.issuer = OpenSSL::X509::Name.new([['CN','Puppet CA: puppetmaster.example.com']])
+            crl.issuer = OpenSSL::X509::Name.new([['CN','Oregano CA: oreganomaster.example.com']])
             crl.last_update = Time.now + 24 * 60 * 60
             ssl_context.stubs(:current_crl).returns(crl)
 
             subject.call(false, ssl_context)
-            expect(subject.verify_errors).to eq(["CRL is not yet valid for /CN=Puppet CA: puppetmaster.example.com"])
+            expect(subject.verify_errors).to eq(["CRL is not yet valid for /CN=Oregano CA: oreganomaster.example.com"])
           end
 
           it 'rejects CRLs whose last_update time is more than 5 minutes in the future' do
             crl = OpenSSL::X509::CRL.new
-            crl.issuer = OpenSSL::X509::Name.new([['CN','Puppet CA: puppetmaster.example.com']])
+            crl.issuer = OpenSSL::X509::Name.new([['CN','Oregano CA: oreganomaster.example.com']])
             crl.last_update = Time.now + 24 * 60 * 60
             ssl_context.stubs(:current_crl).returns(crl)
 
@@ -106,7 +106,7 @@ describe Puppet::SSL::Validator::DefaultValidator do
 
           it 'accepts CRLs whose last_update time is 10 seconds in the future' do
             crl = OpenSSL::X509::CRL.new
-            crl.issuer = OpenSSL::X509::Name.new([['CN','Puppet CA: puppetmaster.example.com']])
+            crl.issuer = OpenSSL::X509::Name.new([['CN','Oregano CA: oreganomaster.example.com']])
             crl.last_update = Time.now + 10
             ssl_context.stubs(:current_crl).returns(crl)
 
@@ -146,7 +146,7 @@ describe Puppet::SSL::Validator::DefaultValidator do
       context 'and the chain is invalid' do
         before :each do
           ssl_configuration.stubs(:read_file).
-            with(Puppet[:localcacert]).
+            with(Oregano[:localcacert]).
             returns(agent_ca)
         end
 
@@ -209,7 +209,7 @@ describe Puppet::SSL::Validator::DefaultValidator do
   describe '#valid_peer?' do
     before :each do
       peer_certs = cert_chain_in_callback_order.map do |c|
-        Puppet::SSL::Certificate.from_instance(c)
+        Oregano::SSL::Certificate.from_instance(c)
       end
       subject.instance_variable_set(:@peer_certs, peer_certs)
     end

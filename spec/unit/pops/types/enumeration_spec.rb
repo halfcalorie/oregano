@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops::Types
+module Oregano::Pops::Types
 describe 'The enumeration support' do
   it 'produces an enumerator for Array' do
   expect(Enumeration.enumerator([1,2,3]).respond_to?(:next)).to eql(true)

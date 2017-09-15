@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::IPSUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::IPSUtils
 
 teardown do
   step "cleanup"
@@ -29,11 +29,11 @@ agents.each do |agent|
     assert_match( /ensure: created/, result.stdout, "err: #{agent}")
   end
 
-  on(agent, puppet("resource package mypkg")) do
+  on(agent, oregano("resource package mypkg")) do
     assert_match( /0.0.1/, result.stdout, "err: #{agent}")
   end
 
-  on(agent, puppet("resource package")) do
+  on(agent, oregano("resource package")) do
     assert_match( /0.0.1/, result.stdout, "err: #{agent}")
   end
 end

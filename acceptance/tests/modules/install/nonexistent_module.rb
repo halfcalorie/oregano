@@ -1,6 +1,6 @@
-test_name "puppet module install (nonexistent module)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (nonexistent module)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -23,7 +23,7 @@ step 'Setup'
 stub_forge_on(master)
 
 step "Try to install a non-existent module"
-on master, puppet("module install #{module_author}-#{module_name}"), :acceptable_exit_codes => [1] do
+on master, oregano("module install #{module_author}-#{module_name}"), :acceptable_exit_codes => [1] do
   assert_match(/could not install '#{module_author}-#{module_name}'/i, stderr,
       "Error that module could not be installed was not displayed")
 
@@ -32,7 +32,7 @@ on master, puppet("module install #{module_author}-#{module_name}"), :acceptable
 end
 
 step "Try to install a non-existent module (JSON rendering)"
-on master, puppet("module --render-as json install #{module_author}-#{module_name}") do
+on master, oregano("module --render-as json install #{module_author}-#{module_name}") do
   require 'json'
   str  = stdout.lines.to_a.last
   json = JSON.parse(str)

@@ -1,4 +1,4 @@
-test_name "node_name_value should be used as the node name for puppet agent"
+test_name "node_name_value should be used as the node name for oregano agent"
 
 tag 'audit:medium',
     'audit:integration',  # Tests that the server properly overrides certname with node_name fact.
@@ -8,15 +8,15 @@ tag 'audit:medium',
 success_message = "node_name_value setting was correctly used as the node name"
 testdir = master.tmpdir('nodenamevalue')
 
-if @options[:is_puppetserver]
+if @options[:is_oreganoserver]
   step "Prepare for custom tk-auth rules" do
-    on master, 'cp /etc/puppetlabs/puppetserver/conf.d/auth.conf /etc/puppetlabs/puppetserver/conf.d/auth.bak'
-    modify_tk_config(master, options['puppetserver-config'], {'jruby-puppet' => {'use-legacy-auth-conf' => false}})
+    on master, 'cp /etc/oreganolabs/oreganoserver/conf.d/auth.conf /etc/oreganolabs/oreganoserver/conf.d/auth.bak'
+    modify_tk_config(master, options['oreganoserver-config'], {'jruby-oregano' => {'use-legacy-auth-conf' => false}})
   end
 
   teardown do
-    on master, 'cp /etc/puppetlabs/puppetserver/conf.d/auth.bak /etc/puppetlabs/puppetserver/conf.d/auth.conf'
-    modify_tk_config(master, options['puppetserver-config'], {'jruby-puppet' => {'use-legacy-auth-conf' => true}})
+    on master, 'cp /etc/oreganolabs/oreganoserver/conf.d/auth.bak /etc/oreganolabs/oreganoserver/conf.d/auth.conf'
+    modify_tk_config(master, options['oreganoserver-config'], {'jruby-oregano' => {'use-legacy-auth-conf' => true}})
   end
 
   step "Setup tk-auth rules" do
@@ -26,42 +26,42 @@ authorization: {
     rules: [
         {
             match-request: {
-                path: "/puppet/v3/file"
+                path: "/oregano/v3/file"
                 type: path
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs file"
+            name: "oreganolabs file"
         },
         {
             match-request: {
-                path: "/puppet/v3/catalog/specified_node_name"
+                path: "/oregano/v3/catalog/specified_node_name"
                 type: path
                 method: [get, post]
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs catalog"
+            name: "oreganolabs catalog"
         },
         {
             match-request: {
-                path: "/puppet/v3/node/specified_node_name"
+                path: "/oregano/v3/node/specified_node_name"
                 type: path
                 method: get
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs node"
+            name: "oreganolabs node"
         },
         {
             match-request: {
-                path: "/puppet/v3/report/specified_node_name"
+                path: "/oregano/v3/report/specified_node_name"
                 type: path
                 method: put
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs report"
+            name: "oreganolabs report"
         },
         {
           match-request: {
@@ -70,14 +70,14 @@ authorization: {
           }
           deny: "*"
           sort-order: 999
-          name: "puppetlabs deny all"
+          name: "oreganolabs deny all"
         }
     ]
 }
     TK_AUTH
 
     apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
-      file { '/etc/puppetlabs/puppetserver/conf.d/auth.conf':
+      file { '/etc/oreganolabs/oreganoserver/conf.d/auth.conf':
         ensure => file,
         mode => '0644',
         content => '#{tk_auth}',
@@ -88,15 +88,15 @@ else
   step "setup auth.conf rules" do
     authfile = "#{testdir}/auth.conf"
     authconf = <<-AUTHCONF
-path /puppet/v3/catalog/specified_node_name
+path /oregano/v3/catalog/specified_node_name
 auth yes
 allow *
 
-path /puppet/v3/node/specified_node_name
+path /oregano/v3/node/specified_node_name
 auth yes
 allow *
 
-path /puppet/v3/report/specified_node_name
+path /oregano/v3/report/specified_node_name
 auth yes
 allow *
     AUTHCONF
@@ -153,8 +153,8 @@ step "Ensure nodes are classified based on the node name fact" do
       'node_terminus'   => 'plain',
     },
   }
-  with_puppet_running_on(master, master_opts, testdir) do
-    on(agents, puppet('agent', "-t --node_name_value specified_node_name --server #{master}"), :acceptable_exit_codes => [0,2]) do
+  with_oregano_running_on(master, master_opts, testdir) do
+    on(agents, oregano('agent', "-t --node_name_value specified_node_name --server #{master}"), :acceptable_exit_codes => [0,2]) do
       assert_match(/defined 'message'.*#{success_message}/, stdout)
     end
   end

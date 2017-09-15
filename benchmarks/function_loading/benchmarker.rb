@@ -13,13 +13,13 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
-    config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', config])
+    require 'oregano'
+    config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', config])
   end
 
   def run(args=nil)
-    envs = Puppet.lookup(:environments)
+    envs = Oregano.lookup(:environments)
 
     envs.clear('benchmarking')
 #    # Uncomment to get some basic memory statistics
@@ -27,8 +27,8 @@ class Benchmarker
 #    result = {}
 #    ObjectSpace.count_objects(result)
 #    puts "C(#{result[:T_CLASS]}) O(#{result[:T_OBJECT]}) F(#{result[:FREE]}) #{result[:T_CLASS] + result[:T_OBJECT]}"
-    node = Puppet::Node.new('testing', :environment => envs.get('benchmarking'))
-    Puppet::Resource::Catalog.indirection.find('testing', :use_node => node)
+    node = Oregano::Node.new('testing', :environment => envs.get('benchmarking'))
+    Oregano::Resource::Catalog.indirection.find('testing', :use_node => node)
   end
 
   def benchmark_count
@@ -40,7 +40,7 @@ class Benchmarker
   def generate
     environment = File.join(@target, 'environments', 'benchmarking')
     modules = File.join(environment, 'modules')
-    env_functions = File.join(environment, 'lib', 'puppet', 'functions', 'environment')
+    env_functions = File.join(environment, 'lib', 'oregano', 'functions', 'environment')
     templates = File.join('benchmarks', 'function_loading')
 
     mkdir_p(modules)
@@ -61,7 +61,7 @@ class Benchmarker
       module_name = "module#{i}"
       module_base = File.join(modules, module_name)
       manifests = File.join(module_base, 'manifests')
-      module_functions = File.join(module_base, 'lib', 'puppet', 'functions', module_name)
+      module_functions = File.join(module_base, 'lib', 'oregano', 'functions', module_name)
 
       mkdir_p(manifests)
       mkdir_p(module_functions)
@@ -69,7 +69,7 @@ class Benchmarker
       File.open(File.join(module_base, 'metadata.json'), 'w') do |f|
         JSON.dump({
           'name' => "tester-#{module_name}",
-          'author' => 'Puppet Labs tester',
+          'author' => 'Oregano Labs tester',
           'license' => 'Apache 2.0',
           'version' => '1.0.0',
           'summary' => 'Benchmark module',
@@ -90,8 +90,8 @@ class Benchmarker
       end
     end
 
-    render(File.join(templates, 'puppet.conf.erb'),
-           File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+           File.join(@target, 'oregano.conf'),
            :location => @target)
   end
 

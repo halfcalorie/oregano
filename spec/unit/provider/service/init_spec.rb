@@ -5,20 +5,20 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:service).provider(:init) do
+describe Oregano::Type.type(:service).provider(:init) do
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   end
 
   before do
-    Puppet::Type.type(:service).defaultprovider = described_class
+    Oregano::Type.type(:service).defaultprovider = described_class
   end
 
   after do
-    Puppet::Type.type(:service).defaultprovider = nil
+    Oregano::Type.type(:service).defaultprovider = nil
   end
 
   let :provider do
@@ -26,7 +26,7 @@ describe Puppet::Type.type(:service).provider(:init) do
   end
 
   let :resource do
-    Puppet::Type.type(:service).new(
+    Oregano::Type.type(:service).new(
       :name     => 'myservice',
       :ensure   => :running,
       :path     => paths
@@ -84,12 +84,12 @@ describe Puppet::Type.type(:service).provider(:init) do
       expect(described_class.instances).to be_all { |provider| provider.get(:hasstatus) == true }
     end
 
-    it "should discard upstart jobs", :if => Puppet.features.manages_symlinks? do
+    it "should discard upstart jobs", :if => Oregano.features.manages_symlinks? do
       not_init_service, *valid_services = @services
       path = "tmp/#{not_init_service}"
-      Puppet::FileSystem.expects(:symlink?).at_least_once.returns false
-      Puppet::FileSystem.expects(:symlink?).with(Puppet::FileSystem.pathname(path)).returns(true)
-      Puppet::FileSystem.expects(:readlink).with(Puppet::FileSystem.pathname(path)).returns("/lib/init/upstart-job")
+      Oregano::FileSystem.expects(:symlink?).at_least_once.returns false
+      Oregano::FileSystem.expects(:symlink?).with(Oregano::FileSystem.pathname(path)).returns(true)
+      Oregano::FileSystem.expects(:readlink).with(Oregano::FileSystem.pathname(path)).returns("/lib/init/upstart-job")
       expect(described_class.instances.map(&:name)).to eq(valid_services)
     end
 
@@ -104,7 +104,7 @@ describe Puppet::Type.type(:service).provider(:init) do
   describe "when checking valid paths" do
     it "should discard paths that do not exist" do
       File.expects(:directory?).with(paths[0]).returns false
-      Puppet::FileSystem.expects(:exist?).with(paths[0]).returns false
+      Oregano::FileSystem.expects(:exist?).with(paths[0]).returns false
       File.expects(:directory?).with(paths[1]).returns true
 
       expect(provider.paths).to eq([paths[1]])
@@ -112,7 +112,7 @@ describe Puppet::Type.type(:service).provider(:init) do
 
     it "should discard paths that are not directories" do
       paths.each do |path|
-        Puppet::FileSystem.expects(:exist?).with(path).returns true
+        Oregano::FileSystem.expects(:exist?).with(path).returns true
         File.expects(:directory?).with(path).returns false
       end
       expect(provider.paths).to be_empty
@@ -125,30 +125,30 @@ describe Puppet::Type.type(:service).provider(:init) do
     end
 
     it "should be able to find the init script in the service path" do
-      Puppet::FileSystem.expects(:exist?).with("#{paths[0]}/myservice").returns true
-      Puppet::FileSystem.expects(:exist?).with("#{paths[1]}/myservice").never # first one wins
+      Oregano::FileSystem.expects(:exist?).with("#{paths[0]}/myservice").returns true
+      Oregano::FileSystem.expects(:exist?).with("#{paths[1]}/myservice").never # first one wins
       expect(provider.initscript).to eq("/service/path/myservice")
     end
 
     it "should be able to find the init script in an alternate service path" do
-      Puppet::FileSystem.expects(:exist?).with("#{paths[0]}/myservice").returns false
-      Puppet::FileSystem.expects(:exist?).with("#{paths[1]}/myservice").returns true
+      Oregano::FileSystem.expects(:exist?).with("#{paths[0]}/myservice").returns false
+      Oregano::FileSystem.expects(:exist?).with("#{paths[1]}/myservice").returns true
       expect(provider.initscript).to eq("/alt/service/path/myservice")
     end
 
     it "should be able to find the init script if it ends with .sh" do
-      Puppet::FileSystem.expects(:exist?).with("#{paths[0]}/myservice").returns false
-      Puppet::FileSystem.expects(:exist?).with("#{paths[1]}/myservice").returns false
-      Puppet::FileSystem.expects(:exist?).with("#{paths[0]}/myservice.sh").returns true
+      Oregano::FileSystem.expects(:exist?).with("#{paths[0]}/myservice").returns false
+      Oregano::FileSystem.expects(:exist?).with("#{paths[1]}/myservice").returns false
+      Oregano::FileSystem.expects(:exist?).with("#{paths[0]}/myservice.sh").returns true
       expect(provider.initscript).to eq("/service/path/myservice.sh")
     end
 
     it "should fail if the service isn't there" do
       paths.each do |path|
-        Puppet::FileSystem.expects(:exist?).with("#{path}/myservice").returns false
-        Puppet::FileSystem.expects(:exist?).with("#{path}/myservice.sh").returns false
+        Oregano::FileSystem.expects(:exist?).with("#{path}/myservice").returns false
+        Oregano::FileSystem.expects(:exist?).with("#{path}/myservice.sh").returns false
       end
-      expect { provider.initscript }.to raise_error(Puppet::Error, "Could not find init script for 'myservice'")
+      expect { provider.initscript }.to raise_error(Oregano::Error, "Could not find init script for 'myservice'")
     end
   end
 
@@ -156,7 +156,7 @@ describe Puppet::Type.type(:service).provider(:init) do
     before :each do
       File.stubs(:directory?).with("/service/path").returns true
       File.stubs(:directory?).with("/alt/service/path").returns true
-      Puppet::FileSystem.stubs(:exist?).with("/service/path/myservice").returns true
+      Oregano::FileSystem.stubs(:exist?).with("/service/path/myservice").returns true
     end
 
     [:start, :stop, :status, :restart].each do |method|

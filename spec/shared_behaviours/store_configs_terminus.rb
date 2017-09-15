@@ -1,7 +1,7 @@
 shared_examples_for "a StoreConfigs terminus" do
   before :each do
-    Puppet[:storeconfigs] = true
-    Puppet[:storeconfigs_backend] = "store_configs_testing"
+    Oregano[:storeconfigs] = true
+    Oregano[:storeconfigs_backend] = "store_configs_testing"
   end
 
   api = [:find, :search, :save, :destroy, :head]
@@ -11,7 +11,7 @@ shared_examples_for "a StoreConfigs terminus" do
   end
 
   it "should fail if an invalid backend is configured" do
-    Puppet[:storeconfigs_backend] = "synergy"
+    Oregano[:storeconfigs_backend] = "synergy"
     expect { subject }.to raise_error(ArgumentError, /could not find terminus synergy/i)
   end
 

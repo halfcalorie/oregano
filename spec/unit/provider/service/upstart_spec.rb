@@ -2,15 +2,15 @@
 require 'spec_helper'
 
 
-describe Puppet::Type.type(:service).provider(:upstart) do
+describe Oregano::Type.type(:service).provider(:upstart) do
   let(:manual) { "\nmanual" }
   let(:start_on_default_runlevels) {  "\nstart on runlevel [2,3,4,5]" }
-  let(:provider_class) { Puppet::Type.type(:service).provider(:upstart) }
+  let(:provider_class) { Oregano::Type.type(:service).provider(:upstart) }
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   end
 
   def given_contents_of(file, content)
@@ -24,7 +24,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
   end
 
   def lists_processes_as(output)
-    Puppet::Util::Execution.stubs(:execpipe).with("/sbin/initctl list").yields(output)
+    Oregano::Util::Execution.stubs(:execpipe).with("/sbin/initctl list").yields(output)
     provider_class.stubs(:which).with("/sbin/initctl").returns("/sbin/initctl")
   end
 
@@ -77,9 +77,9 @@ describe Puppet::Type.type(:service).provider(:upstart) do
   describe "#search" do
     it "searches through paths to find a matching conf file" do
       File.stubs(:directory?).returns(true)
-      Puppet::FileSystem.stubs(:exist?).returns(false)
-      Puppet::FileSystem.expects(:exist?).with("/etc/init/foo-bar.conf").returns(true)
-      resource = Puppet::Type.type(:service).new(:name => "foo-bar", :provider => :upstart)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.expects(:exist?).with("/etc/init/foo-bar.conf").returns(true)
+      resource = Oregano::Type.type(:service).new(:name => "foo-bar", :provider => :upstart)
       provider = provider_class.new(resource)
 
       expect(provider.initscript).to eq("/etc/init/foo-bar.conf")
@@ -87,9 +87,9 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
     it "searches for just the name of a compound named service" do
       File.stubs(:directory?).returns(true)
-      Puppet::FileSystem.stubs(:exist?).returns(false)
-      Puppet::FileSystem.expects(:exist?).with("/etc/init/network-interface.conf").returns(true)
-      resource = Puppet::Type.type(:service).new(:name => "network-interface INTERFACE=lo", :provider => :upstart)
+      Oregano::FileSystem.stubs(:exist?).returns(false)
+      Oregano::FileSystem.expects(:exist?).with("/etc/init/network-interface.conf").returns(true)
+      resource = Oregano::Type.type(:service).new(:name => "network-interface INTERFACE=lo", :provider => :upstart)
       provider = provider_class.new(resource)
 
       expect(provider.initscript).to eq("/etc/init/network-interface.conf")
@@ -98,7 +98,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
   describe "#status" do
     it "should use the default status command if none is specified" do
-      resource = Puppet::Type.type(:service).new(:name => "foo", :provider => :upstart)
+      resource = Oregano::Type.type(:service).new(:name => "foo", :provider => :upstart)
       provider = provider_class.new(resource)
       provider.stubs(:is_upstart?).returns(true)
 
@@ -109,7 +109,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
     describe "when a special status command is specifed" do
       it "should use the provided status command" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -120,7 +120,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
       end
 
       it "should return :stopped when the provided status command return non-zero" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -131,7 +131,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
       end
 
       it "should return :running when the provided status command return zero" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -144,7 +144,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
     describe "when :hasstatus is set to false" do
       it "should return :stopped if the pid can not be found" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -154,7 +154,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
       end
 
       it "should return :running if the pid can be found" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -166,7 +166,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
     describe "when a special status command is specifed" do
       it "should use the provided status command" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -177,7 +177,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
       end
 
       it "should return :stopped when the provided status command return non-zero" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -188,7 +188,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
       end
 
       it "should return :running when the provided status command return zero" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :provider => :upstart, :status => '/bin/foo')
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -201,7 +201,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
     describe "when :hasstatus is set to false" do
       it "should return :stopped if the pid can not be found" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -211,7 +211,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
       end
 
       it "should return :running if the pid can be found" do
-        resource = Puppet::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
+        resource = Oregano::Type.type(:service).new(:name => 'foo', :hasstatus => false, :provider => :upstart)
         provider = provider_class.new(resource)
         provider.stubs(:is_upstart?).returns(true)
 
@@ -222,7 +222,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
     end
 
     it "should properly handle services with 'start' in their name" do
-      resource = Puppet::Type.type(:service).new(:name => "foostartbar", :provider => :upstart)
+      resource = Oregano::Type.type(:service).new(:name => "foostartbar", :provider => :upstart)
       provider = provider_class.new(resource)
       provider.stubs(:is_upstart?).returns(true)
 
@@ -234,7 +234,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
   describe "inheritance" do
     let :resource do
-      resource = Puppet::Type.type(:service).new(:name => "foo", :provider => :upstart)
+      resource = Oregano::Type.type(:service).new(:name => "foo", :provider => :upstart)
     end
 
     let :provider do
@@ -258,7 +258,7 @@ describe Puppet::Type.type(:service).provider(:upstart) do
 
   describe "should be enableable" do
     let :resource do
-      Puppet::Type.type(:service).new(:name => "foo", :provider => :upstart)
+      Oregano::Type.type(:service).new(:name => "foo", :provider => :upstart)
     end
 
     let :provider do
@@ -266,11 +266,11 @@ describe Puppet::Type.type(:service).provider(:upstart) do
     end
 
     let :init_script do
-      PuppetSpec::Files.tmpfile("foo.conf")
+      OreganoSpec::Files.tmpfile("foo.conf")
     end
 
     let :over_script do
-      PuppetSpec::Files.tmpfile("foo.override")
+      OreganoSpec::Files.tmpfile("foo.override")
     end
 
     let :disabled_content do

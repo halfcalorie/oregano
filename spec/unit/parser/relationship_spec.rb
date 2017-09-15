@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/parser/relationship'
+require 'oregano/parser/relationship'
 
-describe Puppet::Parser::Relationship do
+describe Oregano::Parser::Relationship do
   before do
-    @source = Puppet::Resource.new(:mytype, "source")
-    @target = Puppet::Resource.new(:mytype, "target")
-    @extra_resource  = Puppet::Resource.new(:mytype, "extra")
-    @extra_resource2 = Puppet::Resource.new(:mytype, "extra2")
-    @dep = Puppet::Parser::Relationship.new(@source, @target, :relationship)
+    @source = Oregano::Resource.new(:mytype, "source")
+    @target = Oregano::Resource.new(:mytype, "target")
+    @extra_resource  = Oregano::Resource.new(:mytype, "extra")
+    @extra_resource2 = Oregano::Resource.new(:mytype, "extra2")
+    @dep = Oregano::Parser::Relationship.new(@source, @target, :relationship)
   end
 
   describe "when evaluating" do
     before do
-      @catalog = Puppet::Resource::Catalog.new
+      @catalog = Oregano::Resource::Catalog.new
       @catalog.add_resource(@source)
       @catalog.add_resource(@target)
       @catalog.add_resource(@extra_resource)
@@ -22,13 +22,13 @@ describe Puppet::Parser::Relationship do
     end
 
     it "should fail if the source resource cannot be found" do
-      @catalog = Puppet::Resource::Catalog.new
+      @catalog = Oregano::Resource::Catalog.new
       @catalog.add_resource @target
       expect { @dep.evaluate(@catalog) }.to raise_error(ArgumentError)
     end
 
     it "should fail if the target resource cannot be found" do
-      @catalog = Puppet::Resource::Catalog.new
+      @catalog = Oregano::Resource::Catalog.new
       @catalog.add_resource @source
       expect { @dep.evaluate(@catalog) }.to raise_error(ArgumentError)
     end

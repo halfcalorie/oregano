@@ -2,21 +2,21 @@
 require 'spec_helper'
 
 def existing_command
-  Puppet.features.microsoft_windows? ? "cmd" : "echo"
+  Oregano.features.microsoft_windows? ? "cmd" : "echo"
 end
 
-describe Puppet::Provider do
+describe Oregano::Provider do
   before :each do
-    Puppet::Type.newtype(:test) do
+    Oregano::Type.newtype(:test) do
       newparam(:name) { isnamevar }
     end
   end
 
   after :each do
-    Puppet::Type.rmtype(:test)
+    Oregano::Type.rmtype(:test)
   end
 
-  let :type do Puppet::Type.type(:test) end
+  let :type do Oregano::Type.type(:test) end
   let :provider do type.provide(:default) {} end
 
   subject { provider }
@@ -139,23 +139,23 @@ describe Puppet::Provider do
   end
 
   it "should have a specifity class method" do
-    expect(Puppet::Provider).to respond_to(:specificity)
+    expect(Oregano::Provider).to respond_to(:specificity)
   end
 
   it "should be Comparable" do
-    res = Puppet::Type.type(:notify).new(:name => "res")
+    res = Oregano::Type.type(:notify).new(:name => "res")
 
     # Normally I wouldn't like the stubs, but the only way to name a class
     # otherwise is to assign it to a constant, and that hurts more here in
     # testing world. --daniel 2012-01-29
-    a = Class.new(Puppet::Provider).new(res)
-    a.class.stubs(:name).returns "Puppet::Provider::Notify::A"
+    a = Class.new(Oregano::Provider).new(res)
+    a.class.stubs(:name).returns "Oregano::Provider::Notify::A"
 
-    b = Class.new(Puppet::Provider).new(res)
-    b.class.stubs(:name).returns "Puppet::Provider::Notify::B"
+    b = Class.new(Oregano::Provider).new(res)
+    b.class.stubs(:name).returns "Oregano::Provider::Notify::B"
 
-    c = Class.new(Puppet::Provider).new(res)
-    c.class.stubs(:name).returns "Puppet::Provider::Notify::C"
+    c = Class.new(Oregano::Provider).new(res)
+    c.class.stubs(:name).returns "Oregano::Provider::Notify::C"
 
     [[a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a]].each do |this|
       expect(this.sort).to eq([a, b, c])
@@ -202,7 +202,7 @@ describe Puppet::Provider do
       subject { provider.new }
 
       it "should raise an internal error if asked for the name" do
-        expect { subject.name }.to raise_error Puppet::DevError
+        expect { subject.name }.to raise_error Oregano::DevError
       end
 
       it "should not have a resource" do expect(subject.resource).to be_nil end
@@ -225,14 +225,14 @@ describe Puppet::Provider do
       { :operatingsystem => Facter.value(:operatingsystem) } => true,
       { :operatingsystem => :yayness } => false,
       { :nothing => :yayness } => false,
-      { :exists => Puppet::Util.which(existing_command) } => true,
+      { :exists => Oregano::Util.which(existing_command) } => true,
       { :exists => "/this/file/does/not/exist" } => false,
-      { :true => true, :exists => Puppet::Util.which(existing_command) } => true,
+      { :true => true, :exists => Oregano::Util.which(existing_command) } => true,
       { :true => true, :exists => "/this/file/does/not/exist" } => false,
       { :operatingsystem => Facter.value(:operatingsystem),
-        :exists => Puppet::Util.which(existing_command) } => true,
+        :exists => Oregano::Util.which(existing_command) } => true,
       { :operatingsystem => :yayness,
-        :exists => Puppet::Util.which(existing_command) } => false,
+        :exists => Oregano::Util.which(existing_command) } => false,
       { :operatingsystem => Facter.value(:operatingsystem),
         :exists => "/this/file/does/not/exist" } => false,
       { :operatingsystem => :yayness,
@@ -366,8 +366,8 @@ describe Puppet::Provider do
 
     describe "using a :feature key" do
       before :each do
-        Puppet.features.add(:yay) do true end
-        Puppet.features.add(:boo) do false end
+        Oregano.features.add(:yay) do true end
+        Oregano.features.add(:boo) do false end
       end
 
       it "is default for an available feature" do
@@ -390,29 +390,29 @@ describe Puppet::Provider do
 
   context "provider commands" do
     it "should raise for unknown commands" do
-      expect { subject.command(:something) }.to raise_error(Puppet::DevError)
+      expect { subject.command(:something) }.to raise_error(Oregano::DevError)
     end
 
     it "should handle command inheritance" do
       parent = type.provide("parent")
       child  = type.provide("child", :parent => parent.name)
 
-      command = Puppet::Util.which('sh') || Puppet::Util.which('cmd.exe')
+      command = Oregano::Util.which('sh') || Oregano::Util.which('cmd.exe')
       parent.commands :sh => command
 
-      expect(Puppet::FileSystem.exist?(parent.command(:sh))).to be_truthy
+      expect(Oregano::FileSystem.exist?(parent.command(:sh))).to be_truthy
       expect(parent.command(:sh)).to match(/#{Regexp.escape(command)}$/)
 
-      expect(Puppet::FileSystem.exist?(child.command(:sh))).to be_truthy
+      expect(Oregano::FileSystem.exist?(child.command(:sh))).to be_truthy
       expect(child.command(:sh)).to match(/#{Regexp.escape(command)}$/)
     end
 
     it "#1197: should find commands added in the same run" do
-      subject.commands :testing => "puppet-bug-1197"
+      subject.commands :testing => "oregano-bug-1197"
       expect(subject.command(:testing)).to be_nil
 
-      subject.stubs(:which).with("puppet-bug-1197").returns("/puppet-bug-1197")
-      expect(subject.command(:testing)).to eq("/puppet-bug-1197")
+      subject.stubs(:which).with("oregano-bug-1197").returns("/oregano-bug-1197")
+      expect(subject.command(:testing)).to eq("/oregano-bug-1197")
 
       # Ideally, we would also test that `suitable?` returned the right thing
       # here, but it is impossible to get access to the methods that do that
@@ -440,50 +440,50 @@ describe Puppet::Provider do
       end
 
       it "should raise if the command is invoked" do
-        expect { subject.cmd }.to raise_error(Puppet::Error, /Command cmd is missing/)
+        expect { subject.cmd }.to raise_error(Oregano::Error, /Command cmd is missing/)
       end
     end
   end
 
   context "execution" do
     before :each do
-      Puppet.expects(:deprecation_warning).never
+      Oregano.expects(:deprecation_warning).never
     end
 
-    it "delegates instance execute to Puppet::Util::Execution" do
-      Puppet::Util::Execution.expects(:execute).with("a_command", { :option => "value" })
+    it "delegates instance execute to Oregano::Util::Execution" do
+      Oregano::Util::Execution.expects(:execute).with("a_command", { :option => "value" })
 
       provider.new.send(:execute, "a_command", { :option => "value" })
     end
 
-    it "delegates class execute to Puppet::Util::Execution" do
-      Puppet::Util::Execution.expects(:execute).with("a_command", { :option => "value" })
+    it "delegates class execute to Oregano::Util::Execution" do
+      Oregano::Util::Execution.expects(:execute).with("a_command", { :option => "value" })
 
       provider.send(:execute, "a_command", { :option => "value" })
     end
 
-    it "delegates instance execpipe to Puppet::Util::Execution" do
+    it "delegates instance execpipe to Oregano::Util::Execution" do
       block = Proc.new { }
-      Puppet::Util::Execution.expects(:execpipe).with("a_command", true, block)
+      Oregano::Util::Execution.expects(:execpipe).with("a_command", true, block)
 
       provider.new.send(:execpipe, "a_command", true, block)
     end
 
-    it "delegates class execpipe to Puppet::Util::Execution" do
+    it "delegates class execpipe to Oregano::Util::Execution" do
       block = Proc.new { }
-      Puppet::Util::Execution.expects(:execpipe).with("a_command", true, block)
+      Oregano::Util::Execution.expects(:execpipe).with("a_command", true, block)
 
       provider.send(:execpipe, "a_command", true, block)
     end
 
-    it "delegates instance execfail to Puppet::Util::Execution" do
-      Puppet::Util::Execution.expects(:execfail).with("a_command", "an exception to raise")
+    it "delegates instance execfail to Oregano::Util::Execution" do
+      Oregano::Util::Execution.expects(:execfail).with("a_command", "an exception to raise")
 
       provider.new.send(:execfail, "a_command", "an exception to raise")
     end
 
-    it "delegates class execfail to Puppet::Util::Execution" do
-      Puppet::Util::Execution.expects(:execfail).with("a_command", "an exception to raise")
+    it "delegates class execfail to Oregano::Util::Execution" do
+      Oregano::Util::Execution.expects(:execfail).with("a_command", "an exception to raise")
 
       provider.send(:execfail, "a_command", "an exception to raise")
     end
@@ -698,7 +698,7 @@ describe Puppet::Provider do
   end
 
   def provider_of(options = {}, &block)
-    type = Puppet::Type.newtype(:dummy) do
+    type = Oregano::Type.newtype(:dummy) do
       provide(:dummy, options, &block)
     end
 
@@ -706,13 +706,13 @@ describe Puppet::Provider do
   end
 
   def expect_command_executed(name, path, *args)
-    command = Puppet::Provider::Command.new(name, path, Puppet::Util, Puppet::Util::Execution)
+    command = Oregano::Provider::Command.new(name, path, Oregano::Util, Oregano::Util::Execution)
     command.expects(:execute).with(*args)
     command
   end
 
   def allow_creation_of(command, environment = {})
-      Puppet::Provider::Command.stubs(:new).with(command.name, command.executable, Puppet::Util, Puppet::Util::Execution, { :failonfail => true, :combine => true, :custom_environment => environment }).returns(command)
+      Oregano::Provider::Command.stubs(:new).with(command.name, command.executable, Oregano::Util, Oregano::Util::Execution, { :failonfail => true, :combine => true, :custom_environment => environment }).returns(command)
   end
 
   def file_exists_and_is_executable(path)

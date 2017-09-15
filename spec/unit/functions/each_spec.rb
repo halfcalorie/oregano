@@ -1,11 +1,11 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 require 'shared_behaviours/iterative_functions'
 
 describe 'the each method' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   context "should be callable as" do
     it 'each on an array selecting each value' do

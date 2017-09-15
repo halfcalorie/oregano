@@ -14,7 +14,7 @@ manifest = %Q{
   step "prepare the agents for the test"
   on agent, "touch #{touch} && rm -f #{donottouch}"
 
-  step "test using puppet apply"
+  step "test using oregano apply"
   apply_manifest_on(agent, manifest) do
     fail_test "looks like the thing executed, which it shouldn't" if
       stdout.include? 'executed successfully'
@@ -26,8 +26,8 @@ manifest = %Q{
   step "prepare the agents for the second part of the test"
   on agent, "touch #{touch} ; rm -f #{donottouch}"
 
-  step "test using puppet resource"
-  on(agent, puppet_resource('exec', "test#{Time.new.to_i}",
+  step "test using oregano resource"
+  on(agent, oregano_resource('exec', "test#{Time.new.to_i}",
                    "command='#{agent.touch(donottouch)}'",
                    "creates='#{touch}'")) do
     fail_test "looks like the thing executed, which it shouldn't" if

@@ -1,9 +1,9 @@
-test_name 'Puppet User and Group' do
+test_name 'Oregano User and Group' do
   hosts.each do |host|
 
-    step "ensure puppet user and group added to all nodes because this is what the packages do" do
-      on host, puppet("resource user puppet ensure=present")
-      on host, puppet("resource group puppet ensure=present")
+    step "ensure oregano user and group added to all nodes because this is what the packages do" do
+      on host, oregano("resource user oregano ensure=present")
+      on host, oregano("resource group oregano ensure=present")
     end
 
   end

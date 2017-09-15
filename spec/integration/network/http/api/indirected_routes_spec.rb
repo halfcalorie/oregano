@@ -1,35 +1,35 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http'
-require 'puppet/network/http/api/indirected_routes'
-require 'rack/mock' if Puppet.features.rack?
-require 'puppet/network/http/rack/rest'
-require 'puppet/indirector_proxy'
-require 'puppet_spec/files'
-require 'puppet_spec/network'
+require 'oregano/network/http'
+require 'oregano/network/http/api/indirected_routes'
+require 'rack/mock' if Oregano.features.rack?
+require 'oregano/network/http/rack/rest'
+require 'oregano/indirector_proxy'
+require 'oregano_spec/files'
+require 'oregano_spec/network'
 require 'json'
 
-describe Puppet::Network::HTTP::API::IndirectedRoutes do
-  include PuppetSpec::Files
-  include PuppetSpec::Network
+describe Oregano::Network::HTTP::API::IndirectedRoutes do
+  include OreganoSpec::Files
+  include OreganoSpec::Network
   include_context 'with supported checksum types'
 
   describe "when running the master application" do
     before :each do
-      Puppet::Application[:master].setup_terminuses
+      Oregano::Application[:master].setup_terminuses
     end
 
-    describe "using Puppet API to request file metadata" do
-      let(:handler) { Puppet::Network::HTTP::API::IndirectedRoutes.new }
-      let(:response) { Puppet::Network::HTTP::MemoryResponse.new }
+    describe "using Oregano API to request file metadata" do
+      let(:handler) { Oregano::Network::HTTP::API::IndirectedRoutes.new }
+      let(:response) { Oregano::Network::HTTP::MemoryResponse.new }
 
       with_checksum_types 'file_content', 'lib/files/file.rb' do
         before :each do
-          Puppet.settings[:modulepath] = env_path
+          Oregano.settings[:modulepath] = env_path
         end
 
         it "should find the file metadata with expected checksum" do
-          request = a_request_that_finds(Puppet::IndirectorProxy.new("modules/lib/file.rb", "file_metadata"),
+          request = a_request_that_finds(Oregano::IndirectorProxy.new("modules/lib/file.rb", "file_metadata"),
                                          {:accept_header => 'unknown, text/pson'},
                                          {:environment => 'production', :checksum_type => checksum_type})
           handler.call(request, response)
@@ -40,7 +40,7 @@ describe Puppet::Network::HTTP::API::IndirectedRoutes do
         end
 
         it "should search for the file metadata with expected checksum" do
-          request = a_request_that_searches(Puppet::IndirectorProxy.new("modules/lib", "file_metadata"),
+          request = a_request_that_searches(Oregano::IndirectorProxy.new("modules/lib", "file_metadata"),
                                             {:accept_header => 'unknown, text/pson'},
                                             {:environment => 'production', :checksum_type => checksum_type, :recurse => 'yes'})
           handler.call(request, response)
@@ -55,14 +55,14 @@ describe Puppet::Network::HTTP::API::IndirectedRoutes do
       end
     end
 
-    describe "an error from IndirectedRoutes", :if => Puppet.features.rack? do
-      let(:handler) { Puppet::Network::HTTP::RackREST.new }
+    describe "an error from IndirectedRoutes", :if => Oregano.features.rack? do
+      let(:handler) { Oregano::Network::HTTP::RackREST.new }
 
       describe "returns json" do
         it "when a standard error" do
           response = Rack::Response.new
           request = Rack::Request.new(
-            Rack::MockRequest.env_for("/puppet/v3/invalid-indirector"))
+            Rack::MockRequest.env_for("/oregano/v3/invalid-indirector"))
 
           handler.process(request, response)
 
@@ -74,7 +74,7 @@ describe Puppet::Network::HTTP::API::IndirectedRoutes do
         it "when a server error" do
           response = Rack::Response.new
           request = Rack::Request.new(
-            Rack::MockRequest.env_for("/puppet/v3/unknown_indirector"))
+            Rack::MockRequest.env_for("/oregano/v3/unknown_indirector"))
 
           handler.process(request, response)
 

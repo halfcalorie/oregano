@@ -1,35 +1,35 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/face'
+require 'oregano/face'
 
-describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Face[:ca, '0.1.0'], :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   before :each do
-    Puppet.run_mode.stubs(:master?).returns(true)
-    Puppet[:ca]     = true
-    Puppet[:ssldir] = tmpdir("face-ca-ssldir")
+    Oregano.run_mode.stubs(:master?).returns(true)
+    Oregano[:ca]     = true
+    Oregano[:ssldir] = tmpdir("face-ca-ssldir")
 
-    Puppet::SSL::Host.ca_location = :only
-    Puppet[:certificate_revocation] = true
+    Oregano::SSL::Host.ca_location = :only
+    Oregano[:certificate_revocation] = true
 
     # This is way more intimate than I want to be with the implementation, but
     # there doesn't seem any other way to test this. --daniel 2011-07-18
-    Puppet::SSL::CertificateAuthority.stubs(:instance).returns(
+    Oregano::SSL::CertificateAuthority.stubs(:instance).returns(
         # ...and this actually does the directory creation, etc.
-        Puppet::SSL::CertificateAuthority.new
+        Oregano::SSL::CertificateAuthority.new
     )
   end
 
   def given_certificate_requests_for(*names)
     names.each do |name|
-      Puppet::SSL::Host.new(name).generate_certificate_request
+      Oregano::SSL::Host.new(name).generate_certificate_request
     end
   end
 
   def given_certificates_for(*names)
     names.each do |name|
-      Puppet::SSL::Host.new(name).generate
+      Oregano::SSL::Host.new(name).generate
     end
   end
 
@@ -73,7 +73,7 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
       given_certificates_for('random-host')
       subject.revoke('random-host')
 
-      Puppet[:certificate_revocation] = false
+      Oregano[:certificate_revocation] = false
 
       expect(subject.verify('random-host')).to eq({
         :host => 'random-host', :valid => true
@@ -127,7 +127,7 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
 
       expect(text).to be_an_instance_of String
       expect(text).to match(/^Certificate:/)
-      expect(text).to match(/Issuer: CN=Puppet CA: /)
+      expect(text).to match(/Issuer: CN=Oregano CA: /)
       expect(text).to match(/Subject: CN=random-host$/)
     end
   end
@@ -146,7 +146,7 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
     it "should sign a CSR if one exists" do
       given_certificate_requests_for('random-host')
 
-      expect(subject.sign('random-host')).to be_an_instance_of Puppet::SSL::Certificate
+      expect(subject.sign('random-host')).to be_an_instance_of Oregano::SSL::Certificate
 
       list = subject.list(:signed => true)
       expect(list.length).to eq(1)
@@ -154,7 +154,7 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
     end
 
     describe "when the CSR specifies DNS alt names" do
-      let(:host) { Puppet::SSL::Host.new('someone') }
+      let(:host) { Oregano::SSL::Host.new('someone') }
 
       before :each do
         host.generate_certificate_request(:dns_alt_names => 'some,alt,names')
@@ -163,14 +163,14 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
       it "should sign the CSR if DNS alt names are allowed" do
         subject.sign('someone', :allow_dns_alt_names => true)
 
-        expect(host.certificate).to be_a(Puppet::SSL::Certificate)
+        expect(host.certificate).to be_a(Oregano::SSL::Certificate)
       end
 
       it "should refuse to sign the CSR if DNS alt names are not allowed" do
         certname = 'someone'
         expect do
           subject.sign(certname)
-        end.to raise_error(Puppet::SSL::CertificateAuthority::CertificateSigningError, /CSR '#{certname}' contains subject alternative names \(.*\), which are disallowed. Use `puppet cert --allow-dns-alt-names sign #{certname}` to sign this request./i)
+        end.to raise_error(Oregano::SSL::CertificateAuthority::CertificateSigningError, /CSR '#{certname}' contains subject alternative names \(.*\), which are disallowed. Use `oregano cert --allow-dns-alt-names sign #{certname}` to sign this request./i)
 
         expect(host.certificate).to be_nil
       end
@@ -255,7 +255,7 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
       expect(subject.list(:signed => true, :subject => 'random-host')).not_to eq([])
 
       expect(subject.destroy('random-host')).
-        to eq("Deleted for random-host: Puppet::SSL::Certificate")
+        to eq("Deleted for random-host: Oregano::SSL::Certificate")
     end
   end
 
@@ -340,7 +340,7 @@ describe Puppet::Face[:ca, '0.1.0'], :unless => Puppet.features.microsoft_window
   actions.each do |action|
     it { is_expected.to be_action action }
     it "should fail #{action} when not a CA" do
-      Puppet[:ca] = false
+      Oregano[:ca] = false
       expect {
         case subject.method(action).arity
         when -1 then subject.send(action)

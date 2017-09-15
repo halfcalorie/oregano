@@ -25,8 +25,8 @@ shared_context('with supported digest algorithms', :uses_checksums => true) do
 end
 
 shared_context("when digest_algorithm is set to sha256", :digest_algorithm => 'sha256') do
-  before { Puppet[:digest_algorithm] = 'sha256' }
-  after { Puppet[:digest_algorithm] = nil }
+  before { Oregano[:digest_algorithm] = 'sha256' }
+  after { Oregano[:digest_algorithm] = nil }
 
   let(:digest_algorithm) { 'sha256' }
 
@@ -35,13 +35,13 @@ shared_context("when digest_algorithm is set to sha256", :digest_algorithm => 's
   let(:bucket_dir) { '4/0/9/a/1/1/4/6/409a11465ed0938227128b1756c677a8480a8b84814f1963853775e15a74d4b4' }
 
   def digest(content)
-    Puppet::Util::Checksums.sha256(content)
+    Oregano::Util::Checksums.sha256(content)
   end
 end
 
 shared_context("when digest_algorithm is set to md5", :digest_algorithm => 'md5') do
-  before { Puppet[:digest_algorithm] = 'md5' }
-  after { Puppet[:digest_algorithm] = nil }
+  before { Oregano[:digest_algorithm] = 'md5' }
+  after { Oregano[:digest_algorithm] = nil }
 
   let(:digest_algorithm) { 'md5' }
 
@@ -50,6 +50,6 @@ shared_context("when digest_algorithm is set to md5", :digest_algorithm => 'md5'
   let(:bucket_dir) { 'f/0/d/7/d/4/e/4/f0d7d4e480ad698ed56aeec8b6bd6dea' }
 
   def digest(content)
-    Puppet::Util::Checksums.md5(content)
+    Oregano::Util::Checksums.md5(content)
   end
 end

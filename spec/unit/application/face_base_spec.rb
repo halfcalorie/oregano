@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/application/face_base'
+require 'oregano/application/face_base'
 require 'tmpdir'
 
-class Puppet::Application::FaceBase::Basetest < Puppet::Application::FaceBase
+class Oregano::Application::FaceBase::Basetest < Oregano::Application::FaceBase
 end
 
-describe Puppet::Application::FaceBase do
+describe Oregano::Application::FaceBase do
   let :app do
-    app = Puppet::Application::FaceBase::Basetest.new
+    app = Oregano::Application::FaceBase::Basetest.new
     app.command_line.stubs(:subcommand_name).returns('subcommand')
-    Puppet::Util::Log.stubs(:newdestination)
+    Oregano::Util::Log.stubs(:newdestination)
     app
   end
 
@@ -21,7 +21,7 @@ describe Puppet::Application::FaceBase do
   describe "#find_global_settings_argument" do
     it "should not match --ca to --ca-location" do
       option = mock('ca option', :optparse_args => ["--ca"])
-      Puppet.settings.expects(:each).yields(:ca, option)
+      Oregano.settings.expects(:each).yields(:ca, option)
 
       expect(app.find_global_settings_argument("--ca-location")).to be_nil
     end
@@ -61,13 +61,13 @@ describe Puppet::Application::FaceBase do
 
       expect { app.run }.to exit_with(1)
 
-      expect(@logs.map(&:message)).to eq(["'basetest' has no 'banana' action.  See `puppet help basetest`."])
+      expect(@logs.map(&:message)).to eq(["'basetest' has no 'banana' action.  See `oregano help basetest`."])
     end
 
     it "should use the default action if not given any arguments" do
       app.command_line.stubs(:args).returns []
       action = stub(:options => [], :render_as => nil)
-      Puppet::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(action)
+      Oregano::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(action)
       app.stubs(:main)
       app.run
       expect(app.action).to eq(action)
@@ -77,7 +77,7 @@ describe Puppet::Application::FaceBase do
     it "should use the default action if not given a valid one" do
       app.command_line.stubs(:args).returns %w{bar}
       action = stub(:options => [], :render_as => nil)
-      Puppet::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(action)
+      Oregano::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(action)
       app.stubs(:main)
       app.run
       expect(app.action).to eq(action)
@@ -86,7 +86,7 @@ describe Puppet::Application::FaceBase do
 
     it "should have no action if not given a valid one and there is no default action" do
       app.command_line.stubs(:args).returns %w{bar}
-      Puppet::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(nil)
+      Oregano::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(nil)
       app.stubs(:main)
       expect { app.run }.to exit_with(1)
       expect(@logs.first.message).to match(/has no 'bar' action./)
@@ -96,7 +96,7 @@ describe Puppet::Application::FaceBase do
      %w{something_I_cannot_do argument}].each do |input|
       it "should report unknown actions nicely" do
         app.command_line.stubs(:args).returns input
-        Puppet::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(nil)
+        Oregano::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(nil)
         app.stubs(:main)
         expect { app.run }.to exit_with(1)
         expect(@logs.first.message).to match(/has no 'something_I_cannot_do' action/)
@@ -107,7 +107,7 @@ describe Puppet::Application::FaceBase do
      %w{something_I_cannot_do argument --unknown-option}].each do |input|
       it "should report unknown actions even if there are unknown options" do
         app.command_line.stubs(:args).returns input
-        Puppet::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(nil)
+        Oregano::Face[:basetest, '0.0.1'].expects(:get_default_action).returns(nil)
         app.stubs(:main)
         expect { app.run }.to exit_with(1)
         expect(@logs.first.message).to match(/has no 'something_I_cannot_do' action/)
@@ -160,16 +160,16 @@ describe Puppet::Application::FaceBase do
         to raise_error(OptionParser::InvalidOption, /invalid option: --bar/)
     end
 
-    it "does not skip when a puppet global setting is given as one item" do
-      app.command_line.stubs(:args).returns %w{--confdir=/tmp/puppet foo}
+    it "does not skip when a oregano global setting is given as one item" do
+      app.command_line.stubs(:args).returns %w{--confdir=/tmp/oregano foo}
       app.preinit
       app.parse_options
       expect(app.action.name).to eq(:foo)
       expect(app.options).to eq({})
     end
 
-    it "does not skip when a puppet global setting is given as two items" do
-      app.command_line.stubs(:args).returns %w{--confdir /tmp/puppet foo}
+    it "does not skip when a oregano global setting is given as two items" do
+      app.command_line.stubs(:args).returns %w{--confdir /tmp/oregano foo}
       app.preinit
       app.parse_options
       expect(app.action.name).to eq(:foo)
@@ -177,7 +177,7 @@ describe Puppet::Application::FaceBase do
     end
 
     it "should not add :debug to the application-level options" do
-      app.command_line.stubs(:args).returns %w{--confdir /tmp/puppet foo --debug}
+      app.command_line.stubs(:args).returns %w{--confdir /tmp/oregano foo --debug}
       app.preinit
       app.parse_options
       expect(app.action.name).to eq(:foo)
@@ -185,7 +185,7 @@ describe Puppet::Application::FaceBase do
     end
 
     it "should not add :verbose to the application-level options" do
-      app.command_line.stubs(:args).returns %w{--confdir /tmp/puppet foo --verbose}
+      app.command_line.stubs(:args).returns %w{--confdir /tmp/oregano foo --verbose}
       app.preinit
       app.parse_options
       expect(app.action.name).to eq(:foo)
@@ -197,10 +197,10 @@ describe Puppet::Application::FaceBase do
     }.each do |name, args|
       it "should accept global boolean settings #{name} the action" do
         app.command_line.stubs(:args).returns args
-        Puppet.settings.initialize_global_settings(args)
+        Oregano.settings.initialize_global_settings(args)
         app.preinit
         app.parse_options
-        expect(Puppet[:trace]).to be_truthy
+        expect(Oregano[:trace]).to be_truthy
       end
     end
 
@@ -209,10 +209,10 @@ describe Puppet::Application::FaceBase do
     }.each do |name, args|
       it "should accept global settings with arguments #{name} the action" do
         app.command_line.stubs(:args).returns args
-        Puppet.settings.initialize_global_settings(args)
+        Oregano.settings.initialize_global_settings(args)
         app.preinit
         app.parse_options
-        expect(Puppet[:syslogfacility]).to eq("user1")
+        expect(Oregano[:syslogfacility]).to eq("user1")
       end
     end
 
@@ -247,7 +247,7 @@ describe Puppet::Application::FaceBase do
     before :each do
       app.stubs(:puts)          # don't dump text to screen.
 
-      app.face      = Puppet::Face[:basetest, '0.0.1']
+      app.face      = Oregano::Face[:basetest, '0.0.1']
       app.action    = app.face.get_action(:foo)
       app.arguments = ["myname", "myarg"]
     end
@@ -259,7 +259,7 @@ describe Puppet::Application::FaceBase do
 
     it "should lookup help when it cannot do anything else" do
       app.action = nil
-      Puppet::Face[:help, :current].expects(:help).with(:basetest)
+      Oregano::Face[:help, :current].expects(:help).with(:basetest)
       expect { app.main }.to exit_with(1)
     end
 
@@ -272,12 +272,12 @@ describe Puppet::Application::FaceBase do
       # since app is shared across examples, stub to avoid affecting shared context
       app.face.stubs(:deprecated?).returns(true)
       app.face.expects(:foo).with(*app.arguments)
-      Puppet.expects(:deprecation_warning).with(regexp_matches(/'puppet basetest' is deprecated/))
+      Oregano.expects(:deprecation_warning).with(regexp_matches(/'oregano basetest' is deprecated/))
       expect { app.main }.to exit_with(0)
     end
 
     it "should not issue a deprecation warning if the face is not deprecated" do
-      Puppet.expects(:deprecation_warning).never
+      Oregano.expects(:deprecation_warning).never
       # since app is shared across examples, stub to avoid affecting shared context
       app.face.stubs(:deprecated?).returns(false)
       app.face.expects(:foo).with(*app.arguments)
@@ -290,7 +290,7 @@ describe Puppet::Application::FaceBase do
       app.stubs(:puts)          # don't dump text to screen.
 
       app.render_as = :json
-      app.face      = Puppet::Face[:basetest, '0.0.1']
+      app.face      = Oregano::Face[:basetest, '0.0.1']
       app.arguments = [{}]      # we always have options in there...
     end
 
@@ -322,8 +322,8 @@ describe Puppet::Application::FaceBase do
 
   describe "#render" do
     before :each do
-      app.face      = Puppet::Interface.new('basetest', '0.0.1')
-      app.action    = Puppet::Interface::Action.new(app.face, :foo)
+      app.face      = Oregano::Interface.new('basetest', '0.0.1')
+      app.action    = Oregano::Interface::Action.new(app.face, :foo)
     end
 
     context "default rendering" do
@@ -414,9 +414,9 @@ EOT
       app.command_line.stubs(:args).returns %w{--render-as interpretive-dance return_true}
       # We shouldn't get here, thanks to the exception, and our expectation on
       # it, but this helps us fail if that slips up and all. --daniel 2011-04-27
-      Puppet::Face[:help, :current].expects(:help).never
+      Oregano::Face[:help, :current].expects(:help).never
 
-      Puppet.expects(:err).with("Could not parse application options: I don't know how to render 'interpretive-dance'")
+      Oregano.expects(:err).with("Could not parse application options: I don't know how to render 'interpretive-dance'")
 
       expect { app.run }.to exit_with(1)
     end
@@ -440,13 +440,13 @@ EOT
   describe "#help" do
     it "should generate help for --help" do
       app.command_line.stubs(:args).returns %w{--help}
-      Puppet::Face[:help, :current].expects(:help)
+      Oregano::Face[:help, :current].expects(:help)
       expect { app.run }.to exit_with(0)
     end
 
     it "should generate help for -h" do
       app.command_line.stubs(:args).returns %w{-h}
-      Puppet::Face[:help, :current].expects(:help)
+      Oregano::Face[:help, :current].expects(:help)
       expect { app.run }.to exit_with(0)
     end
   end

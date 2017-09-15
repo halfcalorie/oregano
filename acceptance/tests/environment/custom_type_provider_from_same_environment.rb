@@ -1,6 +1,6 @@
 test_name 'C59122: ensure provider from same env as custom type' do
-require 'puppet/acceptance/environment_utils'
-extend Puppet::Acceptance::EnvironmentUtils
+require 'oregano/acceptance/environment_utils'
+extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:medium',
     'audit:integration',  # This behavior is specific to the master to 'do the right thing'
@@ -27,7 +27,7 @@ tag 'audit:medium',
     type_name               = 'test_custom_type'
     provider_name           = 'universal'
     type_content            = <<TYPE
-      Puppet::Type.newtype(:#{type_name}) do
+      Oregano::Type.newtype(:#{type_name}) do
         @doc = "Manage a file (the simple version)."
         ensurable
         newparam(:name) do
@@ -38,7 +38,7 @@ TYPE
 
     def provider_content(file_file_content, type_name, provider_name)
       return <<PROVIDER
-        Puppet::Type.type(:#{type_name}).provide(:#{provider_name}) do
+        Oregano::Type.type(:#{type_name}).provide(:#{provider_name}) do
           desc "#{provider_name} file mgmt, yo"
           def create
             File.open(@resource[:name], "w") { |f| f.puts "#{file_file_content}!" }
@@ -58,30 +58,30 @@ File { ensure => directory }
 file {
        '#{fq_tmp_environmentpath}/modules/simple_type':;
        '#{fq_tmp_environmentpath}/modules/simple_type/lib':;
-       '#{fq_tmp_environmentpath}/modules/simple_type/lib/puppet':;
-       '#{fq_tmp_environmentpath}/modules/simple_type/lib/puppet/type/':;
-       '#{fq_tmp_environmentpath}/modules/simple_type/lib/puppet/provider/':;
-       '#{fq_tmp_environmentpath}/modules/simple_type/lib/puppet/provider/#{type_name}':;
+       '#{fq_tmp_environmentpath}/modules/simple_type/lib/oregano':;
+       '#{fq_tmp_environmentpath}/modules/simple_type/lib/oregano/type/':;
+       '#{fq_tmp_environmentpath}/modules/simple_type/lib/oregano/provider/':;
+       '#{fq_tmp_environmentpath}/modules/simple_type/lib/oregano/provider/#{type_name}':;
        '#{fq_prod_environmentpath}/modules/simple_type':;
        '#{fq_prod_environmentpath}/modules/simple_type/lib':;
-       '#{fq_prod_environmentpath}/modules/simple_type/lib/puppet':;
-       '#{fq_prod_environmentpath}/modules/simple_type/lib/puppet/type/':;
-       '#{fq_prod_environmentpath}/modules/simple_type/lib/puppet/provider/':;
-       '#{fq_prod_environmentpath}/modules/simple_type/lib/puppet/provider/#{type_name}':;
+       '#{fq_prod_environmentpath}/modules/simple_type/lib/oregano':;
+       '#{fq_prod_environmentpath}/modules/simple_type/lib/oregano/type/':;
+       '#{fq_prod_environmentpath}/modules/simple_type/lib/oregano/provider/':;
+       '#{fq_prod_environmentpath}/modules/simple_type/lib/oregano/provider/#{type_name}':;
 }
-file { '#{fq_tmp_environmentpath}/modules/simple_type/lib/puppet/type/#{type_name}.rb':
+file { '#{fq_tmp_environmentpath}/modules/simple_type/lib/oregano/type/#{type_name}.rb':
   ensure => file,
     content => '#{type_content}',
 }
-file { '#{fq_prod_environmentpath}/modules/simple_type/lib/puppet/type/#{type_name}.rb':
+file { '#{fq_prod_environmentpath}/modules/simple_type/lib/oregano/type/#{type_name}.rb':
   ensure => file,
     content => '#{type_content}',
 }
-file { '#{fq_tmp_environmentpath}/modules/simple_type/lib/puppet/provider/#{type_name}/#{provider_name}.rb':
+file { '#{fq_tmp_environmentpath}/modules/simple_type/lib/oregano/provider/#{type_name}/#{provider_name}.rb':
   ensure => file,
     content => '#{provider_content('correct', type_name, provider_name)}',
 }
-file { '#{fq_prod_environmentpath}/modules/simple_type/lib/puppet/provider/#{type_name}/#{provider_name}.rb':
+file { '#{fq_prod_environmentpath}/modules/simple_type/lib/oregano/provider/#{type_name}/#{provider_name}.rb':
   ensure => file,
     content => '#{provider_content('wrong', type_name, provider_name)}',
 }
@@ -98,13 +98,13 @@ MANIFEST
   end
 
   step "run agent in #{tmp_environment}, ensure it finds the correct provider" do
-    with_puppet_running_on(master,{}) do
+    with_oregano_running_on(master,{}) do
       agents.each do |agent|
-        on(agent, puppet("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
           :accept_all_exit_codes => true) do |result|
           assert_equal(2, result.exit_code, 'agent did not exit with the correct code of 2')
           assert_match(/#{file_correct}/, result.stdout, 'agent did not ensure the correct file')
-          assert(agent.file_exist?(file_correct), 'puppet did not create the file')
+          assert(agent.file_exist?(file_correct), 'oregano did not create the file')
         end
       end
     end

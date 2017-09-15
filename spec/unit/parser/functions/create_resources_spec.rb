@@ -1,23 +1,23 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet_spec/files'
+require 'oregano_spec/compiler'
+require 'oregano_spec/files'
 
 describe 'function for dynamically creating resources' do
-  include PuppetSpec::Compiler
-  include PuppetSpec::Files
+  include OreganoSpec::Compiler
+  include OreganoSpec::Files
 
   before :each do
-    node      = Puppet::Node.new("floppy", :environment => 'production')
-    @compiler = Puppet::Parser::Compiler.new(node)
-    @scope    = Puppet::Parser::Scope.new(@compiler)
+    node      = Oregano::Node.new("floppy", :environment => 'production')
+    @compiler = Oregano::Parser::Compiler.new(node)
+    @scope    = Oregano::Parser::Scope.new(@compiler)
     @topscope = @scope.compiler.topscope
     @scope.parent = @topscope
-    Puppet::Parser::Functions.function(:create_resources)
+    Oregano::Parser::Functions.function(:create_resources)
   end
 
   it "should exist" do
-    expect(Puppet::Parser::Functions.function(:create_resources)).to eq("function_create_resources")
+    expect(Oregano::Parser::Functions.function(:create_resources)).to eq("function_create_resources")
   end
 
   it 'should require two or three arguments' do
@@ -50,10 +50,10 @@ describe 'function for dynamically creating resources' do
     end
 
     it 'file and line information where call originates is written to all resources created in one call' do
-      node = Puppet::Node.new('test')
+      node = Oregano::Node.new('test')
       file = File.join(dir, 'site.pp')
-      Puppet[:manifest] = file
-      catalog = Puppet::Parser::Compiler.compile(node).filter { |r| r.virtual? }
+      Oregano[:manifest] = file
+      catalog = Oregano::Parser::Compiler.compile(node).filter { |r| r.virtual? }
 
       expect(catalog.resource(:notify, 'a').file).to eq(file)
       expect(catalog.resource(:notify, 'a').line).to eq(3)
@@ -75,9 +75,9 @@ describe 'function for dynamically creating resources' do
     end
 
     it 'should pick up and pass on file and line information' do
-      # mock location as the compile_to_catalog sets Puppet[:code} which does not
+      # mock location as the compile_to_catalog sets Oregano[:code} which does not
       # have file/line support.
-      Puppet::Pops::PuppetStack.expects(:stacktrace).once.returns([['test.pp', 1234]])
+      Oregano::Pops::OreganoStack.expects(:stacktrace).once.returns([['test.pp', 1234]])
       catalog = compile_to_catalog("create_resources('file', {'/etc/foo'=>{'ensure'=>'present'}})")
       r = catalog.resource(:file, "/etc/foo")
       expect(r.file).to eq('test.pp')
@@ -171,7 +171,7 @@ describe 'function for dynamically creating resources' do
 
           create_resources('foocreateresource', {'blah'=>{}})
         MANIFEST
-      }.to raise_error(Puppet::Error, /Foocreateresource\[blah\]: expects a value for parameter 'one'/)
+      }.to raise_error(Oregano::Error, /Foocreateresource\[blah\]: expects a value for parameter 'one'/)
     end
 
     it 'should accept undef as explicit value when parameter has no default value' do
@@ -259,14 +259,14 @@ describe 'function for dynamically creating resources' do
 
     [:off, :warning].each do | strictness |
       it "should warn if strict = #{strictness} and class is exported" do
-        Puppet[:strict] = strictness
+        Oregano[:strict] = strictness
         collect_notices('class test{} create_resources("@@class", {test => {}})')
         expect(warnings).to include(/Classes are not virtualizable/)
       end
     end
 
     it 'should error if strict = error and class is exported' do
-      Puppet[:strict] = :error
+      Oregano[:strict] = :error
       expect{
         compile_to_catalog('class test{} create_resources("@@class", {test => {}})')
       }.to raise_error(/Classes are not virtualizable/)
@@ -274,14 +274,14 @@ describe 'function for dynamically creating resources' do
 
     [:off, :warning].each do | strictness |
       it "should warn if strict = #{strictness} and class is virtual" do
-        Puppet[:strict] = strictness
+        Oregano[:strict] = strictness
         collect_notices('class test{} create_resources("@class", {test => {}})')
         expect(warnings).to include(/Classes are not virtualizable/)
       end
     end
 
     it 'should error if strict = error and class is virtual' do
-      Puppet[:strict] = :error
+      Oregano[:strict] = :error
       expect{
         compile_to_catalog('class test{} create_resources("@class", {test => {}})')
       }.to raise_error(/Classes are not virtualizable/)
@@ -320,14 +320,14 @@ describe 'function for dynamically creating resources' do
 
     it 'should fail with a correct error message if the syntax of an imported file is incorrect' do
       expect{
-        Puppet[:modulepath] = my_fixture_dir
+        Oregano[:modulepath] = my_fixture_dir
         compile_to_catalog('include foo')
-      }.to raise_error(Puppet::Error, /Syntax error at.*/)
+      }.to raise_error(Oregano::Error, /Syntax error at.*/)
     end
   end
 
   def collect_notices(code)
-    Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+    Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
       compile_to_catalog(code)
     end
   end

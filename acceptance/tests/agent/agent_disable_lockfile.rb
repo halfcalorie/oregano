@@ -5,18 +5,18 @@ tag 'audit:integration', # lockfile uses the standard `vardir` location to store
                          # The validation of the `vardir` at the OS level
                          # should be accomplished in another test.
     'audit:medium',
-    'audit:refactor'     # This test should not require a master. Remove the use of `with_puppet_running_on`.
+    'audit:refactor'     # This test should not require a master. Remove the use of `with_oregano_running_on`.
 
 #
-# This test is intended to ensure that puppet agent --enable/--disable
+# This test is intended to ensure that oregano agent --enable/--disable
 #  work properly, both in terms of complying with our public "API" around
-#  lockfile semantics ( http://links.puppet.com/agent_lockfiles ), and
+#  lockfile semantics ( http://links.oregano.com/agent_lockfiles ), and
 #  in terms of actually restricting or allowing new agent runs to begin.
 #
 
-require 'puppet/acceptance/temp_file_utils'
+require 'oregano/acceptance/temp_file_utils'
 
-extend Puppet::Acceptance::TempFileUtils
+extend Oregano::Acceptance::TempFileUtils
 
 initialize_temp_dirs()
 @all_tests_passed = false
@@ -31,7 +31,7 @@ teardown do
     remove_temp_dirs()
   end
   agents.each do |agent|
-    on(agent, puppet('agent', "--enable"))
+    on(agent, oregano('agent', "--enable"))
   end
 end
 
@@ -40,17 +40,17 @@ tuples = [
     ["I'm busy; go away.'", true]
 ]
 
-with_puppet_running_on(master, {}) do
+with_oregano_running_on(master, {}) do
   tuples.each do |expected_message, explicitly_specify_message|
     step "disable the agent; specify message? '#{explicitly_specify_message}', message: '#{expected_message}'" do
       agents.each do |agent|
         if (explicitly_specify_message)
-          on(agent, puppet('agent', "--disable \"#{expected_message}\""))
+          on(agent, oregano('agent', "--disable \"#{expected_message}\""))
         else
-          on(agent, puppet('agent', "--disable"))
+          on(agent, oregano('agent', "--disable"))
         end
 
-        agent_disabled_lockfile = "#{agent.puppet['vardir']}/state/agent_disabled.lock"
+        agent_disabled_lockfile = "#{agent.oregano['vardir']}/state/agent_disabled.lock"
         unless file_exists?(agent, agent_disabled_lockfile) then
           fail_test("Failed to create disabled lock file '#{agent_disabled_lockfile}' on agent '#{agent}'")
         end
@@ -68,7 +68,7 @@ with_puppet_running_on(master, {}) do
 
     step "attempt to run the agent (message: '#{expected_message}')" do
       agents.each do |agent|
-        on(agent, puppet('agent', "--test --server #{master}"),
+        on(agent, oregano('agent', "--test --server #{master}"),
                      :acceptable_exit_codes => [1]) do
           disabled_regex = /administratively disabled.*'#{expected_message}'/
           unless result.stdout =~ disabled_regex
@@ -81,8 +81,8 @@ with_puppet_running_on(master, {}) do
     step "enable the agent (message: '#{expected_message}')" do
       agents.each do |agent|
 
-        agent_disabled_lockfile = "#{agent.puppet['vardir']}/state/agent_disabled.lock"
-        on(agent, puppet('agent', "--enable"))
+        agent_disabled_lockfile = "#{agent.oregano['vardir']}/state/agent_disabled.lock"
+        on(agent, oregano('agent', "--enable"))
         if file_exists?(agent, agent_disabled_lockfile) then
           fail_test("Failed to remove disabled lock file '#{agent_disabled_lockfile}' on agent '#{agent}'")
         end
@@ -91,10 +91,10 @@ with_puppet_running_on(master, {}) do
 
     step "verify that we can run the agent (message: '#{expected_message}')" do
       agents.each do |agent|
-        on(agent, puppet('agent', "--test --server #{master}"))
+        on(agent, oregano('agent', "--test --server #{master}"))
       end
     end
   end # tuples block
-end # with_puppet_running_on block
+end # with_oregano_running_on block
 
 @all_tests_passed = true

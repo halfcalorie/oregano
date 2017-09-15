@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/file_metadata/selector'
+require 'oregano/indirector/file_metadata/selector'
 
-describe Puppet::Indirector::FileMetadata::Selector do
-  include PuppetSpec::Files
+describe Oregano::Indirector::FileMetadata::Selector do
+  include OreganoSpec::Files
 
-  it_should_behave_like "Puppet::FileServing::Files", :file_metadata
+  it_should_behave_like "Oregano::FileServing::Files", :file_metadata
 end
 

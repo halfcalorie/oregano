@@ -6,15 +6,15 @@ test_name 'Arista Switch Pre-suite' do
 
   step 'install Arista Module on masters' do
     masters.each do |node|
-      on(node, puppet('module','install','aristanetworks-netdev_stdlib_eos'))
+      on(node, oregano('module','install','aristanetworks-netdev_stdlib_eos'))
     end
   end
 
-  step 'add puppet user to switch' do
+  step 'add oregano user to switch' do
     switchs.each do |switch|
-      on(switch, "useradd -U puppet")
-      on(switch, "/opt/puppetlabs/bin/puppet config --confdir /etc/puppetlabs/puppet set user root")
-      on(switch, "/opt/puppetlabs/bin/puppet config --confdir /etc/puppetlabs/puppet set group root")
+      on(switch, "useradd -U oregano")
+      on(switch, "/opt/oreganolabs/bin/oregano config --confdir /etc/oreganolabs/oregano set user root")
+      on(switch, "/opt/oreganolabs/bin/oregano config --confdir /etc/oreganolabs/oregano set group root")
     end
   end
 end

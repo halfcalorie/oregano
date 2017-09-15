@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:apt)
+provider_class = Oregano::Type.type(:package).provider(:apt)
 
 describe provider_class do
   let(:name) { 'asdf' }
 
   let(:resource) do
-    Puppet::Type.type(:package).new(
+    Oregano::Type.type(:package).new(
       :name     => name,
       :provider => 'apt'
     )
@@ -70,7 +70,7 @@ Version table:
 
   it "should preseed with the provided responsefile when preseeding is called for" do
     resource[:responsefile] = '/my/file'
-    Puppet::FileSystem.expects(:exist?).with('/my/file').returns true
+    Oregano::FileSystem.expects(:exist?).with('/my/file').returns true
 
     provider.expects(:info)
     provider.expects(:preseed).with('/my/file')

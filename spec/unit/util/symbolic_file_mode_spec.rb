@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/symbolic_file_mode'
+require 'oregano/util/symbolic_file_mode'
 
-describe Puppet::Util::SymbolicFileMode do
-  include Puppet::Util::SymbolicFileMode
+describe Oregano::Util::SymbolicFileMode do
+  include Oregano::Util::SymbolicFileMode
 
   describe "#valid_symbolic_mode?" do
     %w{
@@ -129,37 +129,37 @@ describe Puppet::Util::SymbolicFileMode do
     # Now, test some failure modes.
     it "should fail if no mode is given" do
       expect { symbolic_mode_to_int('') }.
-        to raise_error Puppet::Error, /empty mode string/
+        to raise_error Oregano::Error, /empty mode string/
     end
 
     %w{u g o ug uo go ugo a uu u/x u!x u=r,,g=r}.each do |input|
       it "should fail if no (valid) action is given: #{input.inspect}" do
         expect { symbolic_mode_to_int(input) }.
-          to raise_error Puppet::Error, /Missing action/
+          to raise_error Oregano::Error, /Missing action/
       end
     end
 
     %w{u+q u-rwF u+rw,g+rw,o+RW}.each do |input|
       it "should fail with unknown op #{input.inspect}" do
         expect { symbolic_mode_to_int(input) }.
-          to raise_error Puppet::Error, /Unknown operation/
+          to raise_error Oregano::Error, /Unknown operation/
       end
     end
 
     it "should refuse to subtract the conditional execute op" do
       expect { symbolic_mode_to_int("o-rwX") }.
-        to raise_error Puppet::Error, /only works with/
+        to raise_error Oregano::Error, /only works with/
     end
 
     it "should refuse to set to the conditional execute op" do
       expect { symbolic_mode_to_int("o=rwX") }.
-        to raise_error Puppet::Error, /only works with/
+        to raise_error Oregano::Error, /only works with/
     end
 
     %w{8 08 9 09 118 119}.each do |input|
       it "should fail for decimal modes: #{input.inspect}" do
         expect { symbolic_mode_to_int(input) }.
-          to raise_error Puppet::Error, /octal/
+          to raise_error Oregano::Error, /octal/
       end
     end
 

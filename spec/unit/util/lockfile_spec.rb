@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/lockfile'
+require 'oregano/util/lockfile'
 
 module LockfileSpecHelper
   def self.run_in_forks(count, &blk)
@@ -30,13 +30,13 @@ module LockfileSpecHelper
   end
 end
 
-describe Puppet::Util::Lockfile do
-  require 'puppet_spec/files'
-  include PuppetSpec::Files
+describe Oregano::Util::Lockfile do
+  require 'oregano_spec/files'
+  include OreganoSpec::Files
 
   before(:each) do
     @lockfile = tmpfile("lock")
-    @lock = Puppet::Util::Lockfile.new(@lockfile)
+    @lock = Oregano::Util::Lockfile.new(@lockfile)
   end
 
   describe "#lock" do
@@ -52,11 +52,11 @@ describe Puppet::Util::Lockfile do
     it "should create a lock file" do
       @lock.lock
 
-      expect(Puppet::FileSystem.exist?(@lockfile)).to be_truthy
+      expect(Oregano::FileSystem.exist?(@lockfile)).to be_truthy
     end
 
     # We test simultaneous locks using fork which isn't supported on Windows.
-    it "should not be acquired by another process", :unless => Puppet.features.microsoft_windows? do
+    it "should not be acquired by another process", :unless => Oregano.features.microsoft_windows? do
       30.times do
         forks = 3
         results = LockfileSpecHelper.run_in_forks(forks) do
@@ -91,7 +91,7 @@ describe Puppet::Util::Lockfile do
     it "should clear the lock file" do
       File.open(@lockfile, 'w') { |fd| fd.print("locked") }
       @lock.unlock
-      expect(Puppet::FileSystem.exist?(@lockfile)).to be_falsey
+      expect(Oregano::FileSystem.exist?(@lockfile)).to be_falsey
     end
   end
 

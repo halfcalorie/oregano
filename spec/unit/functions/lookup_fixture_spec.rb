@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
-require 'puppet_spec/files'
-require 'puppet/pops'
+require 'oregano_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano/pops'
 require 'deep_merge/core'
 
 # Tests the lookup function using fixtures
 describe 'The lookup function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   # Assembles code that includes the *abc* class and compiles it into a catalog. This class will use the global
   # variable $args to perform a lookup and assign the result to $abc::result. Unless the $block is set to
@@ -26,8 +26,8 @@ describe 'The lookup function' do
   # - Compile the code into a catalog
   # - Return the name of all Notify resources in that catalog
   #
-  # @param fmt [String] The puppet interpolated string used when creating the notify title
-  # @param *args [String] splat of args that will be concatenated to form the puppet args sent to lookup
+  # @param fmt [String] The oregano interpolated string used when creating the notify title
+  # @param *args [String] splat of args that will be concatenated to form the oregano args sent to lookup
   # @return [Array<String>] List of names of Notify resources in the resulting catalog
   #
   def assemble_and_compile(fmt, *lookup_args, &block)
@@ -45,7 +45,7 @@ describe 'The lookup function' do
   end
 
   def compile_and_get_notifications(code)
-    Puppet[:code] = code
+    Oregano[:code] = code
     node.environment.check_for_reparse
     catalog = block_given? ? compiler.compile { |catalog| yield(compiler.topscope); catalog } : compiler.compile
     catalog.resources.map(&:ref).select { |r| r.start_with?('Notify[') }.map { |r| r[7..-2] }
@@ -53,23 +53,23 @@ describe 'The lookup function' do
 
   # There is a fully configured 'production' environment in fixtures at this location
   let(:environmentpath) { File.join(my_fixture_dir, 'environments') }
-  let(:node) { Puppet::Node.new("testnode", :facts => Puppet::Node::Facts.new("facts", {}), :environment => 'production') }
-  let(:compiler) { Puppet::Parser::Compiler.new(node) }
+  let(:node) { Oregano::Node.new("testnode", :facts => Oregano::Node::Facts.new("facts", {}), :environment => 'production') }
+  let(:compiler) { Oregano::Parser::Compiler.new(node) }
 
   around(:each) do |example|
     # Initialize settings to get a full compile as close as possible to a real
     # environment load
-    Puppet.settings.initialize_global_settings
+    Oregano.settings.initialize_global_settings
 
     # Initialize loaders based on the environmentpath. It does not work to
     # just set the setting environmentpath for some reason - this achieves the same:
     # - first a loader is created, loading directory environments from the fixture (there is
     # one environment, 'production', which will be loaded since the node references this
     # environment by name).
-    # - secondly, the created env loader is set as 'environments' in the puppet context.
+    # - secondly, the created env loader is set as 'environments' in the oregano context.
     #
-    environments = Puppet::Environments::Directories.new(environmentpath, [])
-    Puppet.override(:environments => environments) do
+    environments = Oregano::Environments::Directories.new(environmentpath, [])
+    Oregano.override(:environments => environments) do
       example.run
     end
   end
@@ -91,7 +91,7 @@ describe 'The lookup function' do
     end
 
     it 'can lookup value provided in global scope' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r}', "'abc::a'")
       expect(resources).to include('global_a')
     end
@@ -122,7 +122,7 @@ describe 'The lookup function' do
     end
 
     it "can 'hash' merge values provided by global, environment, and module" do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r[k1]}_${r[k2]}_${r[k3]}', "'abc::e'", 'Hash[String,String]', "'hash'")
       expect(resources).to include('global_e1_module_e2_env_e3')
     end
@@ -145,13 +145,13 @@ describe 'The lookup function' do
     it "will fail unless merge in the form of a hash contains a 'strategy'" do
       expect do
         assemble_and_compile('${r[k1]}_${r[k2]}_${r[k3]}', "'abc::e'", 'Hash[String,String]', "{merge_key => 'hash'}")
-      end.to raise_error(Puppet::ParseError, /hash given as 'merge' must contain the name of a strategy/)
+      end.to raise_error(Oregano::ParseError, /hash given as 'merge' must contain the name of a strategy/)
     end
 
     it 'will raise an exception when value is not found for single key and no default is provided' do
       expect do
         assemble_and_compile('${r}', "'abc::x'")
-      end.to raise_error(Puppet::ParseError, /did not find a value for the name 'abc::x'/)
+      end.to raise_error(Oregano::ParseError, /did not find a value for the name 'abc::x'/)
     end
 
     it 'can lookup an undef value' do
@@ -167,13 +167,13 @@ describe 'The lookup function' do
     it 'will not accept a succesful lookup of an undef value when the type rejects it' do
       expect do
         assemble_and_compile('${r}', "'abc::n'", 'String')
-      end.to raise_error(Puppet::ParseError, /Found value has wrong type, expects a String value, got Undef/)
+      end.to raise_error(Oregano::ParseError, /Found value has wrong type, expects a String value, got Undef/)
     end
 
     it 'will raise an exception when value is not found for array key and no default is provided' do
       expect do
         assemble_and_compile('${r}', "['abc::x', 'abc::y']")
-      end.to raise_error(Puppet::ParseError, /did not find a value for any of the names \['abc::x', 'abc::y'\]/)
+      end.to raise_error(Oregano::ParseError, /did not find a value for any of the names \['abc::x', 'abc::y'\]/)
     end
 
     it 'can lookup and deep merge shallow values provided by the environment only' do
@@ -187,31 +187,31 @@ describe 'The lookup function' do
     end
 
     it 'can lookup and deep merge deep values provided by global, environment, and module' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r[k1][s1]}_${r[k1][s2]}_${r[k1][s3]}_${r[k2][s1]}_${r[k2][s2]}_${r[k2][s3]}', "'abc::f'", 'Hash[String,Hash[String,String]]', "'deep'")
       expect(resources).to include('global_f11_env_f12_module_f13_env_f21_module_f22_global_f23')
     end
 
     it 'will propagate resolution_type :array to Hiera when merge == \'unique\'' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r[0]}_${r[1]}_${r[2]}', "'abc::c'", 'Array[String]', "'unique'")
       expect(resources).to include('global_c_env_c_module_c')
     end
 
     it 'will propagate a Hash resolution_type with :behavior => :native to Hiera when merge == \'hash\'' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r[k1]}_${r[k2]}_${r[k3]}', "'abc::e'", 'Hash[String,String]', "{strategy => 'hash'}")
       expect(resources).to include('global_e1_module_e2_env_e3')
     end
 
     it 'will propagate a Hash resolution_type with :behavior => :deeper to Hiera when merge == \'deep\'' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r[k1][s1]}_${r[k1][s2]}_${r[k1][s3]}_${r[k2][s1]}_${r[k2][s2]}_${r[k2][s3]}', "'abc::f'", 'Hash[String,Hash[String,String]]', "'deep'")
       expect(resources).to include('global_f11_env_f12_module_f13_env_f21_module_f22_global_f23')
     end
 
     it 'will propagate a Hash resolution_type with symbolic deep merge options to Hiera' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = assemble_and_compile('${r[k1][s1]}_${r[k1][s2]}_${r[k1][s3]}_${r[k2][s1]}_${r[k2][s2]}_${r[k2][s3]}', "'abc::f'", 'Hash[String,Hash[String,String]]', "{ 'strategy' => 'deep', 'knockout_prefix' => '--' }")
       expect(resources).to include('global_f11_env_f12_module_f13_env_f21_module_f22_global_f23')
     end
@@ -240,7 +240,7 @@ describe 'The lookup function' do
       it 'fails unless default is an instance of value_type' do
         expect do
           assemble_and_compile('${r[a]}_${r[b]}', "'abc::x'", 'Hash[String,String]', 'undef', "{'a' => 'dflt_x', 'b' => 32}")
-        end.to raise_error(Puppet::ParseError,
+        end.to raise_error(Oregano::ParseError,
           /Default value has wrong type, entry 'b' expects a String value, got Integer/)
       end
     end
@@ -274,7 +274,7 @@ describe 'The lookup function' do
       it 'fails unless block returns an instance of value_type' do
         expect do
           assemble_and_compile_with_block('${r[a]}_${r[b]}', "{'a' => 'dflt_x', 'b' => 32}", "'abc::x'", 'Hash[String,String]')
-        end.to raise_error(Puppet::ParseError,
+        end.to raise_error(Oregano::ParseError,
           /Value returned from default block has wrong type, entry 'b' expects a String value, got Integer/)
       end
 
@@ -361,7 +361,7 @@ describe 'The lookup function' do
     it 'will raise an exception when value is not found for single key and no default is provided' do
       expect do
         assemble_and_compile('${r}', "{name => 'abc::x'}")
-      end.to raise_error(Puppet::ParseError, /did not find a value for the name 'abc::x'/)
+      end.to raise_error(Oregano::ParseError, /did not find a value for the name 'abc::x'/)
     end
 
     it 'will not raise an exception when value is not found default value is nil' do
@@ -373,9 +373,9 @@ describe 'The lookup function' do
   context 'accessing from outside a module' do
     it 'will both log a warning and raise an exception when key in the function provided module data is not prefixed' do
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
-        Puppet[:code] = "include bad_data\nlookup('bad_data::b')"
-        expect { compiler.compile }.to raise_error(Puppet::ParseError, /did not find a value for the name 'bad_data::b'/)
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
+        Oregano[:code] = "include bad_data\nlookup('bad_data::b')"
+        expect { compiler.compile }.to raise_error(Oregano::ParseError, /did not find a value for the name 'bad_data::b'/)
       end
       warnings = logs.select { |log| log.level == :warning }.map { |log| log.message }
       expect(warnings).to include("Module 'bad_data': Value returned from deprecated API function 'bad_data::data' must use keys qualified with the name of the module")
@@ -384,7 +384,7 @@ describe 'The lookup function' do
     it 'will succeed finding prefixed keys even when a key in the function provided module data is not prefixed' do
       logs = []
       resources = nil
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         resources = compile_and_get_notifications(<<-PUPPET.unindent)
           include bad_data
           notify { lookup('bad_data::c'): }
@@ -396,7 +396,7 @@ describe 'The lookup function' do
     end
 
     it 'will resolve global, environment, and module correctly' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = compile_and_get_notifications(<<-PUPPET.unindent)
         include bca
         $r = lookup(bca::e, Hash[String,String], hash)
@@ -406,7 +406,7 @@ describe 'The lookup function' do
     end
 
     it 'will resolve global and environment correctly when module has no provider' do
-      Puppet.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
+      Oregano.settings[:hiera_config] = File.join(my_fixture_dir, 'hiera.yaml')
       resources = compile_and_get_notifications(<<-PUPPET.unindent)
         include no_provider
         $r = lookup(no_provider::e, Hash[String,String], hash)
@@ -418,9 +418,9 @@ describe 'The lookup function' do
 
   context 'accessing bad data' do
     it 'a warning will be logged when key in the function provided module data is not prefixed' do
-      Puppet[:code] = "include bad_data\nlookup('bad_data::c')"
+      Oregano[:code] = "include bad_data\nlookup('bad_data::c')"
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         compiler.compile
       end
       warnings = logs.select { |log| log.level == :warning }.map { |log| log.message }
@@ -428,9 +428,9 @@ describe 'The lookup function' do
     end
 
     it 'a warning will be logged when key in the hiera provided module data is not prefixed' do
-      Puppet[:code] = "include hieraprovider\nlookup('hieraprovider::test::param_a')"
+      Oregano[:code] = "include hieraprovider\nlookup('hieraprovider::test::param_a')"
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         compiler.compile
       end
       warnings = logs.select { |log| log.level == :warning }.map { |log| log.message }
@@ -441,25 +441,25 @@ describe 'The lookup function' do
   context 'accessing empty files' do
     # An empty YAML file is OK and should be treated as a file that contains no keys
     it "will fail normally with a 'did not find a value' error when a yaml file is empty" do
-      Puppet[:code] = "include empty_yaml\nlookup('empty_yaml::a')"
-      expect { compiler.compile }.to raise_error(Puppet::ParseError, /did not find a value for the name 'empty_yaml::a'/)
+      Oregano[:code] = "include empty_yaml\nlookup('empty_yaml::a')"
+      expect { compiler.compile }.to raise_error(Oregano::ParseError, /did not find a value for the name 'empty_yaml::a'/)
     end
 
     # An empty JSON file is not OK. Should yield a parse error
     it "will fail with a LookupError indicating a parser failure when a json file is empty" do
-      Puppet[:code] = "include empty_json\nlookup('empty_json::a')"
-      expect { compiler.compile }.to raise_error(Puppet::DataBinding::LookupError, /Unable to parse/)
+      Oregano[:code] = "include empty_json\nlookup('empty_json::a')"
+      expect { compiler.compile }.to raise_error(Oregano::DataBinding::LookupError, /Unable to parse/)
     end
   end
 
   context 'accessing nil values' do
     it 'will find a key with undef value in a yaml file' do
-      Puppet[:code] = 'include empty_key_yaml'
+      Oregano[:code] = 'include empty_key_yaml'
       compiler.compile do |catalog|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('empty_key_yaml::has_undef_value', nil, nil, false, nil, lookup_invocation)
-        rescue Puppet::Error
+          Oregano::Pops::Lookup.lookup('empty_key_yaml::has_undef_value', nil, nil, false, nil, lookup_invocation)
+        rescue Oregano::Error
         end
         expect(lookup_invocation.explainer.explain).to include(<<-EOS.unindent('      '))
           Path "#{environmentpath}/production/modules/empty_key_yaml/data/empty_key.yaml"
@@ -470,12 +470,12 @@ describe 'The lookup function' do
     end
 
     it 'will find a key with undef value in a json file' do
-      Puppet[:code] = 'include empty_key_json'
+      Oregano[:code] = 'include empty_key_json'
       compiler.compile do |catalog|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('empty_key_json::has_undef_value', nil, nil, false, nil, lookup_invocation)
-        rescue Puppet::Error
+          Oregano::Pops::Lookup.lookup('empty_key_json::has_undef_value', nil, nil, false, nil, lookup_invocation)
+        rescue Oregano::Error
         end
         expect(lookup_invocation.explainer.explain).to include(<<-EOS.unindent('      '))
           Path "#{environmentpath}/production/modules/empty_key_json/data/empty_key.json"
@@ -488,24 +488,24 @@ describe 'The lookup function' do
 
   context 'using explain' do
     it 'will explain that module is not found' do
-      Puppet[:code] = 'undef'
+      Oregano[:code] = 'undef'
       compiler.compile do |catalog|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('ppx::e', nil, nil, false, nil, lookup_invocation)
-        rescue Puppet::Error
+          Oregano::Pops::Lookup.lookup('ppx::e', nil, nil, false, nil, lookup_invocation)
+        rescue Oregano::Error
         end
         expect(lookup_invocation.explainer.explain).to include('Module "ppx" not found')
       end
     end
 
     it 'will explain that module does not find a key' do
-      Puppet[:code] = 'undef'
+      Oregano[:code] = 'undef'
       compiler.compile do |catalog|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(compiler.topscope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('abc::x', nil, nil, false, nil, lookup_invocation)
-        rescue Puppet::Error
+          Oregano::Pops::Lookup.lookup('abc::x', nil, nil, false, nil, lookup_invocation)
+        rescue Oregano::Error
         end
         expect(lookup_invocation.explainer.explain).to include(<<-EOS.unindent('  '))
           Module "abc" Data Provider (hiera configuration version 5)
@@ -517,8 +517,8 @@ describe 'The lookup function' do
 
     it 'will explain deep merge results without options' do
       assemble_and_compile('${r}', "'abc::a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
-        Puppet::Pops::Lookup.lookup('abc::e', Puppet::Pops::Types::TypeParser.singleton.parse('Hash[String,String]'), nil, false, 'deep', lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        Oregano::Pops::Lookup.lookup('abc::e', Oregano::Pops::Types::TypeParser.singleton.parse('Hash[String,String]'), nil, false, 'deep', lookup_invocation)
         expect(lookup_invocation.explainer.explain).to eq(<<-EOS.unindent)
           Searching for "abc::e"
             Merge strategy deep
@@ -547,8 +547,8 @@ describe 'The lookup function' do
 
     it 'will explain deep merge results with options' do
       assemble_and_compile('${r}', "'abc::a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
-        Puppet::Pops::Lookup.lookup('abc::e', Puppet::Pops::Types::TypeParser.singleton.parse('Hash[String,String]'), nil, false, { 'strategy' => 'deep', 'merge_hash_arrays' => true }, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        Oregano::Pops::Lookup.lookup('abc::e', Oregano::Pops::Types::TypeParser.singleton.parse('Hash[String,String]'), nil, false, { 'strategy' => 'deep', 'merge_hash_arrays' => true }, lookup_invocation)
         expect(lookup_invocation.explainer.explain).to include(<<-EOS.unindent('  '))
           Merge strategy deep
             Options: {
@@ -560,10 +560,10 @@ describe 'The lookup function' do
 
     it 'will handle merge when no entries are not found' do
       assemble_and_compile('${r}', "'hieraprovider::test::param_a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('hieraprovider::test::not_found', nil, nil, false, 'deep', lookup_invocation)
-        rescue Puppet::DataBinding::LookupError
+          Oregano::Pops::Lookup.lookup('hieraprovider::test::not_found', nil, nil, false, 'deep', lookup_invocation)
+        rescue Oregano::DataBinding::LookupError
         end
         expect(lookup_invocation.explainer.explain).to eq(<<-EOS.unindent)
           Searching for "hieraprovider::test::not_found"
@@ -589,8 +589,8 @@ describe 'The lookup function' do
 
     it 'will explain value access caused by dot notation in key' do
       assemble_and_compile('${r}', "'abc::a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
-        Puppet::Pops::Lookup.lookup('abc::f.k1.s1', Puppet::Pops::Types::TypeParser.singleton.parse('String'), nil, false, nil, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        Oregano::Pops::Lookup.lookup('abc::f.k1.s1', Oregano::Pops::Types::TypeParser.singleton.parse('String'), nil, false, nil, lookup_invocation)
         expect(lookup_invocation.explainer.explain).to include(<<-EOS.unindent('  '))
           Sub key: "k1.s1"
             Found key: "k1" value: {
@@ -605,8 +605,8 @@ describe 'The lookup function' do
 
     it 'will provide a hash containing all explanation elements' do
       assemble_and_compile('${r}', "'abc::a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
-        Puppet::Pops::Lookup.lookup('abc::e', Puppet::Pops::Types::TypeParser.singleton.parse('Hash[String,String]'), nil, false, { 'strategy' => 'deep', 'merge_hash_arrays' => true }, lookup_invocation)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        Oregano::Pops::Lookup.lookup('abc::e', Oregano::Pops::Types::TypeParser.singleton.parse('Hash[String,String]'), nil, false, { 'strategy' => 'deep', 'merge_hash_arrays' => true }, lookup_invocation)
         expect(lookup_invocation.explainer.to_hash).to eq(
           {
             :type => :root,
@@ -665,10 +665,10 @@ describe 'The lookup function' do
 
     it 'will explain that "lookup_options" is an invalid key' do
       assemble_and_compile('${r}', "'abc::a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('lookup_options', nil, nil, false, nil, lookup_invocation)
-        rescue Puppet::Error
+          Oregano::Pops::Lookup.lookup('lookup_options', nil, nil, false, nil, lookup_invocation)
+        rescue Oregano::Error
         end
         expect(lookup_invocation.explainer.explain.chomp).to eq('Invalid key "lookup_options"')
       end
@@ -676,10 +676,10 @@ describe 'The lookup function' do
 
     it 'will explain that "lookup_options" is an invalid key for any key starting with "lookup_options."' do
       assemble_and_compile('${r}', "'abc::a'") do |scope|
-        lookup_invocation = Puppet::Pops::Lookup::Invocation.new(scope, {}, {}, true)
+        lookup_invocation = Oregano::Pops::Lookup::Invocation.new(scope, {}, {}, true)
         begin
-          Puppet::Pops::Lookup.lookup('lookup_options.subkey', nil, nil, false, nil, lookup_invocation)
-        rescue Puppet::Error
+          Oregano::Pops::Lookup.lookup('lookup_options.subkey', nil, nil, false, nil, lookup_invocation)
+        rescue Oregano::Error
         end
         expect(lookup_invocation.explainer.explain.chomp).to eq('Invalid key "lookup_options"')
       end

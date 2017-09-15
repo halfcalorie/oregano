@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/application'
-require 'puppet'
+require 'oregano/application'
+require 'oregano'
 require 'getoptlong'
 require 'timeout'
 
-describe Puppet::Application do
+describe Oregano::Application do
 
   before(:each) do
-    @app = Class.new(Puppet::Application).new
+    @app = Class.new(Oregano::Application).new
     @appclass = @app.class
 
     @app.stubs(:name).returns("test_app")
@@ -19,8 +19,8 @@ describe Puppet::Application do
   describe "application commandline" do
     it "should not pick up changes to the array of arguments" do
       args = %w{subcommand --arg}
-      command_line = Puppet::Util::CommandLine.new('puppet', args)
-      app = Puppet::Application.new(command_line)
+      command_line = Oregano::Util::CommandLine.new('oregano', args)
+      app = Oregano::Application.new(command_line)
 
       args[0] = 'different_subcommand'
       args[1] = '--other-arg'
@@ -33,7 +33,7 @@ describe Puppet::Application do
   describe "application defaults" do
     it "should fail if required app default values are missing" do
       @app.stubs(:app_defaults).returns({ :foo => 'bar' })
-      Puppet.expects(:err).with(regexp_matches(/missing required app default setting/))
+      Oregano.expects(:err).with(regexp_matches(/missing required app default setting/))
       expect {
         @app.run
       }.to exit_with(1)
@@ -42,7 +42,7 @@ describe Puppet::Application do
 
   describe "finding" do
     before do
-      @klass = Puppet::Application
+      @klass = Oregano::Application
       @klass.stubs(:puts)
     end
 
@@ -55,9 +55,9 @@ describe Puppet::Application do
     end
 
     it "should error if it can't find a class" do
-      Puppet.expects(:err).with do |value|
+      Oregano.expects(:err).with do |value|
         value =~ /Unable to find application 'ThisShallNeverEverEverExist'/ and
-          value =~ /puppet\/application\/thisshallneverevereverexist/ and
+          value =~ /oregano\/application\/thisshallneverevereverexist/ and
           value =~ /no such file to load|cannot load such file/
       end
 
@@ -70,21 +70,21 @@ describe Puppet::Application do
   describe "#available_application_names" do
     it 'should be able to find available application names' do
       apps =  %w{describe filebucket kick queue resource agent cert apply doc master}
-      Puppet::Util::Autoload.expects(:files_to_load).returns(apps)
+      Oregano::Util::Autoload.expects(:files_to_load).returns(apps)
 
-      expect(Puppet::Application.available_application_names).to match_array(apps)
+      expect(Oregano::Application.available_application_names).to match_array(apps)
     end
 
     it 'should find applications from multiple paths' do
-      Puppet::Util::Autoload.expects(:files_to_load).with('puppet/application').returns(%w{ /a/foo.rb /b/bar.rb })
+      Oregano::Util::Autoload.expects(:files_to_load).with('oregano/application').returns(%w{ /a/foo.rb /b/bar.rb })
 
-      expect(Puppet::Application.available_application_names).to match_array(%w{ foo bar })
+      expect(Oregano::Application.available_application_names).to match_array(%w{ foo bar })
     end
 
     it 'should return unique application names' do
-      Puppet::Util::Autoload.expects(:files_to_load).with('puppet/application').returns(%w{ /a/foo.rb /b/foo.rb })
+      Oregano::Util::Autoload.expects(:files_to_load).with('oregano/application').returns(%w{ /a/foo.rb /b/foo.rb })
 
-      expect(Puppet::Application.available_application_names).to eq(%w{ foo })
+      expect(Oregano::Application.available_application_names).to eq(%w{ foo })
     end
   end
 
@@ -107,7 +107,7 @@ describe Puppet::Application do
   #  get to a point where it was entirely impossible.
   describe "when dealing with run_mode" do
 
-    class TestApp < Puppet::Application
+    class TestApp < Oregano::Application
       run_mode :master
       def run_command
         # no-op
@@ -115,12 +115,12 @@ describe Puppet::Application do
     end
 
     it "should sadly and frighteningly allow run_mode to change at runtime via #initialize_app_defaults" do
-      Puppet.features.stubs(:syslog?).returns(true)
+      Oregano.features.stubs(:syslog?).returns(true)
 
       app = TestApp.new
       app.initialize_app_defaults
 
-      expect(Puppet.run_mode).to be_master
+      expect(Oregano.run_mode).to be_master
     end
 
     it "should sadly and frighteningly allow run_mode to change at runtime via #run" do
@@ -129,19 +129,19 @@ describe Puppet::Application do
 
       expect(app.class.run_mode.name).to eq(:master)
 
-      expect(Puppet.run_mode).to be_master
+      expect(Oregano.run_mode).to be_master
     end
   end
 
   it "should explode when an invalid run mode is set at runtime, for great victory" do
     expect {
-      class InvalidRunModeTestApp < Puppet::Application
+      class InvalidRunModeTestApp < Oregano::Application
         run_mode :abracadabra
         def run_command
           # no-op
         end
       end
-    }.to raise_error(Puppet::Settings::ValidationError, /Invalid run mode/)
+    }.to raise_error(Oregano::Settings::ValidationError, /Invalid run mode/)
   end
 
   it "should have a run entry-point" do
@@ -171,113 +171,113 @@ describe Puppet::Application do
 
   describe 'when invoking clear!' do
     before :each do
-      Puppet::Application.run_status = :stop_requested
-      Puppet::Application.clear!
+      Oregano::Application.run_status = :stop_requested
+      Oregano::Application.clear!
     end
 
     it 'should have nil run_status' do
-      expect(Puppet::Application.run_status).to be_nil
+      expect(Oregano::Application.run_status).to be_nil
     end
 
     it 'should return false for restart_requested?' do
-      expect(Puppet::Application.restart_requested?).to be_falsey
+      expect(Oregano::Application.restart_requested?).to be_falsey
     end
 
     it 'should return false for stop_requested?' do
-      expect(Puppet::Application.stop_requested?).to be_falsey
+      expect(Oregano::Application.stop_requested?).to be_falsey
     end
 
     it 'should return false for interrupted?' do
-      expect(Puppet::Application.interrupted?).to be_falsey
+      expect(Oregano::Application.interrupted?).to be_falsey
     end
 
     it 'should return true for clear?' do
-      expect(Puppet::Application.clear?).to be_truthy
+      expect(Oregano::Application.clear?).to be_truthy
     end
   end
 
   describe 'after invoking stop!' do
     before :each do
-      Puppet::Application.run_status = nil
-      Puppet::Application.stop!
+      Oregano::Application.run_status = nil
+      Oregano::Application.stop!
     end
 
     after :each do
-      Puppet::Application.run_status = nil
+      Oregano::Application.run_status = nil
     end
 
     it 'should have run_status of :stop_requested' do
-      expect(Puppet::Application.run_status).to eq(:stop_requested)
+      expect(Oregano::Application.run_status).to eq(:stop_requested)
     end
 
     it 'should return true for stop_requested?' do
-      expect(Puppet::Application.stop_requested?).to be_truthy
+      expect(Oregano::Application.stop_requested?).to be_truthy
     end
 
     it 'should return false for restart_requested?' do
-      expect(Puppet::Application.restart_requested?).to be_falsey
+      expect(Oregano::Application.restart_requested?).to be_falsey
     end
 
     it 'should return true for interrupted?' do
-      expect(Puppet::Application.interrupted?).to be_truthy
+      expect(Oregano::Application.interrupted?).to be_truthy
     end
 
     it 'should return false for clear?' do
-      expect(Puppet::Application.clear?).to be_falsey
+      expect(Oregano::Application.clear?).to be_falsey
     end
   end
 
   describe 'when invoking restart!' do
     before :each do
-      Puppet::Application.run_status = nil
-      Puppet::Application.restart!
+      Oregano::Application.run_status = nil
+      Oregano::Application.restart!
     end
 
     after :each do
-      Puppet::Application.run_status = nil
+      Oregano::Application.run_status = nil
     end
 
     it 'should have run_status of :restart_requested' do
-      expect(Puppet::Application.run_status).to eq(:restart_requested)
+      expect(Oregano::Application.run_status).to eq(:restart_requested)
     end
 
     it 'should return true for restart_requested?' do
-      expect(Puppet::Application.restart_requested?).to be_truthy
+      expect(Oregano::Application.restart_requested?).to be_truthy
     end
 
     it 'should return false for stop_requested?' do
-      expect(Puppet::Application.stop_requested?).to be_falsey
+      expect(Oregano::Application.stop_requested?).to be_falsey
     end
 
     it 'should return true for interrupted?' do
-      expect(Puppet::Application.interrupted?).to be_truthy
+      expect(Oregano::Application.interrupted?).to be_truthy
     end
 
     it 'should return false for clear?' do
-      expect(Puppet::Application.clear?).to be_falsey
+      expect(Oregano::Application.clear?).to be_falsey
     end
   end
 
   describe 'when performing a controlled_run' do
     it 'should not execute block if not :clear?' do
-      Puppet::Application.run_status = :stop_requested
+      Oregano::Application.run_status = :stop_requested
       target = mock 'target'
       target.expects(:some_method).never
-      Puppet::Application.controlled_run do
+      Oregano::Application.controlled_run do
         target.some_method
       end
     end
 
     it 'should execute block if :clear?' do
-      Puppet::Application.run_status = nil
+      Oregano::Application.run_status = nil
       target = mock 'target'
       target.expects(:some_method).once
-      Puppet::Application.controlled_run do
+      Oregano::Application.controlled_run do
         target.some_method
       end
     end
 
-    describe 'on POSIX systems', :if => Puppet.features.posix? do
+    describe 'on POSIX systems', :if => Oregano.features.posix? do
       it 'should signal process with HUP after block if restart requested during block execution' do
         Timeout::timeout(3) do  # if the signal doesn't fire, this causes failure.
 
@@ -285,8 +285,8 @@ describe Puppet::Application do
           old_handler = trap('HUP') { has_run = true }
 
           begin
-            Puppet::Application.controlled_run do
-              Puppet::Application.run_status = :restart_requested
+            Oregano::Application.controlled_run do
+              Oregano::Application.run_status = :restart_requested
             end
 
             # Ruby 1.9 uses a separate OS level thread to run the signal
@@ -305,7 +305,7 @@ describe Puppet::Application do
     end
 
     after :each do
-      Puppet::Application.run_status = nil
+      Oregano::Application.run_status = nil
     end
   end
 
@@ -314,7 +314,7 @@ describe Puppet::Application do
     before :each do
       @app.command_line.stubs(:args).returns([])
 
-      Puppet.settings.stubs(:optparse_addargs).returns([])
+      Oregano.settings.stubs(:optparse_addargs).returns([])
     end
 
     it "should pass the banner to the option parser" do
@@ -359,19 +359,19 @@ describe Puppet::Application do
 
     describe "when dealing with an argument not declared directly by the application" do
       it "should pass it to handle_unknown if this method exists" do
-        Puppet.settings.stubs(:optparse_addargs).returns([["--not-handled", :REQUIRED]])
+        Oregano.settings.stubs(:optparse_addargs).returns([["--not-handled", :REQUIRED]])
 
         @app.expects(:handle_unknown).with("--not-handled", "value").returns(true)
         @app.command_line.stubs(:args).returns(["--not-handled", "value"])
         @app.parse_options
       end
 
-      it "should transform boolean option to normal form for Puppet.settings" do
+      it "should transform boolean option to normal form for Oregano.settings" do
         @app.expects(:handle_unknown).with("--option", true)
         @app.send(:handlearg, "--[no-]option", true)
       end
 
-      it "should transform boolean option to no- form for Puppet.settings" do
+      it "should transform boolean option to no- form for Oregano.settings" do
         @app.expects(:handle_unknown).with("--no-option", false)
         @app.send(:handlearg, "--[no-]option", false)
       end
@@ -388,49 +388,49 @@ describe Puppet::Application do
     [ :debug, :verbose ].each do |level|
       it "should honor option #{level}" do
         @app.options.stubs(:[]).with(level).returns(true)
-        Puppet::Util::Log.stubs(:newdestination)
+        Oregano::Util::Log.stubs(:newdestination)
         @app.setup
-        expect(Puppet::Util::Log.level).to eq(level == :verbose ? :info : :debug)
+        expect(Oregano::Util::Log.level).to eq(level == :verbose ? :info : :debug)
       end
     end
 
     it "should honor setdest option" do
       @app.options.stubs(:[]).with(:setdest).returns(false)
 
-      Puppet::Util::Log.expects(:setup_default)
+      Oregano::Util::Log.expects(:setup_default)
 
       @app.setup
     end
 
     it "does not downgrade the loglevel when --verbose is specified" do
-      Puppet[:log_level] = :debug
+      Oregano[:log_level] = :debug
       @app.options.stubs(:[]).with(:verbose).returns(true)
       @app.setup_logs
 
-      expect(Puppet::Util::Log.level).to eq(:debug)
+      expect(Oregano::Util::Log.level).to eq(:debug)
     end
 
     it "allows the loglevel to be specified as an argument" do
       @app.set_log_level(:debug => true)
 
-      expect(Puppet::Util::Log.level).to eq(:debug)
+      expect(Oregano::Util::Log.level).to eq(:debug)
     end
   end
 
   describe "when configuring routes" do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     before :each do
-      Puppet::Node.indirection.reset_terminus_class
+      Oregano::Node.indirection.reset_terminus_class
     end
 
     after :each do
-      Puppet::Node.indirection.reset_terminus_class
+      Oregano::Node.indirection.reset_terminus_class
     end
 
     it "should use the routes specified for only the active application" do
-      Puppet[:route_file] = tmpfile('routes')
-      File.open(Puppet[:route_file], 'w') do |f|
+      Oregano[:route_file] = tmpfile('routes')
+      File.open(Oregano[:route_file], 'w') do |f|
         f.print <<-ROUTES
           test_app:
             node:
@@ -445,18 +445,18 @@ describe Puppet::Application do
 
       @app.configure_indirector_routes
 
-      expect(Puppet::Node.indirection.terminus_class).to eq('exec')
+      expect(Oregano::Node.indirection.terminus_class).to eq('exec')
     end
 
     it "should not fail if the route file doesn't exist" do
-      Puppet[:route_file] = "/dev/null/non-existent"
+      Oregano[:route_file] = "/dev/null/non-existent"
 
       expect { @app.configure_indirector_routes }.to_not raise_error
     end
 
     it "should raise an error if the routes file is invalid" do
-      Puppet[:route_file] = tmpfile('routes')
-      File.open(Puppet[:route_file], 'w') do |f|
+      Oregano[:route_file] = tmpfile('routes')
+      File.open(Oregano[:route_file], 'w') do |f|
         f.print <<-ROUTES
          invalid : : yaml
         ROUTES
@@ -511,19 +511,19 @@ describe Puppet::Application do
     end
 
     it "should warn and exit if no command can be called" do
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       expect { @app.run }.to exit_with 1
     end
 
     it "should raise an error if dispatch returns no command" do
       @app.stubs(:get_command).returns(nil)
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       expect { @app.run }.to exit_with 1
     end
 
     it "should raise an error if dispatch returns an invalid command" do
       @app.stubs(:get_command).returns(:this_function_doesnt_exist)
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       expect { @app.run }.to exit_with 1
     end
   end
@@ -614,19 +614,19 @@ describe Puppet::Application do
     let(:test_arg) { "arg_test_logdest" }
 
     it "should log an exception that is raised" do
-      our_exception = Puppet::DevError.new("test exception")
-      Puppet::Util::Log.expects(:newdestination).with(test_arg).raises(our_exception)
-      Puppet.expects(:log_exception).with(our_exception)
+      our_exception = Oregano::DevError.new("test exception")
+      Oregano::Util::Log.expects(:newdestination).with(test_arg).raises(our_exception)
+      Oregano.expects(:log_exception).with(our_exception)
       @app.handle_logdest_arg(test_arg)
     end
 
     it "should set the new log destination" do
-      Puppet::Util::Log.expects(:newdestination).with(test_arg)
+      Oregano::Util::Log.expects(:newdestination).with(test_arg)
       @app.handle_logdest_arg(test_arg)
     end
 
     it "should set the flag that a destination is set in the options hash" do
-      Puppet::Util::Log.stubs(:newdestination).with(test_arg)
+      Oregano::Util::Log.stubs(:newdestination).with(test_arg)
       @app.handle_logdest_arg(test_arg)
       expect(@app.options[:setdest]).to be_truthy
     end

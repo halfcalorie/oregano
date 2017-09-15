@@ -2,14 +2,14 @@
 # encoding: ASCII-8BIT
 require 'spec_helper'
 
-module Puppet::Util::Plist
+module Oregano::Util::Plist
 end
 
-describe Puppet::Type.type(:user).provider(:directoryservice) do
+describe Oregano::Type.type(:user).provider(:directoryservice) do
   let(:username) { 'nonexistent_user' }
   let(:user_path) { "/Users/#{username}" }
   let(:resource) do
-    Puppet::Type.type(:user).new(
+    Oregano::Type.type(:user).new(
       :name     => username,
       :provider => :directoryservice
     )
@@ -327,7 +327,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
     it 'should convert group names into integers' do
       resource[:gid] = 'somegroup'
-      Puppet::Util.expects(:gid).with('somegroup').returns(21)
+      Oregano::Util.expects(:gid).with('somegroup').returns(21)
       provider.expects(:merge_attribute_with_dscl).with('Users', username, 'PrimaryGroupID', 21)
       provider.create
     end
@@ -343,12 +343,12 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
       expect(instances).to be_a_kind_of Array
       instances.each do |instance|
-        expect(instance).to be_a_kind_of Puppet::Provider
+        expect(instance).to be_a_kind_of Oregano::Provider
       end
     end
   end
 
-  describe 'self#get_all_users', :if => Puppet.features.cfpropertylist? do
+  describe 'self#get_all_users', :if => Oregano.features.cfpropertylist? do
     let(:empty_plist) do
       '<?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -626,7 +626,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
     it "should raise an error on 10.7 if a password hash that doesn't contain 136 characters is passed" do
       provider.class.stubs(:get_os_version).returns('10.7')
-      expect { provider.password = 'password' }.to raise_error Puppet::Error, /OS X 10\.7 requires a Salted SHA512 hash password of 136 characters\.  Please check your password and try again/
+      expect { provider.password = 'password' }.to raise_error Oregano::Error, /OS X 10\.7 requires a Salted SHA512 hash password of 136 characters\.  Please check your password and try again/
     end
   end
 
@@ -638,7 +638,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     it "should raise an error on 10.8 if a password hash that doesn't contain 256 characters is passed" do
       expect do
         provider.password = 'password'
-      end.to raise_error(Puppet::Error, /OS X versions > 10\.7 require a Salted SHA512 PBKDF2 password hash of 256 characters\. Please check your password and try again\./)
+      end.to raise_error(Oregano::Error, /OS X versions > 10\.7 require a Salted SHA512 PBKDF2 password hash of 256 characters\. Please check your password and try again\./)
     end
 
     it "fails if a password is given but not salt and iterations" do
@@ -646,7 +646,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
       expect do
         provider.password = resource[:password]
-      end.to raise_error(Puppet::Error, /OS X versions > 10\.7 use PBKDF2 password hashes, which requires all three of salt, iterations, and password hash\. This resource is missing: salt, iterations\./)
+      end.to raise_error(Oregano::Error, /OS X versions > 10\.7 use PBKDF2 password hashes, which requires all three of salt, iterations, and password hash\. This resource is missing: salt, iterations\./)
     end
 
     it "fails if salt is given but not password and iterations" do
@@ -654,7 +654,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
       expect do
         provider.salt = resource[:salt]
-      end.to raise_error(Puppet::Error, /OS X versions > 10\.7 use PBKDF2 password hashes, which requires all three of salt, iterations, and password hash\. This resource is missing: password, iterations\./)
+      end.to raise_error(Oregano::Error, /OS X versions > 10\.7 use PBKDF2 password hashes, which requires all three of salt, iterations, and password hash\. This resource is missing: password, iterations\./)
     end
 
     it "fails if iterations is given but not password and salt" do
@@ -662,11 +662,11 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
       expect do
         provider.iterations = resource[:iterations]
-      end.to raise_error(Puppet::Error, /OS X versions > 10\.7 use PBKDF2 password hashes, which requires all three of salt, iterations, and password hash\. This resource is missing: password, salt\./)
+      end.to raise_error(Oregano::Error, /OS X versions > 10\.7 use PBKDF2 password hashes, which requires all three of salt, iterations, and password hash\. This resource is missing: password, salt\./)
     end
   end
 
-  describe '#get_list_of_groups', :if => Puppet.features.cfpropertylist? do
+  describe '#get_list_of_groups', :if => Oregano.features.cfpropertylist? do
     # The below value is the result of running `dscl -plist . readall /Groups`
     # on an OS X system.
     let(:groups_xml) do
@@ -733,7 +733,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     end
   end
 
-  describe '#get_attribute_from_dscl', :if => Puppet.features.cfpropertylist? do
+  describe '#get_attribute_from_dscl', :if => Oregano.features.cfpropertylist? do
     # The below value is the result of executing
     # `dscl -plist . read /Users/<username/ GeneratedUID`
     # on an OS X system.
@@ -764,14 +764,14 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
   describe '#convert_hash_to_binary' do
     it 'should use plutil to successfully convert an xml plist to a binary plist' do
-      Puppet::Util::Plist.expects(:dump_plist).with('ruby_hash', :binary).returns('binary_plist_data')
+      Oregano::Util::Plist.expects(:dump_plist).with('ruby_hash', :binary).returns('binary_plist_data')
       expect(provider.class.convert_hash_to_binary('ruby_hash')).to eq('binary_plist_data')
     end
   end
 
   describe '#convert_binary_to_hash' do
     it 'should accept a binary plist and return a ruby hash containing the plist data' do
-      Puppet::Util::Plist.expects(:parse_plist).with('binary_plist_data').returns(user_plist_hash)
+      Oregano::Util::Plist.expects(:parse_plist).with('binary_plist_data').returns(user_plist_hash)
       expect(provider.class.convert_binary_to_hash('binary_plist_data')).to eq(user_plist_hash)
     end
   end
@@ -803,7 +803,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
         expect(provider.class.get_salted_sha512_pbkdf2('iterations', pbkdf2_embedded_bplist_hash)).to be_a(Integer)
     end
     it "should raise an error if a field other than 'entropy', 'salt', or 'iterations' is passed" do
-      expect { provider.class.get_salted_sha512_pbkdf2('othervalue', pbkdf2_embedded_bplist_hash) }.to raise_error(Puppet::Error, /Puppet has tried to read an incorrect value from the SALTED-SHA512-PBKDF2 hash. Acceptable fields are 'salt', 'entropy', or 'iterations'/)
+      expect { provider.class.get_salted_sha512_pbkdf2('othervalue', pbkdf2_embedded_bplist_hash) }.to raise_error(Oregano::Error, /Oregano has tried to read an incorrect value from the SALTED-SHA512-PBKDF2 hash. Acceptable fields are 'salt', 'entropy', or 'iterations'/)
     end
   end
 
@@ -812,7 +812,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     let(:stub_password_file) { stub('connection') }
 
     it 'should return a sha1 hash read from disk' do
-      Puppet::FileSystem.expects(:exist?).with(password_hash_file).returns(true)
+      Oregano::FileSystem.expects(:exist?).with(password_hash_file).returns(true)
       File.expects(:file?).with(password_hash_file).returns(true)
       File.expects(:readable?).with(password_hash_file).returns(true)
       File.expects(:new).with(password_hash_file).returns(stub_password_file)
@@ -822,21 +822,21 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     end
 
     it 'should return nil if the password_hash_file does not exist' do
-      Puppet::FileSystem.expects(:exist?).with(password_hash_file).returns(false)
+      Oregano::FileSystem.expects(:exist?).with(password_hash_file).returns(false)
       expect(provider.class.get_sha1('user_guid')).to eq(nil)
     end
 
     it 'should return nil if the password_hash_file is not a file' do
-      Puppet::FileSystem.expects(:exist?).with(password_hash_file).returns(true)
+      Oregano::FileSystem.expects(:exist?).with(password_hash_file).returns(true)
       File.expects(:file?).with(password_hash_file).returns(false)
       expect(provider.class.get_sha1('user_guid')).to eq(nil)
     end
 
     it 'should raise an error if the password_hash_file is not readable' do
-      Puppet::FileSystem.expects(:exist?).with(password_hash_file).returns(true)
+      Oregano::FileSystem.expects(:exist?).with(password_hash_file).returns(true)
       File.expects(:file?).with(password_hash_file).returns(true)
       File.expects(:readable?).with(password_hash_file).returns(false)
-      expect { expect(provider.class.get_sha1('user_guid')).to eq(nil) }.to raise_error(Puppet::Error, /Could not read password hash file at #{password_hash_file}/)
+      expect { expect(provider.class.get_sha1('user_guid')).to eq(nil) }.to raise_error(Oregano::Error, /Could not read password hash file at #{password_hash_file}/)
     end
   end
 
@@ -870,20 +870,20 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
         "shell"                    => ["/bin/zsh"],
         "passwd"                   => ["********"],
         "picture"                  => ["/Library/User Pictures/Animals/Eagle.tif"],
-        "_writers_LinkedIdentity"  => ["puppet"], "name"=>["puppet"],
-        "home"                     => ["/Users/puppet"],
-        "_writers_UserCertificate" => ["puppet"],
-        "_writers_passwd"          => ["puppet"],
+        "_writers_LinkedIdentity"  => ["oregano"], "name"=>["oregano"],
+        "home"                     => ["/Users/oregano"],
+        "_writers_UserCertificate" => ["oregano"],
+        "_writers_passwd"          => ["oregano"],
         "gid"                      => ["20"],
         "generateduid"             => ["DA8A0E67-E9BE-4B4F-B34E-8977BAE0D3D4"],
-        "realname"                 => ["Puppet"],
-        "_writers_picture"         => ["puppet"],
+        "realname"                 => ["Oregano"],
+        "_writers_picture"         => ["oregano"],
         "uid"                      => ["501"],
         "hint"                     => [""],
         "authentication_authority" => [";ShadowHash;HASHLIST:<SALTED-SHA512>",
-          ";Kerberosv5;;puppet@LKDC:S HA1.35580B1D6366D2890A35D430373FF653297F377D;LKDC:SHA1.35580B1D6366D2890A35D430373FF653297F377D"],
-        "_writers_realname"        => ["puppet"],
-        "_writers_hint"            => ["puppet"],
+          ";Kerberosv5;;oregano@LKDC:S HA1.35580B1D6366D2890A35D430373FF653297F377D;LKDC:SHA1.35580B1D6366D2890A35D430373FF653297F377D"],
+        "_writers_realname"        => ["oregano"],
+        "_writers_hint"            => ["oregano"],
         "ShadowHashData"           => ['blank']
       }
     end
@@ -946,16 +946,16 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     end
 
     # This will also catch the edge-case where a 10.6-style user exists on
-    # a 10.8 system and Puppet attempts to set a password
+    # a 10.8 system and Oregano attempts to set a password
     it 'should not fail if shadow_hash_data is not a Hash' do
-      Puppet::Util::Plist.expects(:string_to_blob).with(provider.base64_decode_string(pbkdf2_password_hash)).returns('binary_string')
+      Oregano::Util::Plist.expects(:string_to_blob).with(provider.base64_decode_string(pbkdf2_password_hash)).returns('binary_string')
       provider.class.expects(:convert_hash_to_binary).with(entropy_shadow_hash_data).returns('binary_plist')
       provider.expects(:set_shadow_hash_data).with({'passwd' => '********'}, 'binary_plist')
       provider.set_salted_pbkdf2({}, false, 'entropy', pbkdf2_password_hash)
     end
 
     it "should set the PBKDF2 password hash when the 'entropy' field is passed with a valid password hash" do
-      Puppet::Util::Plist.expects(:string_to_blob).with(provider.base64_decode_string(pbkdf2_password_hash))
+      Oregano::Util::Plist.expects(:string_to_blob).with(provider.base64_decode_string(pbkdf2_password_hash))
       provider.class.expects(:convert_hash_to_binary).with(pbkdf2_embedded_bplist_hash).returns(pbkdf2_embedded_plist)
       provider.expects(:set_shadow_hash_data).with(users_plist, pbkdf2_embedded_plist)
       users_plist.expects(:[]=).with('passwd', '********')
@@ -963,7 +963,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     end
 
     it "should set the PBKDF2 password hash when the 'salt' field is passed with a valid password hash" do
-      Puppet::Util::Plist.expects(:string_to_blob).with(provider.base64_decode_string(pbkdf2_salt_value))
+      Oregano::Util::Plist.expects(:string_to_blob).with(provider.base64_decode_string(pbkdf2_salt_value))
       provider.class.expects(:convert_hash_to_binary).with(pbkdf2_embedded_bplist_hash).returns(pbkdf2_embedded_plist)
       provider.expects(:set_shadow_hash_data).with(users_plist, pbkdf2_embedded_plist)
       users_plist.expects(:[]=).with('passwd', '********')
@@ -980,28 +980,28 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
 
   describe '#write_users_plist_to_disk' do
     it 'should save the passed plist to disk and convert it to a binary plist' do
-      Puppet::Util::Plist.expects(:write_plist_file).with(user_plist_xml, "#{users_plist_dir}/nonexistent_user.plist", :binary)
+      Oregano::Util::Plist.expects(:write_plist_file).with(user_plist_xml, "#{users_plist_dir}/nonexistent_user.plist", :binary)
       provider.write_users_plist_to_disk(user_plist_xml)
     end
   end
 
   describe '#merge_attribute_with_dscl' do
     it 'should raise an error if a dscl command raises an error' do
-      provider.expects(:dscl).with('.', '-merge', user_path, 'GeneratedUID', 'GUID').raises(Puppet::ExecutionFailure, 'boom')
-      expect { provider.merge_attribute_with_dscl('Users', username, 'GeneratedUID', 'GUID') }.to raise_error Puppet::Error, /Could not set the dscl GeneratedUID key with value: GUID/
+      provider.expects(:dscl).with('.', '-merge', user_path, 'GeneratedUID', 'GUID').raises(Oregano::ExecutionFailure, 'boom')
+      expect { provider.merge_attribute_with_dscl('Users', username, 'GeneratedUID', 'GUID') }.to raise_error Oregano::Error, /Could not set the dscl GeneratedUID key with value: GUID/
     end
   end
 
   describe '#get_users_plist' do
     let(:test_hash) do
       {
-        'user'  => 'puppet',
+        'user'  => 'oregano',
         'shell' => '/bin/bash'
       }
     end
 
     it 'should convert a plist to a valid Ruby hash' do
-      Puppet::Util::Plist.expects(:read_plist_file).with("#{users_plist_dir}/#{username}.plist").returns(test_hash)
+      Oregano::Util::Plist.expects(:read_plist_file).with("#{users_plist_dir}/#{username}.plist").returns(test_hash)
       expect(provider.get_users_plist(username)).to eq(test_hash, )
     end
   end
@@ -1061,7 +1061,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     # differentiating aspect about this plist is that it's from a 10.6-style
     # user. There's an edge case whereby a user that was created in 10.6, but
     # who hasn't attempted to login to the system until after it's been
-    # upgraded to 10.8, will experience errors due to assumptions in Puppet
+    # upgraded to 10.8, will experience errors due to assumptions in Oregano
     # based solely on operatingsystem.
     let(:all_users_hash) do
       [
@@ -1094,7 +1094,7 @@ describe Puppet::Type.type(:user).provider(:directoryservice) do
     let(:username) { 'testuser' }
     let(:user_path) { "/Users/#{username}" }
     let(:resource) do
-      Puppet::Type.type(:user).new(
+      Oregano::Type.type(:user).new(
         :name     => username,
         :provider => :directoryservice
       )

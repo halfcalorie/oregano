@@ -2,8 +2,8 @@
 require 'spec_helper'
 
 require 'pathname'
-require 'puppet/util/selinux'
-include Puppet::Util::SELinux
+require 'oregano/util/selinux'
+include Oregano::Util::SELinux
 
 unless defined?(Selinux)
   module Selinux
@@ -13,7 +13,7 @@ unless defined?(Selinux)
   end
 end
 
-describe Puppet::Util::SELinux do
+describe Oregano::Util::SELinux do
 
   describe "selinux_support?" do
     before do
@@ -62,7 +62,7 @@ describe Puppet::Util::SELinux do
     end
 
     it "should match a path on / to ext3" do
-      expect(find_fs('/etc/puppetlabs/puppet/testfile')).to eq("ext3")
+      expect(find_fs('/etc/oreganolabs/oregano/testfile')).to eq("ext3")
     end
 
     it "should match a path on /mnt/nfs to nfs" do
@@ -70,15 +70,15 @@ describe Puppet::Util::SELinux do
     end
 
     it "should return true for a capable filesystem" do
-      expect(selinux_label_support?('/etc/puppetlabs/puppet/testfile')).to be_truthy
+      expect(selinux_label_support?('/etc/oreganolabs/oregano/testfile')).to be_truthy
     end
 
     it "should return false for a noncapable filesystem" do
       expect(selinux_label_support?('/mnt/nfs/testfile')).to be_falsey
     end
 
-    it "(#8714) don't follow symlinks when determining file systems", :unless => Puppet.features.microsoft_windows? do
-      scratch = Pathname(PuppetSpec::Files.tmpdir('selinux'))
+    it "(#8714) don't follow symlinks when determining file systems", :unless => Oregano.features.microsoft_windows? do
+      scratch = Pathname(OreganoSpec::Files.tmpdir('selinux'))
 
       self.stubs(:read_mounts).returns({
           '/'             => 'ext3',
@@ -90,7 +90,7 @@ describe Puppet::Util::SELinux do
     end
 
     it "should handle files that don't exist" do
-      scratch = Pathname(PuppetSpec::Files.tmpdir('selinux'))
+      scratch = Pathname(OreganoSpec::Files.tmpdir('selinux'))
       expect(selinux_label_support?(scratch + 'nonesuch')).to be_truthy
     end
   end
@@ -123,7 +123,7 @@ describe Puppet::Util::SELinux do
     it "should return a context if a default context exists" do
       self.expects(:selinux_support?).returns true
       fstat = stub 'File::Stat', :mode => 0
-      Puppet::FileSystem.expects(:lstat).with('/foo').returns(fstat)
+      Oregano::FileSystem.expects(:lstat).with('/foo').returns(fstat)
       self.expects(:find_fs).with("/foo").returns "ext3"
       Selinux.expects(:matchpathcon).with("/foo", 0).returns [0, "user_u:role_r:type_t:s0"]
 
@@ -151,7 +151,7 @@ describe Puppet::Util::SELinux do
     it "should return nil if matchpathcon returns failure" do
       self.expects(:selinux_support?).returns true
       fstat = stub 'File::Stat', :mode => 0
-      Puppet::FileSystem.expects(:lstat).with('/foo').returns(fstat)
+      Oregano::FileSystem.expects(:lstat).with('/foo').returns(fstat)
       self.expects(:find_fs).with("/foo").returns "ext3"
       Selinux.expects(:matchpathcon).with("/foo", 0).returns -1
 
@@ -192,15 +192,15 @@ describe Puppet::Util::SELinux do
 
     describe "with spaces in the components" do
       it "should raise when user contains a space" do
-        expect{parse_selinux_context(:seluser, "user with space_u:role_r:type_t:s0")}.to raise_error Puppet::Error
+        expect{parse_selinux_context(:seluser, "user with space_u:role_r:type_t:s0")}.to raise_error Oregano::Error
       end
 
       it "should raise when role contains a space" do
-        expect{parse_selinux_context(:selrole, "user_u:role with space_r:type_t:s0")}.to raise_error Puppet::Error
+        expect{parse_selinux_context(:selrole, "user_u:role with space_r:type_t:s0")}.to raise_error Oregano::Error
       end
 
       it "should raise when type contains a space" do
-        expect{parse_selinux_context(:seltype, "user_u:role_r:type with space_t:s0")}.to raise_error Puppet::Error
+        expect{parse_selinux_context(:seltype, "user_u:role_r:type with space_t:s0")}.to raise_error Oregano::Error
       end
 
       it "should return the range when range contains a space" do

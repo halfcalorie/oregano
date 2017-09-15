@@ -1,21 +1,21 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/windows'
+require 'oregano/util/windows'
 
-describe "Puppet::Util::Windows::AccessControlList", :if => Puppet.features.microsoft_windows? do
-  let(:klass) { Puppet::Util::Windows::AccessControlList }
+describe "Oregano::Util::Windows::AccessControlList", :if => Oregano.features.microsoft_windows? do
+  let(:klass) { Oregano::Util::Windows::AccessControlList }
   let(:system_sid) { 'S-1-5-18' }
   let(:admins_sid) { 'S-1-5-544' }
   let(:none_sid)   { 'S-1-0-0' }
 
   let(:system_ace) do
-    Puppet::Util::Windows::AccessControlEntry.new(system_sid, 0x1)
+    Oregano::Util::Windows::AccessControlEntry.new(system_sid, 0x1)
   end
   let(:admins_ace) do
-    Puppet::Util::Windows::AccessControlEntry.new(admins_sid, 0x2)
+    Oregano::Util::Windows::AccessControlEntry.new(admins_sid, 0x2)
   end
   let(:none_ace) do
-    Puppet::Util::Windows::AccessControlEntry.new(none_sid, 0x3)
+    Oregano::Util::Windows::AccessControlEntry.new(none_sid, 0x3)
   end
 
   it "constructs an empty list" do
@@ -90,8 +90,8 @@ describe "Puppet::Util::Windows::AccessControlList", :if => Puppet.features.micr
     end
 
     it "preserves inherited aces, even if the sids match" do
-      flags = Puppet::Util::Windows::AccessControlEntry::INHERITED_ACE
-      inherited_ace = Puppet::Util::Windows::AccessControlEntry.new(system_sid, 0x1, flags)
+      flags = Oregano::Util::Windows::AccessControlEntry::INHERITED_ACE
+      inherited_ace = Oregano::Util::Windows::AccessControlEntry.new(system_sid, 0x1, flags)
       dacl = klass.new([inherited_ace, system_ace])
       dacl.reassign!(system_sid, none_sid)
       aces = dacl.to_a
@@ -101,13 +101,13 @@ describe "Puppet::Util::Windows::AccessControlList", :if => Puppet.features.micr
 
     it "prepends an explicit ace for the new sid with the same mask and basic inheritance as the inherited ace" do
       expected_flags =
-        Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
-        Puppet::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE |
-        Puppet::Util::Windows::AccessControlEntry::INHERIT_ONLY_ACE
+        Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
+        Oregano::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE |
+        Oregano::Util::Windows::AccessControlEntry::INHERIT_ONLY_ACE
 
-      flags = Puppet::Util::Windows::AccessControlEntry::INHERITED_ACE | expected_flags
+      flags = Oregano::Util::Windows::AccessControlEntry::INHERITED_ACE | expected_flags
 
-      inherited_ace = Puppet::Util::Windows::AccessControlEntry.new(system_sid, 0x1, flags)
+      inherited_ace = Oregano::Util::Windows::AccessControlEntry.new(system_sid, 0x1, flags)
       dacl = klass.new([inherited_ace])
       dacl.reassign!(system_sid, none_sid)
       aces = dacl.to_a

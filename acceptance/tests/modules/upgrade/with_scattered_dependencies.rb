@@ -1,8 +1,8 @@
-test_name "puppet module upgrade (with scattered dependencies)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
-require 'puppet/acceptance/environment_utils'
-extend Puppet::Acceptance::EnvironmentUtils
+test_name "oregano module upgrade (with scattered dependencies)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
+require 'oregano/acceptance/environment_utils'
+extend Oregano::Acceptance::EnvironmentUtils
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -19,10 +19,10 @@ teardown do
 end
 
 step 'Setup'
-on master, puppet("module install pmtacceptance-stdlub --version 0.0.2 --target-dir #{fq_prod_env_modpath}")
-on master, puppet("module install pmtacceptance-java --version 1.6.0 --target-dir #{master['distmoduledir']} --ignore-dependencies")
-on master, puppet("module install pmtacceptance-postql --version 0.0.1 --target-dir #{master['distmoduledir']} --ignore-dependencies")
-on master, puppet("module list") do
+on master, oregano("module install pmtacceptance-stdlub --version 0.0.2 --target-dir #{fq_prod_env_modpath}")
+on master, oregano("module install pmtacceptance-java --version 1.6.0 --target-dir #{master['distmoduledir']} --ignore-dependencies")
+on master, oregano("module install pmtacceptance-postql --version 0.0.1 --target-dir #{master['distmoduledir']} --ignore-dependencies")
+on master, oregano("module list") do
   assert_match /pmtacceptance-java.*1\.6\.0/, stdout, 'Could not find pmtacceptance/java'
   assert_match /pmtacceptance-postql.*0\.0\.1/, stdout, 'Could not find pmtacceptance/postql'
   assert_match /pmtacceptance-stdlub.*0\.0\.2/, stdout, 'Could not find pmtacceptance/stdlub'

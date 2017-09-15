@@ -1,20 +1,20 @@
 begin
-  require 'puppet'
+  require 'oregano'
 rescue LoadError
   #nothing to see here
 else
-  desc "Generate the Pcore model that represents the AST for the Puppet Language"
+  desc "Generate the Pcore model that represents the AST for the Oregano Language"
   task :gen_pcore_ast do
-    Puppet::Pops.generate_ast
+    Oregano::Pops.generate_ast
   end
 
-  module Puppet::Pops
+  module Oregano::Pops
     def self.generate_ast
-      Puppet.initialize_settings
-      env = Puppet.lookup(:environments).get(Puppet[:environment])
+      Oregano.initialize_settings
+      env = Oregano.lookup(:environments).get(Oregano[:environment])
       loaders = Loaders.new(env)
-      ast_pp = Pathname(__FILE__).parent.parent + 'lib/puppet/pops/model/ast.pp'
-      Puppet.override(:current_environment => env, :loaders => loaders) do
+      ast_pp = Pathname(__FILE__).parent.parent + 'lib/oregano/pops/model/ast.pp'
+      Oregano.override(:current_environment => env, :loaders => loaders) do
         ast_factory = Parser::Parser.new.parse_file(ast_pp.expand_path.to_s)
         ast_model = Types::TypeParser.singleton.interpret(
           ast_factory.model.body, Loader::PredefinedLoader.new(loaders.find_loader(nil), 'TypeSet loader'))
@@ -41,11 +41,11 @@ else
         end
 
         # Replace ref() constructs with references to _pcore_type of the types in the module namespace
-        ruby.gsub!(/ref\('Puppet::AST::Locator'\)/, 'Parser::Locator::Locator19._pcore_type')
-        ruby.gsub!(/ref\('Puppet::AST::([0-9A-Za-z_]+)'\)/, '\1._pcore_type')
-        ruby.gsub!(/ref\('Optional\[Puppet::AST::([0-9A-Za-z_]+)\]'\)/, 'Types::POptionalType.new(\1._pcore_type)')
-        ruby.gsub!(/ref\('Array\[Puppet::AST::([0-9A-Za-z_]+)\]'\)/, 'Types::PArrayType.new(\1._pcore_type)')
-        ruby.gsub!(/ref\('Array\[Puppet::AST::([0-9A-Za-z_]+), 1, default\]'\)/,
+        ruby.gsub!(/ref\('Oregano::AST::Locator'\)/, 'Parser::Locator::Locator19._pcore_type')
+        ruby.gsub!(/ref\('Oregano::AST::([0-9A-Za-z_]+)'\)/, '\1._pcore_type')
+        ruby.gsub!(/ref\('Optional\[Oregano::AST::([0-9A-Za-z_]+)\]'\)/, 'Types::POptionalType.new(\1._pcore_type)')
+        ruby.gsub!(/ref\('Array\[Oregano::AST::([0-9A-Za-z_]+)\]'\)/, 'Types::PArrayType.new(\1._pcore_type)')
+        ruby.gsub!(/ref\('Array\[Oregano::AST::([0-9A-Za-z_]+), 1, default\]'\)/,
             'Types::PArrayType.new(\1._pcore_type, Types::PCollectionType::NOT_EMPTY_SIZE)')
 
         # Remove the generated ref() method. It's not needed by this model
@@ -55,9 +55,9 @@ else
         ruby.gsub!(/(attr_reader :body\n  attr_reader :definitions\n  attr_reader :locator)/, "\\1\n\n  def current\n    self\n  end")
 
         # Replace the generated registration with a registration that uses the static loader. This will
-        # become part of the Puppet bootstrap code and there will be no other loader until we have a
+        # become part of the Oregano bootstrap code and there will be no other loader until we have a
         # parser.
-        ruby.gsub!(/^Puppet::Pops::Pcore.register_implementations\((\[[^\]]+\])\)/, <<-RUBY)
+        ruby.gsub!(/^Oregano::Pops::Pcore.register_implementations\((\[[^\]]+\])\)/, <<-RUBY)
 
 module Model
 @@pcore_ast_initialized = false
@@ -72,17 +72,17 @@ def self.register_pcore_types
     types_map[type._pcore_type.simple_name] = type._pcore_type
   end
   type_set = Types::PTypeSetType.new({
-    'name' => 'Puppet::AST',
+    'name' => 'Oregano::AST',
     'pcore_version' => '1.0.0',
     'types' => types_map
   })
-  loc = Puppet::Util.path_to_uri("\#{__FILE__}")
-  Loaders.static_loader.set_entry(Loader::TypedName.new(:type, 'puppet::ast', Pcore::RUNTIME_NAME_AUTHORITY), type_set, URI("\#{loc}?line=1"))
+  loc = Oregano::Util.path_to_uri("\#{__FILE__}")
+  Loaders.static_loader.set_entry(Loader::TypedName.new(:type, 'oregano::ast', Pcore::RUNTIME_NAME_AUTHORITY), type_set, URI("\#{loc}?line=1"))
   Loaders.register_static_implementations(all_types)
 end
 end
 RUBY
-        ast_rb = Pathname(__FILE__).parent.parent + 'lib/puppet/pops/model/ast.rb'
+        ast_rb = Pathname(__FILE__).parent.parent + 'lib/oregano/pops/model/ast.rb'
         File.open(ast_rb.to_s, 'w') { |f| f.write(ruby) }
       end
     end

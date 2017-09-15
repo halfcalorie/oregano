@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/rights'
+require 'oregano/network/rights'
 
-describe Puppet::Network::Rights do
+describe Oregano::Network::Rights do
   before do
-    @right = Puppet::Network::Rights.new
+    @right = Oregano::Network::Rights.new
   end
 
   describe "when validating a :head request" do
     [:find, :save].each do |allowed_method|
       it "should allow the request if only #{allowed_method} is allowed" do
-        rights = Puppet::Network::Rights.new
+        rights = Oregano::Network::Rights.new
         right = rights.newright("/")
         right.allow("*")
         right.restrict_method(allowed_method)
@@ -21,9 +21,9 @@ describe Puppet::Network::Rights do
     end
 
     it "should disallow the request if neither :find nor :save is allowed" do
-      rights = Puppet::Network::Rights.new
+      rights = Oregano::Network::Rights.new
       why_forbidden = rights.is_request_forbidden_and_why?(:head, "/indirection_name/key", {})
-      expect(why_forbidden).to be_instance_of(Puppet::Network::AuthorizationError)
+      expect(why_forbidden).to be_instance_of(Oregano::Network::AuthorizationError)
       expect(why_forbidden.to_s).to eq("Forbidden request: /indirection_name/key [find]")
     end
   end
@@ -49,10 +49,10 @@ describe Puppet::Network::Rights do
       expect(@right["/name"]).not_to be_nil
     end
 
-    it "should create an ACL of type Puppet::Network::AuthStore" do
+    it "should create an ACL of type Oregano::Network::AuthStore" do
       @right.newright("/name")
 
-      expect(@right["/name"]).to be_a_kind_of(Puppet::Network::AuthStore)
+      expect(@right["/name"]).to be_a_kind_of(Oregano::Network::AuthStore)
     end
   end
 
@@ -81,8 +81,8 @@ describe Puppet::Network::Rights do
       expect(@right["~ .rb$"]).not_to be_nil
     end
 
-    it "should create an ACL of type Puppet::Network::AuthStore" do
-      expect(@right.newright("~ .rb$")).to be_a_kind_of(Puppet::Network::AuthStore)
+    it "should create an ACL of type Oregano::Network::AuthStore" do
+      expect(@right.newright("~ .rb$")).to be_a_kind_of(Oregano::Network::AuthStore)
     end
   end
 
@@ -121,7 +121,7 @@ describe Puppet::Network::Rights do
       @right.stubs(:right).returns(nil)
 
       @pathacl = stub 'pathacl', :"<=>" => 1, :line => 0, :file => 'dummy'
-      Puppet::Network::Rights::Right.stubs(:new).returns(@pathacl)
+      Oregano::Network::Rights::Right.stubs(:new).returns(@pathacl)
     end
 
     it "should delegate to is_forbidden_and_why?" do
@@ -136,7 +136,7 @@ describe Puppet::Network::Rights do
     end
 
     it "should return false if is_forbidden_and_why? returns an AuthorizationError" do
-      @right.stubs(:is_forbidden_and_why?).returns(Puppet::Network::AuthorizationError.new("forbidden"))
+      @right.stubs(:is_forbidden_and_why?).returns(Oregano::Network::AuthorizationError.new("forbidden"))
       expect(@right.allowed?("namespace", :args1, :args2)).to be_falsey
     end
 
@@ -152,10 +152,10 @@ describe Puppet::Network::Rights do
     describe "with path acls" do
       before :each do
         @long_acl = stub 'longpathacl', :name => "/path/to/there", :line => 0, :file => 'dummy'
-        Puppet::Network::Rights::Right.stubs(:new).with("/path/to/there", 0, nil).returns(@long_acl)
+        Oregano::Network::Rights::Right.stubs(:new).with("/path/to/there", 0, nil).returns(@long_acl)
 
         @short_acl = stub 'shortpathacl', :name => "/path/to", :line => 0, :file => 'dummy'
-        Puppet::Network::Rights::Right.stubs(:new).with("/path/to", 0, nil).returns(@short_acl)
+        Oregano::Network::Rights::Right.stubs(:new).with("/path/to", 0, nil).returns(@short_acl)
 
         @long_acl.stubs(:"<=>").with(@short_acl).returns(0)
         @short_acl.stubs(:"<=>").with(@long_acl).returns(0)
@@ -215,21 +215,21 @@ describe Puppet::Network::Rights do
         @long_acl.stubs(:match?).returns(true)
         @long_acl.stubs(:allowed?).returns(false)
 
-        expect(@right.is_forbidden_and_why?("/path/to/there", {})).to be_instance_of(Puppet::Network::AuthorizationError)
+        expect(@right.is_forbidden_and_why?("/path/to/there", {})).to be_instance_of(Oregano::Network::AuthorizationError)
       end
 
       it "should raise an AuthorizationError if no path match" do
-        expect(@right.is_forbidden_and_why?("/nomatch", {})).to be_instance_of(Puppet::Network::AuthorizationError)
+        expect(@right.is_forbidden_and_why?("/nomatch", {})).to be_instance_of(Oregano::Network::AuthorizationError)
       end
     end
 
     describe "with regex acls" do
       before :each do
         @regex_acl1 = stub 'regex_acl1', :name => "/files/(.*)/myfile", :line => 0, :file => 'dummy'
-        Puppet::Network::Rights::Right.stubs(:new).with("~ /files/(.*)/myfile", 0, nil).returns(@regex_acl1)
+        Oregano::Network::Rights::Right.stubs(:new).with("~ /files/(.*)/myfile", 0, nil).returns(@regex_acl1)
 
         @regex_acl2 = stub 'regex_acl2', :name => "/files/(.*)/myfile/", :line => 0, :file => 'dummy'
-        Puppet::Network::Rights::Right.stubs(:new).with("~ /files/(.*)/myfile/", 0, nil).returns(@regex_acl2)
+        Oregano::Network::Rights::Right.stubs(:new).with("~ /files/(.*)/myfile/", 0, nil).returns(@regex_acl2)
 
         @regex_acl1.stubs(:"<=>").with(@regex_acl2).returns(0)
         @regex_acl2.stubs(:"<=>").with(@regex_acl1).returns(0)
@@ -284,19 +284,19 @@ describe Puppet::Network::Rights do
       end
 
       it "should raise an error if no regex acl match" do
-        expect(@right.is_forbidden_and_why?("/path", {})).to be_instance_of(Puppet::Network::AuthorizationError)
+        expect(@right.is_forbidden_and_why?("/path", {})).to be_instance_of(Oregano::Network::AuthorizationError)
       end
 
       it "should raise an AuthorizedError on deny" do
-        expect(@right.is_forbidden_and_why?("/path", {})).to be_instance_of(Puppet::Network::AuthorizationError)
+        expect(@right.is_forbidden_and_why?("/path", {})).to be_instance_of(Oregano::Network::AuthorizationError)
       end
 
     end
   end
 
-  describe Puppet::Network::Rights::Right do
+  describe Oregano::Network::Rights::Right do
     before :each do
-      @acl = Puppet::Network::Rights::Right.new("/path",0, nil)
+      @acl = Oregano::Network::Rights::Right.new("/path",0, nil)
     end
 
     describe "with path" do
@@ -315,7 +315,7 @@ describe Puppet::Network::Rights do
 
     describe "with regex" do
       before :each do
-        @acl = Puppet::Network::Rights::Right.new("~ .rb$",0, nil)
+        @acl = Oregano::Network::Rights::Right.new("~ .rb$",0, nil)
       end
 
       it "should match as a regex" do
@@ -328,7 +328,7 @@ describe Puppet::Network::Rights do
     end
 
     it "should allow all rest methods by default" do
-      expect(@acl.methods).to eq(Puppet::Network::Rights::Right::ALL)
+      expect(@acl.methods).to eq(Oregano::Network::Rights::Right::ALL)
     end
 
     it "should allow only authenticated request by default" do
@@ -355,8 +355,8 @@ describe Puppet::Network::Rights do
     end
 
     it "should allow setting an environment filters" do
-      env = Puppet::Node::Environment.create(:acltest, [])
-      Puppet.override(:environments => Puppet::Environments::Static.new(env)) do
+      env = Oregano::Node::Environment.create(:acltest, [])
+      Oregano.override(:environments => Oregano::Environments::Static.new(env)) do
         @acl.restrict_environment(:acltest)
 
         expect(@acl.environment).to eq([env])
@@ -393,9 +393,9 @@ describe Puppet::Network::Rights do
       end
 
       it "should return :dunno if this right is not restricted to the given environment" do
-        prod = Puppet::Node::Environment.create(:production, [])
-        dev = Puppet::Node::Environment.create(:development, [])
-        Puppet.override(:environments => Puppet::Environments::Static.new(prod, dev)) do
+        prod = Oregano::Node::Environment.create(:production, [])
+        dev = Oregano::Node::Environment.create(:development, [])
+        Oregano.override(:environments => Oregano::Environments::Static.new(prod, dev)) do
           @acl.restrict_environment(:production)
 
           expect(@acl.allowed?("me","127.0.0.1", { :method => :save, :environment => dev })).to eq(:dunno)
@@ -404,8 +404,8 @@ describe Puppet::Network::Rights do
 
       it "returns true if the request is permitted for this environment" do
         @acl.allow("me")
-        prod = Puppet::Node::Environment.create(:production, [])
-        Puppet.override(:environments => Puppet::Environments::Static.new(prod)) do
+        prod = Oregano::Node::Environment.create(:production, [])
+        Oregano.override(:environments => Oregano::Environments::Static.new(prod)) do
           @acl.restrict_environment(:production)
           expect(@acl.allowed?("me", "127.0.0.1", { :method => :save, :authenticated => true, :environment => prod })).to eq true
         end

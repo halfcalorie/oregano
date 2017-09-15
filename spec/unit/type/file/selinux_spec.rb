@@ -2,13 +2,13 @@
 require 'spec_helper'
 
 [:seluser, :selrole, :seltype, :selrange].each do |param|
-  property = Puppet::Type.type(:file).attrclass(param)
+  property = Oregano::Type.type(:file).attrclass(param)
   describe property do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     before do
       @path = make_absolute("/my/file")
-      @resource = Puppet::Type.type(:file).new :path => @path
+      @resource = Oregano::Type.type(:file).new :path => @path
       @sel = property.new :resource => @resource
       @sel.stubs(:normalize_selinux_category).with("s0").returns("s0")
       @sel.stubs(:normalize_selinux_category).with(nil).returns(nil)

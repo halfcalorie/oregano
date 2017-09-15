@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/indirector/code'
+require 'oregano/indirector/code'
 
-describe Puppet::Indirector::Code do
+describe Oregano::Indirector::Code do
   before :all do
-    Puppet::Indirector::Terminus.stubs(:register_terminus_class)
+    Oregano::Indirector::Terminus.stubs(:register_terminus_class)
     @model = mock 'model'
     @indirection = stub 'indirection', :name => :mystuff, :register_terminus_type => nil, :model => @model
-    Puppet::Indirector::Indirection.stubs(:instance).returns(@indirection)
+    Oregano::Indirector::Indirection.stubs(:instance).returns(@indirection)
 
     module Testing; end
-    @code_class = class Testing::MyCode < Puppet::Indirector::Code
+    @code_class = class Testing::MyCode < Oregano::Indirector::Code
       self
     end
 

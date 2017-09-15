@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/checksums'
+require 'oregano/util/checksums'
 
-describe Puppet::Util::Checksums do
-  include PuppetSpec::Files
+describe Oregano::Util::Checksums do
+  include OreganoSpec::Files
 
   before do
-    @summer = Puppet::Util::Checksums
+    @summer = Oregano::Util::Checksums
   end
 
   content_sums = [:md5, :md5lite, :sha1, :sha1lite, :sha256, :sha256lite]
@@ -166,7 +166,7 @@ describe Puppet::Util::Checksums do
       it "should use the '#{sum}' on the file to determine the ctime" do
         file = "/my/file"
         stat = mock 'stat', sum => "mysum"
-        Puppet::FileSystem.expects(:stat).with(file).returns(stat)
+        Oregano::FileSystem.expects(:stat).with(file).returns(stat)
 
         expect(@summer.send(sum.to_s + "_file", file)).to eq("mysum")
       end

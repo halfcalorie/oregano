@@ -19,7 +19,7 @@ agents.each do |agent|
   on agent, "schtasks.exe /create #{version} /tn #{name} /tr c:\\\\windows\\\\system32\\\\notepad.exe /sc daily /ru system"
 
   step "query for the task and verify it was found"
-  on agent, puppet_resource('scheduled_task', name) do
+  on agent, oregano_resource('scheduled_task', name) do
     fail_test "didn't find the scheduled_task #{name}" unless stdout.include? 'present'
   end
 

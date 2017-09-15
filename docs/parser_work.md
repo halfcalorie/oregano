@@ -6,7 +6,7 @@ This document contains advice related to doing grammar / parser work.
 From Grammar to Ruby
 ---
 The grammar is described in a `.ra` (racc) file. For the "future parser", this is in
-lib/puppet/pops/parser/egrammar.ra and it is combined with the parser_support.rb file in the
+lib/oregano/pops/parser/egrammar.ra and it is combined with the parser_support.rb file in the
 same directory and processed by race. The output is the resulting parser (in eparser.rb).
 
 Never modify the `parser.rb` by hand.
@@ -243,7 +243,7 @@ Other options for fixing problems
 ### Creating look ahead / look behind in the lexer
 
 Sometimes it is possible to solve an issue by doing a bit more work in the lexer. As an example,
-the puppet grammar has LBRACK and LISTSTART tokens that are issued for the input '['. The lexer
+the oregano grammar has LBRACK and LISTSTART tokens that are issued for the input '['. The lexer
 can differentiate between the tokens - a LISTSTART occurs if at the beginning of the input, or after whitespace. This helps making input such as $a[1] and $a [1] non ambiguous before fed to the grammar
 (where it is impossible to differentiate between them due to whitespace tokens not being part of
 the information sent to the parser). (This is actually an example of "look behind").

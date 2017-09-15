@@ -16,9 +16,9 @@ agents.each do |agent|
   # REVISIT: This step should properly need to handle the non-zero exit code,
   # and #5668 has been filed to record that.  When it is fixed this test will
   # start to fail, and this comment will tell you why. --daniel 2010-12-24
-  on(agent, puppet_resource('host', 'test', "target=#{file}",
+  on(agent, oregano_resource('host', 'test', "target=#{file}",
               "host_aliases=alias")) do
-    fail_test "puppet didn't complain about the missing attribute" unless
+    fail_test "oregano didn't complain about the missing attribute" unless
       stderr.include? 'ip is a required attribute for hosts' unless agent['locale'] == 'ja'
   end
 

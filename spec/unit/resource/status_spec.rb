@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/resource/status'
+require 'oregano/resource/status'
 
-describe Puppet::Resource::Status do
-  include PuppetSpec::Files
+describe Oregano::Resource::Status do
+  include OreganoSpec::Files
 
-  let(:resource) { Puppet::Type.type(:file).new(:path => make_absolute("/my/file")) }
+  let(:resource) { Oregano::Type.type(:file).new(:path => make_absolute("/my/file")) }
   let(:containment_path) { ["foo", "bar", "baz"] }
-  let(:status) { Puppet::Resource::Status.new(resource) }
+  let(:status) { Oregano::Resource::Status.new(resource) }
 
   before do
     resource.stubs(:pathbuilder).returns(containment_path)
@@ -39,39 +39,39 @@ describe Puppet::Resource::Status do
   end
 
   it "should accept a resource at initialization" do
-    expect(Puppet::Resource::Status.new(resource).resource).not_to be_nil
+    expect(Oregano::Resource::Status.new(resource).resource).not_to be_nil
   end
 
   it "should set its source description to the resource's path" do
     resource.expects(:path).returns "/my/path"
-    expect(Puppet::Resource::Status.new(resource).source_description).to eq("/my/path")
+    expect(Oregano::Resource::Status.new(resource).source_description).to eq("/my/path")
   end
 
   it "should set its containment path" do
-  expect(Puppet::Resource::Status.new(resource).containment_path).to eq(containment_path)
+  expect(Oregano::Resource::Status.new(resource).containment_path).to eq(containment_path)
   end
 
   [:file, :line].each do |attr|
     it "should copy the resource's #{attr}" do
       resource.expects(attr).returns "foo"
-      expect(Puppet::Resource::Status.new(resource).send(attr)).to eq("foo")
+      expect(Oregano::Resource::Status.new(resource).send(attr)).to eq("foo")
     end
   end
 
   it "should copy the resource's tags" do
     resource.expects(:tags).returns %w{foo bar}
-    status = Puppet::Resource::Status.new(resource)
+    status = Oregano::Resource::Status.new(resource)
     expect(status).to be_tagged("foo")
     expect(status).to be_tagged("bar")
   end
 
   it "should always convert the resource to a string" do
     resource.expects(:to_s).returns "foo"
-    expect(Puppet::Resource::Status.new(resource).resource).to eq("foo")
+    expect(Oregano::Resource::Status.new(resource).resource).to eq("foo")
   end
 
   it "should support tags" do
-    expect(Puppet::Resource::Status.ancestors).to include(Puppet::Util::Tagging)
+    expect(Oregano::Resource::Status.ancestors).to include(Oregano::Util::Tagging)
   end
 
   it "should create a timestamp at its creation time" do
@@ -79,13 +79,13 @@ describe Puppet::Resource::Status do
   end
 
   it "should support adding events" do
-    event = Puppet::Transaction::Event.new(:name => :foobar)
+    event = Oregano::Transaction::Event.new(:name => :foobar)
     status.add_event(event)
     expect(status.events).to eq([event])
   end
 
   it "should use '<<' to add events" do
-    event = Puppet::Transaction::Event.new(:name => :foobar)
+    event = Oregano::Transaction::Event.new(:name => :foobar)
     expect(status << event).to equal(status)
     expect(status.events).to eq([event])
   end
@@ -109,7 +109,7 @@ describe Puppet::Resource::Status do
   end
 
   it "should count the number of successful events and set changed" do
-    3.times{ status << Puppet::Transaction::Event.new(:status => 'success') }
+    3.times{ status << Oregano::Transaction::Event.new(:status => 'success') }
     expect(status.change_count).to eq(3)
 
     expect(status.changed).to eq(true)
@@ -124,20 +124,20 @@ describe Puppet::Resource::Status do
   end
 
   it "should not treat failure, audit, or noop events as changed" do
-    ['failure', 'audit', 'noop'].each do |s| status << Puppet::Transaction::Event.new(:status => s) end
+    ['failure', 'audit', 'noop'].each do |s| status << Oregano::Transaction::Event.new(:status => s) end
     expect(status.change_count).to eq(0)
     expect(status.changed).to eq(false)
   end
 
   it "should not treat audit events as out of sync" do
-    status << Puppet::Transaction::Event.new(:status => 'audit')
+    status << Oregano::Transaction::Event.new(:status => 'audit')
     expect(status.out_of_sync_count).to eq(0)
     expect(status.out_of_sync).to eq(false)
   end
 
   ['failure', 'noop', 'success'].each do |event_status|
     it "should treat #{event_status} events as out of sync" do
-      3.times do status << Puppet::Transaction::Event.new(:status => event_status) end
+      3.times do status << Oregano::Transaction::Event.new(:status => event_status) end
       expect(status.out_of_sync_count).to eq(3)
       expect(status.out_of_sync).to eq(true)
     end
@@ -145,12 +145,12 @@ describe Puppet::Resource::Status do
 
   context 'when serializing' do
     let(:status) do
-      s = Puppet::Resource::Status.new(resource)
+      s = Oregano::Resource::Status.new(resource)
       s.file = "/foo.rb"
       s.line = 27
       s.evaluation_time = 2.7
       s.tags = %w{one two}
-      s << Puppet::Transaction::Event.new(:name => :mode_changed, :status => 'audit')
+      s << Oregano::Transaction::Event.new(:name => :mode_changed, :status => 'audit')
       s.failed = false
       s.changed = true
       s.out_of_sync = true
@@ -161,7 +161,7 @@ describe Puppet::Resource::Status do
     it "should round trip through json" do
       expect(status.containment_path).to eq(containment_path)
 
-      tripped = Puppet::Resource::Status.from_data_hash(JSON.parse(status.to_json))
+      tripped = Oregano::Resource::Status.from_data_hash(JSON.parse(status.to_json))
 
       expect(tripped.title).to eq(status.title)
       expect(tripped.containment_path).to eq(status.containment_path)
@@ -183,7 +183,7 @@ describe Puppet::Resource::Status do
     end
 
     it 'to_data_hash returns value that is instance of to Data' do
-      expect(Puppet::Pops::Types::TypeFactory.data.instance?(status.to_data_hash)).to be_truthy
+      expect(Oregano::Pops::Types::TypeFactory.data.instance?(status.to_data_hash)).to be_truthy
     end
 
     def events_as_hashes(report)

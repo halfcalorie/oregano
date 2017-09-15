@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'The Object Type' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   let(:parser) { TypeParser.singleton }
   let(:pp_parser) { Parser::EvaluatingParser.new }
@@ -13,7 +13,7 @@ describe 'The Object Type' do
   let(:factory) { TypeFactory }
 
   around(:each) do |example|
-    Puppet.override(:loaders => Loaders.new(Puppet::Node::Environment.create(:testing, []))) do
+    Oregano.override(:loaders => Loaders.new(Oregano::Node::Environment.create(:testing, []))) do
       example.run
     end
   end
@@ -131,7 +131,7 @@ describe 'The Object Type' do
           a => Integer
         }
       OBJECT
-      expect { tp['a'].value }.to raise_error(Puppet::Error, 'attribute MyObject[a] has no value')
+      expect { tp['a'].value }.to raise_error(Oregano::Error, 'attribute MyObject[a] has no value')
     end
 
     context 'that are constants' do
@@ -172,7 +172,7 @@ describe 'The Object Type' do
               a => Integer
             }
           OBJECT
-          expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+          expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
             'attribute MyObject[a] is defined as both a constant and an attribute')
         end
       end
@@ -200,7 +200,7 @@ describe 'The Object Type' do
               }
             }
           OBJECT
-          expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+          expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
             "attribute MyObject[a] of kind 'constant' requires a value")
         end
 
@@ -214,7 +214,7 @@ describe 'The Object Type' do
               }
             }
           OBJECT
-          expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+          expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
             "attribute MyObject[a] of kind 'constant' cannot be combined with final => false")
         end
       end
@@ -241,7 +241,7 @@ describe 'The Object Type' do
           a => Callable
         }
       OBJECT
-      expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
         'function MyObject[a] conflicts with attribute with the same name')
     end
   end
@@ -295,7 +295,7 @@ describe 'The Object Type' do
         }
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         'function MyDerivedObject[a] attempts to override attribute MyObject[a]')
     end
 
@@ -312,7 +312,7 @@ describe 'The Object Type' do
         }
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         'attribute MyDerivedObject[a] attempts to override function MyObject[a]')
     end
 
@@ -329,7 +329,7 @@ describe 'The Object Type' do
         }
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         'attribute MyDerivedObject[a] attempts to override attribute MyObject[a] with a type that does not match')
     end
 
@@ -346,7 +346,7 @@ describe 'The Object Type' do
         }
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         'attribute MyDerivedObject[a] attempts to override final attribute MyObject[a]')
     end
 
@@ -363,7 +363,7 @@ describe 'The Object Type' do
         }
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         'attribute MyDerivedObject[a] attempts to override attribute MyObject[a] without having override => true')
     end
 
@@ -380,7 +380,7 @@ describe 'The Object Type' do
         }
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         "expected attribute MyDerivedObject[b] to override an inherited attribute, but no such attribute was found")
     end
   end
@@ -526,7 +526,7 @@ describe 'The Object Type' do
         equality => a
       OBJECT
       parse_object('MyObject', parent)
-      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyDerivedObject', obj) }.to raise_error(Oregano::ParseError,
         "MyDerivedObject equality is referencing attribute MyObject[a] which is included in equality of MyObject")
     end
 
@@ -538,7 +538,7 @@ describe 'The Object Type' do
         },
         equality => [a,b]
       OBJECT
-      expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
         'MyObject equality is referencing constant attribute MyObject[b]. Reference to constant is not allowed in equality')
     end
 
@@ -552,7 +552,7 @@ describe 'The Object Type' do
         },
         equality => [a,b]
       OBJECT
-      expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
         'MyObject equality is referencing function MyObject[b]. Only attribute references are allowed')
     end
 
@@ -563,7 +563,7 @@ describe 'The Object Type' do
         },
         equality => [a,b]
       OBJECT
-      expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
         "MyObject equality is referencing non existent attribute 'b'")
     end
 
@@ -575,7 +575,7 @@ describe 'The Object Type' do
         equality => a,
         equality_include_type => false
       OBJECT
-      expect { parse_object('MyObject', obj) }.to raise_error(Puppet::ParseError,
+      expect { parse_object('MyObject', obj) }.to raise_error(Oregano::ParseError,
         'equality_include_type = false cannot be combined with non empty equality specification')
     end
   end
@@ -792,7 +792,7 @@ describe 'The Object Type' do
   end
 
   context 'when stringifying created instances' do
-    it 'outputs a Puppet constructor using the initializer hash' do
+    it 'outputs a Oregano constructor using the initializer hash' do
       code = <<-CODE
       type Spec::MyObject = Object[{attributes => { a => Integer }}]
       type Spec::MySecondObject = Object[{parent => Spec::MyObject, attributes => { b => String }}]
@@ -810,7 +810,7 @@ describe 'The Object Type' do
         }
       OBJECT
 
-      t = Puppet::Pops::Types::TypeParser.singleton.parse('MyObject', Puppet::Pops::Loaders.find_loader(nil))
+      t = Oregano::Pops::Types::TypeParser.singleton.parse('MyObject', Oregano::Pops::Loaders.find_loader(nil))
       instance = t.create(32)
       expect(instance.a).to eql(32)
     end
@@ -822,13 +822,13 @@ describe 'The Object Type' do
         }
       OBJECT
 
-      t = Puppet::Pops::Types::TypeParser.singleton.parse('MyObject', Puppet::Pops::Loaders.find_loader(nil))
+      t = Oregano::Pops::Types::TypeParser.singleton.parse('MyObject', Oregano::Pops::Loaders.find_loader(nil))
       instance = t.from_hash('a' => 32)
       expect(instance.a).to eql(32)
     end
   end
 
-  context 'when used in Puppet expressions' do
+  context 'when used in Oregano expressions' do
     it 'two anonymous empty objects are equal' do
       code = <<-CODE
       $x = Object[{}]
@@ -907,7 +907,7 @@ describe 'The Object Type' do
       $x = Object[{ name => 'MyFirstObject' }]
       notice($x == MyFirstObject)
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Resource type not found: MyFirstObject/)
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Resource type not found: MyFirstObject/)
     end
 
     it 'a type alias on a named object overrides the name' do
@@ -916,7 +916,7 @@ describe 'The Object Type' do
       type MySecondObject = Object[{ parent => MyObject, attributes => { a => { type => Integer[10], override => true }}}]
       notice(MySecondObject =~ Type)
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error,
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error,
         /attribute MySecondObject\[a\] attempts to override final attribute MyObject\[a\]/)
     end
 
@@ -924,7 +924,7 @@ describe 'The Object Type' do
       code = <<-CODE
       notice(Object[{ name => 'MyObject', parent => Type('NoneSuch'), attributes => { a => String}}].new('hello'))
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error,
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error,
         /reference to unresolved type 'NoneSuch'/)
     end
 
@@ -932,12 +932,12 @@ describe 'The Object Type' do
       let(:logs) { [] }
       let(:notices) { logs.select { |log| log.level == :notice }.map { |log| log.message } }
       let(:warnings) { logs.select { |log| log.level == :warning }.map { |log| log.message } }
-      let(:node) { Puppet::Node.new('example.com') }
-      let(:compiler) { Puppet::Parser::Compiler.new(node) }
+      let(:node) { Oregano::Node.new('example.com') }
+      let(:compiler) { Oregano::Parser::Compiler.new(node) }
 
       def compile(code)
-        Puppet[:code] = code
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) { compiler.compile }
+        Oregano[:code] = code
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) { compiler.compile }
       end
 
       it 'Object is implicit' do
@@ -975,7 +975,7 @@ describe 'The Object Type' do
       end
 
       it 'parent can be specified in the hash' do
-        Puppet[:strict] = 'warning'
+        Oregano[:strict] = 'warning'
         compile(<<-CODE)
           type MyObject = { name => 'MyFirstObject', attributes => { a => String }}
           type MySecondObject = { parent => MyObject, attributes => { b => String }}
@@ -986,7 +986,7 @@ describe 'The Object Type' do
       end
 
       it 'Object before the hash and parent inside the hash can be combined' do
-        Puppet[:strict] = 'warning'
+        Oregano[:strict] = 'warning'
         compile(<<-CODE)
           type MyObject = { name => 'MyFirstObject', attributes => { a => String }}
           type MySecondObject = Object { parent => MyObject, attributes => { b => String }}
@@ -997,7 +997,7 @@ describe 'The Object Type' do
       end
 
       it 'if strict == warning, a warning is issued when the same is parent specified both before and inside the hash' do
-        Puppet[:strict] = 'warning'
+        Oregano[:strict] = 'warning'
         compile(<<-CODE)
           type MyObject = { name => 'MyFirstObject', attributes => { a => String }}
           type MySecondObject = MyObject { parent => MyObject, attributes => { b => String }}
@@ -1008,7 +1008,7 @@ describe 'The Object Type' do
       end
 
       it 'if strict == warning, a warning is issued when different parents are specified before and inside the hash. The former overrides the latter' do
-        Puppet[:strict] = 'warning'
+        Oregano[:strict] = 'warning'
         compile(<<-CODE)
           type MyObject = { name => 'MyFirstObject', attributes => { a => String }}
           type MySecondObject = MyObject { parent => MyObject, attributes => { b => String }}
@@ -1019,7 +1019,7 @@ describe 'The Object Type' do
       end
 
       it 'if strict == error, an error is raised when the same parent is specified both before and inside the hash' do
-        Puppet[:strict] = 'error'
+        Oregano[:strict] = 'error'
         expect { compile(<<-CODE) }.to raise_error(/The key 'parent' is declared more than once/)
           type MyObject = { name => 'MyFirstObject', attributes => { a => String }}
           type MySecondObject = MyObject { parent => MyObject, attributes => { b => String }}
@@ -1028,7 +1028,7 @@ describe 'The Object Type' do
       end
 
       it 'if strict == error, an error is raised when different parents are specified before and inside the hash' do
-        Puppet[:strict] = 'error'
+        Oregano[:strict] = 'error'
         expect { compile(<<-CODE) }.to raise_error(/The key 'parent' is declared more than once/)
           type MyObject = { name => 'MyFirstObject', attributes => { a => String }}
           type MySecondObject = MyObject { parent => MyOtherType, attributes => { b => String }}
@@ -1055,7 +1055,7 @@ describe 'The Object Type' do
       type MySecondObject = Object[{ parent => MyObjectAlias, attributes => { b => String }, equality => a}]
       notice(MySecondObject < MyObject)
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error,
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error,
         /MySecondObject equality is referencing attribute MyObject\[a\] which is included in equality of MyObject/)
     end
 
@@ -1069,7 +1069,7 @@ describe 'The Object Type' do
       }]
       notice(MySecondObject =~ Type[MyFirstObject])
       CODE
-      expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /inherits from itself/)
+      expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /inherits from itself/)
     end
 
     it 'notices the expanded string form expected content' do
@@ -1204,7 +1204,7 @@ describe 'The Object Type' do
         $obj = MyFirstObject.new('not constant')
         notice($obj.a)
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects no arguments/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects no arguments/)
       end
 
       it 'fails when a required key is missing' do
@@ -1217,7 +1217,7 @@ describe 'The Object Type' do
         $obj = MyFirstObject.new
         notice($obj.a)
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects 1 argument, got none/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects 1 argument, got none/)
       end
 
       it 'creates a derived instance with initialized attributes' do
@@ -1310,7 +1310,7 @@ describe 'The Object Type' do
         $obj = MyFirstObject.new({a => 'not constant'})
         notice($obj.a)
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /unrecognized key 'a'/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /unrecognized key 'a'/)
       end
 
       it 'fails when a required key is missing' do
@@ -1323,7 +1323,7 @@ describe 'The Object Type' do
         $obj = MyFirstObject.new({})
         notice($obj.a)
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects size to be 1, got 0/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects size to be 1, got 0/)
       end
 
       it 'creates a derived instance with initialized attributes' do

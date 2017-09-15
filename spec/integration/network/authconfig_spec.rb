@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-require 'puppet/network/authconfig'
-require 'puppet/network/auth_config_parser'
+require 'oregano/network/authconfig'
+require 'oregano/network/auth_config_parser'
 
 RSpec::Matchers.define :allow do |params|
 
@@ -9,7 +9,7 @@ RSpec::Matchers.define :allow do |params|
     begin
       auth.check_authorization(*params)
       true
-    rescue Puppet::Network::AuthorizationError
+    rescue Oregano::Network::AuthorizationError
       false
     end
   end
@@ -23,25 +23,25 @@ RSpec::Matchers.define :allow do |params|
   end
 end
 
-describe Puppet::Network::AuthConfig do
-  include PuppetSpec::Files
+describe Oregano::Network::AuthConfig do
+  include OreganoSpec::Files
 
   def add_rule(rule)
-    parser = Puppet::Network::AuthConfigParser.new(
+    parser = Oregano::Network::AuthConfigParser.new(
       "path /test\n#{rule}\n"
     )
     @auth = parser.parse
   end
 
   def add_regex_rule(regex, rule)
-    parser = Puppet::Network::AuthConfigParser.new(
+    parser = Oregano::Network::AuthConfigParser.new(
       "path ~ #{regex}\n#{rule}\n"
     )
     @auth = parser.parse
   end
 
   def add_raw_stanza(stanza)
-    parser = Puppet::Network::AuthConfigParser.new(
+    parser = Oregano::Network::AuthConfigParser.new(
       stanza
     )
     @auth = parser.parse
@@ -67,19 +67,19 @@ describe Puppet::Network::AuthConfig do
     it "should not accept CIDR IPv4 address" do
       expect {
         add_rule("allow 10.0.0.0/8")
-      }.to raise_error Puppet::ConfigurationError, /Invalid pattern 10\.0\.0\.0\/8/
+      }.to raise_error Oregano::ConfigurationError, /Invalid pattern 10\.0\.0\.0\/8/
     end
 
     it "should not match wildcard IPv4 address" do
       expect {
         add_rule("allow 10.1.1.*")
-      }.to raise_error Puppet::ConfigurationError, /Invalid pattern 10\.1\.1\.*/
+      }.to raise_error Oregano::ConfigurationError, /Invalid pattern 10\.1\.1\.*/
     end
 
     it "should not match IPv6 address" do
       expect {
         add_rule("allow 2001:DB8::8:800:200C:417A")
-      }.to raise_error Puppet::ConfigurationError, /Invalid pattern 2001/
+      }.to raise_error Oregano::ConfigurationError, /Invalid pattern 2001/
     end
 
     it "should support hostname" do
@@ -97,13 +97,13 @@ describe Puppet::Network::AuthConfig do
     it 'should warn about missing path before allow_ip in stanza' do
       expect {
         add_raw_stanza("allow_ip 10.0.0.1\n")
-      }.to raise_error Puppet::ConfigurationError, /Missing or invalid 'path' before right directive at line.*/
+      }.to raise_error Oregano::ConfigurationError, /Missing or invalid 'path' before right directive at line.*/
     end
 
     it 'should warn about missing path before allow in stanza' do
       expect {
         add_raw_stanza("allow host.domain.com\n")
-      }.to raise_error Puppet::ConfigurationError, /Missing or invalid 'path' before right directive at line.*/
+      }.to raise_error Oregano::ConfigurationError, /Missing or invalid 'path' before right directive at line.*/
     end
 
     it "should support hostname backreferences" do
@@ -193,7 +193,7 @@ describe Puppet::Network::AuthConfig do
     it "should support hostname" do
       expect {
         add_rule("allow_ip host.domain.com")
-      }.to raise_error Puppet::ConfigurationError, /Invalid IP pattern host.domain.com/
+      }.to raise_error Oregano::ConfigurationError, /Invalid IP pattern host.domain.com/
     end
   end
 

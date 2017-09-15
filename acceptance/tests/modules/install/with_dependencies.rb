@@ -1,6 +1,6 @@
-test_name "puppet module install (with dependencies)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (with dependencies)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -21,7 +21,7 @@ step 'Setup'
 stub_forge_on(master)
 
 step "Install a module with dependencies"
-on master, puppet("module install #{module_author}-#{module_name}") do
+on master, oregano("module install #{module_author}-#{module_name}") do
   assert_module_installed_ui(stdout, module_author, module_name)
   module_dependencies.each do |dependency|
     assert_module_installed_ui(stdout, module_author, dependency)

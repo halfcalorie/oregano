@@ -35,8 +35,8 @@ apply_manifest_on(master, <<MANIFEST, :catch_failures => true)
 File {
   ensure => directory,
   mode   => "0755",
-  owner  => #{master.puppet['user']},
-  group  => #{master.puppet['group']},
+  owner  => #{master.oregano['user']},
+  group  => #{master.oregano['group']},
 }
 
 file {
@@ -78,7 +78,7 @@ master_opts = {
   }
 }
 
-with_puppet_running_on master, master_opts, codedir do
+with_oregano_running_on master, master_opts, codedir do
   agents.each do |agent|
     factsd   = agent.tmpdir('facts.d')
     pluginfactdest = agent.tmpdir('facts.d')
@@ -92,34 +92,34 @@ with_puppet_running_on master, master_opts, codedir do
     end
 
     step "Pluginsync the external fact to the agent and ensure it resolves correctly"
-    on(agent, puppet('agent', '-t', '--server', master, '--pluginfactdest', factsd), :acceptable_exit_codes => [2])
+    on(agent, oregano('agent', '-t', '--server', master, '--pluginfactdest', factsd), :acceptable_exit_codes => [2])
     assert_match(/foo is bar/, stdout)
 
     step "Use plugin face to download to the agent"
-    on(agent, puppet('plugin', 'download', '--server', master, '--pluginfactdest', pluginfactdest))
+    on(agent, oregano('plugin', 'download', '--server', master, '--pluginfactdest', pluginfactdest))
     assert_match(/Downloaded these plugins: .*external_fact/, stdout) unless agent['locale'] == 'ja'
 
     step "Ensure it resolves correctly"
-    on(agent, puppet('apply', '--pluginfactdest', pluginfactdest, '-e', "'notify { \"foo is ${foo}\": }'"))
+    on(agent, oregano('apply', '--pluginfactdest', pluginfactdest, '-e', "'notify { \"foo is ${foo}\": }'"))
     assert_match(/foo is bar/, stdout)
 
     # Linux specific tests
     next if agent['platform'] =~ /windows/
 
     step "In Linux, ensure the pluginsync'ed external fact has the same permissions as its source"
-    on(agent, puppet('resource', "file #{factsd}/unix_external_fact.sh"))
+    on(agent, oregano('resource', "file #{factsd}/unix_external_fact.sh"))
     assert_match(/0755/, stdout)
 
-    step "In Linux, ensure puppet apply uses the correct permissions"
+    step "In Linux, ensure oregano apply uses the correct permissions"
     test_source = File.join('/', 'tmp', 'test')
-    on(agent, puppet('apply', "-e \"file { '#{test_source}': ensure => file, mode => '0456' }\""))
+    on(agent, oregano('apply', "-e \"file { '#{test_source}': ensure => file, mode => '0456' }\""))
 
     {'source_permissions => use,'    => /0456/,
      'source_permissions => ignore,' => /0644/,
      ''                              => /0644/
     }.each do |source_permissions, mode|
-      on(agent, puppet('apply', "-e \"file { '/tmp/test_target': ensure => file, #{source_permissions} source => '#{test_source}' }\""))
-      on(agent, puppet('resource', "file /tmp/test_target"))
+      on(agent, oregano('apply', "-e \"file { '/tmp/test_target': ensure => file, #{source_permissions} source => '#{test_source}' }\""))
+      on(agent, oregano('resource', "file /tmp/test_target"))
       assert_match(mode, stdout)
 
       on(agent, "rm /tmp/test_target")

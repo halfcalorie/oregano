@@ -1,22 +1,22 @@
 # encoding: utf-8
 require 'spec_helper'
-require 'puppet/forge'
+require 'oregano/forge'
 require 'net/http'
-require 'puppet/module_tool'
+require 'oregano/module_tool'
 
-describe Puppet::Forge::ModuleRelease do
+describe Oregano::Forge::ModuleRelease do
   let(:agent) { "Test/1.0" }
-  let(:repository) { Puppet::Forge::Repository.new('http://fake.com', agent) }
-  let(:ssl_repository) { Puppet::Forge::Repository.new('https://fake.com', agent) }
+  let(:repository) { Oregano::Forge::Repository.new('http://fake.com', agent) }
+  let(:ssl_repository) { Oregano::Forge::Repository.new('https://fake.com', agent) }
   let(:api_version) { "v3" }
-  let(:module_author) { "puppetlabs" }
+  let(:module_author) { "oreganolabs" }
   let(:module_name) { "stdlib" }
   let(:module_version) { "4.1.0" }
   let(:module_full_name) { "#{module_author}-#{module_name}" }
   let(:module_full_name_versioned) { "#{module_full_name}-#{module_version}" }
   let(:module_md5) { "bbf919d7ee9d278d2facf39c25578bf8" }
   let(:uri) { " "}
-  let(:release) { Puppet::Forge::ModuleRelease.new(ssl_repository, JSON.parse(release_json)) }
+  let(:release) { Oregano::Forge::ModuleRelease.new(ssl_repository, JSON.parse(release_json)) }
 
   let(:mock_file) {
     mock_io = StringIO.new
@@ -48,7 +48,7 @@ describe Puppet::Forge::ModuleRelease do
 
     describe '#tmpfile' do
       it 'should be opened in binary mode' do
-        Puppet::Forge::Cache.stubs(:base_path).returns(Dir.tmpdir)
+        Oregano::Forge::Cache.stubs(:base_path).returns(Dir.tmpdir)
         expect(release.send(:tmpfile).binmode?).to be_truthy
       end
     end
@@ -63,7 +63,7 @@ describe Puppet::Forge::ModuleRelease do
 
       it 'should raise a response error when it receives an error from forge' do
         ssl_repository.stubs(:make_http_request).returns(stub(:body => '{"errors": ["error"]}', :code => '500', :message => 'server error'))
-        expect { release.send(:download, "/some/path", mock_file)}. to raise_error Puppet::Forge::Errors::ResponseError
+        expect { release.send(:download, "/some/path", mock_file)}. to raise_error Oregano::Forge::Errors::ResponseError
       end
     end
 
@@ -84,7 +84,7 @@ describe Puppet::Forge::ModuleRelease do
 
     describe '#unpack' do
       it 'should call unpacker with correct params' do
-        Puppet::ModuleTool::Applications::Unpacker.expects(:unpack).with(mock_file.path, mock_dir).returns(true)
+        Oregano::ModuleTool::Applications::Unpacker.expects(:unpack).with(mock_file.path, mock_dir).returns(true)
 
         release.send(:unpack, mock_file, mock_dir)
       end
@@ -110,10 +110,10 @@ describe Puppet::Forge::ModuleRelease do
         "license": "Apache 2.0",
         "checksums": { },
         "version": "#{module_version}",
-        "description": "Standard Library for Puppet Modules",
-        "source": "git://github.com/puppetlabs/puppetlabs-stdlib.git",
-        "project_page": "https://github.com/puppetlabs/puppetlabs-stdlib",
-        "summary": "Puppet Module Standard Library",
+        "description": "Standard Library for Oregano Modules",
+        "source": "git://github.com/oreganolabs/oreganolabs-stdlib.git",
+        "project_page": "https://github.com/oreganolabs/oreganolabs-stdlib",
+        "summary": "Oregano Module Standard Library",
         "dependencies": [
 
         ],
@@ -121,7 +121,7 @@ describe Puppet::Forge::ModuleRelease do
         "name": "#{module_full_name}"
       },
       "tags": [
-        "puppetlabs",
+        "oreganolabs",
         "library",
         "stdlib",
         "standard",
@@ -163,15 +163,15 @@ describe Puppet::Forge::ModuleRelease do
         "license": "Apache 2.0",
         "checksums": { },
         "version": "#{module_version}",
-        "description": "Standard Library for Puppet Modules",
-        "source": "git://github.com/puppetlabs/puppetlabs-stdlib.git",
-        "project_page": "https://github.com/puppetlabs/puppetlabs-stdlib",
-        "summary": "Puppet Module Standard Library",
+        "description": "Standard Library for Oregano Modules",
+        "source": "git://github.com/oreganolabs/oreganolabs-stdlib.git",
+        "project_page": "https://github.com/oreganolabs/oreganolabs-stdlib",
+        "summary": "Oregano Module Standard Library",
         "author": "#{module_author}",
         "name": "#{module_full_name}"
       },
       "tags": [
-        "puppetlabs",
+        "oreganolabs",
         "library",
         "stdlib",
         "standard",

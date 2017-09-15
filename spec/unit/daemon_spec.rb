@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/daemon'
-require 'puppet/agent'
+require 'oregano/daemon'
+require 'oregano/agent'
 
 def without_warnings
   flag = $VERBOSE
@@ -16,8 +16,8 @@ class TestClient
   end
 end
 
-describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Daemon, :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   class RecordingScheduler
     attr_reader :jobs
@@ -27,20 +27,20 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     end
   end
 
-  let(:agent) { Puppet::Agent.new(TestClient.new, false) }
+  let(:agent) { Oregano::Agent.new(TestClient.new, false) }
   let(:server) { stub("Server", :start => nil, :wait_for_shutdown => nil) }
 
   let(:pidfile) { stub("PidFile", :lock => true, :unlock => true, :file_path => 'fake.pid') }
   let(:scheduler) { RecordingScheduler.new }
 
-  let(:daemon) { Puppet::Daemon.new(pidfile, scheduler) }
+  let(:daemon) { Oregano::Daemon.new(pidfile, scheduler) }
 
   before do
     daemon.stubs(:close_streams).returns nil
   end
 
   it "should reopen the Log logs when told to reopen logs" do
-    Puppet::Util::Log.expects(:reopen)
+    Oregano::Util::Log.expects(:reopen)
     daemon.reopen_logs
   end
 
@@ -48,7 +48,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     [:INT, :TERM].each do |signal|
       it "logs a notice and exits when sent #{signal}" do
         Signal.stubs(:trap).with(signal).yields
-        Puppet.expects(:notice).with("Caught #{signal}; exiting")
+        Oregano.expects(:notice).with("Caught #{signal}; exiting")
         daemon.expects(:stop)
 
         daemon.set_signal_traps
@@ -58,7 +58,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     {:HUP => :restart, :USR1 => :reload, :USR2 => :reopen_logs}.each do |signal, method|
       it "logs a notice and remembers to call #{method} when it receives #{signal}" do
         Signal.stubs(:trap).with(signal).yields
-        Puppet.expects(:notice).with("Caught #{signal}; storing #{method}")
+        Oregano.expects(:notice).with("Caught #{signal}; storing #{method}")
 
         daemon.set_signal_traps
 
@@ -73,7 +73,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     end
 
     it "should fail if it has neither agent nor server" do
-      expect { daemon.start }.to raise_error(Puppet::DevError)
+      expect { daemon.start }.to raise_error(Oregano::DevError)
     end
 
     it "should create its pidfile" do
@@ -99,7 +99,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     end
 
     it "disables the reparse of configs if the filetimeout is 0" do
-      Puppet[:filetimeout] = 0
+      Oregano[:filetimeout] = 0
       daemon.agent = agent
 
       daemon.start
@@ -108,7 +108,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     end
 
     it "disables the agent run when there is no agent" do
-      Puppet[:filetimeout] = 0
+      Oregano[:filetimeout] = 0
       daemon.server = server
 
       daemon.start
@@ -135,15 +135,15 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
 
   describe "when stopping" do
     before do
-      Puppet::Util::Log.stubs(:close_all)
+      Oregano::Util::Log.stubs(:close_all)
       # to make the global safe to mock, set it to a subclass of itself,
       # then restore it in an after pass
-      without_warnings { Puppet::Application = Class.new(Puppet::Application) }
+      without_warnings { Oregano::Application = Class.new(Oregano::Application) }
     end
 
     after do
       # restore from the superclass so we lose the stub garbage
-      without_warnings { Puppet::Application = Puppet::Application.superclass }
+      without_warnings { Oregano::Application = Oregano::Application.superclass }
     end
 
     it "should stop its server if one is configured" do
@@ -154,8 +154,8 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
       expect { daemon.stop }.to exit_with 0
     end
 
-    it 'should request a stop from Puppet::Application' do
-      Puppet::Application.expects(:stop!)
+    it 'should request a stop from Oregano::Application' do
+      Oregano::Application.expects(:stop!)
       expect { daemon.stop }.to exit_with 0
     end
 
@@ -166,7 +166,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     end
 
     it "should close all logs" do
-      Puppet::Util::Log.expects(:close_all)
+      Oregano::Util::Log.expects(:close_all)
       expect { daemon.stop }.to exit_with 0
     end
 
@@ -185,8 +185,8 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
     end
 
     it "should do nothing if the agent is running" do
-      agent.expects(:run).with({:splay => false}).raises Puppet::LockError, 'Failed to aquire lock'
-      Puppet.expects(:notice).with('Not triggering already-running agent')
+      agent.expects(:run).with({:splay => false}).raises Oregano::LockError, 'Failed to aquire lock'
+      Oregano.expects(:notice).with('Not triggering already-running agent')
 
       daemon.agent = agent
 
@@ -195,7 +195,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
 
     it "should run the agent if one is available and it is not running" do
       agent.expects(:run).with({:splay => false})
-      Puppet.expects(:notice).with('Not triggering already-running agent').never
+      Oregano.expects(:notice).with('Not triggering already-running agent').never
 
       daemon.agent = agent
 
@@ -205,15 +205,15 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
 
   describe "when restarting" do
     before do
-      without_warnings { Puppet::Application = Class.new(Puppet::Application) }
+      without_warnings { Oregano::Application = Class.new(Oregano::Application) }
     end
 
     after do
-      without_warnings { Puppet::Application = Puppet::Application.superclass }
+      without_warnings { Oregano::Application = Oregano::Application.superclass }
     end
 
-    it 'should set Puppet::Application.restart!' do
-      Puppet::Application.expects(:restart!)
+    it 'should set Oregano::Application.restart!' do
+      Oregano::Application.expects(:restart!)
       daemon.stubs(:reexec)
       daemon.restart
     end
@@ -241,7 +241,7 @@ describe Puppet::Daemon, :unless => Puppet.features.microsoft_windows? do
 
     it "should fail if no argv values are available" do
       daemon.expects(:argv).returns nil
-      expect { daemon.reexec }.to raise_error(Puppet::DevError)
+      expect { daemon.reexec }.to raise_error(Oregano::DevError)
     end
 
     it "should shut down without exiting" do

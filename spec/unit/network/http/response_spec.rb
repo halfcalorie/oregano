@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/handler'
-require 'puppet/network/http'
+require 'oregano_spec/files'
+require 'oregano_spec/handler'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP::Response do
-  include PuppetSpec::Files
+describe Oregano::Network::HTTP::Response do
+  include OreganoSpec::Files
 
-  let(:handler) { PuppetSpec::Handler.new }
+  let(:handler) { OreganoSpec::Handler.new }
   let(:response) { {} }
   let(:subject) { described_class.new(handler, response) }
   let(:body_utf8) { JSON.dump({ "foo" => "bar"}).encode('UTF-8') }
@@ -38,7 +38,7 @@ describe Puppet::Network::HTTP::Response do
     end
 
     it "accepts a format object" do
-      formatter = Puppet::Network::FormatHandler.format(:json)
+      formatter = Oregano::Network::FormatHandler.format(:json)
       handler.expects(:set_content_type).with(response, 'application/json; charset=utf-8')
 
       subject.respond_with(200, formatter, body_utf8)
@@ -50,7 +50,7 @@ describe Puppet::Network::HTTP::Response do
       it "omits the charset" do
         body_binary = [0xDEADCAFE].pack('L')
 
-        formatter = Puppet::Network::FormatHandler.format(:binary)
+        formatter = Oregano::Network::FormatHandler.format(:binary)
         handler.expects(:set_content_type).with(response, 'application/octet-stream')
 
         subject.respond_with(200, formatter, body_binary)
@@ -58,7 +58,7 @@ describe Puppet::Network::HTTP::Response do
     end
 
     context "with text/plain content" do
-      let(:formatter) { Puppet::Network::FormatHandler.format(:s) }
+      let(:formatter) { Oregano::Network::FormatHandler.format(:s) }
 
       it "sets the charset to UTF-8 for content already in that format" do
         body_pem = "BEGIN CERTIFICATE".encode('UTF-8')
@@ -83,7 +83,7 @@ describe Puppet::Network::HTTP::Response do
     end
 
     context "with application/json content" do
-      let(:formatter) { Puppet::Network::FormatHandler.format(:json) }
+      let(:formatter) { Oregano::Network::FormatHandler.format(:json) }
 
       it "sets the charset to UTF-8 for content already in that format" do
         handler.expects(:set_content_type).with(response, 'application/json; charset=utf-8')

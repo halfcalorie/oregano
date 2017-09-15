@@ -3,7 +3,7 @@ require 'spec_helper'
 # Note that much of the functionality of the tdnf provider is already tested with yum provider tests,
 # as yum is the parent provider, via dnf
 
-provider_class = Puppet::Type.type(:package).provider(:tdnf)
+provider_class = Oregano::Type.type(:package).provider(:tdnf)
 
 context 'default' do
   it 'should be the default provider on PhotonOS' do

@@ -43,14 +43,14 @@ end
 
 def file2specs(file)
   %w{spec/unit spec/integration}.collect { |d|
-    file.sub('lib/puppet', d).sub(".rb", "_spec.rb")
+    file.sub('lib/oregano', d).sub(".rb", "_spec.rb")
   }.find_all { |f|
     File.exist?(f)
   }
 end
 
 def file2test(file)
-  result = file.sub('lib/puppet', 'test')
+  result = file.sub('lib/oregano', 'test')
   return nil unless File.exist?(result)
   result
 end
@@ -99,7 +99,7 @@ end
 
 watch('spec/spec_helper.rb') { run_all_specs }
 watch(%r{^spec/(unit|integration)/.*\.rb$}) { |md| run_spec_files(md[0]) }
-watch(%r{^lib/puppet/(.*)\.rb$}) { |md|
+watch(%r{^lib/oregano/(.*)\.rb$}) { |md|
   run_spec_files(file2specs(md[0]))
   if t = file2test(md[0])
     run_test_file(t)

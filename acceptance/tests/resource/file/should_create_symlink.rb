@@ -44,8 +44,8 @@ agents.each do |agent|
   reset_link_and_target(agent, link_file, target_file)
   reset_link_and_target(agent, link_dir, target_dir)
 
-  step "verify we can create a symlink with puppet resource"
-  on(agent, puppet_resource("file", "#{link_file}", "ensure=#{target_file}"))
+  step "verify we can create a symlink with oregano resource"
+  on(agent, oregano_resource("file", "#{link_file}", "ensure=#{target_file}"))
   verify_symlink(agent, link_file, target_file)
   reset_link_and_target(agent, link_file, target_file)
 
@@ -55,7 +55,7 @@ agents.each do |agent|
   reset_link_and_target(agent, link_file, target_file)
 
   step "verify that 'links => manage' and 'recurse => true' preserves links in a directory"
-  on(agent, puppet_resource("file", target_dir, "ensure=directory"))
+  on(agent, oregano_resource("file", target_dir, "ensure=directory"))
   reset_link_and_target(agent, link_dir, "#{target_dir}/symlink-target")
   apply_manifest_on(agent, "file { '#{link_dir}': ensure => directory, target => '#{target_dir}', links => manage, recurse => true }")
   verify_symlink(agent, "#{link_dir}/symlink-target", "#{target_dir}/symlink-target")

@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/formats'
-require 'puppet/network/format_support'
+require 'oregano/network/formats'
+require 'oregano/network/format_support'
 
 class FormatsTest
-  include Puppet::Network::FormatSupport
+  include Oregano::Network::FormatSupport
 
   attr_accessor :string
   def ==(other)
@@ -35,13 +35,13 @@ class FormatsTest
   end
 end
 
-describe "Puppet Network Format" do
-  it "should include a msgpack format", :if => Puppet.features.msgpack? do
-    expect(Puppet::Network::FormatHandler.format(:msgpack)).not_to be_nil
+describe "Oregano Network Format" do
+  it "should include a msgpack format", :if => Oregano.features.msgpack? do
+    expect(Oregano::Network::FormatHandler.format(:msgpack)).not_to be_nil
   end
 
-  describe "msgpack", :if => Puppet.features.msgpack? do
-    let(:msgpack) { Puppet::Network::FormatHandler.format(:msgpack) }
+  describe "msgpack", :if => Oregano.features.msgpack? do
+    let(:msgpack) { Oregano::Network::FormatHandler.format(:msgpack) }
 
     it "should have its mime type set to application/x-msgpack" do
       expect(msgpack.mime).to eq("application/x-msgpack")
@@ -62,8 +62,8 @@ describe "Puppet Network Format" do
     end
 
     it "should be able to serialize a catalog" do
-      cat = Puppet::Resource::Catalog.new('foo', Puppet::Node::Environment.create(:testing, []))
-      cat.add_resource(Puppet::Resource.new(:file, 'my_file'))
+      cat = Oregano::Resource::Catalog.new('foo', Oregano::Node::Environment.create(:testing, []))
+      cat.add_resource(Oregano::Resource.new(:file, 'my_file'))
       catunpack = MessagePack.unpack(cat.to_msgpack)
       expect(catunpack).to include(
         "tags"=>[],
@@ -86,7 +86,7 @@ describe "Puppet Network Format" do
   end
 
   describe "yaml" do
-    let(:yaml) { Puppet::Network::FormatHandler.format(:yaml) }
+    let(:yaml) { Oregano::Network::FormatHandler.format(:yaml) }
 
     it "should have its mime type set to text/yaml" do
       expect(yaml.mime).to eq("text/yaml")
@@ -118,7 +118,7 @@ describe "Puppet Network Format" do
     end
 
     it "should deserialize symbols as strings" do
-      expect { yaml.intern(String, YAML.dump(:foo))}.to raise_error(Puppet::Network::FormatHandler::FormatError)
+      expect { yaml.intern(String, YAML.dump(:foo))}.to raise_error(Oregano::Network::FormatHandler::FormatError)
     end
 
     it "should skip data_to_hash if data is already an instance of the specified class" do
@@ -135,25 +135,25 @@ describe "Puppet Network Format" do
 
     it "fails intelligibly instead of calling to_json with something other than a hash" do
       expect do
-        yaml.intern(Puppet::Node, '')
-      end.to raise_error(Puppet::Network::FormatHandler::FormatError, /did not contain a valid instance/)
+        yaml.intern(Oregano::Node, '')
+      end.to raise_error(Oregano::Network::FormatHandler::FormatError, /did not contain a valid instance/)
     end
 
     it "fails intelligibly when intern_multiple is called and yaml doesn't decode to an array" do
       expect do
-        yaml.intern_multiple(Puppet::Node, '')
-      end.to raise_error(Puppet::Network::FormatHandler::FormatError, /did not contain a collection/)
+        yaml.intern_multiple(Oregano::Node, '')
+      end.to raise_error(Oregano::Network::FormatHandler::FormatError, /did not contain a collection/)
     end
 
     it "fails intelligibly instead of calling to_json with something other than a hash when interning multiple" do
       expect do
-        yaml.intern_multiple(Puppet::Node, YAML.dump(["hello"]))
-      end.to raise_error(Puppet::Network::FormatHandler::FormatError, /did not contain a valid instance/)
+        yaml.intern_multiple(Oregano::Node, YAML.dump(["hello"]))
+      end.to raise_error(Oregano::Network::FormatHandler::FormatError, /did not contain a valid instance/)
     end
   end
 
   describe "plaintext" do
-    let(:text) { Puppet::Network::FormatHandler.format(:s) }
+    let(:text) { Oregano::Network::FormatHandler.format(:s) }
 
     it "should have its mimetype set to text/plain" do
       expect(text.mime).to eq("text/plain")
@@ -169,15 +169,15 @@ describe "Puppet Network Format" do
   end
 
   describe "dot" do
-    let(:dot) { Puppet::Network::FormatHandler.format(:dot) }
+    let(:dot) { Oregano::Network::FormatHandler.format(:dot) }
 
     it "should have its mimetype set to text/dot" do
       expect(dot.mime).to eq("text/dot")
     end
   end
 
-  describe Puppet::Network::FormatHandler.format(:binary) do
-    let(:binary) { Puppet::Network::FormatHandler.format(:binary) }
+  describe Oregano::Network::FormatHandler.format(:binary) do
+    let(:binary) { Oregano::Network::FormatHandler.format(:binary) }
 
     it "should exist" do
       expect(binary).not_to be_nil
@@ -223,7 +223,7 @@ describe "Puppet Network Format" do
   end
 
   describe "pson" do
-    let(:pson) { Puppet::Network::FormatHandler.format(:pson) }
+    let(:pson) { Oregano::Network::FormatHandler.format(:pson) }
 
     it "should include a pson format" do
       expect(pson).not_to be_nil
@@ -301,13 +301,13 @@ describe "Puppet Network Format" do
 
     it "fails intelligibly when given invalid data" do
       expect do
-        pson.intern(Puppet::Node, '')
+        pson.intern(Oregano::Node, '')
       end.to raise_error(PSON::ParserError, /source did not contain any PSON/)
     end
   end
 
   describe "json" do
-    let(:json) { Puppet::Network::FormatHandler.format(:json) }
+    let(:json) { Oregano::Network::FormatHandler.format(:json) }
 
     it "should include a json format" do
       expect(json).not_to be_nil
@@ -393,16 +393,16 @@ describe "Puppet Network Format" do
 
     it "fails intelligibly when given invalid data" do
       expect do
-        json.intern(Puppet::Node, '')
+        json.intern(Oregano::Node, '')
       end.to raise_error(JSON::ParserError, /A JSON text must at least contain two octets|unexpected token at ''/)
     end
   end
 
   describe ":console format" do
-    let(:console) { Puppet::Network::FormatHandler.format(:console) }
+    let(:console) { Oregano::Network::FormatHandler.format(:console) }
 
     it "should include a console format" do
-      expect(console).to be_an_instance_of Puppet::Network::Format
+      expect(console).to be_an_instance_of Oregano::Network::Format
     end
 
     [:intern, :intern_multiple].each do |method|
@@ -461,7 +461,7 @@ describe "Puppet Network Format" do
       end
 
       it "should render a {String,Numeric}-keyed Hash into a table" do
-        json = Puppet::Network::FormatHandler.format(:json)
+        json = Oregano::Network::FormatHandler.format(:json)
         object = Object.new
         hash = { "one" => 1, "two" => [], "three" => {}, "four" => object, 5 => 5,
                  6.0 => 6 }
@@ -493,7 +493,7 @@ EOT
             "seconds" => 505532
           }
         }
-        facts = Puppet::Node::Facts.new("foo", values)
+        facts = Oregano::Node::Facts.new("foo", values)
         facts.timestamp = tm
 
         # For some reason, render omits the last newline, seems like a bug

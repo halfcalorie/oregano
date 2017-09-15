@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/application/certificate'
+require 'oregano/application/certificate'
 
-describe Puppet::Application::Certificate do
+describe Oregano::Application::Certificate do
   it "should have a 'ca-location' option" do
     # REVISIT: This is delegated from the face, and we will have a test there,
     # so is this actually a valuable test? --daniel 2011-04-07

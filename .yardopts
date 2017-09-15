@@ -14,5 +14,5 @@
 --api public
 --api private
 --hide-void-return
---exclude lib/puppet/vendor/
+--exclude lib/oregano/vendor/
 lib/**/*.rb

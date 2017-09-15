@@ -21,13 +21,13 @@ agents.each do |agent|
           'command=c:\\\\windows\\\\system32\\\\notepad.exe',
           'arguments="foo bar baz"',
           'working_dir=c:\\\\windows']
-  on agent, puppet_resource('scheduled_task', name, args)
+  on agent, oregano_resource('scheduled_task', name, args)
 
   step "verify the task exists"
   on agent, query_cmd
 
   step "verify task properties"
-  on agent, puppet_resource('scheduled_task', name) do
+  on agent, oregano_resource('scheduled_task', name) do
     assert_match(/command\s*=>\s*'c:\\windows\\system32\\notepad.exe'/, stdout)
     assert_match(/arguments\s*=>\s*'foo bar baz'/, stdout)
     assert_match(/enabled\s*=>\s*'true'/, stdout)

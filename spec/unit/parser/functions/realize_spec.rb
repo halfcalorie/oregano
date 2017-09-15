@@ -1,10 +1,10 @@
 require 'spec_helper'
 require 'matchers/resource'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe "the realize function" do
   include Matchers::Resource
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   it "realizes a single, referenced resource" do
     catalog = compile_to_catalog(<<-EOM)
@@ -42,7 +42,7 @@ describe "the realize function" do
       compile_to_catalog(<<-EOM)
         realize(Notify[missing])
       EOM
-    end.to raise_error(Puppet::Error, /Failed to realize/)
+    end.to raise_error(Oregano::Error, /Failed to realize/)
   end
 
   it "fails when no parameters given" do
@@ -50,7 +50,7 @@ describe "the realize function" do
       compile_to_catalog(<<-EOM)
         realize()
       EOM
-    end.to raise_error(Puppet::Error, /Wrong number of arguments/)
+    end.to raise_error(Oregano::Error, /Wrong number of arguments/)
   end
 
   it "silently does nothing when an empty array of resources is given" do

@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider = Puppet::Type.type(:service).provider(:init)
+provider = Oregano::Type.type(:service).provider(:init)
 
 describe provider do
   describe "when running on FreeBSD" do

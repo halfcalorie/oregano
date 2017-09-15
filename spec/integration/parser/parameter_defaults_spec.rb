@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet_spec/language'
+require 'oregano_spec/language'
 
 ['Function', 'EPP'].each do |call_type|
   describe "#{call_type} parameter default expressions" do
@@ -24,14 +24,14 @@ require 'puppet_spec/language'
 
     let (:call_type) { call_type }
 
-    let (:compiler) { Puppet::Parser::Compiler.new(Puppet::Node.new('specification')) }
+    let (:compiler) { Oregano::Parser::Compiler.new(Oregano::Node.new('specification')) }
 
     let (:topscope) { compiler.topscope }
 
     def collect_notices(code)
       logs = []
-      Puppet[:code] = code
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano[:code] = code
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           compiler.compile do |catalog|
             yield
             catalog
@@ -48,7 +48,7 @@ require 'puppet_spec/language'
     def eval_collect_notices(arg_list, body, call_params)
       call = call_params.is_a?(String) ? call_params : "example(#{call_params.map {|p| p.nil? ? 'undef' : (p.is_a?(String) ? "'#{p}'" : p )}.join(',')})"
       body = func_bodies[body] if body.is_a?(Integer)
-      evaluator = Puppet::Pops::Parser::EvaluatingParser.new()
+      evaluator = Oregano::Pops::Parser::EvaluatingParser.new()
       collect_notices("function example(#{arg_list}) #{body}") do
         evaluator.evaluate_string(compiler.topscope, call)
       end
@@ -66,13 +66,13 @@ require 'puppet_spec/language'
       named_params = call_params.reduce({}) {|h, v| h[param_names[h.size]] = v; h }
       collect_notices(code) do
         if inline_epp
-          Puppet::Pops::Evaluator::EppEvaluator.inline_epp(compiler.topscope, source, named_params)
+          Oregano::Pops::Evaluator::EppEvaluator.inline_epp(compiler.topscope, source, named_params)
         else
           file = Tempfile.new(['epp-script', '.epp'])
           begin
             file.write(source)
             file.close
-            Puppet::Pops::Evaluator::EppEvaluator.epp(compiler.topscope, file.path, 'test', named_params)
+            Oregano::Pops::Evaluator::EppEvaluator.epp(compiler.topscope, file.path, 'test', named_params)
           ensure
             file.unlink
           end

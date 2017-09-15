@@ -2,9 +2,9 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:group).provider(:windows_adsi), :if => Oregano.features.microsoft_windows? do
   let(:resource) do
-    Puppet::Type.type(:group).new(
+    Oregano::Type.type(:group).new(
       :title => 'testers',
       :provider => :windows_adsi
     )
@@ -15,10 +15,10 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
   let(:connection) { stub 'connection' }
 
   before :each do
-    Puppet::Util::Windows::ADSI.stubs(:computer_name).returns('testcomputername')
-    Puppet::Util::Windows::ADSI.stubs(:connect).returns connection
+    Oregano::Util::Windows::ADSI.stubs(:computer_name).returns('testcomputername')
+    Oregano::Util::Windows::ADSI.stubs(:connect).returns connection
     # this would normally query the system, but not needed for these tests
-    Puppet::Util::Windows::ADSI::Group.stubs(:localized_domains).returns([])
+    Oregano::Util::Windows::ADSI::Group.stubs(:localized_domains).returns([])
   end
 
   describe ".instances" do
@@ -40,10 +40,10 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
     let(:invalid_user) { SecureRandom.uuid }
 
     before :each do
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with('user1').returns(user1)
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with('user2').returns(user2)
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with('user3').returns(user3)
-      Puppet::Util::Windows::SID.stubs(:name_to_sid_object).with(invalid_user).returns(nil)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with('user1').returns(user1)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with('user2').returns(user2)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with('user3').returns(user3)
+      Oregano::Util::Windows::SID.stubs(:name_to_sid_object).with(invalid_user).returns(nil)
     end
 
     describe "#members_insync?" do
@@ -196,8 +196,8 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
 
       provider.group.stubs(:member_sids).returns(member_sids[0..1])
 
-      Puppet::Util::Windows::SID.expects(:name_to_sid_object).with('user2').returns(member_sids[1])
-      Puppet::Util::Windows::SID.expects(:name_to_sid_object).with('user3').returns(member_sids[2])
+      Oregano::Util::Windows::SID.expects(:name_to_sid_object).with('user2').returns(member_sids[1])
+      Oregano::Util::Windows::SID.expects(:name_to_sid_object).with('user3').returns(member_sids[2])
 
       provider.group.expects(:remove_member_sids).with(member_sids[0])
       provider.group.expects(:add_member_sids).with(member_sids[2])
@@ -211,7 +211,7 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
       resource[:members] = ['user1', 'user2']
 
       group = stub 'group'
-      Puppet::Util::Windows::ADSI::Group.expects(:create).with('testers').returns group
+      Oregano::Util::Windows::ADSI::Group.expects(:create).with('testers').returns group
 
       create = sequence('create')
       group.expects(:commit).in_sequence(create)
@@ -222,19 +222,19 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
     end
 
     it 'should not create a group if a user by the same name exists' do
-      Puppet::Util::Windows::ADSI::Group.expects(:create).with('testers').raises( Puppet::Error.new("Cannot create group if user 'testers' exists.") )
-      expect{ provider.create }.to raise_error( Puppet::Error,
+      Oregano::Util::Windows::ADSI::Group.expects(:create).with('testers').raises( Oregano::Error.new("Cannot create group if user 'testers' exists.") )
+      expect{ provider.create }.to raise_error( Oregano::Error,
         /Cannot create group if user 'testers' exists./ )
     end
 
     it "should fail with an actionable message when trying to create an active directory group" do
       resource[:name] = 'DOMAIN\testdomaingroup'
-      Puppet::Util::Windows::ADSI::User.expects(:exists?).with(resource[:name]).returns(false)
+      Oregano::Util::Windows::ADSI::User.expects(:exists?).with(resource[:name]).returns(false)
       connection.expects(:Create)
       connection.expects(:SetInfo).raises( WIN32OLERuntimeError.new("(in OLE method `SetInfo': )\n    OLE error code:8007089A in Active Directory\n      The specified username is invalid.\r\n\n    HRESULT error code:0x80020009\n      Exception occurred."))
 
       expect{ provider.create }.to raise_error(
-                                       Puppet::Error,
+                                       Oregano::Error,
                                        /not able to create\/delete domain groups/
                                    )
     end
@@ -247,11 +247,11 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
   end
 
   it "should be able to test whether a group exists" do
-    Puppet::Util::Windows::SID.stubs(:name_to_sid_object).returns(nil)
-    Puppet::Util::Windows::ADSI.stubs(:connect).returns stub('connection', :Class => 'Group')
+    Oregano::Util::Windows::SID.stubs(:name_to_sid_object).returns(nil)
+    Oregano::Util::Windows::ADSI.stubs(:connect).returns stub('connection', :Class => 'Group')
     expect(provider).to be_exists
 
-    Puppet::Util::Windows::ADSI.stubs(:connect).returns nil
+    Oregano::Util::Windows::ADSI.stubs(:connect).returns nil
     expect(provider).not_to be_exists
   end
 
@@ -270,7 +270,7 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
   end
 
   it "should report the group's SID as gid" do
-    Puppet::Util::Windows::SID.expects(:name_to_sid).with('testers').returns('S-1-5-32-547')
+    Oregano::Util::Windows::SID.expects(:name_to_sid).with('testers').returns('S-1-5-32-547')
     expect(provider.gid).to eq('S-1-5-32-547')
   end
 
@@ -282,7 +282,7 @@ describe Puppet::Type.type(:group).provider(:windows_adsi), :if => Puppet.featur
   it "should prefer the domain component from the resolved SID" do
     # must lookup well known S-1-5-32-544 as actual 'Administrators' name may be localized
     admins_sid_bytes = [1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0]
-    admins_group = Puppet::Util::Windows::SID::Principal.lookup_account_sid(admins_sid_bytes)
+    admins_group = Oregano::Util::Windows::SID::Principal.lookup_account_sid(admins_sid_bytes)
     # prefix just the name like .\Administrators
     converted = provider.members_to_s([".\\#{admins_group.account}"])
 

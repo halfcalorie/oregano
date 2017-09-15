@@ -1,6 +1,6 @@
-test_name "puppet module install (already installed elsewhere)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (already installed elsewhere)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -42,14 +42,14 @@ PP
 default_moduledir = get_default_modulepath_for_host(master)
 
 step "Try to install a module that is already installed"
-on master, puppet("module install #{module_author}-#{module_name}") do
+on master, oregano("module install #{module_author}-#{module_name}") do
   assert_match(/#{module_reference}.*is already installed/, stdout,
         "Error that module was already installed was not displayed")
 end
 assert_module_not_installed_on_disk(master, module_name, default_moduledir)
 
 step "Try to install a specific version of a module that is already installed"
-on master, puppet("module install #{module_author}-#{module_name} --version 1.x"), :acceptable_exit_codes => [1] do
+on master, oregano("module install #{module_author}-#{module_name} --version 1.x"), :acceptable_exit_codes => [1] do
   assert_match(/Could not install module '#{module_author}-#{module_name}' \(v1.x\)/, stderr,
         "Error that specified module version could not be installed was not displayed")
   assert_match(/#{module_author}-#{module_name}.*is already installed/, stderr,
@@ -58,13 +58,13 @@ end
 assert_module_not_installed_on_disk(master, module_name, default_moduledir)
 
 step "Install a specifc module version that is already installed (with --force)"
-on master, puppet("module install #{module_author}-#{module_name} --force --version 0.0.1") do
+on master, oregano("module install #{module_author}-#{module_name} --force --version 0.0.1") do
   assert_module_installed_ui(stdout, module_author, module_name, '0.0.1', '==')
 end
 assert_module_installed_on_disk(master, module_name, default_moduledir)
 
 step "Install a module that is already installed (with --force)"
-on master, puppet("module install #{module_author}-#{module_name} --force") do
+on master, oregano("module install #{module_author}-#{module_name} --force") do
   assert_module_installed_ui(stdout, module_author, module_name)
 end
 assert_module_installed_on_disk(master, module_name, default_moduledir)

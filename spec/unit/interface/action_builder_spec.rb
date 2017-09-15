@@ -1,21 +1,21 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/interface'
-require 'puppet/network/format_handler'
+require 'oregano/interface'
+require 'oregano/network/format_handler'
 
-describe Puppet::Interface::ActionBuilder do
-  let :face do Puppet::Interface.new(:puppet_interface_actionbuilder, '0.0.1') end
+describe Oregano::Interface::ActionBuilder do
+  let :face do Oregano::Interface.new(:oregano_interface_actionbuilder, '0.0.1') end
 
   it "should build an action" do
-    action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+    action = Oregano::Interface::ActionBuilder.build(face, :foo) do
       when_invoked do |options| true end
     end
-    expect(action).to be_a(Puppet::Interface::Action)
+    expect(action).to be_a(Oregano::Interface::Action)
     expect(action.name).to eq(:foo)
   end
 
   it "should define a method on the face which invokes the action" do
-    face = Puppet::Interface.new(:action_builder_test_interface, '0.0.1') do
+    face = Oregano::Interface.new(:action_builder_test_interface, '0.0.1') do
       action(:foo) { when_invoked { |options| "invoked the method" } }
     end
 
@@ -24,20 +24,20 @@ describe Puppet::Interface::ActionBuilder do
 
   it "should require a block" do
     expect {
-      Puppet::Interface::ActionBuilder.build(nil, :foo)
+      Oregano::Interface::ActionBuilder.build(nil, :foo)
     }.to raise_error("Action :foo must specify a block")
   end
 
   it "should require an invocation block" do
     expect {
-      Puppet::Interface::ActionBuilder.build(face, :foo) {}
+      Oregano::Interface::ActionBuilder.build(face, :foo) {}
     }.to raise_error(/actions need to know what to do when_invoked; please add the block/)
   end
 
   describe "when handling options" do
     it "should have a #option DSL function" do
       method = nil
-      Puppet::Interface::ActionBuilder.build(face, :foo) do
+      Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         method = self.method(:option)
       end
@@ -45,7 +45,7 @@ describe Puppet::Interface::ActionBuilder do
     end
 
     it "should define an option without a block" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         option "--bar"
       end
@@ -53,7 +53,7 @@ describe Puppet::Interface::ActionBuilder do
     end
 
     it "should accept an empty block" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         option "--bar" do
           # This space left deliberately blank.
@@ -65,7 +65,7 @@ describe Puppet::Interface::ActionBuilder do
 
   context "inline documentation" do
     it "should set the summary" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         summary "this is some text"
       end
@@ -75,7 +75,7 @@ describe Puppet::Interface::ActionBuilder do
 
   context "action defaulting" do
     it "should set the default to true" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         default
       end
@@ -83,7 +83,7 @@ describe Puppet::Interface::ActionBuilder do
     end
 
     it "should not be default by, er, default. *cough*" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
       end
       expect(action.default).to be_falsey
@@ -93,7 +93,7 @@ describe Puppet::Interface::ActionBuilder do
   context "#when_rendering" do
     it "should fail if no rendering format is given" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           when_rendering do true end
         end
@@ -102,7 +102,7 @@ describe Puppet::Interface::ActionBuilder do
 
     it "should fail if no block is given" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           when_rendering :json
         end
@@ -111,36 +111,36 @@ describe Puppet::Interface::ActionBuilder do
 
     it "should fail if the block takes no arguments" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           when_rendering :json do true end
         end
       }.to raise_error ArgumentError,
-        /the puppet_interface_actionbuilder face foo action takes .* not/
+        /the oregano_interface_actionbuilder face foo action takes .* not/
     end
 
     it "should fail if the when_rendering block takes a different number of arguments than when_invoked" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           when_rendering :json do |a, b, c| true end
         end
       }.to raise_error ArgumentError,
-        /the puppet_interface_actionbuilder face foo action takes .* not 3/
+        /the oregano_interface_actionbuilder face foo action takes .* not 3/
     end
 
     it "should fail if the block takes a variable number of arguments" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           when_rendering :json do |*args| true end
         end
       }.to raise_error ArgumentError,
-        /the puppet_interface_actionbuilder face foo action takes .* not/
+        /the oregano_interface_actionbuilder face foo action takes .* not/
     end
 
     it "should stash a rendering block" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         when_rendering :json do |a| true end
       end
@@ -149,7 +149,7 @@ describe Puppet::Interface::ActionBuilder do
 
     it "should fail if you try to set the same rendering twice" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           when_rendering :json do |a| true end
           when_rendering :json do |a| true end
@@ -158,7 +158,7 @@ describe Puppet::Interface::ActionBuilder do
     end
 
     it "should work if you set two different renderings" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         when_rendering :json do |a| true end
         when_rendering :yaml do |a| true end
@@ -168,7 +168,7 @@ describe Puppet::Interface::ActionBuilder do
     end
 
     it "should be bound to the face when called" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
         when_rendering :json do |a| self end
       end
@@ -178,7 +178,7 @@ describe Puppet::Interface::ActionBuilder do
 
   context "#render_as" do
     it "should default to nil (eg: based on context)" do
-      action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+      action = Oregano::Interface::ActionBuilder.build(face, :foo) do
         when_invoked do |options| true end
       end
       expect(action.render_as).to be_nil
@@ -186,16 +186,16 @@ describe Puppet::Interface::ActionBuilder do
 
     it "should fail if not rendering format is given" do
       expect {
-        Puppet::Interface::ActionBuilder.build(face, :foo) do
+        Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           render_as
         end
       }.to raise_error ArgumentError, /must give a rendering format to render_as/
     end
 
-    Puppet::Network::FormatHandler.formats.each do |name|
+    Oregano::Network::FormatHandler.formats.each do |name|
       it "should accept #{name.inspect} format" do
-        action = Puppet::Interface::ActionBuilder.build(face, :foo) do
+        action = Oregano::Interface::ActionBuilder.build(face, :foo) do
           when_invoked do |options| true end
           render_as name
         end
@@ -206,7 +206,7 @@ describe Puppet::Interface::ActionBuilder do
     [:if_you_define_this_format_you_frighten_me, "json", 12].each do |input|
       it "should fail if given #{input.inspect}" do
         expect {
-          Puppet::Interface::ActionBuilder.build(face, :foo) do
+          Oregano::Interface::ActionBuilder.build(face, :foo) do
             when_invoked do |options| true end
             render_as input
           end

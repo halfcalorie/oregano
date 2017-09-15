@@ -5,11 +5,11 @@ test_name 'Ensure a file resource can have a UTF-8 source attribute, content, an
 
   skip_test 'requires a master for serving module content' if master.nil?
 
-  require 'puppet/acceptance/environment_utils'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/environment_utils'
+  extend Oregano::Acceptance::EnvironmentUtils
 
-  require 'puppet/acceptance/agent_fqdn_utils'
-  extend Puppet::Acceptance::AgentFqdnUtils
+  require 'oregano/acceptance/agent_fqdn_utils'
+  extend Oregano::Acceptance::AgentFqdnUtils
 
   tmp_environment = mk_tmp_environment_with_teardown(master, File.basename(__FILE__, '.*'))
   agent_tmp_dirs  = {}
@@ -53,7 +53,7 @@ test_name 'Ensure a file resource can have a UTF-8 source attribute, content, an
       \$test_path = \$::fqdn ? #{agent_tmp_dirs}
       file { "\$test_path/\uff72\uff67\u30d5\u30eb":
         ensure => present,
-        source => "puppet:///modules/utf8_file_module/\u9759\u7684",
+        source => "oregano:///modules/utf8_file_module/\u9759\u7684",
       }
     SITE_PP
 
@@ -74,9 +74,9 @@ test_name 'Ensure a file resource can have a UTF-8 source attribute, content, an
     # フ \u30d5 0xE3 0x83 0x95 http://www.fileformat.info/info/unicode/char/30d5/index.htm
     # ル \u30eb 0xE3 0x83 0xAB http://www.fileformat.info/info/unicode/char/30eb/index.htm
 
-    with_puppet_running_on(master, {}) do
+    with_oregano_running_on(master, {}) do
       agents.each do |agent|
-        on(agent, puppet("agent -t --environment '#{tmp_environment}' --server #{master.hostname}"), :acceptable_exit_codes => 2)
+        on(agent, oregano("agent -t --environment '#{tmp_environment}' --server #{master.hostname}"), :acceptable_exit_codes => 2)
 
         on(agent, "cat '#{agent_tmp_dirs[agent_to_fqdn(agent)]}/\uff72\uff67\u30d5\u30eb'") do |result|
           assert_match("\u2603", result.stdout, "managed UTF-8 file contents '#{result.stdout}' did not match expected value '\u2603'")

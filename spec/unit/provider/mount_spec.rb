@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/provider/mount'
+require 'oregano/provider/mount'
 
-describe Puppet::Provider::Mount do
+describe Oregano::Provider::Mount do
   before :each do
     @mounter = Object.new
-    @mounter.extend(Puppet::Provider::Mount)
+    @mounter.extend(Oregano::Provider::Mount)
 
     @name = "/"
 
@@ -16,7 +16,7 @@ describe Puppet::Provider::Mount do
     @mounter.stubs(:resource).returns(@resource)
   end
 
-  describe Puppet::Provider::Mount, " when mounting" do
+  describe Oregano::Provider::Mount, " when mounting" do
 
     before :each do
       @mounter.stubs(:get).with(:ensure).returns(:mounted)
@@ -70,7 +70,7 @@ describe Puppet::Provider::Mount do
 
   end
 
-  describe Puppet::Provider::Mount, " when remounting" do
+  describe Oregano::Provider::Mount, " when remounting" do
 
     it "should use '-o remount' if the resource specifies it supports remounting" do
       @mounter.stubs(:info)
@@ -106,7 +106,7 @@ describe Puppet::Provider::Mount do
     end
   end
 
-  describe Puppet::Provider::Mount, " when unmounting" do
+  describe Oregano::Provider::Mount, " when unmounting" do
 
     before :each do
       @mounter.stubs(:get).with(:ensure).returns(:unmounted)
@@ -133,7 +133,7 @@ describe Puppet::Provider::Mount do
 
   end
 
-  describe Puppet::Provider::Mount, " when determining if it is mounted" do
+  describe Oregano::Provider::Mount, " when determining if it is mounted" do
 
     it "should query the property_hash" do
       @mounter.expects(:get).with(:ensure).returns(:mounted)

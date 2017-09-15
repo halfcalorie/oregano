@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:zypper)
+provider_class = Oregano::Type.type(:package).provider(:zypper)
 
 describe provider_class do
   before(:each) do

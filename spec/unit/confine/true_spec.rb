@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/confine/true'
+require 'oregano/confine/true'
 
-describe Puppet::Confine::True do
+describe Oregano::Confine::True do
   it "should be named :true" do
-    expect(Puppet::Confine::True.name).to eq(:true)
+    expect(Oregano::Confine::True.name).to eq(:true)
   end
 
   it "should require a value" do
-    expect { Puppet::Confine::True.new }.to raise_error(ArgumentError)
+    expect { Oregano::Confine::True.new }.to raise_error(ArgumentError)
   end
 
   describe "when testing values" do
     before do
-      @confine = Puppet::Confine::True.new("foo")
+      @confine = Oregano::Confine::True.new("foo")
       @confine.label = "eh"
     end
 
@@ -37,7 +37,7 @@ describe Puppet::Confine::True do
   end
 
   it "should produce the number of false values when asked for a summary" do
-    @confine = Puppet::Confine::True.new %w{one two three four}
+    @confine = Oregano::Confine::True.new %w{one two three four}
     @confine.expects(:pass?).times(4).returns(true).returns(false).returns(true).returns(false)
     expect(@confine.summary).to eq(2)
   end
@@ -47,6 +47,6 @@ describe Puppet::Confine::True do
     c2 = mock '2', :summary => 2
     c3 = mock '3', :summary => 3
 
-    expect(Puppet::Confine::True.summarize([c1, c2, c3])).to eq(6)
+    expect(Oregano::Confine::True.summarize([c1, c2, c3])).to eq(6)
   end
 end

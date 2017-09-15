@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/parameter'
+require 'oregano/parameter'
 
-describe Puppet::Parameter::ValueCollection do
+describe Oregano::Parameter::ValueCollection do
   before do
-    @collection = Puppet::Parameter::ValueCollection.new
+    @collection = Oregano::Parameter::ValueCollection.new
   end
 
   it "should have a method for defining new values" do
@@ -72,17 +72,17 @@ describe Puppet::Parameter::ValueCollection do
 
   it "should be able to find the first matching value" do
     @collection.newvalues :foo, :bar
-    expect(@collection.match?("foo")).to be_instance_of(Puppet::Parameter::Value)
+    expect(@collection.match?("foo")).to be_instance_of(Oregano::Parameter::Value)
   end
 
   it "should be able to match symbols" do
     @collection.newvalues :foo, :bar
-    expect(@collection.match?(:foo)).to be_instance_of(Puppet::Parameter::Value)
+    expect(@collection.match?(:foo)).to be_instance_of(Oregano::Parameter::Value)
   end
 
   it "should be able to match symbols when a regex is provided" do
     @collection.newvalues %r{.}
-    expect(@collection.match?(:foo)).to be_instance_of(Puppet::Parameter::Value)
+    expect(@collection.match?(:foo)).to be_instance_of(Oregano::Parameter::Value)
   end
 
   it "should be able to match values using regexes" do

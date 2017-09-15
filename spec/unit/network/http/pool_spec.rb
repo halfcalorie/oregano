@@ -2,21 +2,21 @@
 require 'spec_helper'
 
 require 'openssl'
-require 'puppet/network/http'
-require 'puppet/network/http_pool'
+require 'oregano/network/http'
+require 'oregano/network/http_pool'
 
-describe Puppet::Network::HTTP::Pool do
+describe Oregano::Network::HTTP::Pool do
   before :each do
-    Puppet::SSL::Key.indirection.terminus_class = :memory
-    Puppet::SSL::CertificateRequest.indirection.terminus_class = :memory
+    Oregano::SSL::Key.indirection.terminus_class = :memory
+    Oregano::SSL::CertificateRequest.indirection.terminus_class = :memory
   end
 
   let(:site) do
-    Puppet::Network::HTTP::Site.new('https', 'rubygems.org', 443)
+    Oregano::Network::HTTP::Site.new('https', 'rubygems.org', 443)
   end
 
   let(:different_site) do
-    Puppet::Network::HTTP::Site.new('https', 'github.com', 443)
+    Oregano::Network::HTTP::Site.new('https', 'github.com', 443)
   end
 
   let(:verify) do
@@ -24,11 +24,11 @@ describe Puppet::Network::HTTP::Pool do
   end
 
   def create_pool
-    Puppet::Network::HTTP::Pool.new
+    Oregano::Network::HTTP::Pool.new
   end
 
   def create_pool_with_connections(site, *connections)
-    pool = Puppet::Network::HTTP::Pool.new
+    pool = Oregano::Network::HTTP::Pool.new
     connections.each do |conn|
       pool.release(site, conn)
     end
@@ -38,7 +38,7 @@ describe Puppet::Network::HTTP::Pool do
   def create_pool_with_expired_connections(site, *connections)
     # setting keepalive timeout to -1 ensures any newly added
     # connections have already expired
-    pool = Puppet::Network::HTTP::Pool.new(-1)
+    pool = Oregano::Network::HTTP::Pool.new(-1)
     connections.each do |conn|
       pool.release(site, conn)
     end
@@ -124,7 +124,7 @@ describe Puppet::Network::HTTP::Pool do
       # This workaround can be removed once all the ruby versions we care about
       # have the patch from https://bugs.ruby-lang.org/issues/11958 applied.
       #
-      if Puppet::Util::Platform.windows?
+      if Oregano::Util::Platform.windows?
         keepalive   = Socket::Option.bool(:INET, :SOCKET, :KEEPALIVE, true).data[0]
         nokeepalive = Socket::Option.bool(:INET, :SOCKET, :KEEPALIVE, false).data[0]
         expect(s.getsockopt(Socket::SOL_SOCKET, Socket::SO_KEEPALIVE).data).to eq(keepalive)
@@ -239,7 +239,7 @@ describe Puppet::Network::HTTP::Pool do
     end
 
     it 'logs an exception if it fails to close an expired connection' do
-      Puppet.expects(:log_exception).with(is_a(IOError), "Failed to close connection for #{site}: read timeout")
+      Oregano.expects(:log_exception).with(is_a(IOError), "Failed to close connection for #{site}: read timeout")
 
       conn = create_connection(site)
       conn.expects(:finish).raises(IOError, 'read timeout')

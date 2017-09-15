@@ -1,4 +1,4 @@
-test_name "puppet module list (with invalid dependencies)"
+test_name "oregano module list (with invalid dependencies)"
 
 tag 'audit:low',
     'audit:unit'
@@ -74,7 +74,7 @@ on master, "[ -d #{master['distmoduledir']}/thelock ]"
 on master, "[ -d #{master['sitemoduledir']}/crick ]"
 
 step "List the installed modules"
-on master, puppet("module list") do |res|
+on master, oregano("module list") do |res|
   pattern = Regexp.new([
     %Q{.*Warning: Module 'jimmy-crakorn' \\(v0.3.0\\) fails to meet some dependencies:},
     %Q{  'jimmy-crick' \\(v1.0.1\\) requires 'jimmy-crakorn' \\(v0.4.x\\).*},
@@ -85,7 +85,7 @@ on master, puppet("module list") do |res|
 end
 
 step "List the installed modules as a dependency tree"
-on master, puppet("module list --tree") do |res|
+on master, oregano("module list --tree") do |res|
 
   pattern = Regexp.new([
     %Q{.*Warning: Module 'jimmy-crakorn' \\(v0.3.0\\) fails to meet some dependencies:},

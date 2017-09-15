@@ -1,4 +1,4 @@
-test_name "node_name_fact should be used to determine the node name for puppet apply"
+test_name "node_name_fact should be used to determine the node name for oregano apply"
 
 tag 'audit:medium',
     'audit:integration',  # Ruby level integration tests already exist. This acceptance test can be deleted.
@@ -29,6 +29,6 @@ node_names.each do |node_name|
   ]
 end
 
-on agents, puppet_apply("--verbose --node_name_fact kernel"), :stdin => manifest do
+on agents, oregano_apply("--verbose --node_name_fact kernel"), :stdin => manifest do
   assert_match(/defined 'message'.*#{success_message}/, stdout)
 end

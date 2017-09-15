@@ -29,8 +29,8 @@ end
 step "download packages to use for test"
 
 on hosts, "mkdir -p #{dir}"
-on hosts, "curl neptune.puppetlabs.lan/misc/sudo.#{version1}.aix51.lam.bff > #{dir}/sudo.#{version1}.aix51.lam.bff"
-on hosts, "curl neptune.puppetlabs.lan/misc/sudo.#{version2}.aix51.lam.bff > #{dir}/sudo.#{version2}.aix51.lam.bff"
+on hosts, "curl neptune.oreganolabs.lan/misc/sudo.#{version1}.aix51.lam.bff > #{dir}/sudo.#{version1}.aix51.lam.bff"
+on hosts, "curl neptune.oreganolabs.lan/misc/sudo.#{version2}.aix51.lam.bff > #{dir}/sudo.#{version2}.aix51.lam.bff"
 
 step "setup manifests for testing"
 
@@ -80,7 +80,7 @@ assert_package_version package, version2
 
 step "test that downgrading fails by trying to install an older version of the package"
 
-on hosts, puppet_apply("--verbose", "--detailed-exitcodes"), :stdin => version1_manifest, :acceptable_exit_codes => [4,6] do
+on hosts, oregano_apply("--verbose", "--detailed-exitcodes"), :stdin => version1_manifest, :acceptable_exit_codes => [4,6] do
   assert_match(/aix package provider is unable to downgrade packages/, stderr, "Didn't get an error about downgrading packages")
 end
 

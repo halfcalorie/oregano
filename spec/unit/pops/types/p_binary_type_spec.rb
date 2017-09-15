@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'Binary Type' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   context 'as a type' do
     it 'can be created with the type factory' do
@@ -22,7 +22,7 @@ describe 'Binary Type' do
         $x = Binary($testing, '%r')
         notice(assert_type(Binary, $x))
       CODE
-      expect(eval_and_collect_notices(code, Puppet::Node.new('foonode'), { 'testing' => str })).to eql(['8Q=='])
+      expect(eval_and_collect_notices(code, Oregano::Node.new('foonode'), { 'testing' => str })).to eql(['8Q=='])
     end
 
     it 'can be created from a String using %s, string mode' do
@@ -42,7 +42,7 @@ describe 'Binary Type' do
         notice(assert_type(Binary, $x))
       CODE
       expect {
-        eval_and_collect_notices(code, Puppet::Node.new('foonode'), { 'testing' => str })
+        eval_and_collect_notices(code, Oregano::Node.new('foonode'), { 'testing' => str })
       }.to raise_error(/.*The given string in encoding 'UTF-8' is invalid\. Cannot create a Binary UTF-8 representation.*/)
     end
 
@@ -53,7 +53,7 @@ describe 'Binary Type' do
         notice(assert_type(Binary, $x))
       CODE
       expect {
-        eval_and_collect_notices(code, Puppet::Node.new('foonode'), { 'testing' => str })
+        eval_and_collect_notices(code, Oregano::Node.new('foonode'), { 'testing' => str })
       }.to raise_error(/.*"\\xF1" from ASCII-8BIT to UTF-8.*/)
     end
 

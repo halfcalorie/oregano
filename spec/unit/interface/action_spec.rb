@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/interface'
+require 'oregano/interface'
 
-describe Puppet::Interface::Action do
+describe Oregano::Interface::Action do
   describe "when validating the action name" do
     [nil, '', 'foo bar', '-foobar'].each do |input|
       it "should treat #{input.inspect} as an invalid name" do
         expect {
-          Puppet::Interface::Action.new(nil, input)
+          Oregano::Interface::Action.new(nil, input)
         }.to raise_error(/is an invalid action name/)
       end
     end
@@ -16,7 +16,7 @@ describe Puppet::Interface::Action do
   describe "#when_invoked=" do
     it "should fail if the block has arity 0" do
       expect {
-        Puppet::Interface.new(:action_when_invoked, '1.0.0') do
+        Oregano::Interface.new(:action_when_invoked, '1.0.0') do
           action :foo do
             when_invoked { }
           end
@@ -25,7 +25,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should work with arity 1 blocks" do
-      face = Puppet::Interface.new(:action_when_invoked, '1.0.0') do
+      face = Oregano::Interface.new(:action_when_invoked, '1.0.0') do
         action :foo do
           when_invoked {|one| }
         end
@@ -35,7 +35,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should work with arity 2 blocks" do
-      face = Puppet::Interface.new(:action_when_invoked, '1.0.0') do
+      face = Oregano::Interface.new(:action_when_invoked, '1.0.0') do
         action :foo do
           when_invoked {|one, two| }
         end
@@ -45,7 +45,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should work with arity 1 blocks that collect arguments" do
-      face = Puppet::Interface.new(:action_when_invoked, '1.0.0') do
+      face = Oregano::Interface.new(:action_when_invoked, '1.0.0') do
         action :foo do
           when_invoked {|*one| }
         end
@@ -55,7 +55,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should work with arity 2 blocks that collect arguments" do
-      face = Puppet::Interface.new(:action_when_invoked, '1.0.0') do
+      face = Oregano::Interface.new(:action_when_invoked, '1.0.0') do
         action :foo do
           when_invoked {|one, *two| }
         end
@@ -67,7 +67,7 @@ describe Puppet::Interface::Action do
 
   describe "when invoking" do
     it "should be able to call other actions on the same object" do
-      face = Puppet::Interface.new(:my_face, '0.0.1') do
+      face = Oregano::Interface.new(:my_face, '0.0.1') do
         action(:foo) do
           when_invoked { |options| 25 }
         end
@@ -85,7 +85,7 @@ describe Puppet::Interface::Action do
     # baz is an instance action calling a class action
     # qux is an instance action calling an instance action
     it "should be able to call other actions on the same object when defined on a class" do
-      class Puppet::Interface::MyInterfaceBaseClass < Puppet::Interface
+      class Oregano::Interface::MyInterfaceBaseClass < Oregano::Interface
         action(:foo) do
           when_invoked { |options| 25 }
         end
@@ -99,7 +99,7 @@ describe Puppet::Interface::Action do
         end
       end
 
-      face = Puppet::Interface::MyInterfaceBaseClass.new(:my_inherited_face, '0.0.1') do
+      face = Oregano::Interface::MyInterfaceBaseClass.new(:my_inherited_face, '0.0.1') do
         action(:baz) do
           when_invoked { |options| "the value of foo in baz is '#{foo}'" }
         end
@@ -117,7 +117,7 @@ describe Puppet::Interface::Action do
 
     context "when calling the Ruby API" do
       let :face do
-        Puppet::Interface.new(:ruby_api, '1.0.0') do
+        Oregano::Interface.new(:ruby_api, '1.0.0') do
           action :bar do
             option "--bar"
             when_invoked do |*args|
@@ -146,7 +146,7 @@ describe Puppet::Interface::Action do
 
   describe "with action-level options" do
     it "should support options with an empty block" do
-      face = Puppet::Interface.new(:action_level_options, '0.0.1') do
+      face = Oregano::Interface.new(:action_level_options, '0.0.1') do
         action :foo do
           when_invoked do |options| true end
           option "--bar" do
@@ -160,7 +160,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should return only action level options when there are no face options" do
-      face = Puppet::Interface.new(:action_level_options, '0.0.1') do
+      face = Oregano::Interface.new(:action_level_options, '0.0.1') do
         action :foo do
           when_invoked do |options| true end
           option "--bar"
@@ -174,7 +174,7 @@ describe Puppet::Interface::Action do
       let :option do action.get_option :bar end
       let :action do face.get_action :foo end
       let :face do
-        Puppet::Interface.new(:action_level_options, '0.0.1') do
+        Oregano::Interface.new(:action_level_options, '0.0.1') do
           action :foo do
             when_invoked do |options| options end
             option "--bar", "--foo", "-b"
@@ -196,7 +196,7 @@ describe Puppet::Interface::Action do
 
     describe "with both face and action options" do
       let :face do
-        Puppet::Interface.new(:action_level_options, '0.0.1') do
+        Oregano::Interface.new(:action_level_options, '0.0.1') do
           action :foo do when_invoked do |options| true end ; option "--bar" end
           action :baz do when_invoked do |options| true end ; option "--bim" end
           option "--quux"
@@ -208,7 +208,7 @@ describe Puppet::Interface::Action do
       end
 
       it "should fetch options that the face inherited" do
-        parent = Class.new(Puppet::Interface)
+        parent = Class.new(Oregano::Interface)
         parent.option "--foo"
         child = parent.new(:inherited_options, '0.0.1') do
           option "--bar"
@@ -222,18 +222,18 @@ describe Puppet::Interface::Action do
         expect(action).to be
 
         [:baz, :bar, :foo].each do |name|
-          expect(action.get_option(name)).to be_an_instance_of Puppet::Interface::Option
+          expect(action.get_option(name)).to be_an_instance_of Oregano::Interface::Option
         end
       end
 
       it "should get an action option when asked" do
         expect(face.get_action(:foo).get_option(:bar)).
-          to be_an_instance_of Puppet::Interface::Option
+          to be_an_instance_of Oregano::Interface::Option
       end
 
       it "should get a face option when asked" do
         expect(face.get_action(:foo).get_option(:quux)).
-          to be_an_instance_of Puppet::Interface::Option
+          to be_an_instance_of Oregano::Interface::Option
       end
 
       it "should return options only for this action" do
@@ -243,7 +243,7 @@ describe Puppet::Interface::Action do
 
     it_should_behave_like "things that declare options" do
       def add_options_to(&block)
-        face = Puppet::Interface.new(:with_options, '0.0.1') do
+        face = Oregano::Interface.new(:with_options, '0.0.1') do
           action(:foo) do
             when_invoked do |options| true end
             self.instance_eval &block
@@ -255,7 +255,7 @@ describe Puppet::Interface::Action do
 
     it "should fail when a face option duplicates an action option" do
       expect {
-        Puppet::Interface.new(:action_level_options, '0.0.1') do
+        Oregano::Interface.new(:action_level_options, '0.0.1') do
           option "--foo"
           action :bar do option "--foo" end
         end
@@ -263,7 +263,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should fail when a required action option is not provided" do
-      face = Puppet::Interface.new(:required_action_option, '0.0.1') do
+      face = Oregano::Interface.new(:required_action_option, '0.0.1') do
         action(:bar) do
           option('--foo') { required }
           when_invoked {|options| }
@@ -273,7 +273,7 @@ describe Puppet::Interface::Action do
     end
 
     it "should fail when a required face option is not provided" do
-      face = Puppet::Interface.new(:required_face_option, '0.0.1') do
+      face = Oregano::Interface.new(:required_face_option, '0.0.1') do
         option('--foo') { required }
         action(:bar) { when_invoked {|options| } }
       end
@@ -284,7 +284,7 @@ describe Puppet::Interface::Action do
   context "with decorators" do
     context "declared locally" do
       let :face do
-        Puppet::Interface.new(:action_decorators, '0.0.1') do
+        Oregano::Interface.new(:action_decorators, '0.0.1') do
           action :bar do when_invoked do |options| true end end
           def reported; @reported; end
           def report(arg)
@@ -426,7 +426,7 @@ describe Puppet::Interface::Action do
 
     context "and inheritance" do
       let :parent do
-        Class.new(Puppet::Interface) do
+        Class.new(Oregano::Interface) do
           action(:on_parent) { when_invoked { |options| :on_parent } }
 
           def reported; @reported; end
@@ -529,7 +529,7 @@ describe Puppet::Interface::Action do
 
   it_should_behave_like "documentation on faces" do
     subject do
-      face = Puppet::Interface.new(:action_documentation, '0.0.1') do
+      face = Oregano::Interface.new(:action_documentation, '0.0.1') do
         action :documentation do
           when_invoked do |options| true end
         end
@@ -549,7 +549,7 @@ describe Puppet::Interface::Action do
 
   context "#validate_and_clean" do
     subject do
-      Puppet::Interface.new(:validate_args, '1.0.0') do
+      Oregano::Interface.new(:validate_args, '1.0.0') do
         action(:test) { when_invoked { |options| options } }
       end
     end
@@ -584,7 +584,7 @@ describe Puppet::Interface::Action do
 
   context "default option values" do
     subject do
-      Puppet::Interface.new(:default_option_values, '1.0.0') do
+      Oregano::Interface.new(:default_option_values, '1.0.0') do
         action :foo do
           option "--foo" do end
           option "--bar" do end
@@ -629,7 +629,7 @@ describe Puppet::Interface::Action do
 
   context "runtime manipulations" do
     subject do
-      Puppet::Interface.new(:runtime_manipulations, '1.0.0') do
+      Oregano::Interface.new(:runtime_manipulations, '1.0.0') do
         action :foo do
           when_invoked do |options| options end
         end

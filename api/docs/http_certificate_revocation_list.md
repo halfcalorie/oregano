@@ -5,12 +5,12 @@ The `certificate_revocation_list` endpoint retrieves a Certificate Revocation Li
 from the master. The master must be configured to be a CA. The returned
 CRL is always in the `.pem` format.
 
-Under Puppet Server's CA service, the `environment` parameter is ignored and can
-be omitted. Under a Rack or WEBrick Puppet master, `environment` is required and
+Under Oregano Server's CA service, the `environment` parameter is ignored and can
+be omitted. Under a Rack or WEBrick Oregano master, `environment` is required and
 must be a valid environment, but it has no effect on the response.
 
 The `:nodename` should always be `ca`, due to the default auth.conf rules for
-WEBrick and Rack Puppet masters. (You can use a different `:nodename` if you
+WEBrick and Rack Oregano masters. (You can use a different `:nodename` if you
 change the auth rules, but it will have no effect on the response.)
 
 Find
@@ -18,7 +18,7 @@ Find
 
 Get the submitted CRL
 
-    GET /puppet-ca/v1/certificate_revocation_list/:nodename?environment=:environment
+    GET /oregano-ca/v1/certificate_revocation_list/:nodename?environment=:environment
     Accept: text/plain
 
 ### Supported HTTP Methods
@@ -42,7 +42,7 @@ decoding of the CRL PEM file.
 
 #### Empty revocation list
 
-    GET /puppet-ca/v1/certificate_revocation_list/ca?environment=env
+    GET /oregano-ca/v1/certificate_revocation_list/ca?environment=env
 
     HTTP/1.1 200 OK
     Content-Type: text/plain
@@ -68,7 +68,7 @@ decoding of the CRL PEM file.
     Certificate Revocation List (CRL):
             Version 2 (0x1)
             Signature Algorithm: sha1WithRSAEncryption
-            Issuer: /CN=Puppet CA: localhost
+            Issuer: /CN=Oregano CA: localhost
             Last Update: Jul 16 20:48:42 2013 GMT
             Next Update: Jul 15 20:48:43 2018 GMT
             CRL extensions:
@@ -108,7 +108,7 @@ decoding of the CRL PEM file.
 
 #### One-item revocation list
 
-    GET /puppet-ca/v1/certificate_revocation_list/ca?environment=env
+    GET /oregano-ca/v1/certificate_revocation_list/ca?environment=env
 
     HTTP/1.1 200 OK
     Content-Type: text/plain
@@ -134,7 +134,7 @@ decoding of the CRL PEM file.
     Certificate Revocation List (CRL):
             Version 2 (0x1)
             Signature Algorithm: sha1WithRSAEncryption
-            Issuer: /CN=Puppet CA: localhost
+            Issuer: /CN=Oregano CA: localhost
             Last Update: Oct  7 19:48:40 2013 GMT
             Next Update: Oct  6 19:48:41 2018 GMT
             CRL extensions:
@@ -179,12 +179,12 @@ decoding of the CRL PEM file.
 
 #### No node name given
 
-    GET /puppet-ca/v1/certificate_revocation_list?environment=env
+    GET /oregano-ca/v1/certificate_revocation_list?environment=env
 
     HTTP/1.1 400 Bad Request
     Content-Type: text/plain
 
-    No request key specified in /puppet-ca/v1/certificate_revocation_list
+    No request key specified in /oregano-ca/v1/certificate_revocation_list
 
 Schema
 ------

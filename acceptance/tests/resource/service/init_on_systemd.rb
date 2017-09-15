@@ -10,10 +10,10 @@ test_name 'SysV on default Systemd Service Provider Validation' do
                          # actual changing of resources could irreparably damage a
                          # host running this, or require special permissions.
 
-  require 'puppet/acceptance/service_utils'
-  extend Puppet::Acceptance::ServiceUtils
+  require 'oregano/acceptance/service_utils'
+  extend Oregano::Acceptance::ServiceUtils
 
-  svc = 'puppetize'
+  svc = 'oreganoize'
   initd_location = "/etc/init.d/#{svc}"
   pidfile = "/var/run/#{svc}.pid"
 

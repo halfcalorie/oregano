@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/indirector/ssl_file'
+require 'oregano/indirector/ssl_file'
 
-describe Puppet::Indirector::SslFile do
-  include PuppetSpec::Files
+describe Oregano::Indirector::SslFile do
+  include OreganoSpec::Files
 
   before :all do
     @indirection = stub 'indirection', :name => :testing, :model => @model
-    Puppet::Indirector::Indirection.expects(:instance).with(:testing).returns(@indirection)
+    Oregano::Indirector::Indirection.expects(:instance).with(:testing).returns(@indirection)
     module Testing; end
-    @file_class = class Testing::MyType < Puppet::Indirector::SslFile
+    @file_class = class Testing::MyType < Oregano::Indirector::SslFile
       self
     end
   end
@@ -22,9 +22,9 @@ describe Puppet::Indirector::SslFile do
     @file_class.store_at nil
     @file_class.store_ca_at nil
     @path = make_absolute("/thisdoesntexist/my_directory")
-    Puppet[:noop] = false
-    Puppet[@setting] = @path
-    Puppet[:trace] = false
+    Oregano[:noop] = false
+    Oregano[@setting] = @path
+    Oregano[:trace] = false
   end
 
   after :each do
@@ -34,7 +34,7 @@ describe Puppet::Indirector::SslFile do
   end
 
   it "should use :main and :ssl upon initialization" do
-    Puppet.settings.expects(:use).with(:main, :ssl)
+    Oregano.settings.expects(:use).with(:main, :ssl)
     @file_class.new
   end
 
@@ -49,17 +49,17 @@ describe Puppet::Indirector::SslFile do
   end
 
   it "should fail if no store directory or file location has been set" do
-    Puppet.settings.expects(:use).with(:main, :ssl)
+    Oregano.settings.expects(:use).with(:main, :ssl)
     @file_class.store_in nil
     @file_class.store_at nil
     expect {
       @file_class.new
-    }.to raise_error(Puppet::DevError, /No file or directory setting provided/)
+    }.to raise_error(Oregano::DevError, /No file or directory setting provided/)
   end
 
   describe "when managing ssl files" do
     before do
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
       @searcher = @file_class.new
 
       @cert = stub 'certificate', :name => "myname"
@@ -69,7 +69,7 @@ describe Puppet::Indirector::SslFile do
     end
 
     it "should consider the file a ca file if the name is equal to what the SSL::Host class says is the CA name" do
-      Puppet::SSL::Host.expects(:ca_name).returns "amaca"
+      Oregano::SSL::Host.expects(:ca_name).returns "amaca"
       expect(@searcher).to be_ca("amaca")
     end
 
@@ -79,19 +79,19 @@ describe Puppet::Indirector::SslFile do
         @file_class.store_at :mysetting
         @file_class.store_ca_at :cakey
 
-        Puppet[:cakey] = File.expand_path("/ca/file")
+        Oregano[:cakey] = File.expand_path("/ca/file")
 
         @searcher.expects(:ca?).with(@cert.name).returns true
-        expect(@searcher.path(@cert.name)).to eq(Puppet[:cakey])
+        expect(@searcher.path(@cert.name)).to eq(Oregano[:cakey])
       end
 
       it "should set them at the file location if a file setting is available" do
         @file_class.store_in nil
         @file_class.store_at :cacrl
 
-        Puppet[:cacrl] = File.expand_path("/some/file")
+        Oregano[:cacrl] = File.expand_path("/some/file")
 
-        expect(@searcher.path(@cert.name)).to eq(Puppet[:cacrl])
+        expect(@searcher.path(@cert.name)).to eq(Oregano[:cacrl])
       end
 
       it "should set them in the setting directory, with the certificate name plus '.pem', if a directory setting is available" do
@@ -121,9 +121,9 @@ describe Puppet::Indirector::SslFile do
     describe "when finding certificates on disk" do
       describe "and no certificate is present" do
         it "should return nil" do
-          Puppet::FileSystem.expects(:exist?).with(@path).returns(true)
+          Oregano::FileSystem.expects(:exist?).with(@path).returns(true)
           Dir.expects(:entries).with(@path).returns([])
-          Puppet::FileSystem.expects(:exist?).with(@certpath).returns(false)
+          Oregano::FileSystem.expects(:exist?).with(@certpath).returns(false)
 
           expect(@searcher.find(@request)).to be_nil
         end
@@ -139,7 +139,7 @@ describe Puppet::Indirector::SslFile do
 
         context "is readable" do
           it "should return an instance of the model, which it should use to read the certificate" do
-            Puppet::FileSystem.expects(:exist?).with(@certpath).returns true
+            Oregano::FileSystem.expects(:exist?).with(@certpath).returns true
 
             model.expects(:new).with("myname").returns cert
             cert.expects(:read).with(@certpath)
@@ -150,7 +150,7 @@ describe Puppet::Indirector::SslFile do
 
         context "is unreadable" do
           it "should raise an exception" do
-            Puppet::FileSystem.expects(:exist?).with(@certpath).returns(true)
+            Oregano::FileSystem.expects(:exist?).with(@certpath).returns(true)
 
             model.expects(:new).with("myname").returns cert
             cert.expects(:read).with(@certpath).raises(Errno::EACCES)
@@ -171,9 +171,9 @@ describe Puppet::Indirector::SslFile do
         # the support for upper-case certs can be removed around mid-2009.
         it "should rename the existing file to the lower-case path" do
           @path = @searcher.path("myhost")
-          Puppet::FileSystem.expects(:exist?).with(@path).returns(false)
+          Oregano::FileSystem.expects(:exist?).with(@path).returns(false)
           dir, file = File.split(@path)
-          Puppet::FileSystem.expects(:exist?).with(dir).returns true
+          Oregano::FileSystem.expects(:exist?).with(dir).returns true
           Dir.expects(:entries).with(dir).returns [".", "..", "something.pem", file.upcase]
 
           File.expects(:rename).with(File.join(dir, file.upcase), @path)
@@ -197,13 +197,13 @@ describe Puppet::Indirector::SslFile do
 
       it "should fail if the directory is absent" do
         FileTest.expects(:directory?).with(File.dirname(@certpath)).returns false
-        expect { @searcher.save(@request) }.to raise_error(Puppet::Error)
+        expect { @searcher.save(@request) }.to raise_error(Oregano::Error)
       end
 
       it "should fail if the directory is not writeable" do
         FileTest.stubs(:directory?).returns true
         FileTest.expects(:writable?).with(File.dirname(@certpath)).returns false
-        expect { @searcher.save(@request) }.to raise_error(Puppet::Error)
+        expect { @searcher.save(@request) }.to raise_error(Oregano::Error)
       end
 
       it "should save to the path the output of converting the certificate to a string" do
@@ -221,7 +221,7 @@ describe Puppet::Indirector::SslFile do
           @searcher.class.store_in @setting
           fh = mock 'filehandle'
           fh.stubs :print
-          Puppet.settings.setting(@setting).expects(:open_file).with(@certpath, 'w:ASCII').yields fh
+          Oregano.settings.setting(@setting).expects(:open_file).with(@certpath, 'w:ASCII').yields fh
 
           @searcher.save(@request)
         end
@@ -233,7 +233,7 @@ describe Puppet::Indirector::SslFile do
 
           fh = mock 'filehandle'
           fh.stubs :print
-          Puppet.settings.setting(@setting).expects(:open).with('w:ASCII').yields fh
+          Oregano.settings.setting(@setting).expects(:open).with('w:ASCII').yields fh
           @searcher.save(@request)
         end
       end
@@ -242,11 +242,11 @@ describe Puppet::Indirector::SslFile do
         it "should use the filehandle provided by the Settings" do
           @searcher.class.store_at @setting
           @searcher.class.store_ca_at :cakey
-          Puppet[:cakey] = "castuff stub"
+          Oregano[:cakey] = "castuff stub"
 
           fh = mock 'filehandle'
           fh.stubs :print
-          Puppet.settings.setting(:cakey).expects(:open).with('w:ASCII').yields fh
+          Oregano.settings.setting(:cakey).expects(:open).with('w:ASCII').yields fh
           @searcher.stubs(:ca?).returns true
           @searcher.save(@request)
         end
@@ -256,7 +256,7 @@ describe Puppet::Indirector::SslFile do
     describe "when destroying certificates" do
       describe "that do not exist" do
         before do
-          Puppet::FileSystem.expects(:exist?).with(Puppet::FileSystem.pathname(@certpath)).returns false
+          Oregano::FileSystem.expects(:exist?).with(Oregano::FileSystem.pathname(@certpath)).returns false
         end
 
         it "should return false" do
@@ -266,16 +266,16 @@ describe Puppet::Indirector::SslFile do
 
       describe "that exist" do
         it "should unlink the certificate file" do
-          path = Puppet::FileSystem.pathname(@certpath)
-          Puppet::FileSystem.expects(:exist?).with(path).returns true
-          Puppet::FileSystem.expects(:unlink).with(path)
+          path = Oregano::FileSystem.pathname(@certpath)
+          Oregano::FileSystem.expects(:exist?).with(path).returns true
+          Oregano::FileSystem.expects(:unlink).with(path)
           @searcher.destroy(@request)
         end
 
         it "should log that is removing the file" do
-          Puppet::FileSystem.stubs(:exist?).returns true
-          Puppet::FileSystem.stubs(:unlink)
-          Puppet.expects(:notice)
+          Oregano::FileSystem.stubs(:exist?).returns true
+          Oregano::FileSystem.stubs(:unlink)
+          Oregano.expects(:notice)
           @searcher.destroy(@request)
         end
       end

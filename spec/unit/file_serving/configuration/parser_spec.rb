@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/file_serving/configuration/parser'
+require 'oregano/file_serving/configuration/parser'
 
 
 module FSConfigurationParserTesting
@@ -11,16 +11,16 @@ module FSConfigurationParserTesting
   end
 end
 
-describe Puppet::FileServing::Configuration::Parser do
-  include PuppetSpec::Files
+describe Oregano::FileServing::Configuration::Parser do
+  include OreganoSpec::Files
 
   before :each do
     @path = tmpfile('fileserving_config')
     FileUtils.touch(@path)
-    @parser = Puppet::FileServing::Configuration::Parser.new(@path)
+    @parser = Oregano::FileServing::Configuration::Parser.new(@path)
   end
 
-  describe Puppet::FileServing::Configuration::Parser, " when parsing" do
+  describe Oregano::FileServing::Configuration::Parser, " when parsing" do
     include FSConfigurationParserTesting
 
     it "should allow comments" do
@@ -36,8 +36,8 @@ describe Puppet::FileServing::Configuration::Parser do
     it "should return a hash of the created mounts" do
       mount1 = mock 'one', :validate => true
       mount2 = mock 'two', :validate => true
-      Puppet::FileServing::Mount::File.expects(:new).with("one").returns(mount1)
-      Puppet::FileServing::Mount::File.expects(:new).with("two").returns(mount2)
+      Oregano::FileServing::Mount::File.expects(:new).with("one").returns(mount1)
+      Oregano::FileServing::Mount::File.expects(:new).with("two").returns(mount2)
       write_config_file "[one]\n[two]\n"
 
       result = @parser.parse
@@ -57,7 +57,7 @@ describe Puppet::FileServing::Configuration::Parser do
 
     it "should validate each created mount" do
       mount1 = mock 'one'
-      Puppet::FileServing::Mount::File.expects(:new).with("one").returns(mount1)
+      Oregano::FileServing::Mount::File.expects(:new).with("one").returns(mount1)
       write_config_file "[one]\n"
 
       mount1.expects(:validate)
@@ -67,7 +67,7 @@ describe Puppet::FileServing::Configuration::Parser do
 
     it "should fail if any mount does not pass validation" do
       mount1 = mock 'one'
-      Puppet::FileServing::Mount::File.expects(:new).with("one").returns(mount1)
+      Oregano::FileServing::Mount::File.expects(:new).with("one").returns(mount1)
       write_config_file "[one]\n"
 
       mount1.expects(:validate).raises RuntimeError
@@ -76,18 +76,18 @@ describe Puppet::FileServing::Configuration::Parser do
     end
 
     it "should return comprehensible error message, if invalid line detected" do
-      write_config_file "[one]\n\n\x01path /etc/puppetlabs/puppet/files\n\x01allow *\n"
+      write_config_file "[one]\n\n\x01path /etc/oreganolabs/oregano/files\n\x01allow *\n"
 
       expect { @parser.parse }.to raise_error(ArgumentError, /Invalid line.*in.*, line 3/)
     end
   end
 
-  describe Puppet::FileServing::Configuration::Parser, " when parsing mount attributes" do
+  describe Oregano::FileServing::Configuration::Parser, " when parsing mount attributes" do
     include FSConfigurationParserTesting
 
     before do
       @mount = stub 'testmount', :name => "one", :validate => true
-      Puppet::FileServing::Mount::File.expects(:new).with("one").returns(@mount)
+      Oregano::FileServing::Mount::File.expects(:new).with("one").returns(@mount)
       @parser.stubs(:add_modules_mount)
     end
 
@@ -134,7 +134,7 @@ describe Puppet::FileServing::Configuration::Parser do
     end
   end
 
-  describe Puppet::FileServing::Configuration::Parser, " when parsing the modules mount" do
+  describe Oregano::FileServing::Configuration::Parser, " when parsing the modules mount" do
     include FSConfigurationParserTesting
 
     before do
@@ -144,20 +144,20 @@ describe Puppet::FileServing::Configuration::Parser do
     it "should create an instance of the Modules Mount class" do
       write_config_file "[modules]\n"
 
-      Puppet::FileServing::Mount::Modules.expects(:new).with("modules").returns @mount
+      Oregano::FileServing::Mount::Modules.expects(:new).with("modules").returns @mount
       @parser.parse
     end
 
     it "should warn if a path is set" do
       write_config_file "[modules]\npath /some/path\n"
-      Puppet::FileServing::Mount::Modules.expects(:new).with("modules").returns(@mount)
+      Oregano::FileServing::Mount::Modules.expects(:new).with("modules").returns(@mount)
 
-      Puppet.expects(:warning)
+      Oregano.expects(:warning)
       @parser.parse
     end
   end
 
-  describe Puppet::FileServing::Configuration::Parser, " when parsing the plugins mount" do
+  describe Oregano::FileServing::Configuration::Parser, " when parsing the plugins mount" do
     include FSConfigurationParserTesting
 
     before do
@@ -167,14 +167,14 @@ describe Puppet::FileServing::Configuration::Parser do
     it "should create an instance of the Plugins Mount class" do
       write_config_file "[plugins]\n"
 
-      Puppet::FileServing::Mount::Plugins.expects(:new).with("plugins").returns @mount
+      Oregano::FileServing::Mount::Plugins.expects(:new).with("plugins").returns @mount
       @parser.parse
     end
 
     it "should warn if a path is set" do
       write_config_file "[plugins]\npath /some/path\n"
 
-      Puppet.expects(:warning)
+      Oregano.expects(:warning)
       @parser.parse
     end
   end

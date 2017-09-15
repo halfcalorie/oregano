@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/inventory'
+require 'oregano/ssl/inventory'
 
-describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? do
+describe Oregano::SSL::Inventory, :unless => Oregano.features.microsoft_windows? do
   let(:cert_inventory) { File.expand_path("/inven/tory") }
 
   # different UTF-8 widths
@@ -14,21 +14,21 @@ describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? d
   let (:mixed_utf8) { "A\u06FF\u16A0\u{2070E}" } # Aۿᚠ܎
 
   before do
-    @class = Puppet::SSL::Inventory
+    @class = Oregano::SSL::Inventory
   end
 
   describe "when initializing" do
     it "should set its path to the inventory file" do
-      Puppet[:cert_inventory] = cert_inventory
+      Oregano[:cert_inventory] = cert_inventory
       expect(@class.new.path).to eq(cert_inventory)
     end
   end
 
   describe "when managing an inventory" do
     before do
-      Puppet[:cert_inventory] = cert_inventory
+      Oregano[:cert_inventory] = cert_inventory
 
-      Puppet::FileSystem.stubs(:exist?).with(cert_inventory).returns true
+      Oregano::FileSystem.stubs(:exist?).with(cert_inventory).returns true
 
       @inventory = @class.new
 
@@ -38,21 +38,21 @@ describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? d
     describe "and creating the inventory file" do
       it "re-adds all of the existing certificates" do
         inventory_file = StringIO.new
-        Puppet.settings.setting(:cert_inventory).stubs(:open).yields(inventory_file)
+        Oregano.settings.setting(:cert_inventory).stubs(:open).yields(inventory_file)
 
-        cert1 = Puppet::SSL::Certificate.new("cert1")
+        cert1 = Oregano::SSL::Certificate.new("cert1")
         cert1.content = stub 'cert1',
           :serial => 2,
           :not_before => Time.now,
           :not_after => Time.now,
           :subject => "/CN=smocking"
-        cert2 = Puppet::SSL::Certificate.new("cert2")
+        cert2 = Oregano::SSL::Certificate.new("cert2")
         cert2.content = stub 'cert2',
           :serial => 3,
           :not_before => Time.now,
           :not_after => Time.now,
           :subject => "/CN=mocking bird"
-        Puppet::SSL::Certificate.indirection.expects(:search).with("*").returns [cert1, cert2]
+        Oregano::SSL::Certificate.indirection.expects(:search).with("*").returns [cert1, cert2]
 
         @inventory.rebuild
 
@@ -64,17 +64,17 @@ describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? d
     describe "and adding a certificate" do
 
       it "should use the Settings to write to the file" do
-        Puppet.settings.setting(:cert_inventory).expects(:open).with('a:UTF-8')
+        Oregano.settings.setting(:cert_inventory).expects(:open).with('a:UTF-8')
 
         @inventory.add(@cert)
       end
 
       it "should add formatted certificate information to the end of the file" do
-        cert = Puppet::SSL::Certificate.new("mycert")
+        cert = Oregano::SSL::Certificate.new("mycert")
         cert.content = @cert
 
         fh = StringIO.new
-        Puppet.settings.setting(:cert_inventory).expects(:open).with('a:UTF-8').yields(fh)
+        Oregano.settings.setting(:cert_inventory).expects(:open).with('a:UTF-8').yields(fh)
 
         @inventory.expects(:format).with(@cert).returns "myformat"
 
@@ -84,7 +84,7 @@ describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? d
       end
 
       it "can use UTF-8 in the CN per RFC 5280" do
-        cert = Puppet::SSL::Certificate.new("mycert")
+        cert = Oregano::SSL::Certificate.new("mycert")
         cert.content = stub 'cert',
           :serial => 1,
           :not_before => Time.now,
@@ -92,7 +92,7 @@ describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? d
           :subject => "/CN=#{mixed_utf8}"
 
         fh = StringIO.new
-        Puppet.settings.setting(:cert_inventory).expects(:open).with('a:UTF-8').yields(fh)
+        Oregano.settings.setting(:cert_inventory).expects(:open).with('a:UTF-8').yields(fh)
 
         @inventory.add(cert)
 
@@ -137,7 +137,7 @@ describe Puppet::SSL::Inventory, :unless => Puppet.features.microsoft_windows? d
 
     describe "and finding serial numbers" do
       it "should return an empty array if the inventory file is missing" do
-        Puppet::FileSystem.expects(:exist?).with(cert_inventory).returns false
+        Oregano::FileSystem.expects(:exist?).with(cert_inventory).returns false
         expect(@inventory.serials(:whatever)).to be_empty
       end
 

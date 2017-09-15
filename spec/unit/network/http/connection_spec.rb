@@ -1,43 +1,43 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http/connection'
+require 'oregano/network/http/connection'
 
-describe Puppet::Network::HTTP::Connection do
+describe Oregano::Network::HTTP::Connection do
 
   let (:host) { "me" }
   let (:port) { 54321 }
-  subject { Puppet::Network::HTTP::Connection.new(host, port, :verify => Puppet::SSL::Validator.no_validator) }
+  subject { Oregano::Network::HTTP::Connection.new(host, port, :verify => Oregano::SSL::Validator.no_validator) }
   let (:httpok) { Net::HTTPOK.new('1.1', 200, '') }
 
   context "when providing HTTP connections" do
     context "when initializing http instances" do
       it "should return an http instance created with the passed host and port" do
-        conn = Puppet::Network::HTTP::Connection.new(host, port, :verify => Puppet::SSL::Validator.no_validator)
+        conn = Oregano::Network::HTTP::Connection.new(host, port, :verify => Oregano::SSL::Validator.no_validator)
 
         expect(conn.address).to eq(host)
         expect(conn.port).to eq(port)
       end
 
       it "should enable ssl on the http instance by default" do
-        conn = Puppet::Network::HTTP::Connection.new(host, port, :verify => Puppet::SSL::Validator.no_validator)
+        conn = Oregano::Network::HTTP::Connection.new(host, port, :verify => Oregano::SSL::Validator.no_validator)
 
         expect(conn).to be_use_ssl
       end
 
       it "can disable ssl using an option" do
-        conn = Puppet::Network::HTTP::Connection.new(host, port, :use_ssl => false, :verify => Puppet::SSL::Validator.no_validator)
+        conn = Oregano::Network::HTTP::Connection.new(host, port, :use_ssl => false, :verify => Oregano::SSL::Validator.no_validator)
 
         expect(conn).to_not be_use_ssl
       end
 
       it "can enable ssl using an option" do
-        conn = Puppet::Network::HTTP::Connection.new(host, port, :use_ssl => true, :verify => Puppet::SSL::Validator.no_validator)
+        conn = Oregano::Network::HTTP::Connection.new(host, port, :use_ssl => true, :verify => Oregano::SSL::Validator.no_validator)
 
         expect(conn).to be_use_ssl
       end
 
-      it "should raise Puppet::Error when invalid options are specified" do
-        expect { Puppet::Network::HTTP::Connection.new(host, port, :invalid_option => nil) }.to raise_error(Puppet::Error, 'Unrecognized option(s): :invalid_option')
+      it "should raise Oregano::Error when invalid options are specified" do
+        expect { Oregano::Network::HTTP::Connection.new(host, port, :invalid_option => nil) }.to raise_error(Oregano::Error, 'Unrecognized option(s): :invalid_option')
       end
     end
   end
@@ -45,7 +45,7 @@ describe Puppet::Network::HTTP::Connection do
   context "when handling requests", :vcr do
     let (:host) { "my-server" }
     let (:port) { 8140 }
-    let (:subject) { Puppet::Network::HTTP::Connection.new(host, port, :use_ssl => false, :verify => Puppet::SSL::Validator.no_validator) }
+    let (:subject) { Oregano::Network::HTTP::Connection.new(host, port, :use_ssl => false, :verify => Oregano::SSL::Validator.no_validator) }
 
     { :request_get  => {},
       :request_head => {},
@@ -100,7 +100,7 @@ describe Puppet::Network::HTTP::Connection do
   end
 
   shared_examples_for 'ssl verifier' do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     let (:host) { "my_server" }
     let (:port) { 8140 }
@@ -113,37 +113,37 @@ describe Puppet::Network::HTTP::Connection do
       WebMock.enable!
     end
 
-    it "should provide a useful error message when one is available and certificate validation fails", :unless => Puppet.features.microsoft_windows? do
-      connection = Puppet::Network::HTTP::Connection.new(
+    it "should provide a useful error message when one is available and certificate validation fails", :unless => Oregano.features.microsoft_windows? do
+      connection = Oregano::Network::HTTP::Connection.new(
         host, port,
         :verify => ConstantErrorValidator.new(:fails_with => 'certificate verify failed',
                                               :error_string => 'shady looking signature'))
 
       expect do
         connection.get('request')
-      end.to raise_error(Puppet::Error, "certificate verify failed: [shady looking signature]")
+      end.to raise_error(Oregano::Error, "certificate verify failed: [shady looking signature]")
     end
 
-    it "should provide a helpful error message when hostname was not match with server certificate", :unless => Puppet.features.microsoft_windows? do
-      Puppet[:confdir] = tmpdir('conf')
+    it "should provide a helpful error message when hostname was not match with server certificate", :unless => Oregano.features.microsoft_windows? do
+      Oregano[:confdir] = tmpdir('conf')
 
-      connection = Puppet::Network::HTTP::Connection.new(
+      connection = Oregano::Network::HTTP::Connection.new(
       host, port,
       :verify => ConstantErrorValidator.new(
         :fails_with => 'hostname was not match with server certificate',
-        :peer_certs => [Puppet::SSL::CertificateAuthority.new.generate(
+        :peer_certs => [Oregano::SSL::CertificateAuthority.new.generate(
           'not_my_server', :dns_alt_names => 'foo,bar,baz')]))
 
       expect do
         connection.get('request')
-      end.to raise_error(Puppet::Error) do |error|
+      end.to raise_error(Oregano::Error) do |error|
         error.message =~ /Server hostname 'my_server' did not match server certificate; expected one of (.+)/
         expect($1.split(', ')).to match_array(%w[DNS:foo DNS:bar DNS:baz DNS:not_my_server not_my_server])
       end
     end
 
     it "should pass along the error message otherwise" do
-      connection = Puppet::Network::HTTP::Connection.new(
+      connection = Oregano::Network::HTTP::Connection.new(
         host, port,
         :verify => ConstantErrorValidator.new(:fails_with => 'some other message'))
 
@@ -152,18 +152,18 @@ describe Puppet::Network::HTTP::Connection do
       end.to raise_error(/some other message/)
     end
 
-    it "should check all peer certificates for upcoming expiration", :unless => Puppet.features.microsoft_windows? do
-      Puppet[:confdir] = tmpdir('conf')
-      cert = Puppet::SSL::CertificateAuthority.new.generate(
+    it "should check all peer certificates for upcoming expiration", :unless => Oregano.features.microsoft_windows? do
+      Oregano[:confdir] = tmpdir('conf')
+      cert = Oregano::SSL::CertificateAuthority.new.generate(
         'server', :dns_alt_names => 'foo,bar,baz')
 
-      connection = Puppet::Network::HTTP::Connection.new(
+      connection = Oregano::Network::HTTP::Connection.new(
         host, port,
         :verify => NoProblemsValidator.new(cert))
 
       Net::HTTP.any_instance.stubs(:start)
       Net::HTTP.any_instance.stubs(:request).returns(httpok)
-      Puppet::Network::HTTP::Pool.any_instance.stubs(:setsockopts)
+      Oregano::Network::HTTP::Pool.any_instance.stubs(:setsockopts)
 
       connection.get('request')
     end
@@ -176,8 +176,8 @@ describe Puppet::Network::HTTP::Connection do
 
   context "when using persistent HTTPS connections" do
     around :each do |example|
-      pool = Puppet::Network::HTTP::Pool.new
-      Puppet.override(:http_pool => pool) do
+      pool = Oregano::Network::HTTP::Pool.new
+      Oregano.override(:http_pool => pool) do
         example.run
       end
       pool.close
@@ -188,11 +188,11 @@ describe Puppet::Network::HTTP::Connection do
   end
 
   context "when response is a redirect" do
-    let (:site)       { Puppet::Network::HTTP::Site.new('http', 'my_server', 8140) }
-    let (:other_site) { Puppet::Network::HTTP::Site.new('http', 'redirected', 9292) }
+    let (:site)       { Oregano::Network::HTTP::Site.new('http', 'my_server', 8140) }
+    let (:other_site) { Oregano::Network::HTTP::Site.new('http', 'redirected', 9292) }
     let (:other_path) { "other-path" }
-    let (:verify) { Puppet::SSL::Validator.no_validator }
-    let (:subject) { Puppet::Network::HTTP::Connection.new(site.host, site.port, :use_ssl => false, :verify => verify) }
+    let (:verify) { Oregano::SSL::Validator.no_validator }
+    let (:subject) { Oregano::Network::HTTP::Connection.new(site.host, site.port, :use_ssl => false, :verify => verify) }
     let (:httpredirection) do
       response = Net::HTTPFound.new('1.1', 302, 'Moved Temporarily')
       response['location'] = "#{other_site.addr}/#{other_path}"
@@ -202,7 +202,7 @@ describe Puppet::Network::HTTP::Connection do
 
     def create_connection(site, options)
       options[:use_ssl] = site.use_ssl?
-      Puppet::Network::HTTP::Connection.new(site.host, site.port, options)
+      Oregano::Network::HTTP::Connection.new(site.host, site.port, options)
     end
 
     it "should redirect to the final resource location" do
@@ -210,7 +210,7 @@ describe Puppet::Network::HTTP::Connection do
       http.stubs(:request).returns(httpredirection).then.returns(httpok)
 
       seq = sequence('redirection')
-      pool = Puppet.lookup(:http_pool)
+      pool = Oregano.lookup(:http_pool)
       pool.expects(:with_connection).with(site, anything).yields(http).in_sequence(seq)
       pool.expects(:with_connection).with(other_site, anything).yields(http).in_sequence(seq)
 
@@ -222,7 +222,7 @@ describe Puppet::Network::HTTP::Connection do
       http = stub('http')
       http.stubs(:request).returns(httpredirection)
 
-      pool = Puppet.lookup(:http_pool)
+      pool = Oregano.lookup(:http_pool)
       pool.expects(:with_connection).with(site, anything).yields(http)
       pool
     end
@@ -230,7 +230,7 @@ describe Puppet::Network::HTTP::Connection do
     def expects_limit_exceeded(conn)
       expect {
         conn.get('/')
-      }.to raise_error(Puppet::Network::HTTP::RedirectionLimitExceededException)
+      }.to raise_error(Oregano::Network::HTTP::RedirectionLimitExceededException)
     end
 
     it "should not redirect when the limit is 0" do
@@ -298,10 +298,10 @@ describe Puppet::Network::HTTP::Connection do
   end
 
   it "sets HTTP User-Agent header" do
-    puppet_ua = "Puppet/#{Puppet.version} Ruby/#{RUBY_VERSION}-p#{RUBY_PATCHLEVEL} (#{RUBY_PLATFORM})"
+    oregano_ua = "Oregano/#{Oregano.version} Ruby/#{RUBY_VERSION}-p#{RUBY_PATCHLEVEL} (#{RUBY_PLATFORM})"
 
     Net::HTTP.any_instance.expects(:request).with do |request|
-      expect(request['User-Agent']).to eq(puppet_ua)
+      expect(request['User-Agent']).to eq(oregano_ua)
     end.returns(httpok)
 
     subject.get('/path')

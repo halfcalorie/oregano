@@ -1,19 +1,19 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet/pops'
+require 'oregano_spec/files'
+require 'oregano/pops'
 require 'deep_merge/core'
 
-module Puppet::Pops
+module Oregano::Pops
 module Lookup
 describe 'The lookup API' do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   let(:env_name) { 'spec' }
-  let(:code_dir) { Puppet[:environmentpath] }
+  let(:code_dir) { Oregano[:environmentpath] }
   let(:env_dir) { File.join(code_dir, env_name) }
-  let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
-  let(:node) { Puppet::Node.new('test', :environment => env) }
-  let(:compiler) { Puppet::Parser::Compiler.new(node) }
+  let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
+  let(:node) { Oregano::Node.new('test', :environment => env) }
+  let(:compiler) { Oregano::Parser::Compiler.new(node) }
   let(:scope) { compiler.topscope }
   let(:invocation) { Invocation.new(scope) }
 
@@ -72,17 +72,17 @@ describe 'The lookup API' do
   let(:populated_env_dir) do
     all_content = code_dir_content.merge(env_name => env_content.merge('modules' => { 'mod' => mod_content }))
     dir_contained_in(code_dir, all_content)
-    all_content.keys.each { |key| PuppetSpec::Files.record_tmp(File.join(code_dir, key)) }
+    all_content.keys.each { |key| OreganoSpec::Files.record_tmp(File.join(code_dir, key)) }
     env_dir
   end
 
   before(:each) do
-    Puppet[:hiera_config] = File.join(code_dir, 'hiera.yaml')
-    Puppet.push_context(:loaders => Puppet::Pops::Loaders.new(env))
+    Oregano[:hiera_config] = File.join(code_dir, 'hiera.yaml')
+    Oregano.push_context(:loaders => Oregano::Pops::Loaders.new(env))
   end
 
   after(:each) do
-    Puppet.pop_context
+    Oregano.pop_context
   end
 
   context 'when doing automatic parameter lookup' do
@@ -110,9 +110,9 @@ describe 'The lookup API' do
     let(:debugs) { logs.select { |log| log.level == :debug }.map { |log| log.message } }
 
     it 'includes APL in explain output when debug is enabled' do
-      Puppet[:log_level] = 'debug'
-      Puppet[:code] = 'include mod'
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano[:log_level] = 'debug'
+      Oregano[:code] = 'include mod'
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         compiler.compile
       end
       expect(debugs).to include(/Found key: "mod::x" value: "mod::x \(from module\)"/)
@@ -255,7 +255,7 @@ describe 'The lookup API' do
       end
 
       after(:each) do
-        Puppet::Pops::Lookup.send(:remove_const, :SpecialLookupAdapter)
+        Oregano::Pops::Lookup.send(:remove_const, :SpecialLookupAdapter)
       end
 
       let(:other_invocation) { Invocation.new(scope, EMPTY_HASH, EMPTY_HASH, nil, SpecialLookupAdapter) }

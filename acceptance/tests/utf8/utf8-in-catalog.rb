@@ -84,11 +84,11 @@ PP
       }
     }
     
-    with_puppet_running_on(master, master_opts, codedir) do 
+    with_oregano_running_on(master, master_opts, codedir) do 
       step "apply utf-8 catalog" do
         on(
           agent,
-          puppet(
+          oregano(
             "agent -t --vardir #{agent_vardir} --server #{master.hostname}"
           ),
           {
@@ -123,12 +123,12 @@ PP
       step "apply cached catalog" do
         on(
           agent,
-          puppet("resource file #{agent_file} ensure=absent"),
+          oregano("resource file #{agent_file} ensure=absent"),
           :environment => {:LANG => "en_US.UTF-8"}
         )
         on(
           agent,
-          puppet("catalog apply --vardir #{agent_vardir} --terminus json"),
+          oregano("catalog apply --vardir #{agent_vardir} --terminus json"),
           :environment => {:LANG => "en_US.UTF-8"}
         )
         on(

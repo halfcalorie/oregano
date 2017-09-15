@@ -8,8 +8,8 @@ tag 'audit:medium',
 
 confine :to, :platform =>  'aix'
 
-require 'puppet/acceptance/service_utils'
-extend Puppet::Acceptance::ServiceUtils
+require 'oregano/acceptance/service_utils'
+extend Oregano::Acceptance::ServiceUtils
 
 sloth_daemon_script = <<SCRIPT
 #!/usr/bin/env sh
@@ -62,7 +62,7 @@ agents.each do |agent|
 
   ## Setup
   step "Verify a non-existent service is considered stopped and disabled" do
-    on(agent, puppet_resource('service', 'sloth_daemon'), :catch_failures => true, :catch_changes => true) do |result|
+    on(agent, oregano_resource('service', 'sloth_daemon'), :catch_failures => true, :catch_changes => true) do |result|
       assert_match(/ensure[[:space:]]+=>[[:space:]]+'stopped'/, result.stdout, "non-existent service service should be stopped, but received #{result.stdout}")
       assert_match(/enable[[:space:]]+=>[[:space:]]+'false'/, result.stdout, "non-existent service should be disabled, but received #{result.stdout}")
     end
@@ -98,11 +98,11 @@ agents.each do |agent|
   on agent, "mkssys -s sloth_daemon -p #{sloth_daemon_path} -u 0 -S -n 15 -f 9"
 
   # Creating the service may also start it. Stop service before beginning the test.
-  on(agent, puppet_resource('service', 'sloth_daemon', 'ensure=stopped', 'enable=false'))
+  on(agent, oregano_resource('service', 'sloth_daemon', 'ensure=stopped', 'enable=false'))
 
   ## Query
   step "Verify the service exists on #{agent}"
-  on(agent, puppet_resource('service', 'sloth_daemon')) do
+  on(agent, oregano_resource('service', 'sloth_daemon')) do
     assert_match(/sloth_daemon/, stdout, "Couldn't find service sloth_daemon")
   end
 

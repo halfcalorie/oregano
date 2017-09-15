@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/file_serving/http_metadata'
+require 'oregano/file_serving/http_metadata'
 require 'matchers/json'
 require 'net/http'
 require 'digest'
 
-describe Puppet::FileServing::HttpMetadata do
+describe Oregano::FileServing::HttpMetadata do
   let(:foobar) { File.expand_path('/foo/bar') }
 
   it "should be a subclass of Metadata" do
-    expect( described_class.superclass ).to be Puppet::FileServing::Metadata
+    expect( described_class.superclass ).to be Oregano::FileServing::Metadata
   end
 
   describe "when initializing" do

@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/property/ensure'
+require 'oregano/property/ensure'
 
-klass = Puppet::Property::Ensure
+klass = Oregano::Property::Ensure
 
 describe klass do
   it "should be a subclass of Property" do
-    expect(klass.superclass).to eq(Puppet::Property)
+    expect(klass.superclass).to eq(Oregano::Property)
   end
 end

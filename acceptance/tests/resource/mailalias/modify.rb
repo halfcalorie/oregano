@@ -28,10 +28,10 @@ agents.each do |agent|
   end
 
   #------- TESTS -------#
-  step "modify the aliases database with puppet"
+  step "modify the aliases database with oregano"
   args = ['ensure=present',
           'recipient="foo,bar,baz,blarvitz"']
-  on(agent, puppet_resource('mailalias', name, args))
+  on(agent, oregano_resource('mailalias', name, args))
 
 
   step "verify the updated alias is present"

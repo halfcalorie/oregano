@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::SMFUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::SMFUtils
 
 teardown do
   step "SMF: cleanup"
@@ -35,7 +35,7 @@ agents.each do |agent|
   apply_manifest_on(agent, 'service {tstapp : ensure=>running, manifest=>"%s"}' % manifest, :catch_changes => true)
 
   step "SMF: ensure you can query the service with the ral"
-  on(agent, puppet("resource service tstapp")) do
+  on(agent, oregano("resource service tstapp")) do
     assert_match( /ensure => 'running'/, result.stdout, "err: #{agent}")
   end
 

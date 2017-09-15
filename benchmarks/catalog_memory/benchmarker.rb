@@ -36,18 +36,18 @@ class Benchmarker
 
   def run(args=nil)
     unless @initialized
-      require 'puppet'
-      config = File.join(@target, 'puppet.conf')
-      Puppet.initialize_settings(['--config', config])
+      require 'oregano'
+      config = File.join(@target, 'oregano.conf')
+      Oregano.initialize_settings(['--config', config])
       @initialized = true
     end
     @@count += 1
-    env = Puppet.lookup(:environments).get('benchmarking')
-    node = Puppet::Node.new("testing", :environment => env)
+    env = Oregano.lookup(:environments).get('benchmarking')
+    node = Oregano::Node.new("testing", :environment => env)
     # Mimic what apply does (or the benchmark will in part run for the *root* environment)
-    Puppet.push_context({:current_environment => env},'current env for benchmark')
-    Puppet::Resource::Catalog.indirection.find("testing", :use_node => node)
-    Puppet.pop_context
+    Oregano.push_context({:current_environment => env},'current env for benchmark')
+    Oregano::Resource::Catalog.indirection.find("testing", :use_node => node)
+    Oregano.pop_context
     GC.start
     sleep(2)
     counted = ObjectSpace.count_objects({})
@@ -101,8 +101,8 @@ class Benchmarker
     render(File.join(templates, 'site.pp.erb'),
     File.join(environment, 'manifests', 'site.pp'),{})
 
-    render(File.join(templates, 'puppet.conf.erb'),
-           File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+           File.join(@target, 'oregano.conf'),
            :location => @target)
   end
 

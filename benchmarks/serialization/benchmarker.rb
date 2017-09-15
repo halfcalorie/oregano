@@ -1,4 +1,4 @@
-require 'puppet'
+require 'oregano'
 
 class Benchmarker
   def initialize(target, size)
@@ -26,7 +26,7 @@ class Benchmarker
       # the data into a JSON hash, and the parsing the hash into a Catalog. It's
       # interesting to see just how slow that latter process is:
       #
-      #   Puppet::Resource::Catalog.convert_from(:json, @data)
+      #   Oregano::Resource::Catalog.convert_from(:json, @data)
       #
       # However, for this benchmark, we're just testing how long JSON vs PSON
       # parsing and generation are, where we default to parsing JSON.

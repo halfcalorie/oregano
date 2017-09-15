@@ -1,6 +1,6 @@
 test_name 'C98346: Binary data type' do
-  require 'puppet/acceptance/puppet_type_test_tools.rb'
-  extend Puppet::Acceptance::PuppetTypeTestTools
+  require 'oregano/acceptance/oregano_type_test_tools.rb'
+  extend Oregano::Acceptance::OreganoTypeTestTools
 
 tag 'audit:high',
     'audit:integration',  # Tests that binary data is retains integrity
@@ -30,7 +30,7 @@ tag 'audit:high',
     on agent, "echo 'old content' > /tmp/#{tmp_environment}.txt"
   end
   # create a fake module files... file for binary_file()
-  on master, puppet_apply("-e 'file{[\"#{environmentpath}/#{tmp_environment}/modules\",\"#{environmentpath}/#{tmp_environment}/modules/empty\",\"#{environmentpath}/#{tmp_environment}/modules/empty/files\"]: ensure => \"directory\"} file{\"#{environmentpath}/#{tmp_environment}/modules/empty/files/blah.txt\": content => \"binary, yo\"}'")
+  on master, oregano_apply("-e 'file{[\"#{environmentpath}/#{tmp_environment}/modules\",\"#{environmentpath}/#{tmp_environment}/modules/empty\",\"#{environmentpath}/#{tmp_environment}/modules/empty/files\"]: ensure => \"directory\"} file{\"#{environmentpath}/#{tmp_environment}/modules/empty/files/blah.txt\": content => \"binary, yo\"}'")
 
   base64_relaxed = Base64.encode64("invasionfromspace#{random_string}").strip
   base64_strict  = Base64.strict_encode64("invasion from space #{random_string}\n")
@@ -69,11 +69,11 @@ tag 'audit:high',
   create_sitepp(master, tmp_environment, sitepp_content)
 
   step "run agent in #{tmp_environment}, run all assertions" do
-    with_puppet_running_on(master,{}) do
+    with_oregano_running_on(master,{}) do
       agents.each do |agent|
-        on(agent, puppet("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano("agent -t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
-          assert(result.exit_code==2,'puppet agent run failed')
+          assert(result.exit_code==2,'oregano agent run failed')
           run_assertions(assertion_code, result)
         end
       end

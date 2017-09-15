@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-require 'puppet/face'
+require 'oregano/face'
 
 describe 'when pcore described resources types are in use' do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
-  let(:genface) { Puppet::Face[:generate, :current] }
+  let(:genface) { Oregano::Face[:generate, :current] }
 
   context "in an environment with two modules" do
     let(:dir) do
@@ -17,9 +17,9 @@ describe 'when pcore described resources types are in use' do
         'manifests' => { 'site.pp' => "" },
         'modules' => {
           'm1' => {
-            'lib' => { 'puppet' => { 'type' => {
+            'lib' => { 'oregano' => { 'type' => {
               'test1.rb' => <<-EOF
-              module Puppet
+              module Oregano
               Type.newtype(:test1) do
                 @doc = "Docs for resource"
                 newproperty(:message) do
@@ -38,9 +38,9 @@ describe 'when pcore described resources types are in use' do
           },
         },
         'm2' => {
-          'lib' => { 'puppet' => { 'type' => {
+          'lib' => { 'oregano' => { 'type' => {
             'test2.rb' => <<-EOF,
-            module Puppet
+            module Oregano
             Type.newtype(:test2) do
               @doc = "Docs for resource"
               @isomorphic = false
@@ -58,7 +58,7 @@ describe 'when pcore described resources types are in use' do
             end;end
             EOF
             'test3.rb' => <<-RUBY,
-              Puppet::Type.newtype(:test3) do
+              Oregano::Type.newtype(:test3) do
                 newproperty(:message)
                 newparam(:a) { isnamevar }
                 newparam(:b) { isnamevar }
@@ -69,7 +69,7 @@ describe 'when pcore described resources types are in use' do
               end
             RUBY
             'cap.rb' => <<-EOF
-            module Puppet
+            module Oregano
             Type.newtype(:cap, :is_capability => true) do
               @doc = "Docs for capability"
               @isomorphic = false
@@ -100,11 +100,11 @@ describe 'when pcore described resources types are in use' do
     end
 
     around(:each) do |example|
-      Puppet.settings.initialize_global_settings
-      Puppet[:manifest] = ''
-      loader = Puppet::Environments::Directories.new(dir, [])
-      Puppet.override(:environments => loader) do
-        Puppet.override(:current_environment => loader.get('production')) do
+      Oregano.settings.initialize_global_settings
+      Oregano[:manifest] = ''
+      loader = Oregano::Environments::Directories.new(dir, [])
+      Oregano.override(:environments => loader) do
+        Oregano.override(:current_environment => loader.get('production')) do
           example.run
         end
       end
@@ -237,7 +237,7 @@ describe 'when pcore described resources types are in use' do
   end
 
   def find_resource_type(scope, name)
-    t1 = Puppet::Pops::Evaluator::Runtime3ResourceSupport.find_resource_type(scope, name)
+    t1 = Oregano::Pops::Evaluator::Runtime3ResourceSupport.find_resource_type(scope, name)
   end
 
   def generate_and_in_a_compilers_context(&block)
@@ -245,14 +245,14 @@ describe 'when pcore described resources types are in use' do
     # Since an instance of a compiler is needed and it starts an initial import that evaluates
     # code, and that code will be loaded from manifests with a glob (go figure)
     # the only way to stop that is to set 'code' to something as that overrides "importing" files.
-    Puppet[:code] = "undef"
-    node = Puppet::Node.new('test')
+    Oregano[:code] = "undef"
+    node = Oregano::Node.new('test')
     # All loading must be done in a context configured as the compiler does it.
     # (Therefore: use the context a compiler creates as this test logic must otherwise
     #  know how to do this).
     #
-    compiler = Puppet::Parser::Compiler.new(node)
-    Puppet::override(compiler.context_overrides) do
+    compiler = Oregano::Parser::Compiler.new(node)
+    Oregano::override(compiler.context_overrides) do
       block.call(compiler)
     end
   end

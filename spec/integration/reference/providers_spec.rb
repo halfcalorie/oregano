@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/reference'
+require 'oregano/util/reference'
 
-reference = Puppet::Util::Reference.reference(:providers)
+reference = Oregano::Util::Reference.reference(:providers)
 
 describe reference do
   it "should exist" do

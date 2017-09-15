@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet'
-require 'puppet/daemon'
-require 'puppet/application/agent'
+require 'oregano'
+require 'oregano/daemon'
+require 'oregano/application/agent'
 
 # The command line flags affecting #20900 and #20919:
 #
@@ -69,38 +69,38 @@ describe 'agent logging' do
 
   shared_examples "an agent" do |argv, expected|
     before(:each) do
-      # Don't actually run the agent, bypassing cert checks, forking and the puppet run itself
-      Puppet::Application::Agent.any_instance.stubs(:run_command)
+      # Don't actually run the agent, bypassing cert checks, forking and the oregano run itself
+      Oregano::Application::Agent.any_instance.stubs(:run_command)
     end
 
-    def double_of_bin_puppet_agent_call(argv)
+    def double_of_bin_oregano_agent_call(argv)
       argv.unshift('agent')
-      command_line = Puppet::Util::CommandLine.new('puppet', argv)
+      command_line = Oregano::Util::CommandLine.new('oregano', argv)
       command_line.execute
     end
 
-    if Puppet.features.microsoft_windows? && argv.include?(DAEMONIZE)
+    if Oregano.features.microsoft_windows? && argv.include?(DAEMONIZE)
 
       it "should exit on a platform which cannot daemonize if the --daemonize flag is set" do
-        expect { double_of_bin_puppet_agent_call(argv) }.to raise_error(SystemExit)
+        expect { double_of_bin_oregano_agent_call(argv) }.to raise_error(SystemExit)
       end
 
     else
       if no_log_dest_set_in(argv)
         it "when evoked with #{argv}, logs to #{expected[:loggers].inspect} at level #{expected[:level]}" do
-          # This logger is created by the Puppet::Settings object which creates and
+          # This logger is created by the Oregano::Settings object which creates and
           # applies a catalog to ensure that configuration files and users are in
           # place.
           #
           # It's not something we are specifically testing here since it occurs
           # regardless of user flags.
-          Puppet::Util::Log.expects(:newdestination).with(instance_of(Puppet::Transaction::Report)).at_least_once
+          Oregano::Util::Log.expects(:newdestination).with(instance_of(Oregano::Transaction::Report)).at_least_once
           expected[:loggers].each do |logclass|
-            Puppet::Util::Log.expects(:newdestination).with(logclass).at_least_once
+            Oregano::Util::Log.expects(:newdestination).with(logclass).at_least_once
           end
-          double_of_bin_puppet_agent_call(argv)
+          double_of_bin_oregano_agent_call(argv)
 
-          expect(Puppet::Util::Log.level).to eq(expected[:level])
+          expect(Oregano::Util::Log.level).to eq(expected[:level])
         end
       end
 
@@ -126,10 +126,10 @@ describe 'agent logging' do
     loggers << CONSOLE if verbose_or_debug_set_in_argv(argv)
     loggers << 'console' if log_dest_is_set_to(argv, LOGDEST_CONSOLE)
     loggers << '/dev/null/foo' if log_dest_is_set_to(argv, LOGDEST_FILE)
-    if Puppet.features.microsoft_windows?
+    if Oregano.features.microsoft_windows?
       # an explicit call to --logdest syslog on windows is swallowed silently with no
-      # logger created (see #suitable() of the syslog Puppet::Util::Log::Destination subclass)
-      # however Puppet::Util::Log.newdestination('syslog') does get called...so we have
+      # logger created (see #suitable() of the syslog Oregano::Util::Log::Destination subclass)
+      # however Oregano::Util::Log.newdestination('syslog') does get called...so we have
       # to set an expectation
       loggers << 'syslog' if log_dest_is_set_to(argv, LOGDEST_SYSLOG)
 

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet/graph'
+require 'oregano/graph'
 
-describe Puppet::Graph::SequentialPrioritizer do
-  let(:priorities) { Puppet::Graph::SequentialPrioritizer.new }
+describe Oregano::Graph::SequentialPrioritizer do
+  let(:priorities) { Oregano::Graph::SequentialPrioritizer.new }
 
   it "generates priorities that maintain the sequence" do
     first = priorities.generate_priority_for("one")

@@ -7,10 +7,10 @@ test_name "ticket 1073: common package name in two different providers should be
   tag 'audit:medium',
       'audit:acceptance' # Uses a provider that depends on AIO packaging
 
-  require 'puppet/acceptance/rpm_util'
-  extend Puppet::Acceptance::RpmUtils
-  require 'puppet/acceptance/common_utils'
-  extend Puppet::Acceptance::CommandUtils
+  require 'oregano/acceptance/rpm_util'
+  extend Oregano::Acceptance::RpmUtils
+  require 'oregano/acceptance/common_utils'
+  extend Oregano::Acceptance::CommandUtils
 
   rpm_options = {:pkg => 'guid', :version => '1.0'}
 
@@ -38,7 +38,7 @@ test_name "ticket 1073: common package name in two different providers should be
 
   def gem_provider
     if @options[:type] == 'aio'
-      'puppet_gem'
+      'oregano_gem'
     else
       'gem'
     end

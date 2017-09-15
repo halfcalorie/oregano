@@ -1,6 +1,6 @@
-test_name 'puppet module uninstall (with environment)'
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name 'oregano module uninstall (with environment)'
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -13,7 +13,7 @@ step 'Setup'
 
 stub_forge_on(master)
 
-puppet_conf = generate_base_directory_environments(tmpdir)
+oregano_conf = generate_base_directory_environments(tmpdir)
 
 crakorn_metadata = <<-EOS
 {
@@ -43,7 +43,7 @@ apply_manifest_on master, %Q{
 
 step 'Uninstall a module from a non default directory environment' do
   environment_path = "#{tmpdir}/environments/direnv/modules"
-  on(master, puppet("module uninstall jimmy-crakorn --config=#{puppet_conf} --environment=direnv")) do
+  on(master, oregano("module uninstall jimmy-crakorn --config=#{oregano_conf} --environment=direnv")) do
     assert_equal <<-OUTPUT, stdout
 \e[mNotice: Preparing to uninstall 'jimmy-crakorn' ...\e[0m
 Removed 'jimmy-crakorn' (\e[0;36mv0.4.0\e[0m) from #{environment_path}

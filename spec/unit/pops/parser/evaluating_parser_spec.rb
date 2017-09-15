@@ -1,23 +1,23 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/pops'
-require 'puppet_spec/scope'
+require 'oregano/pops'
+require 'oregano_spec/pops'
+require 'oregano_spec/scope'
 
 describe 'The Evaluating Parser' do
 
-  include PuppetSpec::Pops
-  include PuppetSpec::Scope
+  include OreganoSpec::Pops
+  include OreganoSpec::Scope
 
-  let(:acceptor) {  Puppet::Pops::Validation::Acceptor.new() }
+  let(:acceptor) {  Oregano::Pops::Validation::Acceptor.new() }
   let(:scope) { s = create_test_scope_for_node(node); s }
   let(:node) { 'node.example.com' }
 
   def quote(x)
-    Puppet::Pops::Parser::EvaluatingParser.quote(x)
+    Oregano::Pops::Parser::EvaluatingParser.quote(x)
   end
 
   def evaluator()
-    Puppet::Pops::Parser::EvaluatingParser.new()
+    Oregano::Pops::Parser::EvaluatingParser.new()
   end
 
   def evaluate(s)

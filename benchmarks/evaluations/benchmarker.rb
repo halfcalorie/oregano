@@ -15,21 +15,21 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
-    require 'puppet/pops'
-    config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', config])
+    require 'oregano'
+    require 'oregano/pops'
+    config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', config])
     manifests = File.join('benchmarks', 'evaluations', 'manifests')
     Dir.foreach(manifests) do |f|
       if f =~ /^(.*)\.pp$/
         @micro_benchmarks[$1] = File.read(File.join(manifests, f))
       end
     end
-    # Run / Evaluate the common puppet logic
-    @env = Puppet.lookup(:environments).get('benchmarking')
-    @node = Puppet::Node.new("testing", :environment => @env)
-    @parser  = Puppet::Pops::Parser::EvaluatingParser.new
-    @compiler = Puppet::Parser::Compiler.new(@node)
+    # Run / Evaluate the common oregano logic
+    @env = Oregano.lookup(:environments).get('benchmarking')
+    @node = Oregano::Node.new("testing", :environment => @env)
+    @parser  = Oregano::Pops::Parser::EvaluatingParser.new
+    @compiler = Oregano::Parser::Compiler.new(@node)
     @scope = @compiler.topscope
 
     # Perform a portion of what a compile does (just enough to evaluate the site.pp logic)
@@ -37,7 +37,7 @@ class Benchmarker
     @compiler.send(:evaluate_main)
 
     # Then pretend we are running as part of a compilation
-    Puppet.push_context(@compiler.context_overrides, "Benchmark masquerading as compiler configured context")
+    Oregano.push_context(@compiler.context_overrides, "Benchmark masquerading as compiler configured context")
   end
 
   def run(args = {})
@@ -83,8 +83,8 @@ class Benchmarker
     render(File.join(templates, 'site.pp.erb'),
     File.join(environment, 'manifests', 'site.pp'),{})
 
-    render(File.join(templates, 'puppet.conf.erb'),
-           File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+           File.join(@target, 'oregano.conf'),
            :location => @target)
 
     # Generate one module with a 3x function and a 4x function (namespaces)
@@ -92,8 +92,8 @@ class Benchmarker
     module_base = File.join(environment, 'modules', module_name)
     manifests = File.join(module_base, 'manifests')
     mkdir_p(manifests)
-    functions_3x = File.join(module_base, 'lib', 'puppet', 'parser', 'functions')
-    functions_4x = File.join(module_base, 'lib', 'puppet', 'functions')
+    functions_3x = File.join(module_base, 'lib', 'oregano', 'parser', 'functions')
+    functions_4x = File.join(module_base, 'lib', 'oregano', 'functions')
     mkdir_p(functions_3x)
     mkdir_p(functions_4x)
 

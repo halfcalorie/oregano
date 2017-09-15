@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/formats'
+require 'oregano/network/formats'
 
 class PsonIntTest
   attr_accessor :string
@@ -30,23 +30,23 @@ class PsonIntTest
 
 end
 
-describe Puppet::Network::FormatHandler.format(:s) do
+describe Oregano::Network::FormatHandler.format(:s) do
   before do
-    @format = Puppet::Network::FormatHandler.format(:s)
+    @format = Oregano::Network::FormatHandler.format(:s)
   end
 
   it "should support certificates" do
-    expect(@format).to be_supported(Puppet::SSL::Certificate)
+    expect(@format).to be_supported(Oregano::SSL::Certificate)
   end
 
   it "should not support catalogs" do
-    expect(@format).not_to be_supported(Puppet::Resource::Catalog)
+    expect(@format).not_to be_supported(Oregano::Resource::Catalog)
   end
 end
 
-describe Puppet::Network::FormatHandler.format(:pson) do
+describe Oregano::Network::FormatHandler.format(:pson) do
   before do
-    @pson = Puppet::Network::FormatHandler.format(:pson)
+    @pson = Oregano::Network::FormatHandler.format(:pson)
   end
 
   it "should be able to render an instance to pson" do

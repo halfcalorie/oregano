@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/property/boolean'
+require 'oregano/property/boolean'
 
-describe Puppet::Property::Boolean do
+describe Oregano::Property::Boolean do
   let (:resource) { mock('resource') }
   subject { described_class.new(:resource => resource) }
 
@@ -17,7 +17,7 @@ describe Puppet::Property::Boolean do
   end
   [ nil, :undef, 'undef', '0', 0, '1', 1, 9284 ].each do |arg|
     it "should fail to munge #{arg.inspect}" do
-      expect { subject.munge(arg) }.to raise_error Puppet::Error
+      expect { subject.munge(arg) }.to raise_error Oregano::Error
     end
   end
 end

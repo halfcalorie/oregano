@@ -10,10 +10,10 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
+    require 'oregano'
     require 'hiera'
-    @config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', @config])
+    @config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', @config])
     Hiera.logger = 'noop'
     @hiera = ::Hiera.new(:config => @hiera_yaml)
   end

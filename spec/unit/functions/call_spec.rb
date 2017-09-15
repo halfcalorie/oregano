@@ -1,20 +1,20 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 require 'matchers/resource'
 
 describe 'the call method' do
-  include PuppetSpec::Compiler
-  include PuppetSpec::Files
+  include OreganoSpec::Compiler
+  include OreganoSpec::Files
   include Matchers::Resource
 
   context "should be callable as" do
     let(:env_name) { 'testenv' }
-    let(:environments_dir) { Puppet[:environmentpath] }
+    let(:environments_dir) { Oregano[:environmentpath] }
     let(:env_dir) { File.join(environments_dir, env_name) }
-    let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
-    let(:node) { Puppet::Node.new("test", :environment => env) }
+    let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'modules')]) }
+    let(:node) { Oregano::Node.new("test", :environment => env) }
     let(:env_dir_files) {
       {
         'modules' => {
@@ -29,7 +29,7 @@ describe 'the call method' do
 
     let(:populated_env_dir) do
       dir_contained_in(environments_dir, env_name => env_dir_files)
-      PuppetSpec::Files.record_tmp(env_dir)
+      OreganoSpec::Files.record_tmp(env_dir)
       env_dir
     end
 
@@ -40,7 +40,7 @@ describe 'the call method' do
         CODE
     end
 
-    it 'call on a Puppet language function with no arguments' do
+    it 'call on a Oregano language function with no arguments' do
       expect(compile_to_catalog(<<-CODE, node)).to have_resource('Notify[called]')
         notify { test::call_me(): }
         CODE
@@ -68,7 +68,7 @@ describe 'the call method' do
     end
 
     it 'call on a non-existent function name' do
-      expect { compile_to_catalog(<<-CODE) }.to raise_error(Puppet::Error, /Unknown function/)
+      expect { compile_to_catalog(<<-CODE) }.to raise_error(Oregano::Error, /Unknown function/)
         $a = call('not_a_function_name')
         notify { $a: }
       CODE

@@ -1,1 +1,1 @@
-master['puppetservice'] = 'pe-puppetserver'
+master['oreganoservice'] = 'pe-oreganoserver'

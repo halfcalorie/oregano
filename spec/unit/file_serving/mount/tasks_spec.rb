@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/file_serving/mount/tasks'
+require 'oregano/file_serving/mount/tasks'
 
-describe Puppet::FileServing::Mount::Tasks do
+describe Oregano::FileServing::Mount::Tasks do
   before do
-    @mount = Puppet::FileServing::Mount::Tasks.new("tasks")
+    @mount = Oregano::FileServing::Mount::Tasks.new("tasks")
 
     @environment = stub 'environment', :module => nil
     @request = stub 'request', :environment => @environment

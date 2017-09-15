@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/network_device'
-require 'puppet/util/network_device/cisco/interface'
+require 'oregano/util/network_device'
+require 'oregano/util/network_device/cisco/interface'
 
-describe Puppet::Util::NetworkDevice::Cisco::Interface do
+describe Oregano::Util::NetworkDevice::Cisco::Interface do
   before(:each) do
     @transport = stub_everything 'transport'
-    @interface = Puppet::Util::NetworkDevice::Cisco::Interface.new("FastEthernet0/1",@transport)
+    @interface = Oregano::Util::NetworkDevice::Cisco::Interface.new("FastEthernet0/1",@transport)
   end
 
   it "should include IPCalc" do
-    @interface.class.include?(Puppet::Util::NetworkDevice::IPCalc)
+    @interface.class.include?(Oregano::Util::NetworkDevice::IPCalc)
   end
 
   describe "when updating the physical device" do
@@ -80,7 +80,7 @@ describe Puppet::Util::NetworkDevice::Cisco::Interface do
 
   describe "when sending commands to the device" do
     it "should detect errors" do
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       @transport.stubs(:command).yields("% Invalid Command")
       @interface.command("sh ver")
     end

@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 describe 'the unique function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
 
   context 'produces the unique set of chars from a String such that' do

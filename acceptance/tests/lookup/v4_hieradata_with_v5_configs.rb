@@ -1,17 +1,17 @@
 test_name 'C99572: v4 hieradata with v5 configs' do
-  require 'puppet/acceptance/puppet_type_test_tools.rb'
-  extend Puppet::Acceptance::PuppetTypeTestTools
+  require 'oregano/acceptance/oregano_type_test_tools.rb'
+  extend Oregano::Acceptance::OreganoTypeTestTools
 
 tag 'audit:medium',
     'audit:acceptance',
     'audit:refactor',  # Master is not needed for this test. Refactor
-                       # to use puppet apply with a local module tree.
+                       # to use oregano apply with a local module tree.
 
   app_type        = File.basename(__FILE__, '.*')
   tmp_environment = mk_tmp_environment_with_teardown(master, app_type)
   fq_tmp_environmentpath  = "#{environmentpath}/#{tmp_environment}"
 
-  confdir = master.puppet('master')['confdir']
+  confdir = master.oregano('master')['confdir']
   hiera_conf_backup = master.tmpfile('C99572-hiera-yaml')
 
   step "backup global hiera.yaml" do
@@ -89,27 +89,27 @@ environment_key2 = "hocon value",
   end
 
   step 'assert lookups using lookup subcommand' do
-    on(master, puppet('lookup', "--environment #{tmp_environment}", 'environment_key'), :accept_all_exit_codes => true) do |result|
+    on(master, oregano('lookup', "--environment #{tmp_environment}", 'environment_key'), :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "1: lookup subcommand didn't exit properly: (#{result.exit_code})")
       assert_match(/environment_key-env_file/, result.stdout,
                    'lookup environment_key subcommand didn\'t find correct key')
     end
-    on(master, puppet('lookup', "--environment #{tmp_environment}", 'global_key'), :accept_all_exit_codes => true) do |result|
+    on(master, oregano('lookup', "--environment #{tmp_environment}", 'global_key'), :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "2: lookup subcommand didn't exit properly: (#{result.exit_code})")
       assert_match(/global_key-common_file/, result.stdout,
                    'lookup global_key subcommand didn\'t find correct key')
     end
-    on(master, puppet('lookup', "--environment #{tmp_environment}", 'environment_key2'), :accept_all_exit_codes => true) do |result|
+    on(master, oregano('lookup', "--environment #{tmp_environment}", 'environment_key2'), :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "3: lookup subcommand didn't exit properly: (#{result.exit_code})")
       assert_match(/hocon value/, result.stdout,
                    'lookup environment_key2 subcommand didn\'t find correct key')
     end
   end
 
-  with_puppet_running_on(master,{}) do
+  with_oregano_running_on(master,{}) do
     agents.each do |agent|
       step 'agent lookup' do
-        on(agent, puppet('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert(result.exit_code == 2, "agent lookup didn't exit properly: (#{result.exit_code})")
           assert_match(/global_key-common_file/m, result.stdout,

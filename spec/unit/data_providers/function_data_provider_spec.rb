@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe "when using function data provider" do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   # There is a fully configured environment in fixtures in this location
   let(:environmentpath) { parent_fixture('environments') }
@@ -11,16 +11,16 @@ describe "when using function data provider" do
   around(:each) do |example|
     # Initialize settings to get a full compile as close as possible to a real
     # environment load
-    Puppet.settings.initialize_global_settings
+    Oregano.settings.initialize_global_settings
     # Initialize loaders based on the environmentpath. It does not work to
     # just set the setting environmentpath for some reason - this achieves the same:
     # - first a loader is created, loading directory environments from the fixture (there is
     # one such environment, 'production', which will be loaded since the node references this
     # environment by name).
-    # - secondly, the created env loader is set as 'environments' in the puppet context.
+    # - secondly, the created env loader is set as 'environments' in the oregano context.
     #
-    loader = Puppet::Environments::Directories.new(environmentpath, [])
-    Puppet.override(:environments => loader) do
+    loader = Oregano::Environments::Directories.new(environmentpath, [])
+    Oregano.override(:environments => loader) do
       example.run
     end
   end
@@ -39,28 +39,28 @@ describe "when using function data provider" do
   # module.
   #
   it 'gets data from module and environment functions and combines them with env having higher precedence' do
-    Puppet[:code] = 'include abc'
-    node = Puppet::Node.new("testnode", :facts => Puppet::Node::Facts.new("facts", {}), :environment => 'production')
-    compiler = Puppet::Parser::Compiler.new(node)
+    Oregano[:code] = 'include abc'
+    node = Oregano::Node.new("testnode", :facts => Oregano::Node::Facts.new("facts", {}), :environment => 'production')
+    compiler = Oregano::Parser::Compiler.new(node)
     catalog = compiler.compile()
     resources_created_in_fixture = ["Notify[env_test1]", "Notify[env_test2]", "Notify[module_test3]", "Notify[env_test2-ipl]"]
     expect(resources_in(catalog)).to include(*resources_created_in_fixture)
   end
 
-  it 'gets data from module having a puppet function delivering module data' do
-    Puppet[:code] = 'include xyz'
-    node = Puppet::Node.new("testnode", :facts => Puppet::Node::Facts.new("facts", {}), :environment => 'production')
-    compiler = Puppet::Parser::Compiler.new(node)
+  it 'gets data from module having a oregano function delivering module data' do
+    Oregano[:code] = 'include xyz'
+    node = Oregano::Node.new("testnode", :facts => Oregano::Node::Facts.new("facts", {}), :environment => 'production')
+    compiler = Oregano::Parser::Compiler.new(node)
     catalog = compiler.compile()
     resources_created_in_fixture = ["Notify[env_test1]", "Notify[env_test2]", "Notify[module_test3]"]
     expect(resources_in(catalog)).to include(*resources_created_in_fixture)
   end
 
-  it 'gets data from puppet function delivering environment data' do
-    Puppet[:code] = <<-CODE
+  it 'gets data from oregano function delivering environment data' do
+    Oregano[:code] = <<-CODE
       function environment::data() {
-        { 'cls::test1' => 'env_puppet1',
-          'cls::test2' => 'env_puppet2'
+        { 'cls::test1' => 'env_oregano1',
+          'cls::test2' => 'env_oregano2'
         }
       }
       class cls ($test1, $test2) {
@@ -69,20 +69,20 @@ describe "when using function data provider" do
       }
       include cls
     CODE
-    node = Puppet::Node.new('testnode', :facts => Puppet::Node::Facts.new('facts', {}), :environment => 'production')
-    catalog = Puppet::Parser::Compiler.new(node).compile
-    expect(resources_in(catalog)).to include('Notify[env_puppet1]', 'Notify[env_puppet2]')
+    node = Oregano::Node.new('testnode', :facts => Oregano::Node::Facts.new('facts', {}), :environment => 'production')
+    catalog = Oregano::Parser::Compiler.new(node).compile
+    expect(resources_in(catalog)).to include('Notify[env_oregano1]', 'Notify[env_oregano2]')
   end
 
   it 'raises an error if the environment data function does not return a hash' do
-    Puppet[:code] = 'include abc'
+    Oregano[:code] = 'include abc'
     # find the loaders to patch with faulty function
-    node = Puppet::Node.new("testnode", :facts => Puppet::Node::Facts.new("facts", {}), :environment => 'production')
+    node = Oregano::Node.new("testnode", :facts => Oregano::Node::Facts.new("facts", {}), :environment => 'production')
 
-    compiler = Puppet::Parser::Compiler.new(node)
+    compiler = Oregano::Parser::Compiler.new(node)
     loaders = compiler.loaders()
     env_loader = loaders.private_environment_loader()
-    f = Puppet::Functions.create_function('environment::data') do
+    f = Oregano::Functions.create_function('environment::data') do
       def data()
         'this is not a hash'
       end
@@ -94,14 +94,14 @@ describe "when using function data provider" do
   end
 
   it 'raises an error if the module data function does not return a hash' do
-    Puppet[:code] = 'include abc'
+    Oregano[:code] = 'include abc'
     # find the loaders to patch with faulty function
-    node = Puppet::Node.new("testnode", :facts => Puppet::Node::Facts.new("facts", {}), :environment => 'production')
+    node = Oregano::Node.new("testnode", :facts => Oregano::Node::Facts.new("facts", {}), :environment => 'production')
 
-    compiler = Puppet::Parser::Compiler.new(node)
+    compiler = Oregano::Parser::Compiler.new(node)
     loaders = compiler.loaders()
     module_loader = loaders.public_loader_for_module('abc')
-    f = Puppet::Functions.create_function('abc::data') do
+    f = Oregano::Functions.create_function('abc::data') do
       def data()
         'this is not a hash'
       end

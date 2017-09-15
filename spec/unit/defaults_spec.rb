@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet/settings'
+require 'oregano/settings'
 
 describe "Defaults" do
   describe ".default_diffargs" do
@@ -12,7 +12,7 @@ describe "Defaults" do
           Facter.stubs(:value).with(:kernelmajversion).returns("5300")
         end
         it "should be empty" do
-          expect(Puppet.default_diffargs).to eq("")
+          expect(Oregano.default_diffargs).to eq("")
         end
       end
       [ "",
@@ -26,7 +26,7 @@ describe "Defaults" do
           end
 
           it "should be '-u'" do
-            expect(Puppet.default_diffargs).to eq("-u")
+            expect(Oregano.default_diffargs).to eq("-u")
           end
         end
       end
@@ -37,55 +37,55 @@ describe "Defaults" do
       end
 
       it "should be '-u'" do
-        expect(Puppet.default_diffargs).to eq("-u")
+        expect(Oregano.default_diffargs).to eq("-u")
       end
     end
   end
 
   describe 'strict' do
     it 'should accept the valid value :off' do
-      expect {Puppet.settings[:strict] = 'off'}.to_not raise_exception
+      expect {Oregano.settings[:strict] = 'off'}.to_not raise_exception
     end
 
     it 'should accept the valid value :warning' do
-      expect {Puppet.settings[:strict] = 'warning'}.to_not raise_exception
+      expect {Oregano.settings[:strict] = 'warning'}.to_not raise_exception
     end
 
     it 'should accept the valid value :error' do
-      expect {Puppet.settings[:strict] = 'error'}.to_not raise_exception
+      expect {Oregano.settings[:strict] = 'error'}.to_not raise_exception
     end
 
     it 'should fail if given an invalid value' do
-      expect {Puppet.settings[:strict] = 'ignore'}.to raise_exception(/Invalid value 'ignore' for parameter strict\./)
+      expect {Oregano.settings[:strict] = 'ignore'}.to raise_exception(/Invalid value 'ignore' for parameter strict\./)
     end
   end
 
   describe 'supported_checksum_types' do
     it 'should default to md5,sha256' do
-      expect(Puppet.settings[:supported_checksum_types]).to eq(['md5', 'sha256'])
+      expect(Oregano.settings[:supported_checksum_types]).to eq(['md5', 'sha256'])
     end
 
     it 'should raise an error on an unsupported checksum type' do
-      expect { Puppet.settings[:supported_checksum_types] = ['md5', 'foo'] }.to raise_exception ArgumentError, 'Unrecognized checksum types ["foo"] are not supported. Valid values are ["md5", "md5lite", "sha256", "sha256lite", "sha1", "sha1lite", "mtime", "ctime"].'
+      expect { Oregano.settings[:supported_checksum_types] = ['md5', 'foo'] }.to raise_exception ArgumentError, 'Unrecognized checksum types ["foo"] are not supported. Valid values are ["md5", "md5lite", "sha256", "sha256lite", "sha1", "sha1lite", "mtime", "ctime"].'
     end
 
     it 'should not raise an error on setting a valid list of checksum types' do
-      Puppet.settings[:supported_checksum_types] = ['sha256', 'md5lite', 'mtime']
-      expect(Puppet.settings[:supported_checksum_types]).to eq(['sha256', 'md5lite', 'mtime'])
+      Oregano.settings[:supported_checksum_types] = ['sha256', 'md5lite', 'mtime']
+      expect(Oregano.settings[:supported_checksum_types]).to eq(['sha256', 'md5lite', 'mtime'])
     end
   end
 
   describe 'server vs server_list' do
     it 'should warn when both settings are set in code' do
-      Puppet.expects(:deprecation_warning).with('Attempted to set both server and server_list. Server setting will not be used.', :SERVER_DUPLICATION)
-      Puppet.settings[:server] = 'test_server'
-      Puppet.settings[:server_list] = ['one', 'two']
+      Oregano.expects(:deprecation_warning).with('Attempted to set both server and server_list. Server setting will not be used.', :SERVER_DUPLICATION)
+      Oregano.settings[:server] = 'test_server'
+      Oregano.settings[:server_list] = ['one', 'two']
     end
 
     it 'should warn when both settings are set by command line' do
-      Puppet.expects(:deprecation_warning).with('Attempted to set both server and server_list. Server setting will not be used.', :SERVER_DUPLICATION)
-      Puppet.settings.handlearg("--server_list", "one,two")
-      Puppet.settings.handlearg("--server", "test_server")
+      Oregano.expects(:deprecation_warning).with('Attempted to set both server and server_list. Server setting will not be used.', :SERVER_DUPLICATION)
+      Oregano.settings.handlearg("--server_list", "one,two")
+      Oregano.settings.handlearg("--server", "test_server")
     end
   end
 end

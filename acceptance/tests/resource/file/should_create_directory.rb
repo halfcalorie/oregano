@@ -12,7 +12,7 @@ agents.each do |agent|
   end
 
   step "verify we can create a directory" do
-    on(agent, puppet_resource("file", target, 'ensure=directory'))
+    on(agent, oregano_resource("file", target, 'ensure=directory'))
   end
 
   step "verify the directory was created" do
@@ -33,7 +33,7 @@ agents.each do |agent|
 
   step "verify we can't create same dir resource with a trailing slash" do
     options = {:acceptable_exit_codes => [1]}
-    on(agent, puppet_apply("--noop #{dir_manifest}"), options) do |result|
+    on(agent, oregano_apply("--noop #{dir_manifest}"), options) do |result|
       unless agent['locale'] == 'ja'
         assert_match('Cannot alias File', result.output,
                      'duplicate directory resources did not fail properly')

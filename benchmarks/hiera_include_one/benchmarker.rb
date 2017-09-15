@@ -9,20 +9,20 @@ class Benchmarker
   end
 
   def setup
-    require 'puppet'
-    @config = File.join(@target, 'puppet.conf')
-    Puppet.initialize_settings(['--config', @config])
-    envs = Puppet.lookup(:environments)
-    @node = Puppet::Node.new('testing', :environment => envs.get('benchmarking'))
+    require 'oregano'
+    @config = File.join(@target, 'oregano.conf')
+    Oregano.initialize_settings(['--config', @config])
+    envs = Oregano.lookup(:environments)
+    @node = Oregano::Node.new('testing', :environment => envs.get('benchmarking'))
   end
 
   def run(args=nil)
     @size.times do
-      @compiler = Puppet::Parser::Compiler.new(@node)
+      @compiler = Oregano::Parser::Compiler.new(@node)
       @compiler.compile do |catalog|
         scope = @compiler.topscope
         scope['confdir'] = 'test'
-          hiera_func = @compiler.loaders.puppet_system_loader.load(:function, 'hiera_include')
+          hiera_func = @compiler.loaders.oregano_system_loader.load(:function, 'hiera_include')
           hiera_func.call(scope, 'common_entry')
         catalog
       end
@@ -59,7 +59,7 @@ class Benchmarker
     File.open(groups_yaml, 'w') do |f|
       f.puts(<<-YAML)
 ---
-puppet:
+oregano:
   staff:
     groups:
       YAML
@@ -85,8 +85,8 @@ puppet:
 
     templates = File.dirname(File.realpath(__FILE__))
 
-    render(File.join(templates, 'puppet.conf.erb'),
-      File.join(@target, 'puppet.conf'),
+    render(File.join(templates, 'oregano.conf.erb'),
+      File.join(@target, 'oregano.conf'),
       :location => @target)
   end
 

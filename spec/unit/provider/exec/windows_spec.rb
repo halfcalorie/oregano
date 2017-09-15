@@ -2,16 +2,16 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:exec).provider(:windows), :if => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:exec).provider(:windows), :if => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
-  let(:resource) { Puppet::Type.type(:exec).new(:title => 'C:\foo', :provider => :windows) }
+  let(:resource) { Oregano::Type.type(:exec).new(:title => 'C:\foo', :provider => :windows) }
   let(:provider) { described_class.new(resource) }
 
   after :all do
     # This provider may not be suitable on some machines, so we want to reset
     # the default so it isn't used by mistake in future specs.
-    Puppet::Type.type(:exec).defaultprovider = nil
+    Oregano::Type.type(:exec).defaultprovider = nil
   end
 
   describe "#extractexe" do
@@ -45,7 +45,7 @@ describe Puppet::Type.type(:exec).provider(:windows), :if => Puppet.features.mic
   end
 
   describe "#checkexe" do
-    describe "when the command is absolute", :if => Puppet.features.microsoft_windows? do
+    describe "when the command is absolute", :if => Oregano.features.microsoft_windows? do
       it "should return if the command exists and is a file" do
         command = tmpfile('command')
         FileUtils.touch(command)
@@ -91,7 +91,7 @@ describe Puppet::Type.type(:exec).provider(:windows), :if => Puppet.features.mic
 
   describe "#validatecmd" do
     it "should fail if the command isn't absolute and there is no path" do
-      expect { provider.validatecmd('foo') }.to raise_error(Puppet::Error, /'foo' is not qualified and no path was specified/)
+      expect { provider.validatecmd('foo') }.to raise_error(Oregano::Error, /'foo' is not qualified and no path was specified/)
     end
 
     it "should not fail if the command is absolute and there is no path" do

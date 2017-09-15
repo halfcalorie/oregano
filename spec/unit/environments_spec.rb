@@ -1,18 +1,18 @@
 require 'spec_helper'
-require 'puppet/environments'
-require 'puppet/file_system'
+require 'oregano/environments'
+require 'oregano/file_system'
 require 'matchers/include'
 require 'matchers/include_in_order'
 
-module PuppetEnvironments
-describe Puppet::Environments do
+module OreganoEnvironments
+describe Oregano::Environments do
   include Matchers::Include
 
-  FS = Puppet::FileSystem
+  FS = Oregano::FileSystem
 
   before(:each) do
-    Puppet.settings.initialize_global_settings
-    Puppet[:environment_timeout] = "unlimited"
+    Oregano.settings.initialize_global_settings
+    Oregano[:environment_timeout] = "unlimited"
   end
 
   let(:directory_tree) do
@@ -89,7 +89,7 @@ describe Puppet::Environments do
                   :directory => directory_tree) do |loader|
         expect do
           loader.get!("doesnotexist")
-        end.to raise_error(Puppet::Environments::EnvironmentNotFound)
+        end.to raise_error(Oregano::Environments::EnvironmentNotFound)
       end
     end
 
@@ -264,7 +264,7 @@ config_version=$vardir/random/scripts
         EOF
 
         some_absolute_dir = FS::MemoryFile.a_directory(File.expand_path('/some/absolute'))
-        base_module_dirs = Puppet[:basemodulepath].split(File::PATH_SEPARATOR).map do |path|
+        base_module_dirs = Oregano[:basemodulepath].split(File::PATH_SEPARATOR).map do |path|
           FS::MemoryFile.a_directory(path)
         end
         envdir = FS::MemoryFile.a_directory(File.expand_path("envdir"), [
@@ -277,11 +277,11 @@ config_version=$vardir/random/scripts
         loader_from(:filesystem => [envdir, some_absolute_dir, base_module_dirs].flatten,
                     :directory => envdir) do |loader|
           expect(loader.get("env1")).to environment(:env1).
-            with_manifest(File.join(Puppet[:confdir], 'whackymanifests')).
+            with_manifest(File.join(Oregano[:confdir], 'whackymanifests')).
             with_modulepath([some_absolute_dir.path,
                             base_module_dirs.map { |d| d.path },
                             File.join(envdir, 'env1', 'modules')].flatten).
-            with_config_version(File.join(Puppet[:vardir], 'random', 'scripts'))
+            with_config_version(File.join(Oregano[:vardir], 'random', 'scripts'))
         end
       end
 
@@ -316,9 +316,9 @@ config_version=$vardir/random/scripts
         ])
 
         FS.overlay(original_envdir) do
-          dir_loader = Puppet::Environments::Directories.new(original_envdir, [])
-          loader = Puppet::Environments::Cached.new(dir_loader)
-          Puppet.override(:environments => loader) do
+          dir_loader = Oregano::Environments::Directories.new(original_envdir, [])
+          loader = Oregano::Environments::Cached.new(dir_loader)
+          Oregano.override(:environments => loader) do
             original_env = loader.get("env3") # force the environment.conf to be read
 
             changed_envdir = FS::MemoryFile.a_directory(base_dir, [
@@ -353,7 +353,7 @@ config_version=$vardir/random/scripts
             service = ReplayExpirationService.new([true])
             using_expiration_service(service) do
 
-              cached = Puppet::Environments::Cached.new(loader)
+              cached = Oregano::Environments::Cached.new(loader)
               cached.get(:an_environment)
               cached.get(:an_environment)
 
@@ -368,9 +368,9 @@ config_version=$vardir/random/scripts
   end
 
   describe "static loaders" do
-    let(:static1) { Puppet::Node::Environment.create(:static1, []) }
-    let(:static2) { Puppet::Node::Environment.create(:static2, []) }
-    let(:loader) { Puppet::Environments::Static.new(static1, static2) }
+    let(:static1) { Oregano::Node::Environment.create(:static1, []) }
+    let(:static2) { Oregano::Node::Environment.create(:static2, []) }
+    let(:loader) { Oregano::Environments::Static.new(static1, static2) }
 
     it "lists environments" do
       expect(loader.list).to eq([static1, static2])
@@ -391,7 +391,7 @@ config_version=$vardir/random/scripts
     it "raises error if environment is not found" do
       expect do
         loader.get!(:doesnotexist)
-      end.to raise_error(Puppet::Environments::EnvironmentNotFound)
+      end.to raise_error(Oregano::Environments::EnvironmentNotFound)
     end
 
     it "gets a basic conf" do
@@ -407,8 +407,8 @@ config_version=$vardir/random/scripts
     end
 
     context "that are private" do
-      let(:private_env) { Puppet::Node::Environment.create(:private, []) }
-      let(:loader) { Puppet::Environments::StaticPrivate.new(private_env) }
+      let(:private_env) { Oregano::Node::Environment.create(:private, []) }
+      let(:loader) { Oregano::Environments::StaticPrivate.new(private_env) }
 
       it "lists nothing" do
         expect(loader.list).to eq([])
@@ -417,9 +417,9 @@ config_version=$vardir/random/scripts
   end
 
   describe "combined loaders" do
-    let(:static1) { Puppet::Node::Environment.create(:static1, []) }
-    let(:static2) { Puppet::Node::Environment.create(:static2, []) }
-    let(:static_loader) { Puppet::Environments::Static.new(static1, static2) }
+    let(:static1) { Oregano::Node::Environment.create(:static1, []) }
+    let(:static2) { Oregano::Node::Environment.create(:static2, []) }
+    let(:static_loader) { Oregano::Environments::Static.new(static1, static2) }
     let(:directory_tree) do
       FS::MemoryFile.a_directory(File.expand_path("envdir"), [
         FS::MemoryFile.a_directory("an_environment", [
@@ -434,7 +434,7 @@ config_version=$vardir/random/scripts
 
     it "lists environments" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        envs = Puppet::Environments::Combined.new(loader, static_loader).list
+        envs = Oregano::Environments::Combined.new(loader, static_loader).list
         expect(envs[0]).to environment(:an_environment)
         expect(envs[1]).to environment(:static1)
         expect(envs[2]).to environment(:static2)
@@ -443,34 +443,34 @@ config_version=$vardir/random/scripts
 
     it "has search_paths" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Combined.new(loader, static_loader).search_paths).to eq(["file://#{directory_tree}","data:text/plain,internal"])
+        expect(Oregano::Environments::Combined.new(loader, static_loader).search_paths).to eq(["file://#{directory_tree}","data:text/plain,internal"])
       end
     end
 
     it "gets an environment" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Combined.new(loader, static_loader).get(:an_environment)).to environment(:an_environment)
-        expect(Puppet::Environments::Combined.new(loader, static_loader).get(:static2)).to environment(:static2)
+        expect(Oregano::Environments::Combined.new(loader, static_loader).get(:an_environment)).to environment(:an_environment)
+        expect(Oregano::Environments::Combined.new(loader, static_loader).get(:static2)).to environment(:static2)
       end
     end
 
     it "returns nil if env not found" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Combined.new(loader, static_loader).get(:env_does_not_exist)).to be_nil
+        expect(Oregano::Environments::Combined.new(loader, static_loader).get(:env_does_not_exist)).to be_nil
       end
     end
 
     it "raises an error if environment is not found" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
         expect do
-          Puppet::Environments::Combined.new(loader, static_loader).get!(:env_does_not_exist)
-        end.to raise_error(Puppet::Environments::EnvironmentNotFound)
+          Oregano::Environments::Combined.new(loader, static_loader).get!(:env_does_not_exist)
+        end.to raise_error(Oregano::Environments::EnvironmentNotFound)
       end
     end
 
     it "gets an environment.conf" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Combined.new(loader, static_loader).get_conf(:an_environment)).to match_environment_conf(:an_environment).
+        expect(Oregano::Environments::Combined.new(loader, static_loader).get_conf(:an_environment)).to match_environment_conf(:an_environment).
           with_env_path(directory_tree).
           with_global_module_path([])
       end
@@ -480,7 +480,7 @@ config_version=$vardir/random/scripts
   describe "cached loaders" do
     it "lists environments" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Cached.new(loader).list).to include_in_any_order(
+        expect(Oregano::Environments::Cached.new(loader).list).to include_in_any_order(
           environment(:an_environment),
           environment(:another_environment))
       end
@@ -488,24 +488,24 @@ config_version=$vardir/random/scripts
 
     it "has search_paths" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Cached.new(loader).search_paths).to eq(["file://#{directory_tree}"])
+        expect(Oregano::Environments::Cached.new(loader).search_paths).to eq(["file://#{directory_tree}"])
       end
     end
 
     context "#get" do
       it "gets an environment" do
         loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-          expect(Puppet::Environments::Cached.new(loader).get(:an_environment)).to environment(:an_environment)
+          expect(Oregano::Environments::Cached.new(loader).get(:an_environment)).to environment(:an_environment)
         end
       end
 
       it "does not reload the environment if it isn't expired" do
-        env = Puppet::Node::Environment.create(:cached, [])
+        env = Oregano::Node::Environment.create(:cached, [])
         mocked_loader = mock('loader')
         mocked_loader.expects(:get).with(:cached).returns(env).once
-        mocked_loader.expects(:get_conf).with(:cached).returns(Puppet::Settings::EnvironmentConf.static_for(env, 20)).once
+        mocked_loader.expects(:get_conf).with(:cached).returns(Oregano::Settings::EnvironmentConf.static_for(env, 20)).once
 
-        cached = Puppet::Environments::Cached.new(mocked_loader)
+        cached = Oregano::Environments::Cached.new(mocked_loader)
 
         cached.get(:cached)
         cached.get(:cached)
@@ -513,7 +513,7 @@ config_version=$vardir/random/scripts
 
       it "returns nil if env not found" do
         loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-          expect(Puppet::Environments::Cached.new(loader).get(:doesnotexist)).to be_nil
+          expect(Oregano::Environments::Cached.new(loader).get(:doesnotexist)).to be_nil
         end
       end
     end
@@ -521,17 +521,17 @@ config_version=$vardir/random/scripts
     context "#get!" do
       it "gets an environment" do
         loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-          expect(Puppet::Environments::Cached.new(loader).get!(:an_environment)).to environment(:an_environment)
+          expect(Oregano::Environments::Cached.new(loader).get!(:an_environment)).to environment(:an_environment)
         end
       end
 
       it "does not reload the environment if it isn't expired" do
-        env = Puppet::Node::Environment.create(:cached, [])
+        env = Oregano::Node::Environment.create(:cached, [])
         mocked_loader = mock('loader')
         mocked_loader.expects(:get).with(:cached).returns(env).once
-        mocked_loader.expects(:get_conf).with(:cached).returns(Puppet::Settings::EnvironmentConf.static_for(env, 20)).once
+        mocked_loader.expects(:get_conf).with(:cached).returns(Oregano::Settings::EnvironmentConf.static_for(env, 20)).once
 
-        cached = Puppet::Environments::Cached.new(mocked_loader)
+        cached = Oregano::Environments::Cached.new(mocked_loader)
 
         cached.get!(:cached)
         cached.get!(:cached)
@@ -540,15 +540,15 @@ config_version=$vardir/random/scripts
       it "raises error if environment is not found" do
         loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
           expect do
-            Puppet::Environments::Cached.new(loader).get!(:doesnotexist)
-          end.to raise_error(Puppet::Environments::EnvironmentNotFound)
+            Oregano::Environments::Cached.new(loader).get!(:doesnotexist)
+          end.to raise_error(Oregano::Environments::EnvironmentNotFound)
         end
       end
     end
 
     it "gets an environment.conf" do
       loader_from(:filesystem => [directory_tree], :directory => directory_tree) do |loader|
-        expect(Puppet::Environments::Cached.new(loader).get_conf(:an_environment)).to match_environment_conf(:an_environment).
+        expect(Oregano::Environments::Cached.new(loader).get_conf(:an_environment)).to match_environment_conf(:an_environment).
           with_env_path(directory_tree).
           with_global_module_path([])
       end
@@ -627,11 +627,11 @@ config_version=$vardir/random/scripts
 
   def loader_from(options, &block)
     FS.overlay(*options[:filesystem]) do
-      environments = Puppet::Environments::Directories.new(
+      environments = Oregano::Environments::Directories.new(
         options[:directory],
         options[:modulepath] || []
       )
-      Puppet.override(:environments => environments) do
+      Oregano.override(:environments => environments) do
         yield environments
       end
     end
@@ -639,11 +639,11 @@ config_version=$vardir/random/scripts
 
   def using_expiration_service(service)
     begin
-      orig_svc = Puppet::Environments::Cached.cache_expiration_service
-      Puppet::Environments::Cached.cache_expiration_service = service
+      orig_svc = Oregano::Environments::Cached.cache_expiration_service
+      Oregano::Environments::Cached.cache_expiration_service = service
       yield
     ensure
-      Puppet::Environments::Cached.cache_expiration_service = orig_svc
+      Oregano::Environments::Cached.cache_expiration_service = orig_svc
     end
   end
 

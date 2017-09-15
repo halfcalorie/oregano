@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/provider/package/pkgng'
+require 'oregano/provider/package/pkgng'
 
-provider_class = Puppet::Type.type(:package).provider(:pkgng)
+provider_class = Oregano::Type.type(:package).provider(:pkgng)
 
 describe provider_class do
   let(:name) { 'bash' }
@@ -11,24 +11,24 @@ describe provider_class do
 
   let(:resource) do
     # When bash is not present
-    Puppet::Type.type(:package).new(:name => name, :provider => pkgng)
+    Oregano::Type.type(:package).new(:name => name, :provider => pkgng)
   end
 
   let(:installed_resource) do
     # When zsh is present
-    Puppet::Type.type(:package).new(:name => installed_name, :provider => pkgng)
+    Oregano::Type.type(:package).new(:name => installed_name, :provider => pkgng)
   end
 
   let(:latest_resource) do
     # When curl is installed but not the latest
-    Puppet::Type.type(:package).new(:name => 'ftp/curl', :provider => pkgng, :ensure => latest)
+    Oregano::Type.type(:package).new(:name => 'ftp/curl', :provider => pkgng, :ensure => latest)
   end
 
   let (:provider) { resource.provider }
   let (:installed_provider) { installed_resource.provider }
 
   def run_in_catalog(*resources)
-    catalog = Puppet::Resource::Catalog.new
+    catalog = Oregano::Resource::Catalog.new
     catalog.host_config = false
     resources.each do |resource|
       #resource.expects(:err).never
@@ -66,7 +66,7 @@ describe provider_class do
     end
 
     it "should return an empty array when pkg calls raise an exception" do
-      provider_class.stubs(:get_query).raises(Puppet::ExecutionFailure, 'An error occurred.')
+      provider_class.stubs(:get_query).raises(Oregano::ExecutionFailure, 'An error occurred.')
       expect(provider_class.instances).to eq([])
     end
 
@@ -80,7 +80,7 @@ describe provider_class do
 
   context "#install" do
     it "should call pkg with the specified package version given an origin for package name" do
-      resource = Puppet::Type.type(:package).new(
+      resource = Oregano::Type.type(:package).new(
         :name     => 'ftp/curl',
         :provider => :pkgng,
         :ensure   => '7.33.1'
@@ -92,7 +92,7 @@ describe provider_class do
     end
 
     it "should call pkg with the specified package version" do
-      resource = Puppet::Type.type(:package).new(
+      resource = Oregano::Type.type(:package).new(
         :name     => 'curl',
         :provider => :pkgng,
         :ensure   => '7.33.1'
@@ -104,7 +104,7 @@ describe provider_class do
     end
 
     it "should call pkg with the specified package repo" do
-      resource = Puppet::Type.type(:package).new(
+      resource = Oregano::Type.type(:package).new(
         :name     => 'curl',
         :provider => :pkgng,
         :source   => 'urn:freebsd:repo:FreeBSD'
@@ -149,7 +149,7 @@ describe provider_class do
     end
 
     it "should call update to upgrade the version" do
-      resource = Puppet::Type.type(:package).new(
+      resource = Oregano::Type.type(:package).new(
         :name     => 'ftp/curl',
         :provider => pkgng,
         :ensure   => :latest

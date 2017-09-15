@@ -19,8 +19,8 @@ agents.each do |agent|
   step "(setup) populate test file with a malformed line"
   on(agent, "printf '==\n' >> #{file}")
 
-  step "tell puppet to add another host entry"
-  on(agent, puppet_resource('host', 'test', "target=#{file}",
+  step "tell oregano to add another host entry"
+  on(agent, oregano_resource('host', 'test', "target=#{file}",
     'ensure=present', 'ip=127.0.0.3', 'host_aliases=foo'))
 
   step "verify that the initial host entry was not deleted"

@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 require 'shared_behaviours/all_parsedfile_providers'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-provider_class = Puppet::Type.type(:ssh_authorized_key).provider(:parsed)
+provider_class = Oregano::Type.type(:ssh_authorized_key).provider(:parsed)
 
-describe provider_class, :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe provider_class, :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   before :each do
     @keyfile = tmpfile('authorized_keys')
@@ -14,13 +14,13 @@ describe provider_class, :unless => Puppet.features.microsoft_windows? do
     @provider_class.initvars
     @provider_class.any_instance.stubs(:target).returns @keyfile
     @user = 'random_bob'
-    Puppet::Util.stubs(:uid).with(@user).returns 12345
+    Oregano::Util.stubs(:uid).with(@user).returns 12345
   end
 
   def mkkey(args)
     args[:target] = @keyfile
     args[:user]   = @user
-    resource = Puppet::Type.type(:ssh_authorized_key).new(args)
+    resource = Oregano::Type.type(:ssh_authorized_key).new(args)
     key = @provider_class.new(resource)
     args.each do |p,v|
       key.send(p.to_s + "=", v)
@@ -29,10 +29,10 @@ describe provider_class, :unless => Puppet.features.microsoft_windows? do
   end
 
   def genkey(key)
-    @provider_class.stubs(:filetype).returns(Puppet::Util::FileType::FileTypeRam)
+    @provider_class.stubs(:filetype).returns(Oregano::Util::FileType::FileTypeRam)
     File.stubs(:chown)
     File.stubs(:chmod)
-    Puppet::Util::SUIDManager.stubs(:asuser).yields
+    Oregano::Util::SUIDManager.stubs(:asuser).yields
     key.flush
     @provider_class.target_object(@keyfile).read
   end
@@ -154,13 +154,13 @@ describe provider_class, :unless => Puppet.features.microsoft_windows? do
 
 end
 
-describe provider_class, :unless => Puppet.features.microsoft_windows? do
+describe provider_class, :unless => Oregano.features.microsoft_windows? do
   before :each do
-    @resource = Puppet::Type.type(:ssh_authorized_key).new(:name => "foo", :user => "random_bob")
+    @resource = Oregano::Type.type(:ssh_authorized_key).new(:name => "foo", :user => "random_bob")
 
     @provider = provider_class.new(@resource)
-    provider_class.stubs(:filetype).returns(Puppet::Util::FileType::FileTypeRam)
-    Puppet::Util::SUIDManager.stubs(:asuser).yields
+    provider_class.stubs(:filetype).returns(Oregano::Util::FileType::FileTypeRam)
+    Oregano::Util::SUIDManager.stubs(:asuser).yields
 
     provider_class.initvars
   end
@@ -175,26 +175,26 @@ describe provider_class, :unless => Puppet.features.microsoft_windows? do
 
     describe "and both a user and a target have been specified" do
       before :each do
-        Puppet::Util.stubs(:uid).with("random_bob").returns 12345
+        Oregano::Util.stubs(:uid).with("random_bob").returns 12345
         @resource[:user] = "random_bob"
         target = "/tmp/.ssh_dir/place_to_put_authorized_keys"
         @resource[:target] = target
       end
 
       it "should create the directory" do
-        Puppet::FileSystem.stubs(:exist?).with("/tmp/.ssh_dir").returns false
+        Oregano::FileSystem.stubs(:exist?).with("/tmp/.ssh_dir").returns false
         Dir.expects(:mkdir).with("/tmp/.ssh_dir", 0700)
         @provider.flush
       end
 
       it "should absolutely not chown the directory to the user" do
-        uid = Puppet::Util.uid("random_bob")
+        uid = Oregano::Util.uid("random_bob")
         File.expects(:chown).never
         @provider.flush
       end
 
       it "should absolutely not chown the key file to the user" do
-        uid = Puppet::Util.uid("random_bob")
+        uid = Oregano::Util.uid("random_bob")
         File.expects(:chown).never
         @provider.flush
       end
@@ -219,34 +219,34 @@ describe provider_class, :unless => Puppet.features.microsoft_windows? do
       end
 
       it "should create the directory if it doesn't exist" do
-        Puppet::FileSystem.stubs(:exist?).with(@dir).returns false
+        Oregano::FileSystem.stubs(:exist?).with(@dir).returns false
         Dir.expects(:mkdir).with(@dir,0700)
         @provider.flush
       end
 
       it "should not create or chown the directory if it already exist" do
-        Puppet::FileSystem.stubs(:exist?).with(@dir).returns false
+        Oregano::FileSystem.stubs(:exist?).with(@dir).returns false
         Dir.expects(:mkdir).never
         @provider.flush
       end
 
       it "should absolutely not chown the directory to the user if it creates it" do
-        Puppet::FileSystem.stubs(:exist?).with(@dir).returns false
+        Oregano::FileSystem.stubs(:exist?).with(@dir).returns false
         Dir.stubs(:mkdir).with(@dir,0700)
-        uid = Puppet::Util.uid("nobody")
+        uid = Oregano::Util.uid("nobody")
         File.expects(:chown).never
         @provider.flush
       end
 
       it "should not create or chown the directory if it already exist" do
-        Puppet::FileSystem.stubs(:exist?).with(@dir).returns false
+        Oregano::FileSystem.stubs(:exist?).with(@dir).returns false
         Dir.expects(:mkdir).never
         File.expects(:chown).never
         @provider.flush
       end
 
       it "should absolutely not chown the key file to the user" do
-        uid = Puppet::Util.uid("nobody")
+        uid = Oregano::Util.uid("nobody")
         File.expects(:chown).never
         @provider.flush
       end
@@ -259,18 +259,18 @@ describe provider_class, :unless => Puppet.features.microsoft_windows? do
 
     describe "and a target has been specified with no user" do
       it "should raise an error" do
-        @resource = Puppet::Type.type(:ssh_authorized_key).new(:name => "foo", :target => "/tmp/.ssh_dir/place_to_put_authorized_keys")
+        @resource = Oregano::Type.type(:ssh_authorized_key).new(:name => "foo", :target => "/tmp/.ssh_dir/place_to_put_authorized_keys")
         @provider = provider_class.new(@resource)
 
-        expect { @provider.flush }.to raise_error(Puppet::Error, /Cannot write SSH authorized keys without user/)
+        expect { @provider.flush }.to raise_error(Oregano::Error, /Cannot write SSH authorized keys without user/)
       end
     end
 
     describe "and an invalid user has been specified with no target" do
-      it "should catch an exception and raise a Puppet error" do
+      it "should catch an exception and raise a Oregano error" do
         @resource[:user] = "thisusershouldnotexist"
 
-        expect { @provider.flush }.to raise_error(Puppet::Error)
+        expect { @provider.flush }.to raise_error(Oregano::Error)
       end
     end
   end

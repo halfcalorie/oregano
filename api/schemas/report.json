@@ -1,7 +1,7 @@
 {
     "$schema":     "http://json-schema.org/draft-04/schema#",
     "title":       "Report",
-    "description": "A Puppet Report",
+    "description": "A Oregano Report",
     "type":        "object",
 
     "additionalProperties": false,
@@ -12,7 +12,7 @@
         "resource_statuses",
         "configuration_version",
         "report_format",
-        "puppet_version",
+        "oregano_version",
         "status",
         "noop",
         "noop_pending",
@@ -82,7 +82,7 @@
         },
 
         "configuration_version": {
-            "description": "The configuration version of the Puppet run. This is a String if the user has specified their own versioning scheme, otherwise an Integer representing seconds since the epoch.",
+            "description": "The configuration version of the Oregano run. This is a String if the user has specified their own versioning scheme, otherwise an Integer representing seconds since the epoch.",
             "anyOf":       [
                 { "type": "integer", "description": "seconds since the epoch" },
                 { "type": "string",  "description": "custom versioning scheme" }
@@ -119,7 +119,7 @@
         },
 
         "master_used": {
-            "description": "The name of the master that was used to compile the catalog. If failover occurred, this will hold the first master successfully contacted. If this run had no master (e.g. a `puppet apply` run), this field will be blank",
+            "description": "The name of the master that was used to compile the catalog. If failover occurred, this will hold the first master successfully contacted. If this run had no master (e.g. a `oregano apply` run), this field will be blank",
             "type": "string"
         },
 
@@ -129,8 +129,8 @@
             "enum":        ["7", 7]
         },
 
-        "puppet_version": {
-            "description": "The version of the Puppet Agent the report is for.",
+        "oregano_version": {
+            "description": "The version of the Oregano Agent the report is for.",
             "type":        "string"
         },
 
@@ -144,7 +144,7 @@
         },
 
         "noop": {
-            "description": "Whether the puppet run was started in noop mode",
+            "description": "Whether the oregano run was started in noop mode",
             "type":        "boolean"
         },
 
@@ -154,12 +154,12 @@
         },
 
         "environment": {
-            "description": "The name of the environment that was used for the puppet run (e.g. \"production\").",
+            "description": "The name of the environment that was used for the oregano run (e.g. \"production\").",
             "type":        "string"
         },
 
         "corrective_change": {
-            "description": "True if a change or noop event in this report was caused by an unexpected change to the system between Puppet runs.",
+            "description": "True if a change or noop event in this report was caused by an unexpected change to the system between Oregano runs.",
             "type":        "boolean"
         }
     },
@@ -204,7 +204,7 @@
                 },
 
                 "source": {
-                    "description": "The origin of the log message. This could be a resource, a property of a resource, or the string 'Puppet'.",
+                    "description": "The origin of the log message. This could be a resource, a property of a resource, or the string 'Oregano'.",
                     "type":        "string"
                 },
 
@@ -500,7 +500,7 @@
                 },
 
                 "events": {
-                    "description": "the Puppet::Transaction::Event objects for the resource",
+                    "description": "the Oregano::Transaction::Event objects for the resource",
                     "type":        "array",
                     "items":       { "$ref": "#/definitions/event" }
                 },
@@ -521,7 +521,7 @@
                 },
 
                 "failed": {
-                    "description": "True if Puppet experienced an error while evaluating this resource, otherwise false. **Deprecated**",
+                    "description": "True if Oregano experienced an error while evaluating this resource, otherwise false. **Deprecated**",
                     "type":        "boolean"
                 },
 
@@ -532,7 +532,7 @@
                 },
 
                 "corrective_change": {
-                    "description": "True if a change or noop event on this resource was caused by an unexpected change to the system between Puppet runs.",
+                    "description": "True if a change or noop event on this resource was caused by an unexpected change to the system between Oregano runs.",
                     "type":        "boolean"
                 }
             },
@@ -589,7 +589,7 @@
                 },
 
                 "historical_value": {
-                    "description": "The audited value from a previous run of Puppet, if known. Absent in reports of `inspect` kind.",
+                    "description": "The audited value from a previous run of Oregano, if known. Absent in reports of `inspect` kind.",
                     "oneOf": [
                         { "type": "string" },
                         { "type": "array" },
@@ -628,7 +628,7 @@
                 },
 
                 "corrective_change": {
-                    "description": "True if this event was caused by an unexpected change to the system between Puppet runs.",
+                    "description": "True if this event was caused by an unexpected change to the system between Oregano runs.",
                     "type":        "boolean"
                 }
             },

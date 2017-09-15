@@ -9,9 +9,9 @@ tag 'audit:medium',
 # Further, the apps should be runnable on the agent after the sync has occurred.
 #
 
-require 'puppet/acceptance/temp_file_utils'
+require 'oregano/acceptance/temp_file_utils'
 
-extend Puppet::Acceptance::TempFileUtils
+extend Oregano::Acceptance::TempFileUtils
 
 initialize_temp_dirs()
 
@@ -33,14 +33,14 @@ app_output = "Hello from the #{app_name} %s"
 master_module_file_content = {}
 
 master_module_file_content["application"] = <<-HERE
-require 'puppet/application'
+require 'oregano/application'
 
-class Puppet::Application::#{app_name.capitalize} < Puppet::Application
+class Oregano::Application::#{app_name.capitalize} < Oregano::Application
 
   def help
     <<-HELP
 
-puppet-#{app_name}(8) -- #{app_desc % "application"}
+oregano-#{app_name}(8) -- #{app_desc % "application"}
 ========
     HELP
   end
@@ -62,8 +62,8 @@ begin
 
     # here we create a custom app, which basically doesn't do anything except
     # for print a hello-world message
-    agent_module_app_file = "#{agent_lib_dir}/puppet/#{mode}/#{app_name}.rb"
-    master_module_app_file = "#{master_module_dir}/#{app_name}/lib/puppet/#{mode}/#{app_name}.rb"
+    agent_module_app_file = "#{agent_lib_dir}/oregano/#{mode}/#{app_name}.rb"
+    master_module_app_file = "#{master_module_dir}/#{app_name}/lib/oregano/#{mode}/#{app_name}.rb"
 
 
     # copy all the files to the master
@@ -83,7 +83,7 @@ begin
       }
     }
     step "start the master" do
-      with_puppet_running_on master, master_opts do
+      with_oregano_running_on master, master_opts do
 
         # the module files shouldn't exist on the agent yet because they haven't been synced
         step "verify that the module files don't exist on the agent path" do
@@ -96,7 +96,7 @@ begin
 
         step "run the agent" do
           agents.each do |agent|
-            on(agent, puppet('agent',
+            on(agent, oregano('agent',
                              "--libdir=\"#{get_test_file_path(agent, agent_lib_dir)}\" ",
                              "--test --trace --server #{master}")
             )
@@ -116,7 +116,7 @@ begin
 
     step "verify that the application shows up in help" do
       agents.each do |agent|
-        on(agent, PuppetCommand.new(:help, "--libdir=\"#{get_test_file_path(agent, agent_lib_dir)}\"")) do
+        on(agent, OreganoCommand.new(:help, "--libdir=\"#{get_test_file_path(agent, agent_lib_dir)}\"")) do
           assert_match(/^\s+#{app_name}\s+#{app_desc % mode}/, result.stdout)
         end
       end
@@ -124,7 +124,7 @@ begin
 
     step "verify that we can run the application" do
       agents.each do |agent|
-        on(agent, PuppetCommand.new(:"#{app_name}", "--libdir=\"#{get_test_file_path(agent, agent_lib_dir)}\"")) do
+        on(agent, OreganoCommand.new(:"#{app_name}", "--libdir=\"#{get_test_file_path(agent, agent_lib_dir)}\"")) do
           assert_match(/^#{app_output % mode}/, result.stdout)
         end
       end

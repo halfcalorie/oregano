@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_request'
-require 'puppet/ssl/key'
+require 'oregano/ssl/certificate_request'
+require 'oregano/ssl/key'
 
-describe Puppet::SSL::CertificateRequest do
+describe Oregano::SSL::CertificateRequest do
   let(:request) { described_class.new("myname") }
   let(:key) {
-    k = Puppet::SSL::Key.new("myname")
+    k = Oregano::SSL::Key.new("myname")
     k.generate
     k
   }
 
 
   it "should be extended with the Indirector module" do
-    expect(described_class.singleton_class).to be_include(Puppet::Indirector)
+    expect(described_class.singleton_class).to be_include(Oregano::Indirector)
   end
 
   it "should indirect certificate_request" do
@@ -60,7 +60,7 @@ describe Puppet::SSL::CertificateRequest do
 
     it "should be able to read requests from disk" do
       path = "/my/path"
-      Puppet::FileSystem.expects(:read).with(path, :encoding => Encoding::ASCII).returns("my request")
+      Oregano::FileSystem.expects(:read).with(path, :encoding => Encoding::ASCII).returns("my request")
       my_req = mock 'request'
       OpenSSL::X509::Request.expects(:new).with("my request").returns(my_req)
       expect(request.read(path)).to equal(my_req)
@@ -85,7 +85,7 @@ describe Puppet::SSL::CertificateRequest do
   end
 
   describe "when generating" do
-    it "should use the content of the provided key if the key is a Puppet::SSL::Key instance" do
+    it "should use the content of the provided key if the key is a Oregano::SSL::Key instance" do
       request.generate(key)
       expect(request.content.verify(key.content.public_key)).to be_truthy
     end
@@ -96,9 +96,9 @@ describe Puppet::SSL::CertificateRequest do
     end
 
     it "should set the CN to the :ca_name setting when the CSR is for a CA" do
-      Puppet[:ca_name] = "mycertname"
-      request = described_class.new(Puppet::SSL::CA_NAME).generate(key)
-      expect(request.subject).to eq OpenSSL::X509::Name.new([['CN', Puppet[:ca_name]]])
+      Oregano[:ca_name] = "mycertname"
+      request = described_class.new(Oregano::SSL::CA_NAME).generate(key)
+      expect(request.subject).to eq OpenSSL::X509::Name.new([['CN', Oregano[:ca_name]]])
     end
 
     it "should set the version to 0" do
@@ -114,7 +114,7 @@ describe Puppet::SSL::CertificateRequest do
 
     context "without subjectAltName / dns_alt_names" do
       before :each do
-        Puppet[:dns_alt_names] = ""
+        Oregano[:dns_alt_names] = ""
       end
 
       ["extreq", "msExtReq"].each do |name|
@@ -134,7 +134,7 @@ describe Puppet::SSL::CertificateRequest do
 
     context "with dns_alt_names" do
       before :each do
-        Puppet[:dns_alt_names] = "one, two, three"
+        Oregano[:dns_alt_names] = "one, two, three"
       end
 
       ["extreq", "msExtReq"].each do |name|
@@ -154,7 +154,7 @@ describe Puppet::SSL::CertificateRequest do
 
     context "with subjectAltName to generate request" do
       before :each do
-        Puppet[:dns_alt_names] = ""
+        Oregano[:dns_alt_names] = ""
       end
 
       it "should add an extreq attribute" do
@@ -213,12 +213,12 @@ describe Puppet::SSL::CertificateRequest do
 
         expect do
           request.generate(key, :csr_attributes => csr_attributes)
-        end.to raise_error Puppet::Error, /Cannot create CSR with attribute thats\.no\.moon: first num too large/
+        end.to raise_error Oregano::Error, /Cannot create CSR with attribute thats\.no\.moon: first num too large/
       end
 
       it "should support old non-DER encoded extensions" do
         csr = OpenSSL::X509::Request.new(File.read(my_fixture("old-style-cert-request.pem")))
-        wrapped_csr = Puppet::SSL::CertificateRequest.from_instance csr
+        wrapped_csr = Oregano::SSL::CertificateRequest.from_instance csr
         exts = wrapped_csr.request_extensions()
 
         expect(exts.find { |ext| ext['oid'] == 'pp_uuid' }['value']).to eq('I-AM-A-UUID')
@@ -265,7 +265,7 @@ describe Puppet::SSL::CertificateRequest do
         san_names.each do |name|
           expect do
             request.generate(key, :extension_requests => {name => san_field})
-          end.to raise_error Puppet::Error, /conflicts with internally used extension/
+          end.to raise_error Oregano::Error, /conflicts with internally used extension/
         end
       end
 
@@ -286,7 +286,7 @@ describe Puppet::SSL::CertificateRequest do
         exts = {"thats.no.moon" => "death star"}
         expect do
           request.generate(key, :extension_requests => exts)
-        end.to raise_error Puppet::Error, /Cannot create CSR with extension request thats\.no\.moon.*: first num too large/
+        end.to raise_error Oregano::Error, /Cannot create CSR with extension request thats\.no\.moon.*: first num too large/
       end
     end
 
@@ -310,13 +310,13 @@ describe Puppet::SSL::CertificateRequest do
 
       expect {
         request.generate(key)
-      }.to raise_error(Puppet::Error, /CSR sign verification failed/)
+      }.to raise_error(Oregano::Error, /CSR sign verification failed/)
     end
 
     it "should log the fingerprint" do
-      Puppet::SSL::Digest.any_instance.stubs(:to_hex).returns("FINGERPRINT")
-      Puppet.stubs(:info)
-      Puppet.expects(:info).with { |s| s =~ /FINGERPRINT/ }
+      Oregano::SSL::Digest.any_instance.stubs(:to_hex).returns("FINGERPRINT")
+      Oregano.stubs(:info)
+      Oregano.expects(:info).with { |s| s =~ /FINGERPRINT/ }
       request.generate(key)
     end
 
@@ -330,7 +330,7 @@ describe Puppet::SSL::CertificateRequest do
       csr = OpenSSL::X509::Request.new
       OpenSSL::Digest.expects(:const_defined?).with("SHA256").returns(false)
       OpenSSL::Digest.expects(:const_defined?).with("SHA1").returns(true)
-      signer = Puppet::SSL::CertificateSigner.new
+      signer = Oregano::SSL::CertificateSigner.new
       signer.sign(csr, key.content)
       expect(csr.verify(key.content)).to be_truthy
     end
@@ -340,8 +340,8 @@ describe Puppet::SSL::CertificateRequest do
       OpenSSL::Digest.expects(:const_defined?).with("SHA256").returns(false)
       OpenSSL::Digest.expects(:const_defined?).with("SHA1").returns(false)
       expect {
-        signer = Puppet::SSL::CertificateSigner.new
-      }.to raise_error(Puppet::Error)
+        signer = Oregano::SSL::CertificateSigner.new
+      }.to raise_error(Oregano::Error)
     end
   end
 
@@ -349,29 +349,29 @@ describe Puppet::SSL::CertificateRequest do
     describe "and a CA is available" do
       it "should save the CSR and trigger autosigning" do
         ca = mock 'ca', :autosign
-        Puppet::SSL::CertificateAuthority.expects(:instance).returns ca
+        Oregano::SSL::CertificateAuthority.expects(:instance).returns ca
 
-        csr = Puppet::SSL::CertificateRequest.new("me")
+        csr = Oregano::SSL::CertificateRequest.new("me")
         terminus = mock 'terminus'
         terminus.stubs(:validate)
-        Puppet::SSL::CertificateRequest.indirection.expects(:prepare).returns(terminus)
+        Oregano::SSL::CertificateRequest.indirection.expects(:prepare).returns(terminus)
         terminus.expects(:save).with { |request| request.instance == csr && request.key == "me" }
 
-        Puppet::SSL::CertificateRequest.indirection.save(csr)
+        Oregano::SSL::CertificateRequest.indirection.save(csr)
       end
     end
 
     describe "and a CA is not available" do
       it "should save the CSR" do
-        Puppet::SSL::CertificateAuthority.expects(:instance).returns nil
+        Oregano::SSL::CertificateAuthority.expects(:instance).returns nil
 
-        csr = Puppet::SSL::CertificateRequest.new("me")
+        csr = Oregano::SSL::CertificateRequest.new("me")
         terminus = mock 'terminus'
         terminus.stubs(:validate)
-        Puppet::SSL::CertificateRequest.indirection.expects(:prepare).returns(terminus)
+        Oregano::SSL::CertificateRequest.indirection.expects(:prepare).returns(terminus)
         terminus.expects(:save).with { |request| request.instance == csr && request.key == "me" }
 
-        Puppet::SSL::CertificateRequest.indirection.save(csr)
+        Oregano::SSL::CertificateRequest.indirection.save(csr)
       end
     end
 

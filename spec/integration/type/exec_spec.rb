@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-describe Puppet::Type.type(:exec) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:exec) do
+  include OreganoSpec::Files
 
-  let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:catalog) { Oregano::Resource::Catalog.new }
   let(:path) { tmpfile('exec_provider') }
   let(:command) { "ruby -e 'File.open(\"#{path}\", \"w\") { |f| f.print \"foo\" }'" }
 
@@ -33,7 +33,7 @@ describe Puppet::Type.type(:exec) do
     catalog.add_resource exec
     catalog.apply
 
-    expect(Puppet::FileSystem.exist?(path)).to be_falsey
+    expect(Oregano::FileSystem.exist?(path)).to be_falsey
   end
 
   it "should execute the command if onlyif returns zero" do
@@ -72,6 +72,6 @@ describe Puppet::Type.type(:exec) do
     catalog.add_resource exec
     catalog.apply
 
-    expect(Puppet::FileSystem.exist?(path)).to be_falsey
+    expect(Oregano::FileSystem.exist?(path)).to be_falsey
   end
 end

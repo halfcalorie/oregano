@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_request_attributes'
+require 'oregano/ssl/certificate_request_attributes'
 
-describe Puppet::SSL::CertificateRequestAttributes do
+describe Oregano::SSL::CertificateRequestAttributes do
 
   let(:expected) do
     {
@@ -20,7 +20,7 @@ describe Puppet::SSL::CertificateRequestAttributes do
   end
   let(:csr_attributes_hash) { expected.dup }
   let(:csr_attributes_path) { '/some/where/csr_attributes.yaml' }
-  let(:csr_attributes) { Puppet::SSL::CertificateRequestAttributes.new(csr_attributes_path) }
+  let(:csr_attributes) { Oregano::SSL::CertificateRequestAttributes.new(csr_attributes_path) }
 
   it "initializes with a path" do
     expect(csr_attributes.path).to eq(csr_attributes_path)
@@ -33,8 +33,8 @@ describe Puppet::SSL::CertificateRequestAttributes do
 
     context "with an available attributes file" do
       before do
-        Puppet::FileSystem.expects(:exist?).with(csr_attributes_path).returns(true)
-        Puppet::Util::Yaml.expects(:load_file).with(csr_attributes_path, {}).returns(csr_attributes_hash)
+        Oregano::FileSystem.expects(:exist?).with(csr_attributes_path).returns(true)
+        Oregano::Util::Yaml.expects(:load_file).with(csr_attributes_path, {}).returns(csr_attributes_hash)
       end
 
       it "loads csr attributes from a file when the file is present" do
@@ -58,9 +58,9 @@ describe Puppet::SSL::CertificateRequestAttributes do
         expect(csr_attributes.custom_attributes).to eq({})
       end
 
-      it "raise a Puppet::Error if an unexpected root key is defined" do
+      it "raise a Oregano::Error if an unexpected root key is defined" do
         csr_attributes_hash['unintentional'] = 'data'
-        expect { csr_attributes.load }.to raise_error(Puppet::Error, /unexpected attributes.*unintentional/)
+        expect { csr_attributes.load }.to raise_error(Oregano::Error, /unexpected attributes.*unintentional/)
       end
     end
   end

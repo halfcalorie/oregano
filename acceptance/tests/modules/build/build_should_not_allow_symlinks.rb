@@ -1,4 +1,4 @@
-test_name "puppet module build should verify there are no symlinks in module"
+test_name "oregano module build should verify there are no symlinks in module"
 
 tag 'audit:medium',
     'audit:acceptance'
@@ -19,7 +19,7 @@ agents.each do |agent|
   end
 
   step 'Generate module' do
-    on(agent, puppet("module generate #{modauthor}-#{modname} --skip-interview"))
+    on(agent, oregano("module generate #{modauthor}-#{modname} --skip-interview"))
   end
 
   step 'Add symlink to module' do
@@ -28,7 +28,7 @@ agents.each do |agent|
   end
 
   step 'Build module should fail with message about needing symlinks removed' do
-    on(agent, puppet("module build #{modname}"), :acceptable_exit_codes => [1]) do |res|
+    on(agent, oregano("module build #{modname}"), :acceptable_exit_codes => [1]) do |res|
       fail_test('Proper failure message not displayed') unless res.stderr.include? 'Symlinks in modules are unsupported'
     end
   end

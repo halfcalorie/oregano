@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'The type calculator' do
   let(:calculator) { TypeCalculator.new }
@@ -230,15 +230,15 @@ describe 'The type calculator' do
 
     context 'version' do
       it 'translates to PVersionType' do
-        expect(calculator.infer(SemanticPuppet::Version.new(1,0,0)).class).to eq(PSemVerType)
+        expect(calculator.infer(SemanticOregano::Version.new(1,0,0)).class).to eq(PSemVerType)
       end
 
       it 'range translates to PVersionRangeType' do
-        expect(calculator.infer(SemanticPuppet::VersionRange.parse('1.x')).class).to eq(PSemVerRangeType)
+        expect(calculator.infer(SemanticOregano::VersionRange.parse('1.x')).class).to eq(PSemVerRangeType)
       end
 
       it 'translates to a limited PVersionType by infer_set' do
-        v = SemanticPuppet::Version.new(1,0,0)
+        v = SemanticOregano::Version.new(1,0,0)
         t = calculator.infer_set(v)
         expect(t.class).to eq(PSemVerType)
         expect(t.ranges.size).to eq(1)
@@ -282,7 +282,7 @@ describe 'The type calculator' do
 
       let(:derived_object) do
         Class.new(Array) do
-          include PuppetObject
+          include OreganoObject
 
           def self._pcore_type
             @type ||= TypeFactory.object('name' => 'DerivedObjectArray')
@@ -298,7 +298,7 @@ describe 'The type calculator' do
         expect(calculator.infer(derived).class).to eq(PRuntimeType)
       end
 
-      it 'translates derived Puppet Object Array to PObjectType' do
+      it 'translates derived Oregano Object Array to PObjectType' do
         expect(calculator.infer(derived_object).class).to eq(PObjectType)
       end
 
@@ -310,11 +310,11 @@ describe 'The type calculator' do
         expect(runtime_t('ruby', nil)).to be_instance(derived)
       end
 
-      it 'Instance of derived Puppet Object Array class is not instance of Array type' do
+      it 'Instance of derived Oregano Object Array class is not instance of Array type' do
         expect(PArrayType::DEFAULT).not_to be_instance(derived_object)
       end
 
-      it 'Instance of derived Puppet Object Array class is instance of Object type' do
+      it 'Instance of derived Oregano Object Array class is instance of Object type' do
         expect(object_t('name' => 'DerivedObjectArray')).to be_instance(derived_object)
       end
 
@@ -431,7 +431,7 @@ describe 'The type calculator' do
 
       let(:derived_object) do
         Class.new(Hash) do
-          include PuppetObject
+          include OreganoObject
 
           def self._pcore_type
             @type ||= TypeFactory.object('name' => 'DerivedObjectHash')
@@ -447,7 +447,7 @@ describe 'The type calculator' do
         expect(calculator.infer(derived).class).to eq(PRuntimeType)
       end
 
-      it 'translates derived Puppet Object Hash to PObjectType' do
+      it 'translates derived Oregano Object Hash to PObjectType' do
         expect(calculator.infer(derived_object).class).to eq(PObjectType)
       end
 
@@ -459,11 +459,11 @@ describe 'The type calculator' do
         expect(runtime_t('ruby', nil)).to be_instance(derived)
       end
 
-      it 'Instance of derived Puppet Object Hash class is not instance of Hash type' do
+      it 'Instance of derived Oregano Object Hash class is not instance of Hash type' do
         expect(PHashType::DEFAULT).not_to be_instance(derived_object)
       end
 
-      it 'Instance of derived Puppet Object Hash class is instance of Object type' do
+      it 'Instance of derived Oregano Object Hash class is instance of Object type' do
         expect(object_t('name' => 'DerivedObjectHash')).to be_instance(derived_object)
       end
 
@@ -1266,8 +1266,8 @@ describe 'The type calculator' do
         Regexp     => PRegexpType::DEFAULT,
         Array      => TypeFactory.array_of_any,
         Hash       => TypeFactory.hash_of_any
-      }.each do |ruby_type, puppet_type |
-          expect(ruby_type).to be_assignable_to(puppet_type)
+      }.each do |ruby_type, oregano_type |
+          expect(ruby_type).to be_assignable_to(oregano_type)
       end
     end
 
@@ -1998,7 +1998,7 @@ describe 'The type calculator' do
       end
 
       it 'a Function instance should be considered a Callable' do
-        fc = Puppet::Functions.create_function(:foo) do
+        fc = Oregano::Functions.create_function(:foo) do
           dispatch :foo do
             param 'String', :a
           end

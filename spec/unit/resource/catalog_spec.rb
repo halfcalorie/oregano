@@ -1,49 +1,49 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 require 'matchers/json'
 
-describe Puppet::Resource::Catalog, "when compiling" do
+describe Oregano::Resource::Catalog, "when compiling" do
   include JSONMatchers
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before do
     @basepath = make_absolute("/somepath")
     # stub this to not try to create state.yaml
-    Puppet::Util::Storage.stubs(:store)
+    Oregano::Util::Storage.stubs(:store)
   end
 
   it "should support json, pson, dot, yaml" do
     # msgpack is optional, so using include instead of eq
-    expect(Puppet::Resource::Catalog.supported_formats).to include(:json, :pson, :dot, :yaml)
+    expect(Oregano::Resource::Catalog.supported_formats).to include(:json, :pson, :dot, :yaml)
   end
 
   # audit only resources are unmanaged
   # as are resources without properties with should values
   it "should write its managed resources' types, namevars" do
-    catalog = Puppet::Resource::Catalog.new("host")
+    catalog = Oregano::Resource::Catalog.new("host")
 
     resourcefile = tmpfile('resourcefile')
-    Puppet[:resourcefile] = resourcefile
+    Oregano[:resourcefile] = resourcefile
 
-    res = Puppet::Type.type('file').new(:title => File.expand_path('/tmp/sam'), :ensure => 'present')
+    res = Oregano::Type.type('file').new(:title => File.expand_path('/tmp/sam'), :ensure => 'present')
     res.file = 'site.pp'
     res.line = 21
 
-    res2 = Puppet::Type.type('exec').new(:title => 'bob', :command => "#{File.expand_path('/bin/rm')} -rf /")
+    res2 = Oregano::Type.type('exec').new(:title => 'bob', :command => "#{File.expand_path('/bin/rm')} -rf /")
     res2.file = File.expand_path('/modules/bob/manifests/bob.pp')
     res2.line = 42
 
-    res3 = Puppet::Type.type('file').new(:title => File.expand_path('/tmp/susan'), :audit => 'all')
+    res3 = Oregano::Type.type('file').new(:title => File.expand_path('/tmp/susan'), :audit => 'all')
     res3.file = 'site.pp'
     res3.line = 63
 
-    res4 = Puppet::Type.type('file').new(:title => File.expand_path('/tmp/lilly'))
+    res4 = Oregano::Type.type('file').new(:title => File.expand_path('/tmp/lilly'))
     res4.file = 'site.pp'
     res4.line = 84
 
-    comp_res = Puppet::Type.type('component').new(:title => 'Class[Main]')
+    comp_res = Oregano::Type.type('component').new(:title => 'Class[Main]')
 
     catalog.add_resource(res, res2, res3, res4, comp_res)
     catalog.write_resource_file
@@ -54,10 +54,10 @@ describe Puppet::Resource::Catalog, "when compiling" do
   end
 
   it "should log an error if unable to write to the resource file" do
-    catalog = Puppet::Resource::Catalog.new("host")
-    Puppet[:resourcefile] = File.expand_path('/not/writable/file')
+    catalog = Oregano::Resource::Catalog.new("host")
+    Oregano[:resourcefile] = File.expand_path('/not/writable/file')
 
-    catalog.add_resource(Puppet::Type.type('file').new(:title => File.expand_path('/tmp/foo')))
+    catalog.add_resource(Oregano::Type.type('file').new(:title => File.expand_path('/tmp/foo')))
     catalog.write_resource_file
     expect(@logs.size).to eq(1)
     expect(@logs.first.message).to match(/Could not create resource file/)
@@ -65,15 +65,15 @@ describe Puppet::Resource::Catalog, "when compiling" do
   end
 
   it "should be able to write its list of classes to the class file" do
-    @catalog = Puppet::Resource::Catalog.new("host")
+    @catalog = Oregano::Resource::Catalog.new("host")
 
     @catalog.add_class "foo", "bar"
 
-    Puppet[:classfile] = File.expand_path("/class/file")
+    Oregano[:classfile] = File.expand_path("/class/file")
 
     fh = mock 'filehandle'
-    classfile = Puppet.settings.setting(:classfile)
-    Puppet::FileSystem.expects(:open).with(classfile.value, classfile.mode.to_i(8), "w:UTF-8").yields fh
+    classfile = Oregano.settings.setting(:classfile)
+    Oregano::FileSystem.expects(:open).with(classfile.value, classfile.mode.to_i(8), "w:UTF-8").yields fh
 
     fh.expects(:puts).with "foo\nbar"
 
@@ -81,63 +81,63 @@ describe Puppet::Resource::Catalog, "when compiling" do
   end
 
   it "should have a client_version attribute" do
-    @catalog = Puppet::Resource::Catalog.new("host")
+    @catalog = Oregano::Resource::Catalog.new("host")
     @catalog.client_version = 5
     expect(@catalog.client_version).to eq(5)
   end
 
   it "should have a server_version attribute" do
-    @catalog = Puppet::Resource::Catalog.new("host")
+    @catalog = Oregano::Resource::Catalog.new("host")
     @catalog.server_version = 5
     expect(@catalog.server_version).to eq(5)
   end
 
   it "defaults code_id to nil" do
-    catalog = Puppet::Resource::Catalog.new("host")
+    catalog = Oregano::Resource::Catalog.new("host")
     expect(catalog.code_id).to be_nil
   end
 
   it "should include a catalog_uuid" do
     SecureRandom.stubs(:uuid).returns ("827a74c8-cf98-44da-9ff7-18c5e4bee41e")
-    catalog = Puppet::Resource::Catalog.new("host")
+    catalog = Oregano::Resource::Catalog.new("host")
     expect(catalog.catalog_uuid).to eq("827a74c8-cf98-44da-9ff7-18c5e4bee41e")
   end
 
   it "should include the current catalog_format" do
-    catalog = Puppet::Resource::Catalog.new("host")
+    catalog = Oregano::Resource::Catalog.new("host")
     expect(catalog.catalog_format).to eq(1)
   end
 
   describe "when compiling" do
     it "should accept tags" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       config.tag("one")
       expect(config).to be_tagged("one")
     end
 
     it "should accept multiple tags at once" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       config.tag("one", "two")
       expect(config).to be_tagged("one")
       expect(config).to be_tagged("two")
     end
 
     it "should convert all tags to strings" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       config.tag("one", :two)
       expect(config).to be_tagged("one")
       expect(config).to be_tagged("two")
     end
 
     it "should tag with both the qualified name and the split name" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       config.tag("one::two")
       expect(config).to be_tagged("one")
       expect(config).to be_tagged("one::two")
     end
 
     it "should accept classes" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       config.add_class("one")
       expect(config.classes).to eq(%w{one})
       config.add_class("two", "three")
@@ -145,29 +145,29 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should tag itself with passed class names" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       config.add_class("one")
       expect(config).to be_tagged("one")
     end
 
     it "handles resource titles with brackets" do
-      config = Puppet::Resource::Catalog.new("mynode")
+      config = Oregano::Resource::Catalog.new("mynode")
       expect(config.title_key_for_ref("Notify[[foo]bar]")).to eql(["Notify", "[foo]bar"])
     end
   end
 
   describe "when converting to a RAL catalog" do
     before do
-      @original = Puppet::Resource::Catalog.new("mynode")
+      @original = Oregano::Resource::Catalog.new("mynode")
       @original.tag(*%w{one two three})
       @original.add_class *%w{four five six}
 
-      @top            = Puppet::Resource.new :class, 'top'
-      @topobject      = Puppet::Resource.new :file, @basepath+'/topobject'
-      @middle         = Puppet::Resource.new :class, 'middle'
-      @middleobject   = Puppet::Resource.new :file, @basepath+'/middleobject'
-      @bottom         = Puppet::Resource.new :class, 'bottom'
-      @bottomobject   = Puppet::Resource.new :file, @basepath+'/bottomobject'
+      @top            = Oregano::Resource.new :class, 'top'
+      @topobject      = Oregano::Resource.new :file, @basepath+'/topobject'
+      @middle         = Oregano::Resource.new :class, 'middle'
+      @middleobject   = Oregano::Resource.new :file, @basepath+'/middleobject'
+      @bottom         = Oregano::Resource.new :class, 'bottom'
+      @bottomobject   = Oregano::Resource.new :file, @basepath+'/bottomobject'
 
       @resources = [@top, @topobject, @middle, @middleobject, @bottom, @bottomobject]
 
@@ -187,7 +187,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
         # Warning: a failure here will result in "global resource iteration is
         # deprecated" being raised, because the rspec rendering to get the
         # result tries to call `each` on the resource, and that raises.
-        expect(@catalog.resource(resource.ref)).to be_a_kind_of(Puppet::Type)
+        expect(@catalog.resource(resource.ref)).to be_a_kind_of(Oregano::Type)
       end
     end
 
@@ -211,9 +211,9 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
     # This tests #931.
     it "should not lose track of resources whose names vary" do
-      changer = Puppet::Resource.new :file, @basepath+'/test/', :parameters => {:ensure => :directory}
+      changer = Oregano::Resource.new :file, @basepath+'/test/', :parameters => {:ensure => :directory}
 
-      config = Puppet::Resource::Catalog.new('test')
+      config = Oregano::Resource::Catalog.new('test')
       config.add_resource(changer)
       config.add_resource(@top)
 
@@ -231,19 +231,19 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when filtering" do
     before :each do
-      @original = Puppet::Resource::Catalog.new("mynode")
+      @original = Oregano::Resource::Catalog.new("mynode")
       @original.tag(*%w{one two three})
       @original.add_class *%w{four five six}
 
       @r1 = stub_everything 'r1', :ref => "File[/a]"
       @r1.stubs(:respond_to?).with(:ref).returns(true)
       @r1.stubs(:copy_as_resource).returns(@r1)
-      @r1.stubs(:is_a?).with(Puppet::Resource).returns(true)
+      @r1.stubs(:is_a?).with(Oregano::Resource).returns(true)
 
       @r2 = stub_everything 'r2', :ref => "File[/b]"
       @r2.stubs(:respond_to?).with(:ref).returns(true)
       @r2.stubs(:copy_as_resource).returns(@r2)
-      @r2.stubs(:is_a?).with(Puppet::Resource).returns(true)
+      @r2.stubs(:is_a?).with(Oregano::Resource).returns(true)
 
       @resources = [@r1,@r2]
 
@@ -299,11 +299,11 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when functioning as a resource container" do
     before do
-      @catalog = Puppet::Resource::Catalog.new("host")
-      @one = Puppet::Type.type(:notify).new :name => "one"
-      @two = Puppet::Type.type(:notify).new :name => "two"
-      @three = Puppet::Type.type(:notify).new :name => "three"
-      @dupe = Puppet::Type.type(:notify).new :name => "one"
+      @catalog = Oregano::Resource::Catalog.new("host")
+      @one = Oregano::Type.type(:notify).new :name => "one"
+      @two = Oregano::Type.type(:notify).new :name => "two"
+      @three = Oregano::Type.type(:notify).new :name => "three"
+      @dupe = Oregano::Type.type(:notify).new :name => "one"
     end
 
     it "should provide a method to add one or more resources" do
@@ -384,11 +384,11 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
     describe 'with a duplicate resource' do
       def resource_at(type, name, file, line)
-        resource = Puppet::Resource.new(type, name)
+        resource = Oregano::Resource.new(type, name)
         resource.file = file
         resource.line = line
 
-        Puppet::Type.type(type).new(resource)
+        Oregano::Type.type(type).new(resource)
       end
 
       let(:orig) { resource_at(:notify, 'duplicate-title', '/path/to/orig/file', 42) }
@@ -398,7 +398,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
         @catalog.add_resource(orig)
 
         expect { @catalog.add_resource(dupe) }.to raise_error { |error|
-          expect(error).to be_a Puppet::Resource::Catalog::DuplicateResourceError
+          expect(error).to be_a Oregano::Resource::Catalog::DuplicateResourceError
 
           expect(error.message).to match %r[Duplicate declaration: Notify\[duplicate-title\] is already declared]
           expect(error.message).to match %r[in file /path/to/orig/file:42]
@@ -438,7 +438,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
     it "should optionally support an initialization block and should finalize after such blocks" do
       @one.expects :finish
       @two.expects :finish
-      config = Puppet::Resource::Catalog.new("host") do |conf|
+      config = Oregano::Resource::Catalog.new("host") do |conf|
         conf.add_resource @one
         conf.add_resource @two
       end
@@ -481,7 +481,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should create aliases for isomorphic resources whose names do not match their titles" do
-      resource = Puppet::Type::File.new(:title => "testing", :path => @basepath+"/something")
+      resource = Oregano::Type::File.new(:title => "testing", :path => @basepath+"/something")
 
       @catalog.add_resource(resource)
 
@@ -489,7 +489,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should not create aliases for non-isomorphic resources whose names do not match their titles" do
-      resource = Puppet::Type.type(:exec).new(:title => "testing", :command => "echo", :path => %w{/bin /usr/bin /usr/local/bin})
+      resource = Oregano::Type.type(:exec).new(:title => "testing", :command => "echo", :path => %w{/bin /usr/bin /usr/local/bin})
 
       @catalog.add_resource(resource)
 
@@ -534,7 +534,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should add an alias for the namevar when the title and name differ on isomorphic resource types" do
-      resource = Puppet::Type.type(:file).new :path => @basepath+"/something", :title => "other", :content => "blah"
+      resource = Oregano::Type.type(:file).new :path => @basepath+"/something", :title => "other", :content => "blah"
       resource.expects(:isomorphic?).returns(true)
       @catalog.add_resource(resource)
       expect(@catalog.resource(:file, "other")).to equal(resource)
@@ -542,7 +542,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should not add an alias for the namevar when the title and name differ on non-isomorphic resource types" do
-      resource = Puppet::Type.type(:file).new :path => @basepath+"/something", :title => "other", :content => "blah"
+      resource = Oregano::Type.type(:file).new :path => @basepath+"/something", :title => "other", :content => "blah"
       resource.expects(:isomorphic?).returns(false)
       @catalog.add_resource(resource)
       expect(@catalog.resource(:file, resource.title)).to equal(resource)
@@ -553,14 +553,14 @@ describe Puppet::Resource::Catalog, "when compiling" do
     it "should provide a method to create additional resources that also registers the resource" do
       args = {:name => "/yay", :ensure => :file}
       resource = stub 'file', :ref => "File[/yay]", :catalog= => @catalog, :title => "/yay", :[] => "/yay"
-      Puppet::Type.type(:file).expects(:new).with(args).returns(resource)
+      Oregano::Type.type(:file).expects(:new).with(args).returns(resource)
       @catalog.create_resource :file, args
       expect(@catalog.resource("File[/yay]")).to equal(resource)
     end
 
     describe "when adding resources with multiple namevars" do
       before :each do
-        Puppet::Type.newtype(:multiple) do
+        Oregano::Type.newtype(:multiple) do
           newparam(:color, :namevar => true)
           newparam(:designation, :namevar => true)
 
@@ -577,7 +577,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
       end
 
       it "should add an alias using the uniqueness key" do
-        @resource = Puppet::Type.type(:multiple).new(:title => "some resource", :color => "red", :designation => "5")
+        @resource = Oregano::Type.type(:multiple).new(:title => "some resource", :color => "red", :designation => "5")
 
         @catalog.add_resource(@resource)
         expect(@catalog.resource(:multiple, "some resource")).to eq(@resource)
@@ -586,8 +586,8 @@ describe Puppet::Resource::Catalog, "when compiling" do
       end
 
       it "should conflict with a resource with the same uniqueness key" do
-        @resource = Puppet::Type.type(:multiple).new(:title => "some resource", :color => "red", :designation => "5")
-        @other    = Puppet::Type.type(:multiple).new(:title => "another resource", :color => "red", :designation => "5")
+        @resource = Oregano::Type.type(:multiple).new(:title => "some resource", :color => "red", :designation => "5")
+        @other    = Oregano::Type.type(:multiple).new(:title => "another resource", :color => "red", :designation => "5")
 
         @catalog.add_resource(@resource)
         expect { @catalog.add_resource(@other) }.to raise_error(ArgumentError, /Cannot alias Multiple\[another resource\] to \["red", "5"\].*resource \["Multiple", "red", "5"\] already declared/)
@@ -595,16 +595,16 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
       it "should conflict when its uniqueness key matches another resource's title" do
         path = make_absolute("/tmp/foo")
-        @resource = Puppet::Type.type(:file).new(:title => path)
-        @other    = Puppet::Type.type(:file).new(:title => "another file", :path => path)
+        @resource = Oregano::Type.type(:file).new(:title => path)
+        @other    = Oregano::Type.type(:file).new(:title => "another file", :path => path)
 
         @catalog.add_resource(@resource)
         expect { @catalog.add_resource(@other) }.to raise_error(ArgumentError, /Cannot alias File\[another file\] to \["#{Regexp.escape(path)}"\].*resource \["File", "#{Regexp.escape(path)}"\] already declared/)
       end
 
       it "should conflict when its uniqueness key matches the uniqueness key derived from another resource's title" do
-        @resource = Puppet::Type.type(:multiple).new(:title => "red leader")
-        @other    = Puppet::Type.type(:multiple).new(:title => "another resource", :color => "red", :designation => "leader")
+        @resource = Oregano::Type.type(:multiple).new(:title => "red leader")
+        @other    = Oregano::Type.type(:multiple).new(:title => "another resource", :color => "red", :designation => "leader")
 
         @catalog.add_resource(@resource)
         expect { @catalog.add_resource(@other) }.to raise_error(ArgumentError, /Cannot alias Multiple\[another resource\] to \["red", "leader"\].*resource \["Multiple", "red", "leader"\] already declared/)
@@ -614,14 +614,14 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when applying" do
     before :each do
-      @catalog = Puppet::Resource::Catalog.new("host")
+      @catalog = Oregano::Resource::Catalog.new("host")
 
-      @transaction = Puppet::Transaction.new(@catalog, nil, Puppet::Graph::RandomPrioritizer.new)
-      Puppet::Transaction.stubs(:new).returns(@transaction)
+      @transaction = Oregano::Transaction.new(@catalog, nil, Oregano::Graph::RandomPrioritizer.new)
+      Oregano::Transaction.stubs(:new).returns(@transaction)
       @transaction.stubs(:evaluate)
       @transaction.stubs(:for_network_device=)
 
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
     end
 
     it "should create and evaluate a transaction" do
@@ -663,19 +663,19 @@ describe Puppet::Resource::Catalog, "when compiling" do
       # super() doesn't work in the setup method for some reason
       before do
         @catalog.host_config = true
-        Puppet::Util::Storage.stubs(:store)
+        Oregano::Util::Storage.stubs(:store)
       end
 
       it "should initialize the state database before applying a catalog" do
-        Puppet::Util::Storage.expects(:load)
+        Oregano::Util::Storage.expects(:load)
 
         # Short-circuit the apply, so we know we're loading before the transaction
-        Puppet::Transaction.expects(:new).raises ArgumentError
+        Oregano::Transaction.expects(:new).raises ArgumentError
         expect { @catalog.apply }.to raise_error(ArgumentError)
       end
 
       it "should sync the state database after applying" do
-        Puppet::Util::Storage.expects(:store)
+        Oregano::Util::Storage.expects(:store)
         @transaction.stubs :any_failed? => false
         @catalog.apply
       end
@@ -689,14 +689,14 @@ describe Puppet::Resource::Catalog, "when compiling" do
       end
 
       it "should never send reports" do
-        Puppet[:report] = true
-        Puppet[:summarize] = true
+        Oregano[:report] = true
+        Oregano[:summarize] = true
         @catalog.apply
       end
 
       it "should never modify the state database" do
-        Puppet::Util::Storage.expects(:load).never
-        Puppet::Util::Storage.expects(:store).never
+        Oregano::Util::Storage.expects(:load).never
+        Oregano::Util::Storage.expects(:store).never
         @catalog.apply
       end
 
@@ -705,7 +705,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when creating a relationship graph" do
     before do
-      @catalog = Puppet::Resource::Catalog.new("host")
+      @catalog = Oregano::Resource::Catalog.new("host")
     end
 
     it "should get removed when the catalog is cleaned up" do
@@ -719,15 +719,15 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when writing dot files" do
     before do
-      @catalog = Puppet::Resource::Catalog.new("host")
+      @catalog = Oregano::Resource::Catalog.new("host")
       @name = :test
-      @file = File.join(Puppet[:graphdir], @name.to_s + ".dot")
+      @file = File.join(Oregano[:graphdir], @name.to_s + ".dot")
     end
 
     it "should only write when it is a host catalog" do
-      Puppet::FileSystem.expects(:open).with(@file, 0640, "w:UTF-8").never
+      Oregano::FileSystem.expects(:open).with(@file, 0640, "w:UTF-8").never
       @catalog.host_config = false
-      Puppet[:graph] = true
+      Oregano[:graph] = true
       @catalog.write_graph(@name)
     end
 
@@ -735,24 +735,24 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when indirecting" do
     before do
-      @real_indirection = Puppet::Resource::Catalog.indirection
+      @real_indirection = Oregano::Resource::Catalog.indirection
 
       @indirection = stub 'indirection', :name => :catalog
     end
 
     it "should use the value of the 'catalog_terminus' setting to determine its terminus class" do
-      # Puppet only checks the terminus setting the first time you ask
+      # Oregano only checks the terminus setting the first time you ask
       # so this returns the object to the clean state
       # at the expense of making this test less pure
-      Puppet::Resource::Catalog.indirection.reset_terminus_class
+      Oregano::Resource::Catalog.indirection.reset_terminus_class
 
-      Puppet.settings[:catalog_terminus] = "rest"
-      expect(Puppet::Resource::Catalog.indirection.terminus_class).to eq(:rest)
+      Oregano.settings[:catalog_terminus] = "rest"
+      expect(Oregano::Resource::Catalog.indirection.terminus_class).to eq(:rest)
     end
 
     it "should allow the terminus class to be set manually" do
-      Puppet::Resource::Catalog.indirection.terminus_class = :rest
-      expect(Puppet::Resource::Catalog.indirection.terminus_class).to eq(:rest)
+      Oregano::Resource::Catalog.indirection.terminus_class = :rest
+      expect(Oregano::Resource::Catalog.indirection.terminus_class).to eq(:rest)
     end
 
     after do
@@ -762,7 +762,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when converting to yaml" do
     before do
-      @catalog = Puppet::Resource::Catalog.new("me")
+      @catalog = Oregano::Resource::Catalog.new("me")
       @catalog.add_edge("one", "two")
     end
 
@@ -773,7 +773,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
 
   describe "when converting from yaml" do
     before do
-      @catalog = Puppet::Resource::Catalog.new("me")
+      @catalog = Oregano::Resource::Catalog.new("me")
       @catalog.add_edge("one", "two")
 
       text = YAML.dump(@catalog)
@@ -781,7 +781,7 @@ describe Puppet::Resource::Catalog, "when compiling" do
     end
 
     it "should get converted back to a catalog" do
-      expect(@newcatalog).to be_instance_of(Puppet::Resource::Catalog)
+      expect(@newcatalog).to be_instance_of(Oregano::Resource::Catalog)
     end
 
     it "should have all vertices" do
@@ -795,9 +795,9 @@ describe Puppet::Resource::Catalog, "when compiling" do
   end
 end
 
-describe Puppet::Resource::Catalog, "when converting a resource catalog to json" do
+describe Oregano::Resource::Catalog, "when converting a resource catalog to json" do
   include JSONMatchers
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   it "should validate an empty catalog against the schema" do
     empty_catalog = compile_to_catalog("")
@@ -853,13 +853,13 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
   context 'when dealing with parameters that have non-Data values' do
     context 'and rich_data is enabled' do
       before(:each) do
-        Puppet.push_context(:loaders => Puppet::Pops::Loaders.new(Puppet.lookup(:environments).get(Puppet[:environment])))
-        Puppet[:rich_data] = true
+        Oregano.push_context(:loaders => Oregano::Pops::Loaders.new(Oregano.lookup(:environments).get(Oregano[:environment])))
+        Oregano[:rich_data] = true
       end
 
       after(:each) do
-        Puppet[:rich_data] = false
-        Puppet.pop_context
+        Oregano[:rich_data] = false
+        Oregano.pop_context
       end
 
 
@@ -871,7 +871,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
       end
 
       it 'should read and convert rich value hash containing Regexp from json' do
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog_w_regexp.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog_w_regexp.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(Regexp)
         expect(message).to eql(/[a-z]+/)
@@ -879,58 +879,58 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should read and convert rich value hash containing Version from json' do
         catalog = compile_to_catalog("notify {'foo': message => SemVer('1.0.0') }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
-        expect(message).to be_a(SemanticPuppet::Version)
-        expect(message).to eql(SemanticPuppet::Version.parse('1.0.0'))
+        expect(message).to be_a(SemanticOregano::Version)
+        expect(message).to eql(SemanticOregano::Version.parse('1.0.0'))
       end
 
       it 'should read and convert rich value hash containing VersionRange from json' do
         catalog = compile_to_catalog("notify {'foo': message => SemVerRange('>=1.0.0') }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
-        expect(message).to be_a(SemanticPuppet::VersionRange)
-        expect(message).to eql(SemanticPuppet::VersionRange.parse('>=1.0.0'))
+        expect(message).to be_a(SemanticOregano::VersionRange)
+        expect(message).to eql(SemanticOregano::VersionRange.parse('>=1.0.0'))
       end
 
       it 'should read and convert rich value hash containing Timespan from json' do
         catalog = compile_to_catalog("notify {'foo': message => Timespan(1234) }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
-        expect(message).to be_a(Puppet::Pops::Time::Timespan)
-        expect(message).to eql(Puppet::Pops::Time::Timespan.parse('1234', '%S'))
+        expect(message).to be_a(Oregano::Pops::Time::Timespan)
+        expect(message).to eql(Oregano::Pops::Time::Timespan.parse('1234', '%S'))
       end
 
       it 'should read and convert rich value hash containing Timestamp from json' do
         catalog = compile_to_catalog("notify {'foo': message => Timestamp('2016-09-15T08:32:16.123 UTC') }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
-        expect(message).to be_a(Puppet::Pops::Time::Timestamp)
-        expect(message).to eql(Puppet::Pops::Time::Timestamp.parse('2016-09-15T08:32:16.123 UTC'))
+        expect(message).to be_a(Oregano::Pops::Time::Timestamp)
+        expect(message).to eql(Oregano::Pops::Time::Timestamp.parse('2016-09-15T08:32:16.123 UTC'))
       end
 
       it 'should read and convert rich value hash containing hash with rich data from json' do
         catalog = compile_to_catalog("notify {'foo': message => { 'version' => SemVer('1.0.0'), 'time' => Timestamp('2016-09-15T08:32:16.123 UTC') }}")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(Hash)
-        expect(message['version']).to eql(SemanticPuppet::Version.parse('1.0.0'))
-        expect(message['time']).to eql(Puppet::Pops::Time::Timestamp.parse('2016-09-15T08:32:16.123 UTC'))
+        expect(message['version']).to eql(SemanticOregano::Version.parse('1.0.0'))
+        expect(message['time']).to eql(Oregano::Pops::Time::Timestamp.parse('2016-09-15T08:32:16.123 UTC'))
       end
 
       it 'should read and convert rich value hash containing an array with rich data from json' do
         catalog = compile_to_catalog("notify {'foo': message => [ SemVer('1.0.0'), Timestamp('2016-09-15T08:32:16.123 UTC') ] }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(Array)
-        expect(message[0]).to eql(SemanticPuppet::Version.parse('1.0.0'))
-        expect(message[1]).to eql(Puppet::Pops::Time::Timestamp.parse('2016-09-15T08:32:16.123 UTC'))
+        expect(message[0]).to eql(SemanticOregano::Version.parse('1.0.0'))
+        expect(message[1]).to eql(Oregano::Pops::Time::Timestamp.parse('2016-09-15T08:32:16.123 UTC'))
       end
     end
 
     context 'and rich_data is disabled' do
       before(:each) do
-        Puppet[:rich_data] = false
+        Oregano[:rich_data] = false
       end
 
       let(:catalog_w_regexp)  { compile_to_catalog("notify {'foo': message => /[a-z]+/ }") }
@@ -940,7 +940,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
       end
 
       it 'should convert parameter containing Regexp into strings' do
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog_w_regexp.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog_w_regexp.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(String)
         expect(message).to eql('/[a-z]+/')
@@ -948,7 +948,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should convert parameter containing Version into string' do
         catalog = compile_to_catalog("notify {'foo': message => SemVer('1.0.0') }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(String)
         expect(message).to eql('1.0.0')
@@ -956,7 +956,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should convert parameter containing VersionRange into string' do
         catalog = compile_to_catalog("notify {'foo': message => SemVerRange('>=1.0.0') }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(String)
         expect(message).to eql('>=1.0.0')
@@ -964,7 +964,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should convert parameter containing Timespan into string' do
         catalog = compile_to_catalog("notify {'foo': message => Timespan(1234) }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(String)
         expect(message).to eql('0-00:20:34.0')
@@ -972,7 +972,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should convert parameter containing Timestamp into string' do
         catalog = compile_to_catalog("notify {'foo': message => Timestamp('2016-09-15T08:32:16.123 UTC') }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(String)
         expect(message).to eql('2016-09-15T08:32:16.123000000 UTC')
@@ -980,7 +980,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should convert param containing array with :undef entries' do
         catalog = compile_to_catalog("notify {'foo': message => [ 10, undef, 20 ] }")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(Array)
         expect(message[0]).to eql(10)
@@ -990,7 +990,7 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
 
       it 'should convert param containing hash with :undef entries' do
         catalog = compile_to_catalog("notify {'foo': message => {a => undef, b => 10}}")
-        catalog2 = Puppet::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
+        catalog2 = Oregano::Resource::Catalog.from_data_hash(JSON.parse(catalog.to_json))
         message = catalog2.resource('notify', 'foo')['message']
         expect(message).to be_a(Hash)
         expect(message.has_key?('a')).to eql(true)
@@ -1003,9 +1003,9 @@ describe Puppet::Resource::Catalog, "when converting a resource catalog to json"
   end
 end
 
-describe Puppet::Resource::Catalog, "when converting to json" do
+describe Oregano::Resource::Catalog, "when converting to json" do
   before do
-    @catalog = Puppet::Resource::Catalog.new("myhost")
+    @catalog = Oregano::Resource::Catalog.new("myhost")
   end
 
   { :name => 'myhost',
@@ -1059,7 +1059,7 @@ describe Puppet::Resource::Catalog, "when converting to json" do
   end
 end
 
-describe Puppet::Resource::Catalog, "when converting from json" do
+describe Oregano::Resource::Catalog, "when converting from json" do
   before do
     @data = {
       'name' => "myhost"
@@ -1073,14 +1073,14 @@ describe Puppet::Resource::Catalog, "when converting from json" do
     @data['catalog_format'] = 42
     @data['tags'] = %w{one two}
     @data['classes'] = %w{one two}
-    @data['edges'] = [Puppet::Relationship.new('File[/foo]', 'File[/bar]',
+    @data['edges'] = [Oregano::Relationship.new('File[/foo]', 'File[/bar]',
                                                :event => :one,
                                                :callback => :refresh).to_data_hash]
-    @data['resources'] = [Puppet::Resource.new(:file, '/foo').to_data_hash,
-                          Puppet::Resource.new(:file, '/bar').to_data_hash]
+    @data['resources'] = [Oregano::Resource.new(:file, '/foo').to_data_hash,
+                          Oregano::Resource.new(:file, '/bar').to_data_hash]
 
 
-    catalog = Puppet::Resource::Catalog.from_data_hash JSON.parse @data.to_json
+    catalog = Oregano::Resource::Catalog.from_data_hash JSON.parse @data.to_json
 
     expect(catalog.name).to eq('myhost')
     expect(catalog.version).to eq(@data['version'])
@@ -1099,21 +1099,21 @@ describe Puppet::Resource::Catalog, "when converting from json" do
   end
 
   it "defaults the catalog_format to 0" do
-    catalog = Puppet::Resource::Catalog.from_data_hash JSON.parse @data.to_json
+    catalog = Oregano::Resource::Catalog.from_data_hash JSON.parse @data.to_json
     expect(catalog.catalog_format).to eq(0)
   end
 
   it "should fail if the source resource cannot be found" do
-    @data['edges'] = [Puppet::Relationship.new("File[/missing]", "File[/bar]").to_data_hash]
-    @data['resources'] = [Puppet::Resource.new(:file, "/bar").to_data_hash]
+    @data['edges'] = [Oregano::Relationship.new("File[/missing]", "File[/bar]").to_data_hash]
+    @data['resources'] = [Oregano::Resource.new(:file, "/bar").to_data_hash]
 
-    expect { Puppet::Resource::Catalog.from_data_hash JSON.parse @data.to_json }.to raise_error(ArgumentError, /Could not find relationship source/)
+    expect { Oregano::Resource::Catalog.from_data_hash JSON.parse @data.to_json }.to raise_error(ArgumentError, /Could not find relationship source/)
   end
 
   it "should fail if the target resource cannot be found" do
-    @data['edges'] = [Puppet::Relationship.new("File[/bar]", "File[/missing]").to_data_hash]
-    @data['resources'] = [Puppet::Resource.new(:file, "/bar").to_data_hash]
+    @data['edges'] = [Oregano::Relationship.new("File[/bar]", "File[/missing]").to_data_hash]
+    @data['resources'] = [Oregano::Resource.new(:file, "/bar").to_data_hash]
 
-    expect { Puppet::Resource::Catalog.from_data_hash JSON.parse @data.to_json }.to raise_error(ArgumentError, /Could not find relationship target/)
+    expect { Oregano::Resource::Catalog.from_data_hash JSON.parse @data.to_json }.to raise_error(ArgumentError, /Could not find relationship target/)
   end
 end

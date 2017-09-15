@@ -1,13 +1,13 @@
-# A brief introduction to testing in Puppet
+# A brief introduction to testing in Oregano
 
-Puppet relies heavily on automated testing to ensure that Puppet behaves as
+Oregano relies heavily on automated testing to ensure that Oregano behaves as
 expected and that new features don't interfere with existing behavior. There are
-three primary sets of tests that Puppet uses: _unit tests_, _integration tests_,
+three primary sets of tests that Oregano uses: _unit tests_, _integration tests_,
 and _acceptance tests_.
 
 - - -
 
-Unit tests are used to test the individual components of Puppet to ensure that
+Unit tests are used to test the individual components of Oregano to ensure that
 they function as expected in isolation. Unit tests are designed to hide the
 actual system implementations and provide canned information so that only the
 intended behavior is tested, rather than the targeted code and everything else
@@ -22,38 +22,38 @@ used with the rest of the system they might fail, so integration tests are a
 higher level version of unit tests that serve to check the behavior of
 individual subsystems.
 
-All of the unit and integration tests for Puppet are kept in the spec/ directory.
+All of the unit and integration tests for Oregano are kept in the spec/ directory.
 
 - - -
 
-Acceptance tests are used to test high level behaviors of Puppet that deal with
+Acceptance tests are used to test high level behaviors of Oregano that deal with
 a number of concerns and aren't easily tested with normal unit tests. Acceptance
 tests function by changing system state and checking the system after
 the fact to make sure that the intended behavior occurred. Because of this
 acceptance tests can be destructive, so the systems being tested should be
 throwaway systems.
 
-All of the acceptance tests for Puppet are kept in the acceptance/tests/
+All of the acceptance tests for Oregano are kept in the acceptance/tests/
 directory. Running the acceptance tests is much more involved than running the
 spec tests. Information about how to run them can be found in the [acceptance
 testing documentation](acceptance_tests.md)
 
 ## Testing dependency version requirements
 
-Puppet is only compatible with certain versions of RSpec and Mocha. If you are
+Oregano is only compatible with certain versions of RSpec and Mocha. If you are
 not using Bundler to install the required test libraries you must ensure that
 you are using the right library versions. Using unsupported versions of Mocha
 and RSpec will probably display many spurious failures. The supported versions
 of RSpec and Mocha can be found in the project Gemfile.
 
-## Puppet Continuous integration
+## Oregano Continuous integration
 
-  * Travis-ci (spec tests only): https://travis-ci.org/puppetlabs/puppet/
-  * Jenkins (spec and acceptance tests): https://jenkins.puppetlabs.com/view/Puppet%20FOSS/
+  * Travis-ci (spec tests only): https://travis-ci.org/oreganolabs/oregano/
+  * Jenkins (spec and acceptance tests): https://jenkins.oreganolabs.com/view/Oregano%20FOSS/
 
 ## RSpec
 
-Puppet uses RSpec to perform unit and integration tests. RSpec handles a number
+Oregano uses RSpec to perform unit and integration tests. RSpec handles a number
 of concerns to make testing easier:
 
   * Executing examples and ensuring the actual behavior matches the expected behavior (examples)
@@ -85,7 +85,7 @@ things; it makes tests easier to understand and easier to debug.
 
 More complete documentation on expectations is available at https://www.relishapp.com/rspec/rspec-expectations/docs
 
-Note Puppet supports the [RSpec 3](http://rspec.info/blog/2013/07/the-plan-for-rspec-3/)
+Note Oregano supports the [RSpec 3](http://rspec.info/blog/2013/07/the-plan-for-rspec-3/)
 API, so please do not use RSpec 2 "should" syntax like `1.should == 1`.
 
 ### Example groups
@@ -187,7 +187,7 @@ individual tests are only running the code being tested. You can stub out entire
 objects, or just stub out individual methods on an object. When a method is
 stubbed the method itself will never be called.
 
-While RSpec comes with its own stubbing framework, Puppet uses the Mocha
+While RSpec comes with its own stubbing framework, Oregano uses the Mocha
 framework.
 
 A brief usage guide for Mocha is available at http://gofreerange.com/mocha/docs/#Usage,
@@ -306,7 +306,7 @@ for help on IRC or the mailing list.
 
 #### Using instance variables
 
-Puppet has a number of older tests that use `before` blocks and instance
+Oregano has a number of older tests that use `before` blocks and instance
 variables to set up fixture data, instead of `let` blocks. These can retain
 state between tests, which can lead to test failures when tests are run out of
 order.

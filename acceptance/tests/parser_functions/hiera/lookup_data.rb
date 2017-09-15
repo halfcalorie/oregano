@@ -12,8 +12,8 @@ apply_manifest_on(master, <<-PP, :catch_failures => true)
 File {
   ensure => directory,
   mode => "0750",
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
 }
 
 file {
@@ -87,9 +87,9 @@ master_opts = {
   },
 }
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
   agents.each do |agent|
-    on(agent, puppet('agent', "-t --server #{master}"), :acceptable_exit_codes => [2])
+    on(agent, oregano('agent', "-t --server #{master}"), :acceptable_exit_codes => [2])
 
     assert_match("apache server port: 8080", stdout)
   end

@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_authority'
+require 'oregano/ssl/certificate_authority'
 
 shared_examples_for "a normal interface method" do
   it "should call the method on the CA for each host specified if an array was provided" do
     @ca.expects(@method).with("host1")
     @ca.expects(@method).with("host2")
 
-    @applier = Puppet::SSL::CertificateAuthority::Interface.new(@method, :to => %w{host1 host2})
+    @applier = Oregano::SSL::CertificateAuthority::Interface.new(@method, :to => %w{host1 host2})
 
     @applier.apply(@ca)
   end
@@ -19,7 +19,7 @@ shared_examples_for "a normal interface method" do
     @ca.expects(@method).with("host1")
     @ca.expects(@method).with("host2")
 
-    @applier = Puppet::SSL::CertificateAuthority::Interface.new(@method, :to => :all)
+    @applier = Oregano::SSL::CertificateAuthority::Interface.new(@method, :to => :all)
 
     @applier.apply(@ca)
   end
@@ -30,13 +30,13 @@ shared_examples_for "a destructive interface method" do
     @ca.expects(@method).with("host1")
     @ca.expects(@method).with("host2")
 
-    @applier = Puppet::SSL::CertificateAuthority::Interface.new(@method, :to => %w{host1 host2})
+    @applier = Oregano::SSL::CertificateAuthority::Interface.new(@method, :to => %w{host1 host2})
 
     @applier.apply(@ca)
   end
 
   it "raises an error if :all was provided" do
-    @applier = Puppet::SSL::CertificateAuthority::Interface.new(@method, :to => :all)
+    @applier = Oregano::SSL::CertificateAuthority::Interface.new(@method, :to => :all)
 
     expect {
       @applier.apply(@ca)
@@ -44,7 +44,7 @@ shared_examples_for "a destructive interface method" do
   end
 
   it "raises an error if :signed was provided" do
-    @applier = Puppet::SSL::CertificateAuthority::Interface.new(@method, :to => :signed)
+    @applier = Oregano::SSL::CertificateAuthority::Interface.new(@method, :to => :signed)
 
     expect {
       @applier.apply(@ca)
@@ -52,9 +52,9 @@ shared_examples_for "a destructive interface method" do
   end
 end
 
-describe Puppet::SSL::CertificateAuthority::Interface do
+describe Oregano::SSL::CertificateAuthority::Interface do
   before do
-    @class = Puppet::SSL::CertificateAuthority::Interface
+    @class = Oregano::SSL::CertificateAuthority::Interface
   end
   describe "when initializing" do
     it "should set its method using its settor" do
@@ -157,12 +157,12 @@ describe Puppet::SSL::CertificateAuthority::Interface do
 
     describe ":sign" do
       before do
-        @csr1 = Puppet::SSL::CertificateRequest.new 'baz'
+        @csr1 = Oregano::SSL::CertificateRequest.new 'baz'
       end
 
       describe "when run in interactive mode" do
         before do
-          Puppet::SSL::CertificateRequest.indirection.stubs(:find).with("csr1").returns @csr1
+          Oregano::SSL::CertificateRequest.indirection.stubs(:find).with("csr1").returns @csr1
 
           @ca.stubs(:waiting?).returns(%w{csr1})
           @ca.stubs(:check_internal_signing_policies).returns(true)
@@ -203,8 +203,8 @@ describe Puppet::SSL::CertificateAuthority::Interface do
 
       describe "and an array of names was provided" do
         before do
-          Puppet::SSL::CertificateRequest.indirection.stubs(:find).with("host1").returns @csr1
-          Puppet::SSL::CertificateRequest.indirection.stubs(:find).with("host2").returns @csr1
+          Oregano::SSL::CertificateRequest.indirection.stubs(:find).with("host1").returns @csr1
+          Oregano::SSL::CertificateRequest.indirection.stubs(:find).with("host2").returns @csr1
         end
 
         let(:applier) { @class.new(:sign, @options.merge(:to => %w{host1 host2})) }
@@ -237,8 +237,8 @@ describe Puppet::SSL::CertificateAuthority::Interface do
       describe "and :all was provided" do
         it "should sign all waiting certificate requests" do
           @ca.stubs(:waiting?).returns(%w{cert1 cert2})
-          Puppet::SSL::CertificateRequest.indirection.stubs(:find).with("cert1").returns @csr1
-          Puppet::SSL::CertificateRequest.indirection.stubs(:find).with("cert2").returns @csr1
+          Oregano::SSL::CertificateRequest.indirection.stubs(:find).with("cert1").returns @csr1
+          Oregano::SSL::CertificateRequest.indirection.stubs(:find).with("cert2").returns @csr1
           @ca.stubs(:check_internal_signing_policies).returns(true)
 
           @ca.expects(:sign).with("cert1", {})
@@ -254,7 +254,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
           @ca.stubs(:waiting?).returns([])
 
           @applier = @class.new(:sign, :to => :all)
-          expect { @applier.apply(@ca) }.to raise_error(Puppet::SSL::CertificateAuthority::Interface::InterfaceError)
+          expect { @applier.apply(@ca) }.to raise_error(Oregano::SSL::CertificateAuthority::Interface::InterfaceError)
         end
       end
     end
@@ -267,8 +267,8 @@ describe Puppet::SSL::CertificateAuthority::Interface do
       let(:custom_exts) { [] }
 
       before :each do
-        @cert = Puppet::SSL::Certificate.new 'foo'
-        @csr = Puppet::SSL::CertificateRequest.new 'bar'
+        @cert = Oregano::SSL::Certificate.new 'foo'
+        @csr = Oregano::SSL::CertificateRequest.new 'bar'
 
         @cert.stubs(:subject_alt_names).returns signed_alt_names
         @cert.stubs(:custom_extensions).returns custom_exts
@@ -277,8 +277,8 @@ describe Puppet::SSL::CertificateAuthority::Interface do
         @csr.stubs(:custom_attributes).returns custom_attrs
         @csr.stubs(:request_extensions).returns ext_requests
 
-        Puppet::SSL::Certificate.indirection.stubs(:find).returns @cert
-        Puppet::SSL::CertificateRequest.indirection.stubs(:find).returns @csr
+        Oregano::SSL::Certificate.indirection.stubs(:find).returns @cert
+        Oregano::SSL::CertificateRequest.indirection.stubs(:find).returns @csr
 
         @digest = mock("digest")
         @digest.stubs(:to_s).returns("(fingerprint)")
@@ -311,7 +311,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
       describe "and :all was provided" do
         it "should print a string containing all certificate requests and certificates" do
           @ca.expects(:list).returns %w{host4 host5 host6}
-          @ca.stubs(:verify).with("host4").raises(Puppet::SSL::CertificateAuthority::CertificateVerificationError.new(23), "certificate revoked")
+          @ca.stubs(:verify).with("host4").raises(Oregano::SSL::CertificateAuthority::CertificateVerificationError.new(23), "certificate revoked")
 
           applier = @class.new(:list, :to => :all)
 
@@ -374,7 +374,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
         let(:custom_attrs) { [{'oid' => 'customAttr', 'value' => 'attrValue'}] }
         let(:ext_requests) { [{'oid' => 'customExt', 'value' => 'reqExtValue'}] }
         let(:custom_exts) {  [{'oid' => 'extName', 'value' => 'extValue'}] }
-        let(:signed_alt_names) { ["DNS:puppet", "DNS:puppet.example.com"] }
+        let(:signed_alt_names) { ["DNS:oregano", "DNS:oregano.example.com"] }
 
         before do
           @ca.unstub(:waiting?)
@@ -383,11 +383,11 @@ describe Puppet::SSL::CertificateAuthority::Interface do
           @ca.expects(:list).returns(%w{ext1 ext2}).at_most(1)
 
           @ca.stubs(:verify).with("ext2").
-            raises(Puppet::SSL::CertificateAuthority::CertificateVerificationError.new(23),
+            raises(Oregano::SSL::CertificateAuthority::CertificateVerificationError.new(23),
                    "certificate revoked")
 
-          Puppet::SSL::Certificate.indirection.stubs(:find).returns @cert
-          Puppet::SSL::CertificateRequest.indirection.stubs(:find).returns @csr
+          Oregano::SSL::Certificate.indirection.stubs(:find).returns @cert
+          Oregano::SSL::CertificateRequest.indirection.stubs(:find).returns @csr
         end
 
         describe "using legacy format" do
@@ -396,7 +396,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
 
             applier.expects(:puts).with(<<-OUTPUT.chomp)
   "ext3" (fingerprint) **
-+ "ext1" (fingerprint) (alt names: "DNS:puppet", "DNS:puppet.example.com") **
++ "ext1" (fingerprint) (alt names: "DNS:oregano", "DNS:oregano.example.com") **
 - "ext2" (fingerprint) (certificate revoked)
               OUTPUT
 
@@ -408,7 +408,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
 
             applier.expects(:puts).with(<<-OUTPUT.chomp)
   "ext3" (fingerprint) (customAttr: "attrValue", customExt: "reqExtValue")
-+ "ext1" (fingerprint) (expiration) (alt names: "DNS:puppet", "DNS:puppet.example.com", extName: "extValue")
++ "ext1" (fingerprint) (expiration) (alt names: "DNS:oregano", "DNS:oregano.example.com", extName: "extValue")
 - "ext2" (fingerprint) (certificate revoked)
               OUTPUT
 
@@ -422,7 +422,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
 
             applier.expects(:puts).with(<<-OUTPUT.chomp)
   "ext3" (fingerprint) (customAttr: "attrValue", customExt: "reqExtValue")
-+ "ext1" (fingerprint) (expiration) (alt names: "DNS:puppet", "DNS:puppet.example.com", extName: "extValue")
++ "ext1" (fingerprint) (expiration) (alt names: "DNS:oregano", "DNS:oregano.example.com", extName: "extValue")
 - "ext2" (fingerprint) (certificate revoked)
               OUTPUT
 
@@ -447,7 +447,7 @@ describe Puppet::SSL::CertificateAuthority::Interface do
     Status: Signed
     Expiration: (expiration)
     Extensions:
-      alt names: "DNS:puppet", "DNS:puppet.example.com"
+      alt names: "DNS:oregano", "DNS:oregano.example.com"
       extName: "extValue"
 
 - "ext2"
@@ -508,12 +508,12 @@ OUTPUT
 
     describe ":fingerprint" do
       before(:each) do
-        @cert = Puppet::SSL::Certificate.new 'foo'
-        @csr = Puppet::SSL::CertificateRequest.new 'bar'
-        Puppet::SSL::Certificate.indirection.stubs(:find)
-        Puppet::SSL::CertificateRequest.indirection.stubs(:find)
-        Puppet::SSL::Certificate.indirection.stubs(:find).with('host1').returns(@cert)
-        Puppet::SSL::CertificateRequest.indirection.stubs(:find).with('host2').returns(@csr)
+        @cert = Oregano::SSL::Certificate.new 'foo'
+        @csr = Oregano::SSL::CertificateRequest.new 'bar'
+        Oregano::SSL::Certificate.indirection.stubs(:find)
+        Oregano::SSL::CertificateRequest.indirection.stubs(:find)
+        Oregano::SSL::Certificate.indirection.stubs(:find).with('host1').returns(@cert)
+        Oregano::SSL::CertificateRequest.indirection.stubs(:find).with('host2').returns(@csr)
       end
 
       it "should fingerprint with the set digest algorithm" do

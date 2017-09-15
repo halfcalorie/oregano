@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/character_encoding'
-require 'puppet_spec/character_encoding'
+require 'oregano/util/character_encoding'
+require 'oregano_spec/character_encoding'
 
-describe Puppet::Util::CharacterEncoding do
+describe Oregano::Util::CharacterEncoding do
   describe "::convert_to_utf_8" do
     context "when passed a string that is already UTF-8" do
       context "with valid encoding" do
         let(:utf8_string) { "\u06FF\u2603".force_encoding(Encoding::UTF_8) }
 
         it "should return the string unmodified" do
-          expect(Puppet::Util::CharacterEncoding.convert_to_utf_8(utf8_string)).to eq("\u06FF\u2603".force_encoding(Encoding::UTF_8))
+          expect(Oregano::Util::CharacterEncoding.convert_to_utf_8(utf8_string)).to eq("\u06FF\u2603".force_encoding(Encoding::UTF_8))
         end
 
         it "should not mutate the original string" do
@@ -22,16 +22,16 @@ describe Puppet::Util::CharacterEncoding do
         let(:invalid_utf8_string) { "\xfd\xf1".force_encoding(Encoding::UTF_8) }
 
         it "should issue a debug message" do
-          Puppet.expects(:debug).with(regexp_matches(/encoding is invalid/))
-          Puppet::Util::CharacterEncoding.convert_to_utf_8(invalid_utf8_string)
+          Oregano.expects(:debug).with(regexp_matches(/encoding is invalid/))
+          Oregano::Util::CharacterEncoding.convert_to_utf_8(invalid_utf8_string)
         end
 
         it "should return the string unmodified" do
-          expect(Puppet::Util::CharacterEncoding.convert_to_utf_8(invalid_utf8_string)).to eq("\xfd\xf1".force_encoding(Encoding::UTF_8))
+          expect(Oregano::Util::CharacterEncoding.convert_to_utf_8(invalid_utf8_string)).to eq("\xfd\xf1".force_encoding(Encoding::UTF_8))
         end
 
         it "should not mutate the original string" do
-          Puppet::Util::CharacterEncoding.convert_to_utf_8(invalid_utf8_string)
+          Oregano::Util::CharacterEncoding.convert_to_utf_8(invalid_utf8_string)
           expect(invalid_utf8_string).to eq("\xfd\xf1".force_encoding(Encoding::UTF_8))
         end
       end
@@ -47,16 +47,16 @@ describe Puppet::Util::CharacterEncoding do
           # そ - HIRAGANA LETTER SO
           # In Windows_31J: \x82 \xbb - 130 187
           # In Unicode: \u305d - \xe3 \x81 \x9d - 227 129 157
-          result = PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(win_31j)
+          result = OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(win_31j)
           end
           expect(result).to eq("\u305d")
           expect(result.bytes.to_a).to eq([227, 129, 157])
         end
 
         it "should not mutate the original string" do
-          PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(win_31j)
+          OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(win_31j)
           end
           expect(win_31j).to eq([130, 187].pack('C*'))
         end
@@ -66,24 +66,24 @@ describe Puppet::Util::CharacterEncoding do
         let(:invalid_win_31j) { [255, 254, 253].pack('C*') } # these bytes are not valid windows_31j
 
         it "should return the string umodified" do
-          result = PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(invalid_win_31j)
+          result = OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(invalid_win_31j)
           end
           expect(result.bytes.to_a).to eq([255, 254, 253])
           expect(result.encoding).to eq(Encoding::BINARY)
         end
 
         it "should not mutate the original string" do
-          PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(invalid_win_31j)
+          OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(invalid_win_31j)
           end
           expect(invalid_win_31j).to eq([255, 254, 253].pack('C*'))
         end
 
         it "should issue a debug message that the string was not transcodable" do
-          Puppet.expects(:debug).with(regexp_matches(/cannot be transcoded/))
-          PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(invalid_win_31j)
+          Oregano.expects(:debug).with(regexp_matches(/cannot be transcoded/))
+          OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::Windows_31J) do
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(invalid_win_31j)
           end
         end
       end
@@ -99,14 +99,14 @@ describe Puppet::Util::CharacterEncoding do
             # In Unicode: \u3050 - \xe3 \x81 \x90 - 227 129 144
             # if we were only ruby > 2.3.0, we could do String.new("\x82\xae", :encoding => Encoding::Shift_JIS)
 
-            result = Puppet::Util::CharacterEncoding.convert_to_utf_8(shift_jis)
+            result = Oregano::Util::CharacterEncoding.convert_to_utf_8(shift_jis)
             expect(result).to eq("\u3050".force_encoding(Encoding::UTF_8))
             # largely redundant but reinforces the point - this was transcoded:
             expect(result.bytes.to_a).to eq([227, 129, 144])
           end
 
           it "should not mutate the original string" do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(shift_jis)
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(shift_jis)
             expect(shift_jis).to eq([130, 174].pack('C*').force_encoding(Encoding::Shift_JIS))
           end
         end
@@ -125,17 +125,17 @@ describe Puppet::Util::CharacterEncoding do
           let(:euc_kr) { [253, 241].pack('C*').force_encoding(Encoding::ASCII) }
 
           it "should issue a debug message" do
-            Puppet.expects(:debug).with(regexp_matches(/cannot be transcoded/))
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(euc_kr)
+            Oregano.expects(:debug).with(regexp_matches(/cannot be transcoded/))
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(euc_kr)
           end
 
           it "should return the original string unmodified" do
-            result = Puppet::Util::CharacterEncoding.convert_to_utf_8(euc_kr)
+            result = Oregano::Util::CharacterEncoding.convert_to_utf_8(euc_kr)
             expect(result).to eq([253, 241].pack('C*').force_encoding(Encoding::ASCII))
           end
 
           it "should not mutate the original string" do
-            Puppet::Util::CharacterEncoding.convert_to_utf_8(euc_kr)
+            Oregano::Util::CharacterEncoding.convert_to_utf_8(euc_kr)
             expect(euc_kr).to eq([253, 241].pack('C*').force_encoding(Encoding::ASCII))
           end
         end
@@ -150,13 +150,13 @@ describe Puppet::Util::CharacterEncoding do
       let(:snowman) { [226, 152, 131].pack('C*') }
 
       it "should return a copy of the string with external encoding of the string to UTF-8" do
-        result = Puppet::Util::CharacterEncoding.override_encoding_to_utf_8(snowman)
+        result = Oregano::Util::CharacterEncoding.override_encoding_to_utf_8(snowman)
         expect(result).to eq("\u2603")
         expect(result.encoding).to eq(Encoding::UTF_8)
       end
 
       it "should not modify the original string" do
-        Puppet::Util::CharacterEncoding.override_encoding_to_utf_8(snowman)
+        Oregano::Util::CharacterEncoding.override_encoding_to_utf_8(snowman)
         expect(snowman).to eq([226, 152, 131].pack('C*'))
       end
     end
@@ -168,17 +168,17 @@ describe Puppet::Util::CharacterEncoding do
       let(:oslash) { [216].pack('C*').force_encoding(Encoding::ISO_8859_1) }
       let(:foo) { 'foo' }
       it "should issue a debug message" do
-        Puppet.expects(:debug).with(regexp_matches(/not valid UTF-8/))
-        Puppet::Util::CharacterEncoding.override_encoding_to_utf_8(oslash)
+        Oregano.expects(:debug).with(regexp_matches(/not valid UTF-8/))
+        Oregano::Util::CharacterEncoding.override_encoding_to_utf_8(oslash)
       end
 
       it "should return the original string unmodified" do
-        result = Puppet::Util::CharacterEncoding.override_encoding_to_utf_8(oslash)
+        result = Oregano::Util::CharacterEncoding.override_encoding_to_utf_8(oslash)
         expect(result).to eq([216].pack('C*').force_encoding(Encoding::ISO_8859_1))
       end
 
       it "should not modify the string" do
-        Puppet::Util::CharacterEncoding.override_encoding_to_utf_8(oslash)
+        Oregano::Util::CharacterEncoding.override_encoding_to_utf_8(oslash)
         expect(oslash).to eq([216].pack('C*').force_encoding(Encoding::ISO_8859_1))
       end
     end
@@ -197,7 +197,7 @@ describe Puppet::Util::CharacterEncoding do
     let(:invalid_non_utf) { "foo\u2603".force_encoding(Encoding::EUC_KR) } # EUC_KR foosnowman!
 
     it "should defer to String#scrub if defined", :if => String.method_defined?(:scrub) do
-      result = Puppet::Util::CharacterEncoding.scrub(utf_8_string_to_scrub)
+      result = Oregano::Util::CharacterEncoding.scrub(utf_8_string_to_scrub)
       # The result should have the UTF-8 replacement character if we're using Ruby scrub
       expect(result).to eq("\uFFFDfoo".force_encoding(Encoding::UTF_8))
       expect(result.bytes.to_a).to eq([239, 191, 189, 102, 111, 111])
@@ -206,13 +206,13 @@ describe Puppet::Util::CharacterEncoding do
     context "when String#scrub is not defined" do
       it "should still issue unicode replacement characters if the string is UTF-8" do
         utf_8_string_to_scrub.stubs(:respond_to?).with(:scrub).returns(false)
-        result = Puppet::Util::CharacterEncoding.scrub(utf_8_string_to_scrub)
+        result = Oregano::Util::CharacterEncoding.scrub(utf_8_string_to_scrub)
         expect(result).to eq("\uFFFDfoo".force_encoding(Encoding::UTF_8))
       end
 
       it "should still issue unicode replacement characters if the string is UTF-16LE" do
         utf_16LE_string_to_scrub.stubs(:respond_to?).with(:scrub).returns(false)
-        result = Puppet::Util::CharacterEncoding.scrub(utf_16LE_string_to_scrub)
+        result = Oregano::Util::CharacterEncoding.scrub(utf_16LE_string_to_scrub)
         # Bytes of replacement character on UTF_16LE are [253, 255]
         # We just check for bytes because something (ruby?) interprets this array of bytes as:
         # (97) (237 160) (128 253 255) rather than (97) (237 160 128) (253 255)
@@ -221,7 +221,7 @@ describe Puppet::Util::CharacterEncoding do
 
       it "should issue '?' characters if the string is not one of UTF_8 or UTF_16LE" do
         invalid_non_utf.stubs(:respond_to?).with(:scrub).returns(false)
-        result = Puppet::Util::CharacterEncoding.scrub(invalid_non_utf)
+        result = Oregano::Util::CharacterEncoding.scrub(invalid_non_utf)
         expect(result).to eq("foo???".force_encoding(Encoding::EUC_KR))
       end
     end

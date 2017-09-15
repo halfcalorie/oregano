@@ -1,25 +1,25 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
 module Serialization
   describe 'Passing values through ToDataConverter/FromDataConverter' do
   let(:dumper) { Model::ModelTreeDumper.new }
   let(:io) { StringIO.new }
   let(:parser) { Parser::EvaluatingParser.new }
-  let(:env) { Puppet::Node::Environment.create(:testing, []) }
-  let(:loaders) { Puppet::Pops::Loaders.new(env) }
+  let(:env) { Oregano::Node::Environment.create(:testing, []) }
+  let(:loaders) { Oregano::Pops::Loaders.new(env) }
   let(:loader) { loaders.find_loader(nil) }
   let(:to_converter) { ToDataConverter.new(:rich_data => true) }
   let(:from_converter) { FromDataConverter.new(:loader => loader) }
 
   before(:each) do
-    Puppet.lookup(:environments).clear_all
-    Puppet.push_context(:loaders => loaders, :current_environment => env)
+    Oregano.lookup(:environments).clear_all
+    Oregano.push_context(:loaders => loaders, :current_environment => env)
   end
 
   after(:each) do
-    Puppet.pop_context
+    Oregano.pop_context
   end
 
   def write(value)
@@ -122,19 +122,19 @@ module Serialization
 
     it 'Version' do
       # It does succeed on rare occasions, so we need to repeat
-      val = SemanticPuppet::Version.parse('1.2.3-alpha2')
+      val = SemanticOregano::Version.parse('1.2.3-alpha2')
       write(val)
       val2 = read
-      expect(val2).to be_a(SemanticPuppet::Version)
+      expect(val2).to be_a(SemanticOregano::Version)
       expect(val2).to eql(val)
     end
 
     it 'VersionRange' do
       # It does succeed on rare occasions, so we need to repeat
-      val = SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4')
+      val = SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4')
       write(val)
       val2 = read
-      expect(val2).to be_a(SemanticPuppet::VersionRange)
+      expect(val2).to be_a(SemanticOregano::VersionRange)
       expect(val2).to eql(val)
     end
 
@@ -258,8 +258,8 @@ module Serialization
       val = [
         Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
         Time::Timestamp.now,
-        SemanticPuppet::Version.parse('1.2.3-alpha2'),
-        SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+        SemanticOregano::Version.parse('1.2.3-alpha2'),
+        SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
         Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
       ]
       write(val)
@@ -272,8 +272,8 @@ module Serialization
       val = {
         'duration' => Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
         'time' => Time::Timestamp.now,
-        'version' => SemanticPuppet::Version.parse('1.2.3-alpha2'),
-        'range' => SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+        'version' => SemanticOregano::Version.parse('1.2.3-alpha2'),
+        'range' => SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
         'binary' => Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
       }
       write(val)
@@ -310,10 +310,10 @@ module Serialization
       end
     end
 
-    context 'PuppetObject' do
+    context 'OreganoObject' do
       before(:each) do
         class DerivedArray < Array
-          include Types::PuppetObject
+          include Types::OreganoObject
 
           def self._pcore_type
             @type
@@ -334,7 +334,7 @@ module Serialization
         end
 
         class DerivedHash < Hash
-          include Types::PuppetObject
+          include Types::OreganoObject
 
           def self._pcore_type
             @type
@@ -358,7 +358,7 @@ module Serialization
       end
 
       after(:each) do
-        x = Puppet::Pops::Serialization
+        x = Oregano::Pops::Serialization
         x.send(:remove_const, :DerivedArray) if x.const_defined?(:DerivedArray)
         x.send(:remove_const, :DerivedHash) if x.const_defined?(:DerivedHash)
       end
@@ -370,8 +370,8 @@ module Serialization
         val = DerivedArray.new([
           Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
           Time::Timestamp.now,
-          SemanticPuppet::Version.parse('1.2.3-alpha2'),
-          SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+          SemanticOregano::Version.parse('1.2.3-alpha2'),
+          SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
           Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
         ])
         write(val)
@@ -386,8 +386,8 @@ module Serialization
         val = DerivedHash.new({
           'duration' => Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
           'time' => Time::Timestamp.now,
-          'version' => SemanticPuppet::Version.parse('1.2.3-alpha2'),
-          'range' => SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+          'version' => SemanticOregano::Version.parse('1.2.3-alpha2'),
+          'range' => SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
           'binary' => Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
         })
         write(val)
@@ -413,7 +413,7 @@ module Serialization
         write(type.create(32))
 
         # Should fail since no loader knows about 'MyType'
-        expect{ read }.to raise_error(Puppet::Error, 'No implementation mapping found for Puppet Type MyType')
+        expect{ read }.to raise_error(Oregano::Error, 'No implementation mapping found for Oregano Type MyType')
       end
 
       context "succeds but produces an rich_type hash when deserializer has 'allow_unresolved' set to true" do
@@ -440,7 +440,7 @@ module Serialization
 
     it 'A Hash with Symbol keys is converted to hash with String keys with warning' do
       val = { :one => 'one', :two => 'two' }
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         write(val)
         val2 = read
         expect(val2).to be_a(Hash)
@@ -452,16 +452,16 @@ module Serialization
     end
 
     it 'A Hash with Version keys is converted to hash with String keys with warning' do
-      val = { SemanticPuppet::Version.parse('1.0.0') => 'one', SemanticPuppet::Version.parse('2.0.0') => 'two' }
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      val = { SemanticOregano::Version.parse('1.0.0') => 'one', SemanticOregano::Version.parse('2.0.0') => 'two' }
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         write(val)
         val2 = read
         expect(val2).to be_a(Hash)
         expect(val2).to eql({ '1.0.0' => 'one', '2.0.0' => 'two' })
       end
       expect(warnings).to eql([
-        "Test Hash contains a hash with a SemanticPuppet::Version key. It will be converted to the String '1.0.0'",
-        "Test Hash contains a hash with a SemanticPuppet::Version key. It will be converted to the String '2.0.0'"])
+        "Test Hash contains a hash with a SemanticOregano::Version key. It will be converted to the String '1.0.0'",
+        "Test Hash contains a hash with a SemanticOregano::Version key. It will be converted to the String '2.0.0'"])
     end
 
     context 'and symbol_as_string is set to true' do
@@ -469,7 +469,7 @@ module Serialization
 
       it 'A Hash with Symbol keys is silently converted to hash with String keys' do
         val = { :one => 'one', :two => 'two' }
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           write(val)
           val2 = read
           expect(val2).to be_a(Hash)
@@ -480,7 +480,7 @@ module Serialization
 
       it 'A Hash with Symbol values is silently converted to hash with String values' do
         val = { 'one' => :one, 'two' => :two  }
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           write(val)
           val2 = read
           expect(val2).to be_a(Hash)
@@ -491,7 +491,7 @@ module Serialization
 
       it 'A Hash with default values will have the values converted to string with a warning' do
         val = { 'key' => :default  }
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           write(val)
           val2 = read
           expect(val2).to be_a(Hash)
@@ -512,7 +512,7 @@ module Serialization
 
       it 'A Hash with Symbol keys is silently converted to hash with String keys' do
         val = { :one => 'one', :two => 'two' }
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           write(val)
           val2 = read
           expect(val2).to be_a(Hash)
@@ -523,7 +523,7 @@ module Serialization
 
       it 'A Hash with Symbol values is silently converted to hash with String values' do
         val = { 'one' => :one, 'two' => :two  }
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           write(val)
           val2 = read
           expect(val2).to be_a(Hash)
@@ -534,7 +534,7 @@ module Serialization
 
       it 'A Hash with default values will not loose type information' do
         val = { 'key' => :default  }
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           write(val)
           val2 = read
           expect(val2).to be_a(Hash)

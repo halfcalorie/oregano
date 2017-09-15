@@ -1,13 +1,13 @@
 require 'spec_helper'
-require 'puppet/util/profiler'
-require 'puppet/util/profiler/around_profiler'
-require 'puppet/util/profiler/aggregate'
+require 'oregano/util/profiler'
+require 'oregano/util/profiler/around_profiler'
+require 'oregano/util/profiler/aggregate'
 
-describe Puppet::Util::Profiler::Aggregate do
+describe Oregano::Util::Profiler::Aggregate do
   let(:logger) { AggregateSimpleLog.new }
-  let(:profiler) { Puppet::Util::Profiler::Aggregate.new(logger, nil) }
+  let(:profiler) { Oregano::Util::Profiler::Aggregate.new(logger, nil) }
   let(:profiler_mgr) do
-    p = Puppet::Util::Profiler::AroundProfiler.new
+    p = Oregano::Util::Profiler::AroundProfiler.new
     p.add_profiler(profiler)
     p
   end

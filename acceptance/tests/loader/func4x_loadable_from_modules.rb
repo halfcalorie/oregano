@@ -1,7 +1,7 @@
 test_name "Exercise a module with 4x function and 4x system function"
 
 # Purpose:
-# Test that a packed puppet can call a 4x system function, and that a 4x function in
+# Test that a packed oregano can call a 4x system function, and that a 4x function in
 # a module can be called.
 #
 # Method:
@@ -10,15 +10,15 @@ test_name "Exercise a module with 4x function and 4x system function"
 #   a function supplied in the module (helloworld::mul10).
 # * The module is manually constructed to allow the test to also run on Windows where the module tool
 #   is not supported.
-# * The module is included by calling 'include' from 'puppet apply'.
-# * Puppet apply is executed to generate the file with the content.
+# * The module is included by calling 'include' from 'oregano apply'.
+# * Oregano apply is executed to generate the file with the content.
 # * The generated contents is asserted.
 
 # TODO: The test can be improved by adding yet another module that calls the function in helloworld.
 # TODO: The test can be improved to also test loading of a non namespaced function
 
-require 'puppet/acceptance/temp_file_utils'
-extend Puppet::Acceptance::TempFileUtils
+require 'oregano/acceptance/temp_file_utils'
+extend Oregano::Acceptance::TempFileUtils
 
 tag 'audit:medium',
     'audit:unit'    # This should be covered adequately by unit tests
@@ -33,12 +33,12 @@ agents.each do |agent|
   mkdirs agent, target_path
 
   # make sure that we use the modulepath from the dev environment
-  puppetconf = get_test_file_path(agent, 'puppet.conf')
-  on agent, puppet("config", "set", "environmentpath", envs_path, "--section", "main", "--config", puppetconf)
-  on agent, puppet("config", "set", "environment", "dev", "--section", "user", "--config", puppetconf)
+  oreganoconf = get_test_file_path(agent, 'oregano.conf')
+  on agent, oregano("config", "set", "environmentpath", envs_path, "--section", "main", "--config", oreganoconf)
+  on agent, oregano("config", "set", "environment", "dev", "--section", "user", "--config", oreganoconf)
 
   # Where the functions in the written modules should go
-  helloworld_functions = 'helloworld/lib/puppet/functions/helloworld'
+  helloworld_functions = 'helloworld/lib/oregano/functions/helloworld'
   # Clean out the module that will be written to ensure no interference from a previous run
   on agent, "rm -rf #{File.join(dev_modulepath, 'helloworld')}"
   mkdirs agent, File.join(dev_modulepath, helloworld_functions)
@@ -46,7 +46,7 @@ agents.each do |agent|
   # Write a module
   # Write the function helloworld::mul10, that multiplies its argument by 10
   create_remote_file(agent, File.join(dev_modulepath, helloworld_functions, "mul10.rb"), <<'SOURCE')
-Puppet::Functions.create_function(:'helloworld::mul10') do
+Oregano::Functions.create_function(:'helloworld::mul10') do
   def mul10(x)
     x * 10
   end
@@ -70,7 +70,7 @@ class helloworld {
 SOURCE
 
   # Run apply to generate the file with the output
-  on agent, puppet('apply', '-e', "'include helloworld'", '--config', puppetconf)
+  on agent, oregano('apply', '-e', "'include helloworld'", '--config', oreganoconf)
 
   # Assert that the file was written with the generated content
   on(agent, "cat #{File.join(target_path, 'result.txt')}") do

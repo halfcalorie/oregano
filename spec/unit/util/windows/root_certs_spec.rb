@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/windows'
+require 'oregano/util/windows'
 
-describe "Puppet::Util::Windows::RootCerts", :if => Puppet::Util::Platform.windows? do
-  let(:x509_store) { Puppet::Util::Windows::RootCerts.instance.to_a }
+describe "Oregano::Util::Windows::RootCerts", :if => Oregano::Util::Platform.windows? do
+  let(:x509_store) { Oregano::Util::Windows::RootCerts.instance.to_a }
 
   it "should return at least one X509 certificate" do
     expect(x509_store.to_a.size).to be >= 1

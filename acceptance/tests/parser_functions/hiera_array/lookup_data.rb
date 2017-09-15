@@ -12,8 +12,8 @@ apply_manifest_on(master, <<-PP, :catch_failures => true)
 File {
   ensure => directory,
   mode => "0750",
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
 }
 
 file {
@@ -46,7 +46,7 @@ file { '#{testdir}/hieradata/global.yaml':
   ensure  => file,
   content => "---
     port: '8080'
-    ntpservers: ['global.ntp.puppetlabs.com']
+    ntpservers: ['global.ntp.oreganolabs.com']
   ",
   mode => "0640";
 }
@@ -54,7 +54,7 @@ file { '#{testdir}/hieradata/global.yaml':
 file { '#{testdir}/hieradata/production.yaml':
   ensure  => file,
   content => "---
-    ntpservers: ['production.ntp.puppetlabs.com']
+    ntpservers: ['production.ntp.oreganolabs.com']
   ",
   mode => "0640";
 }
@@ -99,11 +99,11 @@ master_opts = {
   },
 }
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
   agents.each do |agent|
-    on(agent, puppet('agent', "-t --server #{master}"), :acceptable_exit_codes => [2])
+    on(agent, oregano('agent', "-t --server #{master}"), :acceptable_exit_codes => [2])
 
-    assert_match("ntpserver global.ntp.puppetlabs.com", stdout)
-    assert_match("ntpserver production.ntp.puppetlabs.com", stdout)
+    assert_match("ntpserver global.ntp.oreganolabs.com", stdout)
+    assert_match("ntpserver production.ntp.oreganolabs.com", stdout)
   end
 end

@@ -5,11 +5,11 @@
 
 require 'spec_helper'
 
-require 'win32/service' if Puppet.features.microsoft_windows?
+require 'win32/service' if Oregano.features.microsoft_windows?
 
-describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:service).provider(:windows), :if => Oregano.features.microsoft_windows? do
   let(:name)     { 'nonexistentservice' }
-  let(:resource) { Puppet::Type.type(:service).new(:name => name, :provider => :windows) }
+  let(:resource) { Oregano::Type.type(:service).new(:name => name, :provider => :windows) }
   let(:provider) { resource.provider }
   let(:config)   { Struct::ServiceConfigInfo.new }
   let(:status)   { Struct::ServiceStatus.new }
@@ -44,11 +44,11 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
     end
 
     it "should raise an error if the start command fails" do
-      provider.expects(:net).with(:start, name).raises(Puppet::ExecutionFailure, "The service name is invalid.")
+      provider.expects(:net).with(:start, name).raises(Oregano::ExecutionFailure, "The service name is invalid.")
 
       expect {
         provider.start
-      }.to raise_error(Puppet::Error, /Cannot start #{name}, error was: The service name is invalid./)
+      }.to raise_error(Oregano::Error, /Cannot start #{name}, error was: The service name is invalid./)
     end
 
     it "raises an error if the service doesn't exist" do
@@ -56,7 +56,7 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
 
       expect {
         provider.start
-      }.to raise_error(Puppet::Error, /Cannot get start type for #{name}/)
+      }.to raise_error(Oregano::Error, /Cannot get start type for #{name}/)
     end
 
     describe "when the service is disabled" do
@@ -65,7 +65,7 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
       end
 
       it "should refuse to start if not managing enable" do
-        expect { provider.start }.to raise_error(Puppet::Error, /Will not start disabled service/)
+        expect { provider.start }.to raise_error(Oregano::Error, /Will not start disabled service/)
       end
 
       it "should enable if managing enable and enable is true" do
@@ -96,11 +96,11 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
     end
 
     it "should raise an error if the stop command fails" do
-      provider.expects(:net).with(:stop, name).raises(Puppet::ExecutionFailure, 'The service name is invalid.')
+      provider.expects(:net).with(:stop, name).raises(Oregano::ExecutionFailure, 'The service name is invalid.')
 
       expect {
         provider.stop
-      }.to raise_error(Puppet::Error, /Cannot stop #{name}, error was: The service name is invalid./)
+      }.to raise_error(Oregano::Error, /Cannot stop #{name}, error was: The service name is invalid./)
     end
   end
 
@@ -126,7 +126,7 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
 
       expect {
         provider.status
-      }.to raise_error(Puppet::Error, /Cannot get status of #{name}/)
+      }.to raise_error(Oregano::Error, /Cannot get status of #{name}/)
     end
   end
 
@@ -167,12 +167,12 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
 
       expect {
         provider.enabled?
-      }.to raise_error(Puppet::Error, /Cannot get start type for #{name}/)
+      }.to raise_error(Oregano::Error, /Cannot get start type for #{name}/)
     end
 
     # We need to guard this section explicitly since rspec will always
     # construct all examples, even if it isn't going to run them.
-    if Puppet.features.microsoft_windows?
+    if Oregano.features.microsoft_windows?
       [Win32::Service::SERVICE_AUTO_START, Win32::Service::SERVICE_BOOT_START, Win32::Service::SERVICE_SYSTEM_START].each do |start_type_const|
         start_type = Win32::Service.get_start_type(start_type_const)
         it "should report a service with a startup type of '#{start_type}' as true" do
@@ -195,7 +195,7 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
 
       expect {
         provider.enable
-      }.to raise_error(Puppet::Error, /Cannot enable #{name}/)
+      }.to raise_error(Oregano::Error, /Cannot enable #{name}/)
     end
   end
 
@@ -210,7 +210,7 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
 
       expect {
         provider.disable
-      }.to raise_error(Puppet::Error, /Cannot disable #{name}/)
+      }.to raise_error(Oregano::Error, /Cannot disable #{name}/)
     end
   end
 
@@ -225,7 +225,7 @@ describe Puppet::Type.type(:service).provider(:windows), :if => Puppet.features.
 
       expect {
         provider.manual_start
-      }.to raise_error(Puppet::Error, /Cannot enable #{name}/)
+      }.to raise_error(Oregano::Error, /Cannot enable #{name}/)
     end
   end
 end

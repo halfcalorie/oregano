@@ -1,17 +1,17 @@
 require 'spec_helper'
 require 'matchers/match_tokens2'
-require 'puppet/pops'
-require 'puppet/pops/parser/lexer2'
+require 'oregano/pops'
+require 'oregano/pops/parser/lexer2'
 
 module EgrammarLexer2Spec
   def tokens_scanned_from(s)
-    lexer = Puppet::Pops::Parser::Lexer2.new
+    lexer = Oregano::Pops::Parser::Lexer2.new
     lexer.string = s
     tokens = lexer.fullscan[0..-2]
   end
 
   def epp_tokens_scanned_from(s)
-    lexer = Puppet::Pops::Parser::Lexer2.new
+    lexer = Oregano::Pops::Parser::Lexer2.new
     lexer.string = s
     tokens = lexer.fullscan_epp[0..-2]
   end
@@ -318,8 +318,8 @@ describe 'Lexer2' do
   end
 
   it 'detects unterminated multiline comment' do
-    expect { tokens_scanned_from("/* not terminated\nmultiline\ncomment") }.to raise_error(Puppet::ParseErrorWithIssue) { |e|
-      expect(e.issue_code).to be(Puppet::Pops::Issues::UNCLOSED_MLCOMMENT.issue_code)
+    expect { tokens_scanned_from("/* not terminated\nmultiline\ncomment") }.to raise_error(Oregano::ParseErrorWithIssue) { |e|
+      expect(e.issue_code).to be(Oregano::Pops::Issues::UNCLOSED_MLCOMMENT.issue_code)
     }
   end
 
@@ -450,7 +450,7 @@ describe 'Lexer2' do
 
     context 'with bad syntax' do
       def expect_issue(code, issue)
-        expect { tokens_scanned_from(code) }.to raise_error(Puppet::ParseErrorWithIssue) { |e|
+        expect { tokens_scanned_from(code) }.to raise_error(Oregano::ParseErrorWithIssue) { |e|
           expect(e.issue_code).to be(issue.issue_code)
         }
       end
@@ -461,7 +461,7 @@ describe 'Lexer2' do
         Text
         |- END
         CODE
-        expect_issue(code, Puppet::Pops::Issues::HEREDOC_UNCLOSED_PARENTHESIS)
+        expect_issue(code, Oregano::Pops::Issues::HEREDOC_UNCLOSED_PARENTHESIS)
       end
 
       it 'detects and reports HEREDOC_WITHOUT_END_TAGGED_LINE' do
@@ -469,7 +469,7 @@ describe 'Lexer2' do
         @(END:syntax/t)
         Text
         CODE
-        expect_issue(code, Puppet::Pops::Issues::HEREDOC_WITHOUT_END_TAGGED_LINE)
+        expect_issue(code, Oregano::Pops::Issues::HEREDOC_WITHOUT_END_TAGGED_LINE)
       end
 
       it 'detects and reports HEREDOC_INVALID_ESCAPE' do
@@ -478,7 +478,7 @@ describe 'Lexer2' do
         Text
         |- END
         CODE
-        expect_issue(code, Puppet::Pops::Issues::HEREDOC_INVALID_ESCAPE)
+        expect_issue(code, Oregano::Pops::Issues::HEREDOC_INVALID_ESCAPE)
       end
 
       it 'detects and reports HEREDOC_INVALID_SYNTAX' do
@@ -487,12 +487,12 @@ describe 'Lexer2' do
         Text
         |- END
         CODE
-        expect_issue(code, Puppet::Pops::Issues::HEREDOC_INVALID_SYNTAX)
+        expect_issue(code, Oregano::Pops::Issues::HEREDOC_INVALID_SYNTAX)
       end
 
       it 'detects and reports HEREDOC_WITHOUT_TEXT' do
         code = '@(END:syntax/t)'
-        expect_issue(code, Puppet::Pops::Issues::HEREDOC_WITHOUT_TEXT)
+        expect_issue(code, Oregano::Pops::Issues::HEREDOC_WITHOUT_TEXT)
       end
 
       it 'detects and reports HEREDOC_MULTIPLE_AT_ESCAPES' do
@@ -501,7 +501,7 @@ describe 'Lexer2' do
         Tex\\tt\\n
         |- END
         CODE
-        expect_issue(code, Puppet::Pops::Issues::HEREDOC_MULTIPLE_AT_ESCAPES)
+        expect_issue(code, Oregano::Pops::Issues::HEREDOC_MULTIPLE_AT_ESCAPES)
       end
     end
   end
@@ -711,68 +711,68 @@ describe 'Lexer2' do
 
     context 'with bad epp syntax' do
       def expect_issue(code, issue)
-        expect { epp_tokens_scanned_from(code) }.to raise_error(Puppet::ParseErrorWithIssue) { |e|
+        expect { epp_tokens_scanned_from(code) }.to raise_error(Oregano::ParseErrorWithIssue) { |e|
           expect(e.issue_code).to be(issue.issue_code)
         }
       end
 
       it 'detects and reports EPP_UNBALANCED_TAG' do
-        expect_issue('<% asf', Puppet::Pops::Issues::EPP_UNBALANCED_TAG)
+        expect_issue('<% asf', Oregano::Pops::Issues::EPP_UNBALANCED_TAG)
       end
 
       it 'detects and reports EPP_UNBALANCED_COMMENT' do
-        expect_issue('<%# asf', Puppet::Pops::Issues::EPP_UNBALANCED_COMMENT)
+        expect_issue('<%# asf', Oregano::Pops::Issues::EPP_UNBALANCED_COMMENT)
       end
 
       it 'detects and reports EPP_UNBALANCED_EXPRESSION' do
-        expect_issue('asf <%', Puppet::Pops::Issues::EPP_UNBALANCED_EXPRESSION)
+        expect_issue('asf <%', Oregano::Pops::Issues::EPP_UNBALANCED_EXPRESSION)
       end
     end
   end
 
   context 'when parsing bad code' do
     def expect_issue(code, issue)
-      expect { tokens_scanned_from(code) }.to raise_error(Puppet::ParseErrorWithIssue) do |e|
+      expect { tokens_scanned_from(code) }.to raise_error(Oregano::ParseErrorWithIssue) do |e|
         expect(e.issue_code).to be(issue.issue_code)
       end
     end
 
     it 'detects and reports issue ILLEGAL_CLASS_REFERENCE' do
-      expect_issue('A::3', Puppet::Pops::Issues::ILLEGAL_CLASS_REFERENCE)
+      expect_issue('A::3', Oregano::Pops::Issues::ILLEGAL_CLASS_REFERENCE)
     end
 
     it 'detects and reports issue ILLEGAL_FULLY_QUALIFIED_CLASS_REFERENCE' do
-      expect_issue('::A::3', Puppet::Pops::Issues::ILLEGAL_FULLY_QUALIFIED_CLASS_REFERENCE)
+      expect_issue('::A::3', Oregano::Pops::Issues::ILLEGAL_FULLY_QUALIFIED_CLASS_REFERENCE)
     end
 
     it 'detects and reports issue ILLEGAL_FULLY_QUALIFIED_NAME' do
-      expect_issue('::a::3', Puppet::Pops::Issues::ILLEGAL_FULLY_QUALIFIED_NAME)
+      expect_issue('::a::3', Oregano::Pops::Issues::ILLEGAL_FULLY_QUALIFIED_NAME)
     end
 
     it 'detects and reports issue ILLEGAL_NUMBER' do
-     expect_issue('3g', Puppet::Pops::Issues::ILLEGAL_NUMBER)
+     expect_issue('3g', Oregano::Pops::Issues::ILLEGAL_NUMBER)
     end
 
     it 'detects and reports issue INVALID_HEX_NUMBER' do
-      expect_issue('0x3g', Puppet::Pops::Issues::INVALID_HEX_NUMBER)
+      expect_issue('0x3g', Oregano::Pops::Issues::INVALID_HEX_NUMBER)
     end
 
     it 'detects and reports issue INVALID_OCTAL_NUMBER' do
-      expect_issue('038', Puppet::Pops::Issues::INVALID_OCTAL_NUMBER)
+      expect_issue('038', Oregano::Pops::Issues::INVALID_OCTAL_NUMBER)
     end
 
     it 'detects and reports issue INVALID_DECIMAL_NUMBER' do
-      expect_issue('4.3g', Puppet::Pops::Issues::INVALID_DECIMAL_NUMBER)
+      expect_issue('4.3g', Oregano::Pops::Issues::INVALID_DECIMAL_NUMBER)
     end
 
     it 'detects and reports issue NO_INPUT_TO_LEXER' do
-      expect { Puppet::Pops::Parser::Lexer2.new.fullscan }.to raise_error(Puppet::ParseErrorWithIssue) { |e|
-        expect(e.issue_code).to be(Puppet::Pops::Issues::NO_INPUT_TO_LEXER.issue_code)
+      expect { Oregano::Pops::Parser::Lexer2.new.fullscan }.to raise_error(Oregano::ParseErrorWithIssue) { |e|
+        expect(e.issue_code).to be(Oregano::Pops::Issues::NO_INPUT_TO_LEXER.issue_code)
       }
     end
 
     it 'detects and reports issue UNCLOSED_QUOTE' do
-      expect_issue('"asd', Puppet::Pops::Issues::UNCLOSED_QUOTE)
+      expect_issue('"asd', Oregano::Pops::Issues::UNCLOSED_QUOTE)
     end
   end
 
@@ -792,10 +792,10 @@ describe 'Lexer2' do
         it "errors on the byte order mark for #{key} '[#{bytes.map() {|b| '%X' % b}.join(' ')}]'" do
           format_name = key.split('_')[0,2].join('-')
           bytes_str = "\\[#{bytes.map {|b| '%X' % b}.join(' ')}\\]"
-          fix =  " - remove these from the puppet source"
+          fix =  " - remove these from the oregano source"
           expect {
             tokens_scanned_from(bytes.pack('C*'))
-          }.to raise_error(Puppet::ParseErrorWithIssue,
+          }.to raise_error(Oregano::ParseErrorWithIssue,
             /Illegal #{format_name} .* at beginning of input: #{bytes_str}#{fix}/)
         end
 
@@ -803,19 +803,19 @@ describe 'Lexer2' do
          format_name = key.split('_')[0,2].join('-')
          string = bytes.pack('C*').force_encoding('UTF-16')
          bytes_str = "\\[#{string.bytes.map {|b| '%X' % b}.join(' ')}\\]"
-         fix =  " - remove these from the puppet source"
+         fix =  " - remove these from the oregano source"
          expect {
            tokens_scanned_from(string)
-         }.to raise_error(Puppet::ParseErrorWithIssue,
+         }.to raise_error(Oregano::ParseErrorWithIssue,
            /Illegal #{format_name} .* at beginning of input: #{bytes_str}#{fix}/)
        end
     end
   end
 end
 
-describe Puppet::Pops::Parser::Lexer2 do
+describe Oregano::Pops::Parser::Lexer2 do
 
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   # First line of Rune version of Rune poem at http://www.columbia.edu/~fdc/utf8/
   # characters chosen since they will not parse on Windows with codepage 437 or 1252
@@ -829,7 +829,7 @@ describe Puppet::Pops::Parser::Lexer2 do
 
   context 'when lexing files from disk' do
     it 'should always read files as UTF-8' do
-      if Puppet.features.microsoft_windows? && Encoding.default_external == Encoding::UTF_8
+      if Oregano.features.microsoft_windows? && Encoding.default_external == Encoding::UTF_8
         raise 'This test must be run in a codepage other than 65001 to validate behavior'
       end
 
@@ -849,8 +849,8 @@ describe Puppet::Pops::Parser::Lexer2 do
 
         expect {
           lexed_file = described_class.new.lex_file(manifest)
-        }.to raise_error(Puppet::ParseErrorWithIssue,
-          'Illegal UTF-8 Byte Order mark at beginning of input: [EF BB BF] - remove these from the puppet source')
+        }.to raise_error(Oregano::ParseErrorWithIssue,
+          'Illegal UTF-8 Byte Order mark at beginning of input: [EF BB BF] - remove these from the oregano source')
     end
   end
 

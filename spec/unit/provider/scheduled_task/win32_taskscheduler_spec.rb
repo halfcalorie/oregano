@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/windows/taskscheduler' if Puppet.features.microsoft_windows?
+require 'oregano/util/windows/taskscheduler' if Oregano.features.microsoft_windows?
 
 shared_examples_for "a trigger that handles start_date and start_time" do
   let(:trigger) do
@@ -42,7 +42,7 @@ shared_examples_for "a trigger that handles start_date and start_time" do
       trigger_hash['start_date'] = '1752-12-31'
 
       expect { date_component }.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         'start_date must be on or after 1753-01-01'
       )
     end
@@ -109,9 +109,9 @@ shared_examples_for "a trigger that handles start_date and start_time" do
   end
 end
 
-describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if => Oregano.features.microsoft_windows? do
   before :each do
-    Puppet::Type.type(:scheduled_task).stubs(:defaultprovider).returns(described_class)
+    Oregano::Type.type(:scheduled_task).stubs(:defaultprovider).returns(described_class)
   end
 
   describe 'when retrieving' do
@@ -122,7 +122,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
       Win32::TaskScheduler.stubs(:new).returns(@mock_task)
     end
-    let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
+    let(:resource) { Oregano::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
     describe 'the triggers for a task' do
       describe 'with only one trigger' do
@@ -483,7 +483,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
         ])
       end
 
-      it 'should skip trigger types Puppet does not handle' do
+      it 'should skip trigger types Oregano does not handle' do
         @mock_task.expects(:trigger_count).returns(3)
         @mock_task.expects(:trigger).with(0).returns({
           'trigger_type' => Win32::TaskScheduler::TASK_TIME_TRIGGER_ONCE,
@@ -593,7 +593,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
       Win32::TaskScheduler.stubs(:new).returns(@mock_task)
     end
-    let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
+    let(:resource) { Oregano::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
     it "should delegate to Win32::TaskScheduler using the resource's name" do
       @mock_task.expects(:exists?).with('Test Task').returns(true)
@@ -612,7 +612,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
       described_class.any_instance.stubs(:exists?).returns(false)
     end
-    let(:resource) { Puppet::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
+    let(:resource) { Oregano::Type.type(:scheduled_task).new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
 
     it 'should clear the cached task object' do
       expect(resource.provider.task).to eq(@mock_task)
@@ -686,31 +686,31 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
     end
   end
 
-  describe '#user_insync?', :if => Puppet.features.microsoft_windows? do
+  describe '#user_insync?', :if => Oregano.features.microsoft_windows? do
     let(:resource) { described_class.new(:name => 'foobar', :command => 'C:\Windows\System32\notepad.exe') }
 
     it 'should consider the user as in sync if the name matches' do
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with('joe').twice.returns('SID A')
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with('joe').twice.returns('SID A')
 
       expect(resource).to be_user_insync('joe', ['joe'])
     end
 
     it 'should consider the user as in sync if the current user is fully qualified' do
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with('joe').returns('SID A')
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with('MACHINE\joe').returns('SID A')
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with('joe').returns('SID A')
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with('MACHINE\joe').returns('SID A')
 
       expect(resource).to be_user_insync('MACHINE\joe', ['joe'])
     end
 
     it 'should consider a current user of the empty string to be the same as the system user' do
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with('system').twice.returns('SYSTEM SID')
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with('system').twice.returns('SYSTEM SID')
 
       expect(resource).to be_user_insync('', ['system'])
     end
 
     it 'should consider different users as being different' do
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with('joe').returns('SID A')
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with('bob').returns('SID B')
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with('joe').returns('SID A')
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with('bob').returns('SID B')
 
       expect(resource).not_to be_user_insync('joe', ['bob'])
     end
@@ -1158,89 +1158,89 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
   describe '#translate_hash_to_trigger' do
     before :each do
-      @puppet_trigger = {
+      @oregano_trigger = {
         'start_date' => '2011-1-1',
         'start_time' => '01:10'
       }
     end
     let(:provider) { described_class.new(:name => 'Test Task', :command => 'C:\Windows\System32\notepad.exe') }
-    let(:trigger)  { provider.translate_hash_to_trigger(@puppet_trigger) }
+    let(:trigger)  { provider.translate_hash_to_trigger(@oregano_trigger) }
 
     context "working with repeat every x triggers" do
       before :each do
-        @puppet_trigger['schedule'] = 'once'
+        @oregano_trigger['schedule'] = 'once'
       end
 
       it 'should succeed if minutes_interval is equal to 0' do
-        @puppet_trigger['minutes_interval'] = '0'
+        @oregano_trigger['minutes_interval'] = '0'
 
         expect(trigger['minutes_interval']).to eq(0)
       end
 
       it 'should default minutes_duration to a full day when minutes_interval is greater than 0 without setting minutes_duration' do
-        @puppet_trigger['minutes_interval'] = '1'
+        @oregano_trigger['minutes_interval'] = '1'
 
         expect(trigger['minutes_duration']).to eq(1440)
       end
 
       it 'should succeed if minutes_interval is greater than 0 and minutes_duration is also set' do
-        @puppet_trigger['minutes_interval'] = '1'
-        @puppet_trigger['minutes_duration'] = '2'
+        @oregano_trigger['minutes_interval'] = '1'
+        @oregano_trigger['minutes_duration'] = '2'
 
         expect(trigger['minutes_interval']).to eq(1)
       end
 
       it 'should fail if minutes_interval is less than 0' do
-        @puppet_trigger['minutes_interval'] = '-1'
+        @oregano_trigger['minutes_interval'] = '-1'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           'minutes_interval must be an integer greater or equal to 0'
         )
       end
 
       it 'should fail if minutes_interval is not an integer' do
-        @puppet_trigger['minutes_interval'] = 'abc'
+        @oregano_trigger['minutes_interval'] = 'abc'
         expect { trigger }.to raise_error(ArgumentError)
       end
 
       it 'should succeed if minutes_duration is equal to 0' do
-        @puppet_trigger['minutes_duration'] = '0'
+        @oregano_trigger['minutes_duration'] = '0'
         expect(trigger['minutes_duration']).to eq(0)
       end
 
       it 'should succeed if minutes_duration is greater than 0' do
-        @puppet_trigger['minutes_duration'] = '1'
+        @oregano_trigger['minutes_duration'] = '1'
         expect(trigger['minutes_duration']).to eq(1)
       end
 
       it 'should fail if minutes_duration is less than 0' do
-        @puppet_trigger['minutes_duration'] = '-1'
+        @oregano_trigger['minutes_duration'] = '-1'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
 
       it 'should fail if minutes_duration is not an integer' do
-        @puppet_trigger['minutes_duration'] = 'abc'
+        @oregano_trigger['minutes_duration'] = 'abc'
         expect { trigger }.to raise_error(ArgumentError)
       end
 
       it 'should succeed if minutes_duration is equal to a full day' do
-        @puppet_trigger['minutes_duration'] = '1440'
+        @oregano_trigger['minutes_duration'] = '1440'
         expect(trigger['minutes_duration']).to eq(1440)
       end
 
       it 'should succeed if minutes_duration is equal to three days' do
-        @puppet_trigger['minutes_duration'] = '4320'
+        @oregano_trigger['minutes_duration'] = '4320'
         expect(trigger['minutes_duration']).to eq(4320)
       end
 
       it 'should succeed if minutes_duration is greater than minutes_duration' do
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '11'
+        @oregano_trigger['minutes_interval'] = '10'
+        @oregano_trigger['minutes_duration'] = '11'
 
         expect(trigger['minutes_interval']).to eq(10)
         expect(trigger['minutes_duration']).to eq(11)
@@ -1249,39 +1249,39 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       it 'should fail if minutes_duration is equal to minutes_interval' do
         # On Windows 2003, the duration must be greater than the interval
         # on other platforms the values can be equal.
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '10'
+        @oregano_trigger['minutes_interval'] = '10'
+        @oregano_trigger['minutes_duration'] = '10'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
 
       it 'should succeed if minutes_duration and minutes_interval are both set to 0' do
-        @puppet_trigger['minutes_interval'] = '0'
-        @puppet_trigger['minutes_duration'] = '0'
+        @oregano_trigger['minutes_interval'] = '0'
+        @oregano_trigger['minutes_duration'] = '0'
 
         expect(trigger['minutes_interval']).to eq(0)
         expect(trigger['minutes_duration']).to eq(0)
       end
 
       it 'should fail if minutes_duration is less than minutes_interval' do
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '9'
+        @oregano_trigger['minutes_interval'] = '10'
+        @oregano_trigger['minutes_duration'] = '9'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           'minutes_duration must be an integer greater than minutes_interval and equal to or greater than 0'
         )
       end
 
       it 'should fail if minutes_duration is less than minutes_interval and set to 0' do
-        @puppet_trigger['minutes_interval'] = '10'
-        @puppet_trigger['minutes_duration'] = '0'
+        @oregano_trigger['minutes_interval'] = '10'
+        @oregano_trigger['minutes_duration'] = '0'
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           'minutes_interval cannot be set without minutes_duration also being set to a number greater than 0'
         )
       end
@@ -1289,7 +1289,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
     describe 'when given a one-time trigger' do
       before :each do
-        @puppet_trigger['schedule'] = 'once'
+        @oregano_trigger['schedule'] = 'once'
       end
 
       it 'should set the trigger_type to Win32::TaskScheduler::ONCE' do
@@ -1301,19 +1301,19 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it "should require 'start_date'" do
-        @puppet_trigger.delete('start_date')
+        @oregano_trigger.delete('start_date')
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Must specify 'start_date' when defining a one-time trigger/
         )
       end
 
       it "should require 'start_time'" do
-        @puppet_trigger.delete('start_time')
+        @oregano_trigger.delete('start_time')
 
         expect { trigger }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Must specify 'start_time' when defining a trigger/
         )
       end
@@ -1325,7 +1325,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
     describe 'when given a daily trigger' do
       before :each do
-        @puppet_trigger['schedule'] = 'daily'
+        @oregano_trigger['schedule'] = 'daily'
       end
 
       it "should default 'every' to 1" do
@@ -1333,13 +1333,13 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it "should use the specified value for 'every'" do
-        @puppet_trigger['every'] = 5
+        @oregano_trigger['every'] = 5
 
         expect(trigger['type']['days_interval']).to eq(5)
       end
 
       it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
+        @oregano_trigger.delete('start_date')
         today = Time.now
 
         expect(trigger['start_year']).to eq(today.year)
@@ -1354,7 +1354,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
     describe 'when given a weekly trigger' do
       before :each do
-        @puppet_trigger['schedule'] = 'weekly'
+        @oregano_trigger['schedule'] = 'weekly'
       end
 
       it "should default 'every' to 1" do
@@ -1362,7 +1362,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it "should use the specified value for 'every'" do
-        @puppet_trigger['every'] = 4
+        @oregano_trigger['every'] = 4
 
         expect(trigger['type']['weeks_interval']).to eq(4)
       end
@@ -1378,7 +1378,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it "should use the specified value for 'day_of_week'" do
-        @puppet_trigger['day_of_week'] = ['mon', 'wed', 'fri']
+        @oregano_trigger['day_of_week'] = ['mon', 'wed', 'fri']
 
         expect(trigger['type']['days_of_week']).to eq(Win32::TaskScheduler::MONDAY    |
                                                   Win32::TaskScheduler::WEDNESDAY |
@@ -1386,7 +1386,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
+        @oregano_trigger.delete('start_date')
         today = Time.now
 
         expect(trigger['start_year']).to eq(today.year)
@@ -1416,7 +1416,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it "should use the specified value for 'months'" do
-        @puppet_trigger['months'] = [2, 8]
+        @oregano_trigger['months'] = [2, 8]
 
         expect(trigger['type']['months']).to eq(Win32::TaskScheduler::FEBRUARY  |
                                             Win32::TaskScheduler::AUGUST)
@@ -1425,41 +1425,41 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
     describe 'when given a monthly date-based trigger' do
       before :each do
-        @puppet_trigger['schedule'] = 'monthly'
-        @puppet_trigger['on']       = [7, 14]
+        @oregano_trigger['schedule'] = 'monthly'
+        @oregano_trigger['on']       = [7, 14]
       end
 
       it_behaves_like 'a monthly schedule'
 
       it "should not allow 'which_occurrence' to be specified" do
-        @puppet_trigger['which_occurrence'] = 'first'
+        @oregano_trigger['which_occurrence'] = 'first'
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
 
       it "should not allow 'day_of_week' to be specified" do
-        @puppet_trigger['day_of_week'] = 'mon'
+        @oregano_trigger['day_of_week'] = 'mon'
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
 
       it "should require 'on'" do
-        @puppet_trigger.delete('on')
+        @oregano_trigger.delete('on')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Don't know how to create a 'monthly' schedule with the options: schedule, start_date, start_time/
         )
       end
 
       it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
+        @oregano_trigger.delete('start_date')
         today = Time.now
 
         expect(trigger['start_year']).to eq(today.year)
@@ -1474,42 +1474,42 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
     describe 'when given a monthly day-of-week-based trigger' do
       before :each do
-        @puppet_trigger['schedule']         = 'monthly'
-        @puppet_trigger['which_occurrence'] = 'first'
-        @puppet_trigger['day_of_week']      = 'mon'
+        @oregano_trigger['schedule']         = 'monthly'
+        @oregano_trigger['which_occurrence'] = 'first'
+        @oregano_trigger['day_of_week']      = 'mon'
       end
 
       it_behaves_like 'a monthly schedule'
 
       it "should not allow 'on' to be specified" do
-        @puppet_trigger['on'] = 15
+        @oregano_trigger['on'] = 15
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Neither 'day_of_week' nor 'which_occurrence' can be specified when creating a monthly date-based trigger/
         )
       end
 
       it "should require 'which_occurrence'" do
-        @puppet_trigger.delete('which_occurrence')
+        @oregano_trigger.delete('which_occurrence')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /which_occurrence must be specified when creating a monthly day-of-week based trigger/
         )
       end
 
       it "should require 'day_of_week'" do
-        @puppet_trigger.delete('day_of_week')
+        @oregano_trigger.delete('day_of_week')
 
         expect {trigger}.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /day_of_week must be specified when creating a monthly day-of-week based trigger/
         )
       end
 
       it "should default 'start_date' to 'today'" do
-        @puppet_trigger.delete('start_date')
+        @oregano_trigger.delete('start_date')
         today = Time.now
 
         expect(trigger['start_year']).to eq(today.year)
@@ -1542,7 +1542,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       ]
 
       expect {provider.validate_trigger(triggers_to_validate)}.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         /#{Regexp.escape("Unknown trigger option(s): ['this is invalid']")}/
       )
     end
@@ -1550,7 +1550,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
   describe '#flush' do
     let(:resource) do
-      Puppet::Type.type(:scheduled_task).new(
+      Oregano::Type.type(:scheduled_task).new(
         :name    => 'Test Task',
         :command => 'C:\Windows\System32\notepad.exe',
         :ensure  => @ensure
@@ -1580,13 +1580,13 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it 'should fail if the command is not specified' do
-        resource = Puppet::Type.type(:scheduled_task).new(
+        resource = Oregano::Type.type(:scheduled_task).new(
           :name    => 'Test Task',
           :ensure  => @ensure
         )
 
         expect { resource.provider.flush }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           'Parameter command is required.'
         )
       end
@@ -1607,7 +1607,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       it 'should not fail if the command is not specified' do
         @mock_task.stubs(:save)
 
-        resource = Puppet::Type.type(:scheduled_task).new(
+        resource = Oregano::Type.type(:scheduled_task).new(
           :name    => 'Test Task',
           :ensure  => @ensure
         )
@@ -1619,7 +1619,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
   describe 'property setter methods' do
     let(:resource) do
-      Puppet::Type.type(:scheduled_task).new(
+      Oregano::Type.type(:scheduled_task).new(
         :name    => 'Test Task',
         :command => 'C:\dummy_task.exe'
       )
@@ -1675,7 +1675,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
     describe '#trigger=' do
       let(:resource) do
-        Puppet::Type.type(:scheduled_task).new(
+        Oregano::Type.type(:scheduled_task).new(
           :name    => 'Test Task',
           :command => 'C:\Windows\System32\notepad.exe',
           :trigger => @trigger
@@ -1735,7 +1735,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
     end
 
-    describe '#user=', :if => Puppet.features.microsoft_windows? do
+    describe '#user=', :if => Oregano.features.microsoft_windows? do
       before :each do
         @mock_task = stub
         @mock_task.responds_like(Win32::TaskScheduler.new)
@@ -1745,9 +1745,9 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it 'should use nil for user and password when setting the user to the SYSTEM account' do
-        Puppet::Util::Windows::SID.stubs(:name_to_sid).with('system').returns('SYSTEM SID')
+        Oregano::Util::Windows::SID.stubs(:name_to_sid).with('system').returns('SYSTEM SID')
 
-        resource = Puppet::Type.type(:scheduled_task).new(
+        resource = Oregano::Type.type(:scheduled_task).new(
           :name    => 'Test Task',
           :command => 'C:\dummy_task.exe',
           :user    => 'system'
@@ -1759,9 +1759,9 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       end
 
       it 'should use the specified user and password when setting the user to anything other than SYSTEM' do
-        Puppet::Util::Windows::SID.stubs(:name_to_sid).with('my_user_name').returns('SID A')
+        Oregano::Util::Windows::SID.stubs(:name_to_sid).with('my_user_name').returns('SID A')
 
-        resource = Puppet::Type.type(:scheduled_task).new(
+        resource = Oregano::Type.type(:scheduled_task).new(
           :name     => 'Test Task',
           :command  => 'C:\dummy_task.exe',
           :user     => 'my_user_name',
@@ -1777,7 +1777,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
 
   describe '#create' do
     let(:resource) do
-      Puppet::Type.type(:scheduled_task).new(
+      Oregano::Type.type(:scheduled_task).new(
         :name        => 'Test Task',
         :enabled     => @enabled,
         :command     => @command,
@@ -1848,7 +1848,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
     end
   end
 
-  describe "Win32::TaskScheduler", :if => Puppet.features.microsoft_windows? do
+  describe "Win32::TaskScheduler", :if => Oregano.features.microsoft_windows? do
 
     let(:name) { SecureRandom.uuid }
 
@@ -1920,37 +1920,37 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       it 'on account user name' do
         expect {
           task.set_account_information('a' * (Win32::TaskScheduler::MAX_ACCOUNT_LENGTH + 1), 'pass')
-        }.to raise_error(Puppet::Error)
+        }.to raise_error(Oregano::Error)
       end
 
       it 'on application name' do
         expect {
           task.application_name = 'a' * (Win32::TaskScheduler::MAX_PATH + 1)
-        }.to raise_error(Puppet::Error)
+        }.to raise_error(Oregano::Error)
       end
 
       it 'on parameters' do
         expect {
           task.parameters = 'a' * (Win32::TaskScheduler::MAX_PARAMETERS_LENGTH + 1)
-        }.to raise_error(Puppet::Error)
+        }.to raise_error(Oregano::Error)
       end
 
       it 'on working directory' do
         expect {
           task.working_directory = 'a' * (Win32::TaskScheduler::MAX_PATH + 1)
-        }.to raise_error(Puppet::Error)
+        }.to raise_error(Oregano::Error)
       end
 
       it 'on comment' do
         expect {
           task.comment = 'a' * (Win32::TaskScheduler::MAX_COMMENT_LENGTH + 1)
-        }.to raise_error(Puppet::Error)
+        }.to raise_error(Oregano::Error)
       end
 
       it 'on creator' do
         expect {
           task.creator = 'a' * (Win32::TaskScheduler::MAX_ACCOUNT_LENGTH + 1)
-        }.to raise_error(Puppet::Error)
+        }.to raise_error(Oregano::Error)
       end
     end
 
@@ -1960,7 +1960,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
       attempts.times do
         begin
           task.delete(name) if Win32::TaskScheduler.new.exists?(name)
-        rescue Puppet::Util::Windows::Error
+        rescue Oregano::Util::Windows::Error
           failed = true
         end
 
@@ -1976,7 +1976,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
           task = Win32::TaskScheduler.new(task_name, { 'trigger_type' => Win32::TaskScheduler::ONCE })
           task.save()
 
-          expect(Puppet::FileSystem.exist?("C:\\Windows\\Tasks\\#{task_name}.job")).to be_truthy
+          expect(Oregano::FileSystem.exist?("C:\\Windows\\Tasks\\#{task_name}.job")).to be_truthy
           expect(task.exists?(task_name)).to be_truthy
         ensure
           delete_task_with_retry(task, task_name)
@@ -2043,7 +2043,7 @@ describe Puppet::Type.type(:scheduled_task).provider(:win32_taskscheduler), :if 
           task.activate(name)
           task.application_name = 'c:/windows/system32/notepad.exe'
 
-          expect { task.save() }.to raise_error(Puppet::Error, /Account information must be set on the current task to save it properly/)
+          expect { task.save() }.to raise_error(Oregano::Error, /Account information must be set on the current task to save it properly/)
 
           # on a failed save, the current task is still active - add SYSTEM
           task.set_account_information('', nil)

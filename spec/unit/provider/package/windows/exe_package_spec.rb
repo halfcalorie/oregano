@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/provider/package/windows/exe_package'
+require 'oregano/provider/package/windows/exe_package'
 
-describe Puppet::Provider::Package::Windows::ExePackage do
+describe Oregano::Provider::Package::Windows::ExePackage do
   subject { described_class }
 
   let (:name)        { 'Git version 1.7.11' }
@@ -76,7 +76,7 @@ describe Puppet::Provider::Package::Windows::ExePackage do
     it 'should install using the source' do
       cmd = subject.install_command({:source => source})
 
-      expect(cmd).to eq(['cmd.exe', '/c', 'start', '"puppet-install"', '/w', source])
+      expect(cmd).to eq(['cmd.exe', '/c', 'start', '"oregano-install"', '/w', source])
     end
   end
 
@@ -84,7 +84,7 @@ describe Puppet::Provider::Package::Windows::ExePackage do
     ['C:\uninstall.exe', 'C:\Program Files\uninstall.exe'].each do |exe|
       it "should quote #{exe}" do
         expect(subject.new(name, version, exe).uninstall_command).to eq(
-          ['cmd.exe', '/c', 'start', '"puppet-uninstall"', '/w', "\"#{exe}\""]
+          ['cmd.exe', '/c', 'start', '"oregano-uninstall"', '/w', "\"#{exe}\""]
         )
       end
     end
@@ -92,7 +92,7 @@ describe Puppet::Provider::Package::Windows::ExePackage do
     ['"C:\Program Files\uninstall.exe"', '"C:\Program Files (x86)\Git\unins000.exe" /SILENT"'].each do |exe|
       it "should not quote #{exe}" do
         expect(subject.new(name, version, exe).uninstall_command).to eq(
-          ['cmd.exe', '/c', 'start', '"puppet-uninstall"', '/w', exe]
+          ['cmd.exe', '/c', 'start', '"oregano-uninstall"', '/w', exe]
         )
       end
     end

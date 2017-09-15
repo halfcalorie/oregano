@@ -19,18 +19,18 @@ describe "http compression" do
 
   describe "when zlib is not available" do
     before(:each) do
-      Puppet.features.stubs(:zlib?).returns false
+      Oregano.features.stubs(:zlib?).returns false
 
-      require 'puppet/network/http/compression'
+      require 'oregano/network/http/compression'
       class HttpUncompressor
-        include Puppet::Network::HTTP::Compression::None
+        include Oregano::Network::HTTP::Compression::None
       end
 
       @uncompressor = HttpUncompressor.new
     end
 
     it "should have a module function that returns the None underlying module" do
-      expect(Puppet::Network::HTTP::Compression.module).to eq(Puppet::Network::HTTP::Compression::None)
+      expect(Oregano::Network::HTTP::Compression.module).to eq(Oregano::Network::HTTP::Compression::None)
     end
 
     it "should not add any Accept-Encoding header" do
@@ -45,21 +45,21 @@ describe "http compression" do
     it "should yield an identity uncompressor" do
       response = stub 'response'
       @uncompressor.uncompress(response) { |u|
-        expect(u).to be_instance_of(Puppet::Network::HTTP::Compression::IdentityAdapter)
+        expect(u).to be_instance_of(Oregano::Network::HTTP::Compression::IdentityAdapter)
       }
     end
   end
 
   describe "when zlib is available" do
-    require 'puppet/network/http/compression'
+    require 'oregano/network/http/compression'
     class ActiveUncompressor
-      include Puppet::Network::HTTP::Compression::Active
+      include Oregano::Network::HTTP::Compression::Active
     end
 
     let(:uncompressor) { ActiveUncompressor.new }
 
     it "should have a module function that returns the Active underlying module" do
-      expect(Puppet::Network::HTTP::Compression.module).to eq(Puppet::Network::HTTP::Compression::Active)
+      expect(Oregano::Network::HTTP::Compression.module).to eq(Oregano::Network::HTTP::Compression::Active)
     end
 
     it "should add an Accept-Encoding header supporting compression" do
@@ -136,7 +136,7 @@ describe "http compression" do
         stubs_response_with(response, nil, data)
 
         expect { |b|
-          uncompressor.uncompress(response).yield_once_with(Puppet::Network::HTTP::Compression::IdentityAdapter, &b)
+          uncompressor.uncompress(response).yield_once_with(Oregano::Network::HTTP::Compression::IdentityAdapter, &b)
         }
       end
 
@@ -144,7 +144,7 @@ describe "http compression" do
         stubs_response_with(response, 'identity', data)
 
         expect { |b|
-          uncompressor.uncompress(response).yield_once_with(Puppet::Network::HTTP::Compression::IdentityAdapter, &b)
+          uncompressor.uncompress(response).yield_once_with(Oregano::Network::HTTP::Compression::IdentityAdapter, &b)
         }
       end
 
@@ -152,7 +152,7 @@ describe "http compression" do
         stubs_response_with(response, 'gzip', compressed_gzip)
 
         expect { |b|
-          uncompressor.uncompress(response).yield_once_with(Puppet::Network::HTTP::Compression::ZlibAdapter, &b)
+          uncompressor.uncompress(response).yield_once_with(Oregano::Network::HTTP::Compression::ZlibAdapter, &b)
         }
       end
 
@@ -160,14 +160,14 @@ describe "http compression" do
         stubs_response_with(response, 'deflate', compressed_zlib)
 
         expect { |b|
-          uncompressor.uncompress(response).yield_once_with(Puppet::Network::HTTP::Compression::ZlibAdapter, &b)
+          uncompressor.uncompress(response).yield_once_with(Oregano::Network::HTTP::Compression::ZlibAdapter, &b)
         }
       end
 
       it "should close the underlying adapter" do
         stubs_response_with(response, 'identity', data)
         adapter = stub_everything 'adapter'
-        Puppet::Network::HTTP::Compression::IdentityAdapter.expects(:new).returns(adapter)
+        Oregano::Network::HTTP::Compression::IdentityAdapter.expects(:new).returns(adapter)
 
         adapter.expects(:close)
         uncompressor.uncompress(response) { |u| }
@@ -176,7 +176,7 @@ describe "http compression" do
       it "should close the underlying adapter if the yielded block raises" do
         stubs_response_with(response, 'identity', data)
         adapter = stub_everything 'adapter'
-        Puppet::Network::HTTP::Compression::IdentityAdapter.expects(:new).returns(adapter)
+        Oregano::Network::HTTP::Compression::IdentityAdapter.expects(:new).returns(adapter)
 
         adapter.expects(:close)
         expect {
@@ -189,11 +189,11 @@ describe "http compression" do
       it "should initialize the underlying inflater with gzip/zlib header parsing" do
         Zlib::Inflate.expects(:new).with(15+32)
 
-        Puppet::Network::HTTP::Compression::Active::ZlibAdapter.new
+        Oregano::Network::HTTP::Compression::Active::ZlibAdapter.new
       end
 
       it "should return the given chunk" do
-        adapter = Puppet::Network::HTTP::Compression::Active::ZlibAdapter.new
+        adapter = Oregano::Network::HTTP::Compression::Active::ZlibAdapter.new
 
         expect(adapter.uncompress(compressed_zlib)).to eq(data)
       end
@@ -201,7 +201,7 @@ describe "http compression" do
       it "should try a 'regular' inflater on Zlib::DataError" do
         inflater = Zlib::Inflate.new(15 + 32)
         inflater.expects(:inflate).raises(Zlib::DataError.new("not a zlib stream"))
-        adapter = Puppet::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
+        adapter = Oregano::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
 
         expect(adapter.uncompress(compressed_zlib)).to eq(data)
       end
@@ -209,7 +209,7 @@ describe "http compression" do
       it "should raise the error the second time" do
         inflater = Zlib::Inflate.new(15 + 32)
         inflater.expects(:inflate).raises(Zlib::DataError.new("not a zlib stream"))
-        adapter = Puppet::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
+        adapter = Oregano::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
 
         expect { adapter.uncompress("this is not compressed data") }.to raise_error(Zlib::DataError, /incorrect header check/)
       end
@@ -218,7 +218,7 @@ describe "http compression" do
         inflater = stub 'inflater'
         inflater.expects(:finish)
         inflater.expects(:close)
-        adapter = Puppet::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
+        adapter = Oregano::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
 
         adapter.close
       end
@@ -228,7 +228,7 @@ describe "http compression" do
         inflater.expects(:finish).raises(Zlib::BufError)
         inflater.expects(:close)
 
-        adapter = Puppet::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
+        adapter = Oregano::Network::HTTP::Compression::Active::ZlibAdapter.new(inflater)
         expect {
           adapter.close
         }.to raise_error(Zlib::BufError)

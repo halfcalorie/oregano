@@ -4,8 +4,8 @@ tag 'audit:medium',
     'audit:refactor',    # Use block style `test_name`
     'audit:integration'
 
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CommandUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CommandUtils
 
 hosts_to_test = agents.reject do |agent|
   if agent['platform'].match /(?:ubuntu|centos|debian|el-|fedora)/
@@ -24,8 +24,8 @@ username = "pl#{rand(99999).to_i}"
 teardown do
   step "Teardown: Ensure test user is removed"
   hosts_to_test.each do |host|
-    on agent, puppet('resource', 'user', username, 'ensure=absent')
-    on agent, puppet('resource', 'group', username, 'ensure=absent')
+    on agent, oregano('resource', 'user', username, 'ensure=absent')
+    on agent, oregano('resource', 'group', username, 'ensure=absent')
   end
 end
 

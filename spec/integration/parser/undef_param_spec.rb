@@ -1,22 +1,22 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe "Parameter passing" do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   before :each do
     # DataBinding will be consulted before falling back to a default value,
     # but we aren't testing that here
-    Puppet::DataBinding.indirection.stubs(:find)
+    Oregano::DataBinding.indirection.stubs(:find)
   end
 
-  def expect_the_message_to_be(message, node = Puppet::Node.new('the node'))
+  def expect_the_message_to_be(message, node = Oregano::Node.new('the node'))
     catalog = compile_to_catalog(yield, node)
     expect(catalog.resource('Notify', 'something')[:message]).to eq(message)
   end
 
-  def expect_puppet_error(message, node = Puppet::Node.new('the node'))
-    expect { compile_to_catalog(yield, node) }.to raise_error(Puppet::Error, message)
+  def expect_oregano_error(message, node = Oregano::Node.new('the node'))
+    expect { compile_to_catalog(yield, node) }.to raise_error(Oregano::Error, message)
   end
 
   it "overrides the default when a value is given" do
@@ -78,7 +78,7 @@ describe "Parameter passing" do
   end
 
   it "errors when no parameter is provided and there is no default" do
-    expect_puppet_error(/A\[a\]: expects a value for parameter 'x'/) do <<-MANIFEST
+    expect_oregano_error(/A\[a\]: expects a value for parameter 'x'/) do <<-MANIFEST
         define a($x) { notify { 'something': message => $x }}
         a {'a': }
     MANIFEST

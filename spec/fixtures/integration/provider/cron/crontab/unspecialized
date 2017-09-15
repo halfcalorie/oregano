@@ -6,10 +6,10 @@
 
 17-19,22 0-23/2 * * 2 /bin/unnamed_regular_command
 
-# Puppet Name: My daily failure
+# Oregano Name: My daily failure
 MAILTO=""
 * * * * * /bin/false
-# Puppet Name: Monthly job
+# Oregano Name: Monthly job
 SHELL=/bin/sh
 MAILTO=mail@company.com
 15 14 1 * * $HOME/bin/monthly

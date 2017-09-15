@@ -4,16 +4,16 @@
 #
 require 'spec_helper'
 
-describe Puppet::Type.type(:service).provider(:systemd) do
+describe Oregano::Type.type(:service).provider(:systemd) do
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   end
 
   before :each do
-    Puppet::Type.type(:service).stubs(:defaultprovider).returns described_class
+    Oregano::Type.type(:service).stubs(:defaultprovider).returns described_class
     described_class.stubs(:which).with('systemctl').returns '/bin/systemctl'
   end
 
@@ -146,23 +146,23 @@ describe Puppet::Type.type(:service).provider(:systemd) do
 
   describe "#start" do
     it "should use the supplied start command if specified" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service', :start => '/bin/foo'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service', :start => '/bin/foo'))
       provider.expects(:execute).with(['/bin/foo'], :failonfail => true, :override_locale => false, :squelch => false, :combine => true)
       provider.start
     end
 
     it "should start the service with systemctl start otherwise" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:systemctl).with(:unmask, 'sshd.service')
       provider.expects(:execute).with(['/bin/systemctl','start','sshd.service'], {:failonfail => true, :override_locale => false, :squelch => false, :combine => true})
       provider.start
     end
 
     it "should show journald logs on failure" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:systemctl).with(:unmask, 'sshd.service')
       provider.expects(:execute).with(['/bin/systemctl','start','sshd.service'],{:failonfail => true, :override_locale => false, :squelch => false, :combine => true})
-        .raises(Puppet::ExecutionFailure, "Failed to start sshd.service: Unit sshd.service failed to load: Invalid argument. See system logs and 'systemctl status sshd.service' for details.")
+        .raises(Oregano::ExecutionFailure, "Failed to start sshd.service: Unit sshd.service failed to load: Invalid argument. See system logs and 'systemctl status sshd.service' for details.")
       journalctl_logs = <<-EOS
 -- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --
 Jun 14 21:41:34 foo.example.com systemd[1]: Stopping sshd Service...
@@ -170,27 +170,27 @@ Jun 14 21:41:35 foo.example.com systemd[1]: Starting sshd Service...
 Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= and ExecStop= setting. Refusing.
       EOS
       provider.expects(:execute).with("journalctl -n 50 --since '5 minutes ago' -u sshd.service --no-pager").returns(journalctl_logs)
-      expect { provider.start }.to raise_error(Puppet::Error, /Systemd start for sshd.service failed![\n]+journalctl log for sshd.service:[\n]+-- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --/m)
+      expect { provider.start }.to raise_error(Oregano::Error, /Systemd start for sshd.service failed![\n]+journalctl log for sshd.service:[\n]+-- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --/m)
     end
   end
 
   describe "#stop" do
     it "should use the supplied stop command if specified" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service', :stop => '/bin/foo'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service', :stop => '/bin/foo'))
       provider.expects(:execute).with(['/bin/foo'], :failonfail => true, :override_locale => false, :squelch => false, :combine => true)
       provider.stop
     end
 
     it "should stop the service with systemctl stop otherwise" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','stop','sshd.service'], :failonfail => true, :override_locale => false, :squelch => false, :combine => true)
       provider.stop
     end
 
     it "should show journald logs on failure" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','stop','sshd.service'],{:failonfail => true, :override_locale => false, :squelch => false, :combine => true})
-        .raises(Puppet::ExecutionFailure, "Failed to stop sshd.service: Unit sshd.service failed to load: Invalid argument. See system logs and 'systemctl status sshd.service' for details.")
+        .raises(Oregano::ExecutionFailure, "Failed to stop sshd.service: Unit sshd.service failed to load: Invalid argument. See system logs and 'systemctl status sshd.service' for details.")
       journalctl_logs = <<-EOS
 -- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --
 Jun 14 21:41:34 foo.example.com systemd[1]: Stopping sshd Service...
@@ -198,48 +198,48 @@ Jun 14 21:41:35 foo.example.com systemd[1]: Starting sshd Service...
 Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= and ExecStop= setting. Refusing.
       EOS
       provider.expects(:execute).with("journalctl -n 50 --since '5 minutes ago' -u sshd.service --no-pager").returns(journalctl_logs)
-      expect { provider.stop }.to raise_error(Puppet::Error, /Systemd stop for sshd.service failed![\n]+journalctl log for sshd.service:[\n]-- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --/m)
+      expect { provider.stop }.to raise_error(Oregano::Error, /Systemd stop for sshd.service failed![\n]+journalctl log for sshd.service:[\n]-- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --/m)
     end
   end
 
   describe "#enabled?" do
     it "should return :true if the service is enabled" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','is-enabled','sshd.service'], :failonfail => false).returns "enabled\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(0)
       expect(provider.enabled?).to eq(:true)
     end
 
     it "should return :true if the service is static" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','is-enabled','sshd.service'], :failonfail => false).returns "static\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(0)
       expect(provider.enabled?).to eq(:true)
     end
 
     it "should return :false if the service is disabled" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','is-enabled','sshd.service'], :failonfail => false).returns "disabled\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(1)
       expect(provider.enabled?).to eq(:false)
     end
 
     it "should return :false if the service is indirect" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','is-enabled','sshd.service'], :failonfail => false).returns "indirect\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(0)
       expect(provider.enabled?).to eq(:false)
     end
 
     it "should return :false if the service is masked and the resource is attempting to be disabled" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service', :enable => false))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service', :enable => false))
       provider.expects(:execute).with(['/bin/systemctl','is-enabled','sshd.service'], :failonfail => false).returns "masked\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(1)
       expect(provider.enabled?).to eq(:false)
     end
 
     it "should return :mask if the service is masked and the resource is attempting to be masked" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service', :enable => 'mask'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service', :enable => 'mask'))
       provider.expects(:execute).with(['/bin/systemctl','is-enabled','sshd.service'], :failonfail => false).returns "masked\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(1)
       expect(provider.enabled?).to eq(:mask)
@@ -248,7 +248,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
 
   describe "#enable" do
     it "should run systemctl enable to enable a service" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:systemctl).with(:unmask, 'sshd.service')
       provider.expects(:systemctl).with(:enable, 'sshd.service')
       provider.enable
@@ -257,7 +257,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
 
   describe "#disable" do
     it "should run systemctl disable to disable a service" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:systemctl).with(:disable, 'sshd.service')
       provider.disable
     end
@@ -265,7 +265,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
 
   describe "#mask" do
     it "should run systemctl to disable and mask a service" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       # :disable is the only call in the provider that uses a symbol instead of
       # a string.
       # This should be made consistent in the future and all tests updated.
@@ -279,7 +279,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
   # command. I just assume that it does not make sense for systemd.
   describe "#status" do
     it "should return running if if the command returns 0" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','is-active','sshd.service'], :failonfail => false, :override_locale => false, :squelch => false, :combine => true).returns "active\n"
       $CHILD_STATUS.stubs(:exitstatus).returns(0)
       expect(provider.status).to eq(:running)
@@ -287,7 +287,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
 
     [-10,-1,3,10].each { |ec|
       it "should return stopped if the command returns something non-0" do
-        provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+        provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
         provider.expects(:execute).with(['/bin/systemctl','is-active','sshd.service'], :failonfail => false, :override_locale => false, :squelch => false, :combine => true).returns "inactive\n"
         $CHILD_STATUS.stubs(:exitstatus).returns(ec)
         expect(provider.status).to eq(:stopped)
@@ -295,7 +295,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
     }
 
     it "should use the supplied status command if specified" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service', :status => '/bin/foo'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service', :status => '/bin/foo'))
       provider.expects(:execute).with(['/bin/foo'], :failonfail => false, :override_locale => false, :squelch => false, :combine => true)
       provider.status
     end
@@ -305,22 +305,22 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
   # does not make sense for systemd
   describe "#restart" do
     it "should use the supplied restart command if specified" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd', :restart => '/bin/foo'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd', :restart => '/bin/foo'))
       provider.expects(:execute).with(['/bin/systemctl','restart','sshd.service'], :failonfail => true, :override_locale => false, :squelch => false, :combine => true).never
       provider.expects(:execute).with(['/bin/foo'], :failonfail => true, :override_locale => false, :squelch => false, :combine => true)
       provider.restart
     end
 
     it "should restart the service with systemctl restart" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','restart','sshd.service'], :failonfail => true, :override_locale => false, :squelch => false, :combine => true)
       provider.restart
     end
 
     it "should show journald logs on failure" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       provider.expects(:execute).with(['/bin/systemctl','restart','sshd.service'],{:failonfail => true, :override_locale => false, :squelch => false, :combine => true})
-        .raises(Puppet::ExecutionFailure, "Failed to restart sshd.service: Unit sshd.service failed to load: Invalid argument. See system logs and 'systemctl status sshd.service' for details.")
+        .raises(Oregano::ExecutionFailure, "Failed to restart sshd.service: Unit sshd.service failed to load: Invalid argument. See system logs and 'systemctl status sshd.service' for details.")
       journalctl_logs = <<-EOS
 -- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --
 Jun 14 21:41:34 foo.example.com systemd[1]: Stopping sshd Service...
@@ -328,14 +328,14 @@ Jun 14 21:41:35 foo.example.com systemd[1]: Starting sshd Service...
 Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= and ExecStop= setting. Refusing.
       EOS
       provider.expects(:execute).with("journalctl -n 50 --since '5 minutes ago' -u sshd.service --no-pager").returns(journalctl_logs)
-      expect { provider.restart }.to raise_error(Puppet::Error, /Systemd restart for sshd.service failed![\n]+journalctl log for sshd.service:[\n]+-- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --/m)
+      expect { provider.restart }.to raise_error(Oregano::Error, /Systemd restart for sshd.service failed![\n]+journalctl log for sshd.service:[\n]+-- Logs begin at Tue 2016-06-14 11:59:21 UTC, end at Tue 2016-06-14 21:45:02 UTC. --/m)
     end
   end
 
   describe "#debian_enabled?" do
     [104, 106].each do |status|
       it "should return true when invoke-rc.d returns #{status}" do
-        provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+        provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
         provider.stubs(:system)
         $CHILD_STATUS.expects(:exitstatus).returns(status)
         expect(provider.debian_enabled?).to eq(:true)
@@ -344,7 +344,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
 
     [101, 105].each do |status|
       it "should return true when status is #{status} and there are at least 4 start links" do
-        provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+        provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
         provider.stubs(:system)
         provider.expects(:get_start_link_count).returns(4)
         $CHILD_STATUS.expects(:exitstatus).twice.returns(status)
@@ -352,7 +352,7 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
       end
 
       it "should return false when status is #{status} and there are less than 4 start links" do
-        provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+        provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
         provider.stubs(:system)
         provider.expects(:get_start_link_count).returns(1)
         $CHILD_STATUS.expects(:exitstatus).twice.returns(status)
@@ -363,13 +363,13 @@ Jun 14 21:43:23 foo.example.com systemd[1]: sshd.service lacks both ExecStart= a
 
   describe "#get_start_link_count" do
     it "should strip the '.service' from the search if present in the resource name" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd.service'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd.service'))
       Dir.expects(:glob).with("/etc/rc*.d/S??sshd").returns(['files'])
       provider.get_start_link_count
     end
 
     it "should use the full service name if it does not include '.service'" do
-      provider = described_class.new(Puppet::Type.type(:service).new(:name => 'sshd'))
+      provider = described_class.new(Oregano::Type.type(:service).new(:name => 'sshd'))
       Dir.expects(:glob).with("/etc/rc*.d/S??sshd").returns(['files'])
       provider.get_start_link_count
     end

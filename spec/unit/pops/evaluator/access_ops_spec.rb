@@ -1,23 +1,23 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
-require 'puppet/pops/types/type_factory'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
+require 'oregano/pops/types/type_factory'
 require 'base64'
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
   include EvaluatorRspecHelper
 
   def range(from, to)
-    Puppet::Pops::Types::TypeFactory.range(from, to)
+    Oregano::Pops::Types::TypeFactory.range(from, to)
   end
 
   def float_range(from, to)
-    Puppet::Pops::Types::TypeFactory.float_range(from, to)
+    Oregano::Pops::Types::TypeFactory.float_range(from, to)
   end
 
   def binary(s)
@@ -79,7 +79,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
 
   context 'The evaluator when operating on an Array' do
     it 'is tested with the correct assumptions' do
-      expect(literal([1,2,3]).access_at(1).model_class <= Puppet::Pops::Model::AccessExpression).to eql(true)
+      expect(literal([1,2,3]).access_at(1).model_class <= Oregano::Pops::Model::AccessExpression).to eql(true)
     end
 
     it 'can get an element using a single key index to []' do
@@ -137,7 +137,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
   end
 
   context "When applied to a type it" do
-    let(:types) { Puppet::Pops::Types::TypeFactory }
+    let(:types) { Oregano::Pops::Types::TypeFactory }
 
     # Integer
     #
@@ -331,18 +331,18 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
     #
     it 'creates a PPatternType instance when applied to a Pattern' do
       regexp_expr = fqr('Pattern').access_at('foo')
-      expect(evaluate(regexp_expr)).to eql(Puppet::Pops::Types::TypeFactory.pattern('foo'))
+      expect(evaluate(regexp_expr)).to eql(Oregano::Pops::Types::TypeFactory.pattern('foo'))
     end
 
     # Regexp Type
     #
     it 'creates a Regexp instance when applied to a Pattern' do
       regexp_expr = fqr('Regexp').access_at('foo')
-      expect(evaluate(regexp_expr)).to eql(Puppet::Pops::Types::TypeFactory.regexp('foo'))
+      expect(evaluate(regexp_expr)).to eql(Oregano::Pops::Types::TypeFactory.regexp('foo'))
 
       # arguments are flattened
       regexp_expr = fqr('Regexp').access_at(['foo'])
-      expect(evaluate(regexp_expr)).to eql(Puppet::Pops::Types::TypeFactory.regexp('foo'))
+      expect(evaluate(regexp_expr)).to eql(Oregano::Pops::Types::TypeFactory.regexp('foo'))
     end
 
     # Class
@@ -423,7 +423,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
     it 'does not allow the type to be specified in an array' do
       # arguments are flattened
       expr = fqr('Resource').access_at([fqr('File')])
-      expect{evaluate(expr)}.to raise_error(Puppet::ParseError, /must be a resource type or a String/)
+      expect{evaluate(expr)}.to raise_error(Oregano::ParseError, /must be a resource type or a String/)
     end
 
     it 'produces a specific resource reference type from File[title]' do
@@ -480,24 +480,24 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
     #
     it 'produces a NotUndef instance' do
       type_expr = fqr('NotUndef')
-      expect(evaluate(type_expr)).to eql(Puppet::Pops::Types::TypeFactory.not_undef())
+      expect(evaluate(type_expr)).to eql(Oregano::Pops::Types::TypeFactory.not_undef())
     end
 
     it 'produces a NotUndef instance with contained type' do
       type_expr = fqr('NotUndef').access_at(fqr('Integer'))
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to eql(tf.not_undef(tf.integer))
     end
 
     it 'produces a NotUndef instance with String type when given a literal String' do
       type_expr = fqr('NotUndef').access_at(literal('hey'))
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to be_the_type(tf.not_undef(tf.string('hey')))
     end
 
     it 'Produces Optional instance with String type when using a String argument' do
       type_expr = fqr('Optional').access_at(literal('hey'))
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to be_the_type(tf.optional(tf.string('hey')))
     end
 
@@ -505,7 +505,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
     #
     it 'creates a Type instance when applied to a Type' do
       type_expr = fqr('Type').access_at(fqr('Integer'))
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to eql(tf.type_type(tf.integer))
 
       # arguments are flattened
@@ -517,7 +517,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
     #
     it 'creates a Ruby Type instance when applied to a Ruby Type' do
       type_expr = fqr('Runtime').access_at('ruby','String')
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to eql(tf.ruby_type('String'))
 
       # arguments are flattened
@@ -529,13 +529,13 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
     #
     it 'produces Callable instance without return type' do
       type_expr = fqr('Callable').access_at(fqr('String'))
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to eql(tf.callable(String))
     end
 
     it 'produces Callable instance with parameters and return type' do
       type_expr = fqr('Callable').access_at([fqr('String')], fqr('Integer'))
-      tf = Puppet::Pops::Types::TypeFactory
+      tf = Oregano::Pops::Types::TypeFactory
       expect(evaluate(type_expr)).to eql(tf.callable([String], Integer))
     end
 
@@ -547,7 +547,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl/AccessOperator' do
   end
 
   matcher :be_the_type do |type|
-    calc = Puppet::Pops::Types::TypeCalculator.new
+    calc = Oregano::Pops::Types::TypeCalculator.new
 
     match do |actual|
       calc.assignable?(actual, type) && calc.assignable?(type, actual)

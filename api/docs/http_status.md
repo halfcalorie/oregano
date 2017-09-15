@@ -8,7 +8,7 @@ Find
 
 Get status for a master
 
-    GET /puppet/v3/status/:name?environment=:environment
+    GET /oregano/v3/status/:name?environment=:environment
 
 The `environment` parameter and the `:name` are both required, but have no
 effect on the response. The `environment` must be a valid environment.
@@ -27,7 +27,7 @@ None
 
 ### Example Response
 
-    GET /puppet/v3/status/whatever?environment=env
+    GET /oregano/v3/status/whatever?environment=env
 
     HTTP 200 OK
     Content-Type: application/json

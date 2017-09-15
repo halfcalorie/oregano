@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/reference'
+require 'oregano/util/reference'
 
-describe Puppet::Util::Reference do
+describe Oregano::Util::Reference do
   it "should create valid Markdown extension definition lists" do
     my_fragment = nil
-    Puppet::Util::Reference.newreference :testreference, :doc => "A peer of the type and configuration references, but with no useful information" do
+    Oregano::Util::Reference.newreference :testreference, :doc => "A peer of the type and configuration references, but with no useful information" do
       my_term = "A term"
       my_definition = <<-EOT
         The definition of this term, marked by a colon and a space.
@@ -20,7 +20,7 @@ describe Puppet::Util::Reference do
       EOT
       my_fragment = markdown_definitionlist(my_term, my_definition)
     end
-    Puppet::Util::Reference.reference(:testreference).send(:to_markdown, true)
+    Oregano::Util::Reference.reference(:testreference).send(:to_markdown, true)
     expect(my_fragment).to eq <<-EOT
 A term
 : The definition of this term, marked by a colon and a space.

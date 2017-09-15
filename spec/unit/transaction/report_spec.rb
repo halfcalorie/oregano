@@ -1,134 +1,134 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet'
-require 'puppet/transaction/report'
+require 'oregano'
+require 'oregano/transaction/report'
 require 'matchers/json'
 
-describe Puppet::Transaction::Report do
+describe Oregano::Transaction::Report do
   include JSONMatchers
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before do
-    Puppet::Util::Storage.stubs(:store)
+    Oregano::Util::Storage.stubs(:store)
   end
 
   it "should set its host name to the node_name_value" do
-    Puppet[:node_name_value] = 'mynode'
-    expect(Puppet::Transaction::Report.new.host).to eq("mynode")
+    Oregano[:node_name_value] = 'mynode'
+    expect(Oregano::Transaction::Report.new.host).to eq("mynode")
   end
 
   it "should return its host name as its name" do
-    r = Puppet::Transaction::Report.new
+    r = Oregano::Transaction::Report.new
     expect(r.name).to eq(r.host)
   end
 
   it "should create an initialization timestamp" do
     Time.expects(:now).returns "mytime"
-    expect(Puppet::Transaction::Report.new.time).to eq("mytime")
+    expect(Oregano::Transaction::Report.new.time).to eq("mytime")
   end
 
   it "should take a 'configuration_version' as an argument" do
-    expect(Puppet::Transaction::Report.new("some configuration version", "some environment").configuration_version).to eq("some configuration version")
+    expect(Oregano::Transaction::Report.new("some configuration version", "some environment").configuration_version).to eq("some configuration version")
   end
 
   it "should take a 'transaction_uuid' as an argument" do
-    expect(Puppet::Transaction::Report.new("some configuration version", "some environment", "some transaction uuid").transaction_uuid).to eq("some transaction uuid")
+    expect(Oregano::Transaction::Report.new("some configuration version", "some environment", "some transaction uuid").transaction_uuid).to eq("some transaction uuid")
   end
 
   it "should take a 'transaction_uuid' as an argument" do
-    expect(Puppet::Transaction::Report.new("some configuration version", "some environment", "some transaction uuid").transaction_uuid).to eq("some transaction uuid")
+    expect(Oregano::Transaction::Report.new("some configuration version", "some environment", "some transaction uuid").transaction_uuid).to eq("some transaction uuid")
   end
 
   it "should take a 'job_id' as an argument" do
-    expect(Puppet::Transaction::Report.new('cv', 'env', 'tid', 'some job id').job_id).to eq('some job id')
+    expect(Oregano::Transaction::Report.new('cv', 'env', 'tid', 'some job id').job_id).to eq('some job id')
   end
 
   it "should be able to set configuration_version" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.configuration_version = "some version"
     expect(report.configuration_version).to eq("some version")
   end
 
   it "should be able to set transaction_uuid" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.transaction_uuid = "some transaction uuid"
     expect(report.transaction_uuid).to eq("some transaction uuid")
   end
 
   it "should be able to set job_id" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.job_id = "some job id"
     expect(report.job_id).to eq("some job id")
   end
 
   it "should be able to set code_id" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.code_id = "some code id"
     expect(report.code_id).to eq("some code id")
   end
 
   it "should be able to set catalog_uuid" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.catalog_uuid = "some catalog uuid"
     expect(report.catalog_uuid).to eq("some catalog uuid")
   end
 
   it "should be able to set cached_catalog_status" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.cached_catalog_status = "explicitly_requested"
     expect(report.cached_catalog_status).to eq("explicitly_requested")
   end
 
-  it "should set noop to true if Puppet[:noop] is true" do
-    Puppet[:noop] = true
-    report = Puppet::Transaction::Report.new
+  it "should set noop to true if Oregano[:noop] is true" do
+    Oregano[:noop] = true
+    report = Oregano::Transaction::Report.new
     expect(report.noop).to be_truthy
   end
 
-  it "should set noop to false if Puppet[:noop] is false" do
-    Puppet[:noop] = false
-    report = Puppet::Transaction::Report.new
+  it "should set noop to false if Oregano[:noop] is false" do
+    Oregano[:noop] = false
+    report = Oregano::Transaction::Report.new
     expect(report.noop).to be_falsey
   end
 
-  it "should set noop to false if Puppet[:noop] is unset" do
-    Puppet[:noop] = nil
-    report = Puppet::Transaction::Report.new
+  it "should set noop to false if Oregano[:noop] is unset" do
+    Oregano[:noop] = nil
+    report = Oregano::Transaction::Report.new
     expect(report.noop).to be_falsey
   end
 
   it "should take 'environment' as an argument" do
-    expect(Puppet::Transaction::Report.new("some configuration version", "some environment").environment).to eq("some environment")
+    expect(Oregano::Transaction::Report.new("some configuration version", "some environment").environment).to eq("some environment")
   end
 
   it "should be able to set environment" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.environment = "some environment"
     expect(report.environment).to eq("some environment")
   end
 
   it "should be able to set resources_failed_to_generate" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     report.resources_failed_to_generate = true
     expect(report.resources_failed_to_generate).to be_truthy
   end
 
   it "resources_failed_to_generate should not be true by default" do
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
     expect(report.resources_failed_to_generate).to be_falsey
   end
 
   it "should not include whits" do
-    Puppet::FileBucket::File.indirection.stubs(:save)
+    Oregano::FileBucket::File.indirection.stubs(:save)
 
     filename = tmpfile('whit_test')
-    file = Puppet::Type.type(:file).new(:path => filename)
+    file = Oregano::Type.type(:file).new(:path => filename)
 
-    catalog = Puppet::Resource::Catalog.new
+    catalog = Oregano::Resource::Catalog.new
     catalog.add_resource(file)
 
-    report = Puppet::Transaction::Report.new
+    report = Oregano::Transaction::Report.new
 
     catalog.apply(:report => report)
     report.finalize_report
@@ -139,7 +139,7 @@ describe Puppet::Transaction::Report do
 
   describe "when accepting logs" do
     before do
-      @report = Puppet::Transaction::Report.new
+      @report = Oregano::Transaction::Report.new
     end
 
     it "should add new logs to the log list" do
@@ -156,9 +156,9 @@ describe Puppet::Transaction::Report do
   describe "#as_logging_destination" do
     it "makes the report collect logs during the block " do
       log_string = 'Hello test report!'
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.as_logging_destination do
-        Puppet.err(log_string)
+        Oregano.err(log_string)
       end
 
       expect(report.logs.collect(&:message)).to include(log_string)
@@ -167,7 +167,7 @@ describe Puppet::Transaction::Report do
 
   describe "when accepting resource statuses" do
     before do
-      @report = Puppet::Transaction::Report.new
+      @report = Oregano::Transaction::Report.new
     end
 
     it "should add each status to its status list" do
@@ -181,18 +181,18 @@ describe Puppet::Transaction::Report do
     it "should redirect :save to the indirection" do
       Facter.stubs(:value).returns("eh")
       @indirection = stub 'indirection', :name => :report
-      Puppet::Transaction::Report.stubs(:indirection).returns(@indirection)
-      report = Puppet::Transaction::Report.new
+      Oregano::Transaction::Report.stubs(:indirection).returns(@indirection)
+      report = Oregano::Transaction::Report.new
       @indirection.expects(:save)
-      Puppet::Transaction::Report.indirection.save(report)
+      Oregano::Transaction::Report.indirection.save(report)
     end
 
     it "should default to the 'processor' terminus" do
-      expect(Puppet::Transaction::Report.indirection.terminus_class).to eq(:processor)
+      expect(Oregano::Transaction::Report.indirection.terminus_class).to eq(:processor)
     end
 
     it "should delegate its name attribute to its host method" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.expects(:host).returns "me"
       expect(report.name).to eq("me")
     end
@@ -200,21 +200,21 @@ describe Puppet::Transaction::Report do
 
   describe "when computing exit status" do
     it "should produce 2 if changes are present" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.add_metric("changes", {"total" => 1})
       report.add_metric("resources", {"failed" => 0})
       expect(report.exit_status).to eq(2)
     end
 
     it "should produce 4 if failures are present" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.add_metric("changes", {"total" => 0})
       report.add_metric("resources", {"failed" => 1})
       expect(report.exit_status).to eq(4)
     end
 
     it "should produce 4 if failures to restart are present" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.add_metric("changes", {"total" => 0})
       report.add_metric("resources", {"failed" => 0})
       report.add_metric("resources", {"failed_to_restart" => 1})
@@ -222,7 +222,7 @@ describe Puppet::Transaction::Report do
     end
 
     it "should produce 6 if both changes and failures are present" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.add_metric("changes", {"total" => 1})
       report.add_metric("resources", {"failed" => 1})
       expect(report.exit_status).to eq(6)
@@ -231,14 +231,14 @@ describe Puppet::Transaction::Report do
 
   describe "before finalizing the report" do
     it "should have a status of 'failed'" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       expect(report.status).to eq('failed')
     end
   end
 
   describe "when finalizing the report" do
     before do
-      @report = Puppet::Transaction::Report.new
+      @report = Oregano::Transaction::Report.new
     end
 
     def metric(name, value)
@@ -251,7 +251,7 @@ describe Puppet::Transaction::Report do
 
     def add_statuses(count, type = :file)
       count.times do |i|
-        status = Puppet::Resource::Status.new(Puppet::Type.type(type).new(:title => make_absolute("/my/path#{i}")))
+        status = Oregano::Resource::Status.new(Oregano::Type.type(type).new(:title => make_absolute("/my/path#{i}")))
         yield status if block_given?
         @report.add_resource_status status
       end
@@ -260,7 +260,7 @@ describe Puppet::Transaction::Report do
     [:time, :resources, :changes, :events].each do |type|
       it "should add #{type} metrics" do
         @report.finalize_report
-        expect(@report.metrics[type.to_s]).to be_instance_of(Puppet::Transaction::Metric)
+        expect(@report.metrics[type.to_s]).to be_instance_of(Oregano::Transaction::Metric)
       end
     end
 
@@ -272,7 +272,7 @@ describe Puppet::Transaction::Report do
         expect(metric(:resources, "total")).to eq(3)
       end
 
-      Puppet::Resource::Status::STATES.each do |state|
+      Oregano::Resource::Status::STATES.each do |state|
         it "should provide the number of #{state} resources as determined by the status objects" do
           add_statuses(3) { |status| status.send(state.to_s + "=", true) }
 
@@ -307,7 +307,7 @@ describe Puppet::Transaction::Report do
 
     describe "for changes" do
       it "should provide the number of changes from the resource statuses and mark the report as 'changed'" do
-        add_statuses(3) { |status| 3.times { status << Puppet::Transaction::Event.new(:status => 'success') } }
+        add_statuses(3) { |status| 3.times { status << Oregano::Transaction::Event.new(:status => 'success') } }
         @report.finalize_report
         expect(metric(:changes, "total")).to eq(9)
         expect(@report.status).to eq('changed')
@@ -358,7 +358,7 @@ describe Puppet::Transaction::Report do
     describe "for events" do
       it "should provide the total number of events" do
         add_statuses(3) do |status|
-          3.times { |i| status.add_event(Puppet::Transaction::Event.new :status => 'success') }
+          3.times { |i| status.add_event(Oregano::Transaction::Event.new :status => 'success') }
         end
         @report.finalize_report
         expect(metric(:events, "total")).to eq(9)
@@ -369,11 +369,11 @@ describe Puppet::Transaction::Report do
         expect(metric(:events, "total")).to eq(0)
       end
 
-      Puppet::Transaction::Event::EVENT_STATUSES.each do |status_name|
+      Oregano::Transaction::Event::EVENT_STATUSES.each do |status_name|
         it "should provide the number of #{status_name} events" do
           add_statuses(3) do |status|
             3.times do |i|
-              event = Puppet::Transaction::Event.new
+              event = Oregano::Transaction::Event.new
               event.status = status_name
               status.add_event(event)
             end
@@ -395,7 +395,7 @@ describe Puppet::Transaction::Report do
       it "should have 'noop_pending == false' when no 'noop' events are available" do
         add_statuses(3) do |status|
           ['success', 'audit'].each do |status_name|
-            event = Puppet::Transaction::Event.new
+            event = Oregano::Transaction::Event.new
             event.status = status_name
             status.add_event(event)
           end
@@ -407,7 +407,7 @@ describe Puppet::Transaction::Report do
       it "should have 'noop_pending == true' when 'noop' events are available" do
         add_statuses(3) do |status|
           ['success', 'audit', 'noop'].each do |status_name|
-            event = Puppet::Transaction::Event.new
+            event = Oregano::Transaction::Event.new
             event.status = status_name
             status.add_event(event)
           end
@@ -419,7 +419,7 @@ describe Puppet::Transaction::Report do
       it "should have 'noop_pending == true' when 'noop' and 'failure' events are available" do
         add_statuses(3) do |status|
           ['success', 'failure', 'audit', 'noop'].each do |status_name|
-            event = Puppet::Transaction::Event.new
+            event = Oregano::Transaction::Event.new
             event.status = status_name
             status.add_event(event)
           end
@@ -432,8 +432,8 @@ describe Puppet::Transaction::Report do
 
   describe "when producing a summary" do
     before do
-      resource = Puppet::Type.type(:notify).new(:name => "testing")
-      catalog = Puppet::Resource::Catalog.new
+      resource = Oregano::Type.type(:notify).new(:name => "testing")
+      catalog = Oregano::Resource::Catalog.new
       catalog.add_resource resource
       catalog.version = 1234567
       trans = catalog.apply
@@ -455,7 +455,7 @@ describe Puppet::Transaction::Report do
 
     it "should include all resource statuses" do
       resources_report = @report.raw_summary["resources"]
-      Puppet::Resource::Status::STATES.each do |state|
+      Oregano::Resource::Status::STATES.each do |state|
         expect(resources_report).to be_include(state.to_s)
       end
     end
@@ -471,8 +471,8 @@ describe Puppet::Transaction::Report do
       expect(@report.raw_summary["version"]["config"]).to eq(1234567)
     end
 
-    it "should include puppet version" do
-      expect(@report.raw_summary["version"]["puppet"]).to eq(Puppet.version)
+    it "should include oregano version" do
+      expect(@report.raw_summary["version"]["oregano"]).to eq(Oregano.version)
     end
 
     %w{Changes Total Resources Time Events}.each do |main|
@@ -484,42 +484,42 @@ describe Puppet::Transaction::Report do
 
   describe "when outputting yaml" do
     it "should not include @external_times" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.add_times('config_retrieval', 1.0)
       expect(report.to_data_hash.keys).not_to include('external_times')
     end
 
     it "should not include @resources_failed_to_generate" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       report.resources_failed_to_generate = true
       expect(report.to_data_hash.keys).not_to include('resources_failed_to_generate')
     end
 
     it 'to_data_hash returns value that is instance of to Data' do
-      expect(Puppet::Pops::Types::TypeFactory.data.instance?(generate_report.to_data_hash)).to be_truthy
+      expect(Oregano::Pops::Types::TypeFactory.data.instance?(generate_report.to_data_hash)).to be_truthy
     end
   end
 
   it "defaults to serializing to json" do
-    expect(Puppet::Transaction::Report.default_format).to eq(:json)
+    expect(Oregano::Transaction::Report.default_format).to eq(:json)
   end
 
   it "supports both json, pson and yaml" do
     # msgpack is optional, so using include instead of eq
-    expect(Puppet::Transaction::Report.supported_formats).to include(:json, :pson, :yaml)
+    expect(Oregano::Transaction::Report.supported_formats).to include(:json, :pson, :yaml)
   end
 
   context 'can make a round trip through' do
     before(:each) do
-      Puppet.push_context(:loaders => Puppet::Pops::Loaders.new(Puppet.lookup(:current_environment)))
+      Oregano.push_context(:loaders => Oregano::Pops::Loaders.new(Oregano.lookup(:current_environment)))
     end
 
-    after(:each) { Puppet.pop_context }
+    after(:each) { Oregano.pop_context }
 
     it 'pson' do
       report = generate_report
 
-      tripped = Puppet::Transaction::Report.convert_from(:pson, report.render)
+      tripped = Oregano::Transaction::Report.convert_from(:pson, report.render)
 
       expect_equivalent_reports(tripped, report)
     end
@@ -527,7 +527,7 @@ describe Puppet::Transaction::Report do
     it 'json' do
       report = generate_report
 
-      tripped = Puppet::Transaction::Report.convert_from(:json, report.render)
+      tripped = Oregano::Transaction::Report.convert_from(:json, report.render)
 
       expect_equivalent_reports(tripped, report)
     end
@@ -536,7 +536,7 @@ describe Puppet::Transaction::Report do
       report = generate_report
 
       yaml_output = report.render(:yaml)
-      tripped = Puppet::Transaction::Report.convert_from(:yaml, yaml_output)
+      tripped = Oregano::Transaction::Report.convert_from(:yaml, yaml_output)
 
       expect(yaml_output).to match(/^--- /)
       expect_equivalent_reports(tripped, report)
@@ -563,7 +563,7 @@ describe Puppet::Transaction::Report do
     expect(tripped.catalog_uuid).to eq(report.catalog_uuid)
     expect(tripped.cached_catalog_status).to eq(report.cached_catalog_status)
     expect(tripped.report_format).to eq(report.report_format)
-    expect(tripped.puppet_version).to eq(report.puppet_version)
+    expect(tripped.oregano_version).to eq(report.oregano_version)
     expect(tripped.status).to eq(report.status)
     expect(tripped.environment).to eq(report.environment)
     expect(tripped.corrective_change).to eq(report.corrective_change)
@@ -612,21 +612,21 @@ describe Puppet::Transaction::Report do
     event_hash = {
       :audited => false,
       :property => 'message',
-      :previous_value => SemanticPuppet::VersionRange.parse('>=1.0.0'),
-      :desired_value => SemanticPuppet::VersionRange.parse('>=1.2.0'),
+      :previous_value => SemanticOregano::VersionRange.parse('>=1.0.0'),
+      :desired_value => SemanticOregano::VersionRange.parse('>=1.2.0'),
       :historical_value => nil,
       :message => "defined 'message' as 'a resource'",
       :name => :message_changed,
       :status => 'success',
     }
-    event = Puppet::Transaction::Event.new(event_hash)
+    event = Oregano::Transaction::Event.new(event_hash)
 
-    status = Puppet::Resource::Status.new(Puppet::Type.type(:notify).new(:title => "a resource"))
+    status = Oregano::Resource::Status.new(Oregano::Type.type(:notify).new(:title => "a resource"))
     status.changed = true
     status.add_event(event)
 
-    report = Puppet::Transaction::Report.new(1357986, 'test_environment', "df34516e-4050-402d-a166-05b03b940749", '42')
-    report << Puppet::Util::Log.new(:level => :warning, :message => "log message")
+    report = Oregano::Transaction::Report.new(1357986, 'test_environment', "df34516e-4050-402d-a166-05b03b940749", '42')
+    report << Oregano::Util::Log.new(:level => :warning, :message => "log message")
     report.add_times("timing", 4)
     report.code_id = "some code id"
     report.catalog_uuid = "some catalog uuid"
@@ -638,12 +638,12 @@ describe Puppet::Transaction::Report do
   end
 
   def generate_report_with_error
-    status = Puppet::Resource::Status.new(Puppet::Type.type(:notify).new(:title => "a resource"))
+    status = Oregano::Resource::Status.new(Oregano::Type.type(:notify).new(:title => "a resource"))
     status.changed = true
     status.failed_because("bad stuff happened")
 
-    report = Puppet::Transaction::Report.new(1357986, 'test_environment', "df34516e-4050-402d-a166-05b03b940749", '42')
-    report << Puppet::Util::Log.new(:level => :warning, :message => "log message")
+    report = Oregano::Transaction::Report.new(1357986, 'test_environment', "df34516e-4050-402d-a166-05b03b940749", '42')
+    report << Oregano::Util::Log.new(:level => :warning, :message => "log message")
     report.add_times("timing", 4)
     report.code_id = "some code id"
     report.catalog_uuid = "some catalog uuid"

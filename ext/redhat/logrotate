@@ -1,21 +1,21 @@
 # Generic logrotate config for Red Hat systems. Works with both official
-# Fedora and RHEL packages as well as PuppetLabs distributions.
+# Fedora and RHEL packages as well as OreganoLabs distributions.
 
-/var/log/puppetlabs/masterhttp.log /var/log/puppet/masterhttp.log {
+/var/log/oreganolabs/masterhttp.log /var/log/oregano/masterhttp.log {
   compress
   missingok
   notifempty
   nocreate
 }
 
-/var/log/puppetlabs/puppetd.log /var/log/puppet/puppetd.log {
+/var/log/oreganolabs/oreganod.log /var/log/oregano/oreganod.log {
   compress
   missingok
   notifempty
   nocreate
   sharedscripts
   postrotate
-   ([ -x /etc/init.d/puppet ] && /etc/init.d/puppet reload > /dev/null 2>&1) ||
-    ([ -x /usr/bin/systemctl ] && /usr/bin/systemctl kill -s USR2 puppet.service > /dev/null 2>&1) || true
+   ([ -x /etc/init.d/oregano ] && /etc/init.d/oregano reload > /dev/null 2>&1) ||
+    ([ -x /usr/bin/systemctl ] && /usr/bin/systemctl kill -s USR2 oregano.service > /dev/null 2>&1) || true
   endscript
 }

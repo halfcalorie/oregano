@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/provider/interface/cisco'
+require 'oregano/provider/interface/cisco'
 
-provider_class = Puppet::Type.type(:interface).provider(:cisco)
+provider_class = Oregano::Type.type(:interface).provider(:cisco)
 
 describe provider_class do
   before do
@@ -12,8 +12,8 @@ describe provider_class do
     @provider = provider_class.new(@device, @resource)
   end
 
-  it "should have a parent of Puppet::Provider::Cisco" do
-    expect(provider_class).to be < Puppet::Provider::Cisco
+  it "should have a parent of Oregano::Provider::Cisco" do
+    expect(provider_class).to be < Oregano::Provider::Cisco
   end
 
   it "should have an instances method" do

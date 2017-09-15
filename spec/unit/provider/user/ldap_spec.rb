@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:user).provider(:ldap)
+provider_class = Oregano::Type.type(:user).provider(:ldap)
 
 describe provider_class do
   it "should have the Ldap provider class as its baseclass" do
-    expect(provider_class.superclass).to equal(Puppet::Provider::Ldap)
+    expect(provider_class.superclass).to equal(Oregano::Provider::Ldap)
   end
 
   it "should manage :posixAccount and :person objectclasses" do
@@ -31,9 +31,9 @@ describe provider_class do
     :gid => "gidNumber",
     :home => "homeDirectory",
     :shell => "loginShell"
-  }.each do |puppet, ldap|
-    it "should map :#{puppet.to_s} to '#{ldap}'" do
-      expect(provider_class.manager.ldap_name(puppet)).to eq(ldap)
+  }.each do |oregano, ldap|
+    it "should map :#{oregano.to_s} to '#{ldap}'" do
+      expect(provider_class.manager.ldap_name(oregano)).to eq(ldap)
     end
   end
 
@@ -45,7 +45,7 @@ describe provider_class do
     end
 
     it "should generate the sn as the last field of the cn" do
-      Puppet::Type.type(:group).provider(:ldap).expects(:name2id).with(["whatever"]).returns [123]
+      Oregano::Type.type(:group).provider(:ldap).expects(:name2id).with(["whatever"]).returns [123]
 
       resource = stub 'resource', :should => %w{whatever}
       resource.stubs(:should).with(:comment).returns ["Luke Kanies"]
@@ -61,7 +61,7 @@ describe provider_class do
     end
 
     it "should translate a group name to the numeric id" do
-      Puppet::Type.type(:group).provider(:ldap).expects(:name2id).with("bar").returns 101
+      Oregano::Type.type(:group).provider(:ldap).expects(:name2id).with("bar").returns 101
 
       resource = stub 'resource', :should => %w{whatever}
       resource.stubs(:should).with(:gid).returns 'bar'
@@ -77,7 +77,7 @@ describe provider_class do
 
     describe "with no uid specified" do
       it "should pick the first available UID after the largest existing UID" do
-        Puppet::Type.type(:group).provider(:ldap).expects(:name2id).with(["whatever"]).returns [123]
+        Oregano::Type.type(:group).provider(:ldap).expects(:name2id).with(["whatever"]).returns [123]
 
         low = {:name=>["luke"], :shell=>:absent, :uid=>["600"], :home=>["/h"], :gid=>["1000"], :password=>["blah"], :comment=>["l k"]}
         high = {:name=>["testing"], :shell=>:absent, :uid=>["640"], :home=>["/h"], :gid=>["1000"], :password=>["blah"], :comment=>["t u"]}
@@ -96,7 +96,7 @@ describe provider_class do
       end
 
       it "should pick 501 of no users exist" do
-        Puppet::Type.type(:group).provider(:ldap).expects(:name2id).with(["whatever"]).returns [123]
+        Oregano::Type.type(:group).provider(:ldap).expects(:name2id).with(["whatever"]).returns [123]
 
         provider_class.manager.expects(:search).returns nil
 
@@ -122,7 +122,7 @@ describe provider_class do
     end
 
     it "should remove the :groups value before updating" do
-      @instance.class.manager.expects(:update).with { |name, ldap, puppet| puppet[:groups].nil? }
+      @instance.class.manager.expects(:update).with { |name, ldap, oregano| oregano[:groups].nil? }
 
       @instance.flush
     end
@@ -146,7 +146,7 @@ describe provider_class do
 
   describe "when checking group membership" do
     before do
-      @groups = Puppet::Type.type(:group).provider(:ldap)
+      @groups = Oregano::Type.type(:group).provider(:ldap)
       @group_manager = @groups.manager
       provider_class.stubs(:suitable?).returns true
 
@@ -177,7 +177,7 @@ describe provider_class do
 
   describe "when modifying group membership" do
     before do
-      @groups = Puppet::Type.type(:group).provider(:ldap)
+      @groups = Oregano::Type.type(:group).provider(:ldap)
       @group_manager = @groups.manager
       provider_class.stubs(:suitable?).returns true
 
@@ -195,7 +195,7 @@ describe provider_class do
     it "should fail if the group does not exist" do
       @group_manager.expects(:find).with("mygroup").returns nil
 
-      expect { @instance.groups = "mygroup" }.to raise_error(Puppet::Error)
+      expect { @instance.groups = "mygroup" }.to raise_error(Oregano::Error)
     end
 
     it "should only pass the attributes it cares about to the group manager" do

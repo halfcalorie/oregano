@@ -8,7 +8,7 @@ tag 'audit:medium',
 agents.each do |agent|
   target=agent.tmpfile('6541-target')
 
-  on agent, "rm -rf \"#{agent.puppet['vardir']}/*bucket\""
+  on agent, "rm -rf \"#{agent.oregano['vardir']}/*bucket\""
 
   step "write zero length file"
   manifest = "file { '#{target}': content => '' }"

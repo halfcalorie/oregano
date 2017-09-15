@@ -11,7 +11,7 @@ tag 'audit:medium',
 
 agents.each do |agent|
   teardown do
-    puppet_resource("user", 'testuser', "ensure=absent")
+    oregano_resource("user", 'testuser', "ensure=absent")
   end
 
   step "create the test user with password and salt" do

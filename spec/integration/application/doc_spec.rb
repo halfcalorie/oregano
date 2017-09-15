@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet/application/doc'
+require 'oregano_spec/files'
+require 'oregano/application/doc'
 
-describe Puppet::Application::Doc do
-  include PuppetSpec::Files
+describe Oregano::Application::Doc do
+  include OreganoSpec::Files
 
   it "should respect the -o option" do
-    puppetdoc = Puppet::Application[:doc]
-    puppetdoc.command_line.stubs(:args).returns(['foo', '-o', 'bar'])
-    puppetdoc.parse_options
-    expect(puppetdoc.options[:outputdir]).to eq('bar')
+    oreganodoc = Oregano::Application[:doc]
+    oreganodoc.command_line.stubs(:args).returns(['foo', '-o', 'bar'])
+    oreganodoc.parse_options
+    expect(oreganodoc.options[:outputdir]).to eq('bar')
   end
 end

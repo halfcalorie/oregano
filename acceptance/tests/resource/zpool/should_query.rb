@@ -6,8 +6,8 @@ tag 'audit:medium',
     'audit:acceptance' # Could be done as integration tests, but would
                        # require drastically changing the system running the test
 
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::ZPoolUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::ZPoolUtils
 
 teardown do
   step "ZPool: cleanup"
@@ -27,12 +27,12 @@ agents.each do |agent|
   end
 
   step "ZPool: query one"
-  on(agent, puppet("resource zpool tstpool")) do
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/ensure *=> *'present'/, result.stdout, "err: #{agent}")
   end
 
   step "ZPool: query all"
-  on(agent, puppet("resource zpool tstpool")) do
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/tstpool'/, result.stdout, "err: #{agent}")
   end
 end

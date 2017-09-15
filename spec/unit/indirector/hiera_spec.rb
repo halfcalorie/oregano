@@ -1,13 +1,13 @@
 require 'spec_helper'
-require 'puppet/data_binding'
-require 'puppet/indirector/hiera'
+require 'oregano/data_binding'
+require 'oregano/indirector/hiera'
 require 'hiera/backend'
 
-describe Puppet::Indirector::Hiera do
+describe Oregano::Indirector::Hiera do
 
   module Testing
     module DataBinding
-      class Hiera < Puppet::Indirector::Hiera
+      class Hiera < Oregano::Indirector::Hiera
       end
     end
   end

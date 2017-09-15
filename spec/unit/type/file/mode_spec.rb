@@ -2,18 +2,18 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).attrclass(:mode) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:mode) do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('mode_spec') }
-  let(:resource) { Puppet::Type.type(:file).new :path => path, :mode => '0644' }
+  let(:resource) { Oregano::Type.type(:file).new :path => path, :mode => '0644' }
   let(:mode) { resource.property(:mode) }
 
   describe "#validate" do
     it "should reject non-string values" do
       expect {
         mode.value = 0755
-      }.to raise_error(Puppet::Error, /The file mode specification must be a string, not '(?:Fixnum|Integer)'/)
+      }.to raise_error(Oregano::Error, /The file mode specification must be a string, not '(?:Fixnum|Integer)'/)
     end
 
     it "should accept values specified as octal numbers in strings" do
@@ -27,7 +27,7 @@ describe Puppet::Type.type(:file).attrclass(:mode) do
     it "should not accept strings other than octal numbers" do
       expect do
         mode.value = 'readable please!'
-      end.to raise_error(Puppet::Error, /The file mode specification is invalid/)
+      end.to raise_error(Oregano::Error, /The file mode specification is invalid/)
     end
   end
 
@@ -82,14 +82,14 @@ describe Puppet::Type.type(:file).attrclass(:mode) do
       expect(mode).to_not be_insync('755')
     end
 
-    it "should return true if the file is a link and we are managing links", :if => Puppet.features.manages_symlinks? do
-      Puppet::FileSystem.symlink('anything', path)
+    it "should return true if the file is a link and we are managing links", :if => Oregano.features.manages_symlinks? do
+      Oregano::FileSystem.symlink('anything', path)
 
       expect(mode).to be_insync('644')
     end
 
     describe "with a symbolic mode" do
-      let(:resource_sym) { Puppet::Type.type(:file).new :path => path, :mode => 'u+w,g-w' }
+      let(:resource_sym) { Oregano::Type.type(:file).new :path => path, :mode => 'u+w,g-w' }
       let(:mode_sym) { resource_sym.property(:mode) }
 
       it "should return true if the mode matches, regardless of other bits" do
@@ -180,42 +180,42 @@ describe Puppet::Type.type(:file).attrclass(:mode) do
   end
 
   describe "#sync with a symbolic mode" do
-    let(:resource_sym) { Puppet::Type.type(:file).new :path => path, :mode => 'u+w,g-w' }
+    let(:resource_sym) { Oregano::Type.type(:file).new :path => path, :mode => 'u+w,g-w' }
     let(:mode_sym) { resource_sym.property(:mode) }
 
     before { FileUtils.touch(path) }
 
     it "changes only the requested bits" do
       # lower nibble must be set to 4 for the sake of passing on Windows
-      Puppet::FileSystem.chmod(0464, path)
+      Oregano::FileSystem.chmod(0464, path)
 
       mode_sym.sync
-      stat = Puppet::FileSystem.stat(path)
+      stat = Oregano::FileSystem.stat(path)
       expect((stat.mode & 0777).to_s(8)).to eq("644")
     end
   end
 
   describe '#sync with a symbolic mode of +X for a file' do
-    let(:resource_sym) { Puppet::Type.type(:file).new :path => path, :mode => 'g+wX' }
+    let(:resource_sym) { Oregano::Type.type(:file).new :path => path, :mode => 'g+wX' }
     let(:mode_sym) { resource_sym.property(:mode) }
 
     before { FileUtils.touch(path) }
 
     it 'does not change executable bit if no executable bit is set' do
-      Puppet::FileSystem.chmod(0644, path)
+      Oregano::FileSystem.chmod(0644, path)
 
       mode_sym.sync
 
-      stat = Puppet::FileSystem.stat(path)
+      stat = Oregano::FileSystem.stat(path)
       expect((stat.mode & 0777).to_s(8)).to eq('664')
     end
 
     it 'does change executable bit if an executable bit is set' do
-      Puppet::FileSystem.chmod(0744, path)
+      Oregano::FileSystem.chmod(0744, path)
 
       mode_sym.sync
 
-      stat = Puppet::FileSystem.stat(path)
+      stat = Oregano::FileSystem.stat(path)
       expect((stat.mode & 0777).to_s(8)).to eq('774')
     end
   end

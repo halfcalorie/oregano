@@ -4,7 +4,7 @@
 #
 require 'spec_helper'
 
-describe Puppet::Type.type(:service).provider(:openwrt), :if => Puppet.features.posix? do
+describe Oregano::Type.type(:service).provider(:openwrt), :if => Oregano.features.posix? do
 
   let(:resource) do
     resource = stub 'resource'
@@ -33,7 +33,7 @@ describe Puppet::Type.type(:service).provider(:openwrt), :if => Puppet.features.
     # All OpenWrt tests operate on the init script directly. It must exist.
     File.stubs(:directory?).with('/etc/init.d').returns true
 
-    Puppet::FileSystem.stubs(:exist?).with('/etc/init.d/myservice').returns true
+    Oregano::FileSystem.stubs(:exist?).with('/etc/init.d/myservice').returns true
     FileTest.stubs(:file?).with('/etc/init.d/myservice').returns true
     FileTest.stubs(:executable?).with('/etc/init.d/myservice').returns true
   end
@@ -47,7 +47,7 @@ describe Puppet::Type.type(:service).provider(:openwrt), :if => Puppet.features.
   # test self.instances
   describe "when getting all service instances" do
 
-    let(:services) {['dnsmasq', 'dropbear', 'firewall', 'led', 'puppet', 'uhttpd' ]}
+    let(:services) {['dnsmasq', 'dropbear', 'firewall', 'led', 'oregano', 'uhttpd' ]}
 
     before :each do
       Dir.stubs(:entries).returns services

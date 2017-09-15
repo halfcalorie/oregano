@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 
 describe 'the type mismatch describer' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   it 'will report a mismatch between a hash and a struct with details' do
     code = <<-CODE
@@ -15,7 +15,7 @@ describe 'the type mismatch describer' do
       }
       f({'a' => 'a', 'b' => 23})
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /'f' parameter 'h' entry 'b' expects a String value, got Integer/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /'f' parameter 'h' entry 'b' expects a String value, got Integer/)
   end
 
   it 'will report a mismatch between a array and tuple with details' do
@@ -25,7 +25,7 @@ describe 'the type mismatch describer' do
       }
       f(['a', 23])
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /'f' parameter 'h' index 1 expects a String value, got Integer/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /'f' parameter 'h' index 1 expects a String value, got Integer/)
   end
 
   it 'will not report details for a mismatch between an array and a struct' do
@@ -35,7 +35,7 @@ describe 'the type mismatch describer' do
       }
       f({'a' => 'a string', 'b' => 23})
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects an Array value, got Struct/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects an Array value, got Struct/)
   end
 
   it 'will not report details for a mismatch between a hash and a tuple' do
@@ -45,7 +45,7 @@ describe 'the type mismatch describer' do
       }
       f(['a', 23])
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects a Hash value, got Tuple/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects a Hash value, got Tuple/)
   end
 
   it 'will report an array size mismatch' do
@@ -55,7 +55,7 @@ describe 'the type mismatch describer' do
       }
       f([])
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects size to be at least 1, got 0/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects size to be at least 1, got 0/)
   end
 
   it 'will report a hash size mismatch' do
@@ -65,7 +65,7 @@ describe 'the type mismatch describer' do
       }
       f({})
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /expects size to be at least 1, got 0/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /expects size to be at least 1, got 0/)
   end
 
   it 'will include the aliased type when reporting a mismatch that involves an alias' do
@@ -75,7 +75,7 @@ describe 'the type mismatch describer' do
       function check_port(UnprivilegedPort $port) {}
       check_port(34)
     CODE
-    expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /parameter 'port' expects an UnprivilegedPort = Integer\[1024, 65537\] value, got Integer\[34, 34\]/)
+    expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /parameter 'port' expects an UnprivilegedPort = Integer\[1024, 65537\] value, got Integer\[34, 34\]/)
   end
 
   it 'will include the aliased type when reporting a mismatch that involves an alias nested in another type' do
@@ -86,7 +86,7 @@ describe 'the type mismatch describer' do
       function check_port(PortMap $ports) {}
       check_port({ 34 => 'some service'})
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'ports' expects a PortMap = Hash\[UnprivilegedPort = Integer\[1024, 65537\], String\] value, got Hash\[Integer\[34, 34\], String\]/))
   end
 
@@ -97,7 +97,7 @@ describe 'the type mismatch describer' do
       function check_tree(Tree $tree) {}
       check_tree({ 'x' => {'y' => {32 => 'n'}}})
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'tree' entry 'x' entry 'y' expects a Tree = Hash\[String, Tree\] value, got Hash\[Integer\[32, 32\], String\]/))
   end
 
@@ -108,7 +108,7 @@ describe 'the type mismatch describer' do
       function check_enums(EVariants $evars) {}
       check_enums('n')
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
        /parameter 'evars' expects a match for EVariants = Enum\['a', 'b', 'c', 'd'\], got 'n'/))
   end
 
@@ -117,7 +117,7 @@ describe 'the type mismatch describer' do
       function check_enums(Enum[a,b] $arg) {}
       check_enums('c')
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'arg' expects a match for Enum\['a', 'b'\], got 'c'/))
   end
 
@@ -126,7 +126,7 @@ describe 'the type mismatch describer' do
       function check_enums(Enum[a,b] $arg) {}
       check_enums(Sensitive('c'))
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'arg' expects a match for Enum\['a', 'b'\], got Sensitive/))
   end
 
@@ -137,7 +137,7 @@ describe 'the type mismatch describer' do
       function two_params(Abc $a, Cde $b) {}
       two_params('a', 'x')
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'b' expects a match for Cde = Enum\['c', 'd', 'e'\], got 'x'/))
   end
 
@@ -146,7 +146,7 @@ describe 'the type mismatch describer' do
       define check_enums(Enum[a,b] $arg) {}
       check_enums { x: arg => 'c' }
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'arg' expects a match for Enum\['a', 'b'\], got 'c'/))
   end
 
@@ -155,7 +155,7 @@ describe 'the type mismatch describer' do
       define check(Variant[Undef,String,Integer,Hash,Array] $arg) {}
       check{ x: arg => 2.4 }
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'arg' expects a value of type Undef, String, Integer, Hash, or Array/))
   end
 
@@ -164,7 +164,7 @@ describe 'the type mismatch describer' do
       define check_enums(Enum[a,b] $arg) {}
       check_enums { x: arg => Sensitive('c') }
     CODE
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /parameter 'arg' expects a match for Enum\['a', 'b'\], got Sensitive/))
   end
 
@@ -194,12 +194,12 @@ describe 'the type mismatch describer' do
 
     it 'reports a missing parameter as "has no parameter"' do
       t = parser.parse('Struct[{a=>String}]')
-      expect { subject.validate_parameters('v', t, {'a'=>'a','b'=>'b'}, false) }.to raise_error(Puppet::Error, "v: has no parameter named 'b'")
+      expect { subject.validate_parameters('v', t, {'a'=>'a','b'=>'b'}, false) }.to raise_error(Oregano::Error, "v: has no parameter named 'b'")
     end
 
     it 'reports a missing value as "expects a value"' do
       t = parser.parse('Struct[{a=>String,b=>String}]')
-      expect { subject.validate_parameters('v', t, {'a'=>'a'}, false) }.to raise_error(Puppet::Error, "v: expects a value for parameter 'b'")
+      expect { subject.validate_parameters('v', t, {'a'=>'a'}, false) }.to raise_error(Oregano::Error, "v: expects a value for parameter 'b'")
     end
 
     it 'reports a missing block as "expects a block"' do
@@ -232,7 +232,7 @@ describe 'the type mismatch describer' do
       class test(String $var, Test::Options $opts) {}
       class { 'test': var => 'hello', opts => {} }
     PUPPET
-    expect { eval_and_collect_notices(code) }.to(raise_error(Puppet::Error,
+    expect { eval_and_collect_notices(code) }.to(raise_error(Oregano::Error,
       /Class\[Test\]: parameter 'opts' expects size to be 1, got 0/))
   end
 end

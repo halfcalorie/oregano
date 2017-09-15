@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
 describe 'the find_file function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   def with_file_content(content)
     path = tmpfile('find-file-function')
@@ -44,9 +44,9 @@ describe 'the find_file function' do
     with_file_content('file content') do |name|
       mod = mock 'module'
       mod.stubs(:file).with('myfile').returns(name)
-      Puppet[:code] = "notify { find_file('mymod/myfile'):}"
-      node = Puppet::Node.new('localhost')
-      compiler = Puppet::Parser::Compiler.new(node)
+      Oregano[:code] = "notify { find_file('mymod/myfile'):}"
+      node = Oregano::Node.new('localhost')
+      compiler = Oregano::Parser::Compiler.new(node)
       compiler.environment.stubs(:module).with('mymod').returns(mod)
 
       expect(compiler.compile().filter { |r| r.virtual? }).to have_resource("Notify[#{name}]")
@@ -56,9 +56,9 @@ describe 'the find_file function' do
   it 'returns undef when none of the paths were found' do
     mod = mock 'module'
     mod.stubs(:file).with('myfile').returns(nil)
-    Puppet[:code] = "notify { String(type(find_file('mymod/myfile', 'nomod/nofile'))):}"
-    node = Puppet::Node.new('localhost')
-    compiler = Puppet::Parser::Compiler.new(node)
+    Oregano[:code] = "notify { String(type(find_file('mymod/myfile', 'nomod/nofile'))):}"
+    node = Oregano::Node.new('localhost')
+    compiler = Oregano::Parser::Compiler.new(node)
     # For a module that does not have the file
     compiler.environment.stubs(:module).with('mymod').returns(mod)
     # For a module that does not exist

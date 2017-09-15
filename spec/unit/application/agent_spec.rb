@@ -1,134 +1,134 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/agent'
-require 'puppet/application/agent'
-require 'puppet/network/server'
-require 'puppet/daemon'
+require 'oregano/agent'
+require 'oregano/application/agent'
+require 'oregano/network/server'
+require 'oregano/daemon'
 
-describe Puppet::Application::Agent do
-  include PuppetSpec::Files
+describe Oregano::Application::Agent do
+  include OreganoSpec::Files
 
   before :each do
-    @puppetd = Puppet::Application[:agent]
+    @oreganod = Oregano::Application[:agent]
 
-    @daemon = Puppet::Daemon.new(nil)
+    @daemon = Oregano::Daemon.new(nil)
     @daemon.stubs(:daemonize)
     @daemon.stubs(:start)
     @daemon.stubs(:stop)
-    Puppet::Daemon.stubs(:new).returns(@daemon)
-    Puppet[:daemonize] = false
+    Oregano::Daemon.stubs(:new).returns(@daemon)
+    Oregano[:daemonize] = false
 
     @agent = stub_everything 'agent'
-    Puppet::Agent.stubs(:new).returns(@agent)
+    Oregano::Agent.stubs(:new).returns(@agent)
 
-    @puppetd.preinit
-    Puppet::Util::Log.stubs(:newdestination)
+    @oreganod.preinit
+    Oregano::Util::Log.stubs(:newdestination)
 
     @ssl_host = stub_everything 'ssl host'
-    Puppet::SSL::Host.stubs(:new).returns(@ssl_host)
+    Oregano::SSL::Host.stubs(:new).returns(@ssl_host)
 
-    Puppet::Node.indirection.stubs(:terminus_class=)
-    Puppet::Node.indirection.stubs(:cache_class=)
-    Puppet::Node::Facts.indirection.stubs(:terminus_class=)
+    Oregano::Node.indirection.stubs(:terminus_class=)
+    Oregano::Node.indirection.stubs(:cache_class=)
+    Oregano::Node::Facts.indirection.stubs(:terminus_class=)
 
     $stderr.expects(:puts).never
 
-    Puppet.settings.stubs(:use)
+    Oregano.settings.stubs(:use)
   end
 
   it "should operate in agent run_mode" do
-    expect(@puppetd.class.run_mode.name).to eq(:agent)
+    expect(@oreganod.class.run_mode.name).to eq(:agent)
   end
 
   it "should declare a main command" do
-    expect(@puppetd).to respond_to(:main)
+    expect(@oreganod).to respond_to(:main)
   end
 
   it "should declare a onetime command" do
-    expect(@puppetd).to respond_to(:onetime)
+    expect(@oreganod).to respond_to(:onetime)
   end
 
   it "should declare a fingerprint command" do
-    expect(@puppetd).to respond_to(:fingerprint)
+    expect(@oreganod).to respond_to(:fingerprint)
   end
 
   it "should declare a preinit block" do
-    expect(@puppetd).to respond_to(:preinit)
+    expect(@oreganod).to respond_to(:preinit)
   end
 
   describe "in preinit" do
     it "should catch INT" do
       Signal.expects(:trap).with { |arg,block| arg == :INT }
 
-      @puppetd.preinit
+      @oreganod.preinit
     end
 
     it "should init fqdn to nil" do
-      @puppetd.preinit
+      @oreganod.preinit
 
-      expect(@puppetd.options[:fqdn]).to be_nil
+      expect(@oreganod.options[:fqdn]).to be_nil
     end
 
     it "should init serve to []" do
-      @puppetd.preinit
+      @oreganod.preinit
 
-      expect(@puppetd.options[:serve]).to eq([])
+      expect(@oreganod.options[:serve]).to eq([])
     end
 
     it "should use SHA256 as default digest algorithm" do
-      @puppetd.preinit
+      @oreganod.preinit
 
-      expect(@puppetd.options[:digest]).to eq('SHA256')
+      expect(@oreganod.options[:digest]).to eq('SHA256')
     end
 
     it "should not fingerprint by default" do
-      @puppetd.preinit
+      @oreganod.preinit
 
-      expect(@puppetd.options[:fingerprint]).to be_falsey
+      expect(@oreganod.options[:fingerprint]).to be_falsey
     end
 
     it "should init waitforcert to nil" do
-      @puppetd.preinit
+      @oreganod.preinit
 
-      expect(@puppetd.options[:waitforcert]).to be_nil
+      expect(@oreganod.options[:waitforcert]).to be_nil
     end
   end
 
   describe "when handling options" do
     before do
-      @puppetd.command_line.stubs(:args).returns([])
+      @oreganod.command_line.stubs(:args).returns([])
     end
 
     [:enable, :debug, :fqdn, :test, :verbose, :digest].each do |option|
       it "should declare handle_#{option} method" do
-        expect(@puppetd).to respond_to("handle_#{option}".to_sym)
+        expect(@oreganod).to respond_to("handle_#{option}".to_sym)
       end
 
       it "should store argument value when calling handle_#{option}" do
-        @puppetd.send("handle_#{option}".to_sym, 'arg')
+        @oreganod.send("handle_#{option}".to_sym, 'arg')
 
-        expect(@puppetd.options[option]).to eq('arg')
+        expect(@oreganod.options[option]).to eq('arg')
       end
     end
 
     describe "when handling --disable" do
       it "should set disable to true" do
-        @puppetd.handle_disable('')
+        @oreganod.handle_disable('')
 
-        expect(@puppetd.options[:disable]).to eq(true)
+        expect(@oreganod.options[:disable]).to eq(true)
       end
 
       it "should store disable message" do
-        @puppetd.handle_disable('message')
+        @oreganod.handle_disable('message')
 
-        expect(@puppetd.options[:disable_message]).to eq('message')
+        expect(@oreganod.options[:disable_message]).to eq('message')
       end
     end
 
     it "should set waitforcert to 0 with --onetime and if --waitforcert wasn't given" do
       @agent.stubs(:run).returns(2)
-      Puppet[:onetime] = true
+      Oregano[:onetime] = true
 
       @ssl_host.expects(:wait_for_cert).with(0)
 
@@ -137,8 +137,8 @@ describe Puppet::Application::Agent do
 
     it "should use supplied waitforcert when --onetime is specified" do
       @agent.stubs(:run).returns(2)
-      Puppet[:onetime] = true
-      @puppetd.handle_waitforcert(60)
+      Oregano[:onetime] = true
+      @oreganod.handle_waitforcert(60)
 
       @ssl_host.expects(:wait_for_cert).with(60)
 
@@ -152,253 +152,253 @@ describe Puppet::Application::Agent do
     end
 
     it "should use the waitforcert setting when checking for a signed certificate" do
-      Puppet[:waitforcert] = 10
+      Oregano[:waitforcert] = 10
       @ssl_host.expects(:wait_for_cert).with(10)
 
       execute_agent
     end
 
     it "should set the log destination with --logdest" do
-      Puppet::Log.expects(:newdestination).with("console")
+      Oregano::Log.expects(:newdestination).with("console")
 
-      @puppetd.handle_logdest("console")
+      @oreganod.handle_logdest("console")
     end
 
     it "should put the setdest options to true" do
-      @puppetd.handle_logdest("console")
+      @oreganod.handle_logdest("console")
 
-      expect(@puppetd.options[:setdest]).to eq(true)
+      expect(@oreganod.options[:setdest]).to eq(true)
     end
 
     it "should parse the log destination from the command line" do
-      @puppetd.command_line.stubs(:args).returns(%w{--logdest /my/file})
+      @oreganod.command_line.stubs(:args).returns(%w{--logdest /my/file})
 
-      Puppet::Util::Log.expects(:newdestination).with("/my/file")
+      Oregano::Util::Log.expects(:newdestination).with("/my/file")
 
-      @puppetd.parse_options
+      @oreganod.parse_options
     end
 
     it "should store the waitforcert options with --waitforcert" do
-      @puppetd.handle_waitforcert("42")
+      @oreganod.handle_waitforcert("42")
 
-      expect(@puppetd.options[:waitforcert]).to eq(42)
+      expect(@oreganod.options[:waitforcert]).to eq(42)
     end
   end
 
   describe "during setup" do
     before :each do
-      Puppet.stubs(:info)
-      Puppet[:libdir] = "/dev/null/lib"
-      Puppet::Transaction::Report.indirection.stubs(:terminus_class=)
-      Puppet::Transaction::Report.indirection.stubs(:cache_class=)
-      Puppet::Resource::Catalog.indirection.stubs(:terminus_class=)
-      Puppet::Resource::Catalog.indirection.stubs(:cache_class=)
-      Puppet::Node::Facts.indirection.stubs(:terminus_class=)
-      Puppet.stubs(:settraps)
+      Oregano.stubs(:info)
+      Oregano[:libdir] = "/dev/null/lib"
+      Oregano::Transaction::Report.indirection.stubs(:terminus_class=)
+      Oregano::Transaction::Report.indirection.stubs(:cache_class=)
+      Oregano::Resource::Catalog.indirection.stubs(:terminus_class=)
+      Oregano::Resource::Catalog.indirection.stubs(:cache_class=)
+      Oregano::Node::Facts.indirection.stubs(:terminus_class=)
+      Oregano.stubs(:settraps)
     end
 
     it "should not run with extra arguments" do
-      @puppetd.command_line.stubs(:args).returns(%w{disable})
-      expect{@puppetd.setup}.to raise_error ArgumentError, /does not take parameters/
+      @oreganod.command_line.stubs(:args).returns(%w{disable})
+      expect{@oreganod.setup}.to raise_error ArgumentError, /does not take parameters/
     end
 
     describe "with --test" do
       it "should call setup_test" do
-        @puppetd.options[:test] = true
-        @puppetd.expects(:setup_test)
+        @oreganod.options[:test] = true
+        @oreganod.expects(:setup_test)
 
-        @puppetd.setup
+        @oreganod.setup
       end
 
       it "should set options[:verbose] to true" do
-        @puppetd.setup_test
+        @oreganod.setup_test
 
-        expect(@puppetd.options[:verbose]).to eq(true)
+        expect(@oreganod.options[:verbose]).to eq(true)
       end
       it "should set options[:onetime] to true" do
-        Puppet[:onetime] = false
-        @puppetd.setup_test
-        expect(Puppet[:onetime]).to eq(true)
+        Oregano[:onetime] = false
+        @oreganod.setup_test
+        expect(Oregano[:onetime]).to eq(true)
       end
       it "should set options[:detailed_exitcodes] to true" do
-        @puppetd.setup_test
+        @oreganod.setup_test
 
-        expect(@puppetd.options[:detailed_exitcodes]).to eq(true)
+        expect(@oreganod.options[:detailed_exitcodes]).to eq(true)
       end
     end
 
     it "should call setup_logs" do
-      @puppetd.expects(:setup_logs)
-      @puppetd.setup
+      @oreganod.expects(:setup_logs)
+      @oreganod.setup
     end
 
     describe "when setting up logs" do
       before :each do
-        Puppet::Util::Log.stubs(:newdestination)
+        Oregano::Util::Log.stubs(:newdestination)
       end
 
       it "should set log level to debug if --debug was passed" do
-        @puppetd.options[:debug] = true
-        @puppetd.setup_logs
-        expect(Puppet::Util::Log.level).to eq(:debug)
+        @oreganod.options[:debug] = true
+        @oreganod.setup_logs
+        expect(Oregano::Util::Log.level).to eq(:debug)
       end
 
       it "should set log level to info if --verbose was passed" do
-        @puppetd.options[:verbose] = true
-        @puppetd.setup_logs
-        expect(Puppet::Util::Log.level).to eq(:info)
+        @oreganod.options[:verbose] = true
+        @oreganod.setup_logs
+        expect(Oregano::Util::Log.level).to eq(:info)
       end
 
       [:verbose, :debug].each do |level|
         it "should set console as the log destination with level #{level}" do
-          @puppetd.options[level] = true
+          @oreganod.options[level] = true
 
-          Puppet::Util::Log.expects(:newdestination).at_least_once
-          Puppet::Util::Log.expects(:newdestination).with(:console).once
+          Oregano::Util::Log.expects(:newdestination).at_least_once
+          Oregano::Util::Log.expects(:newdestination).with(:console).once
 
-          @puppetd.setup_logs
+          @oreganod.setup_logs
         end
       end
 
       it "should set a default log destination if no --logdest" do
-        @puppetd.options[:setdest] = false
+        @oreganod.options[:setdest] = false
 
-        Puppet::Util::Log.expects(:setup_default)
+        Oregano::Util::Log.expects(:setup_default)
 
-        @puppetd.setup_logs
+        @oreganod.setup_logs
       end
 
     end
 
-    it "should print puppet config if asked to in Puppet config" do
-      Puppet[:configprint] = "pluginsync"
-      Puppet.settings.expects(:print_configs).returns true
+    it "should print oregano config if asked to in Oregano config" do
+      Oregano[:configprint] = "pluginsync"
+      Oregano.settings.expects(:print_configs).returns true
       expect { execute_agent }.to exit_with 0
     end
 
-    it "should exit after printing puppet config if asked to in Puppet config" do
+    it "should exit after printing oregano config if asked to in Oregano config" do
       path = make_absolute('/my/path')
-      Puppet[:modulepath] = path
-      Puppet[:configprint] = "modulepath"
-      Puppet::Settings.any_instance.expects(:puts).with(path)
+      Oregano[:modulepath] = path
+      Oregano[:configprint] = "modulepath"
+      Oregano::Settings.any_instance.expects(:puts).with(path)
       expect { execute_agent }.to exit_with 0
     end
 
-    it "should use :main, :puppetd, and :ssl" do
-      Puppet.settings.unstub(:use)
-      Puppet.settings.expects(:use).with(:main, :agent, :ssl)
+    it "should use :main, :oreganod, and :ssl" do
+      Oregano.settings.unstub(:use)
+      Oregano.settings.expects(:use).with(:main, :agent, :ssl)
 
-      @puppetd.setup
+      @oreganod.setup
     end
 
     it "should install a remote ca location" do
-      Puppet::SSL::Host.expects(:ca_location=).with(:remote)
+      Oregano::SSL::Host.expects(:ca_location=).with(:remote)
 
-      @puppetd.setup
+      @oreganod.setup
     end
 
     it "should install a none ca location in fingerprint mode" do
-      @puppetd.options[:fingerprint] = true
-      Puppet::SSL::Host.expects(:ca_location=).with(:none)
+      @oreganod.options[:fingerprint] = true
+      Oregano::SSL::Host.expects(:ca_location=).with(:none)
 
-      @puppetd.setup
+      @oreganod.setup
     end
 
     it "should tell the report handler to use REST" do
-      Puppet::Transaction::Report.indirection.expects(:terminus_class=).with(:rest)
+      Oregano::Transaction::Report.indirection.expects(:terminus_class=).with(:rest)
 
-      @puppetd.setup
+      @oreganod.setup
     end
 
     it "should tell the report handler to cache locally as yaml" do
-      Puppet::Transaction::Report.indirection.expects(:cache_class=).with(:yaml)
+      Oregano::Transaction::Report.indirection.expects(:cache_class=).with(:yaml)
 
-      @puppetd.setup
+      @oreganod.setup
     end
 
     it "should default catalog_terminus setting to 'rest'" do
-      @puppetd.initialize_app_defaults
-      expect(Puppet[:catalog_terminus]).to eq(:rest)
+      @oreganod.initialize_app_defaults
+      expect(Oregano[:catalog_terminus]).to eq(:rest)
     end
 
     it "should default node_terminus setting to 'rest'" do
-      @puppetd.initialize_app_defaults
-      expect(Puppet[:node_terminus]).to eq(:rest)
+      @oreganod.initialize_app_defaults
+      expect(Oregano[:node_terminus]).to eq(:rest)
     end
 
     it "has an application default :catalog_cache_terminus setting of 'json'" do
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(:json)
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(:json)
 
-      @puppetd.initialize_app_defaults
-      @puppetd.setup
+      @oreganod.initialize_app_defaults
+      @oreganod.setup
     end
 
     it "should tell the catalog cache class based on the :catalog_cache_terminus setting" do
-      Puppet[:catalog_cache_terminus] = "yaml"
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(:yaml)
+      Oregano[:catalog_cache_terminus] = "yaml"
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(:yaml)
 
-      @puppetd.initialize_app_defaults
-      @puppetd.setup
+      @oreganod.initialize_app_defaults
+      @oreganod.setup
     end
 
     it "should not set catalog cache class if :catalog_cache_terminus is explicitly nil" do
-      Puppet[:catalog_cache_terminus] = nil
-      Puppet::Resource::Catalog.indirection.unstub(:cache_class=)
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).never
+      Oregano[:catalog_cache_terminus] = nil
+      Oregano::Resource::Catalog.indirection.unstub(:cache_class=)
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).never
 
-      @puppetd.initialize_app_defaults
-      @puppetd.setup
+      @oreganod.initialize_app_defaults
+      @oreganod.setup
     end
 
     it "should set catalog cache class to nil during a noop run" do
-      Puppet[:catalog_cache_terminus] = "json"
-      Puppet[:noop] = true
-      Puppet::Resource::Catalog.indirection.expects(:cache_class=).with(nil)
+      Oregano[:catalog_cache_terminus] = "json"
+      Oregano[:noop] = true
+      Oregano::Resource::Catalog.indirection.expects(:cache_class=).with(nil)
 
-      @puppetd.initialize_app_defaults
-      @puppetd.setup
+      @oreganod.initialize_app_defaults
+      @oreganod.setup
     end
 
     it "should default facts_terminus setting to 'facter'" do
-      @puppetd.initialize_app_defaults
-      expect(Puppet[:facts_terminus]).to eq(:facter)
+      @oreganod.initialize_app_defaults
+      expect(Oregano[:facts_terminus]).to eq(:facter)
     end
 
     it "should create an agent" do
-      Puppet::Agent.stubs(:new).with(Puppet::Configurer)
+      Oregano::Agent.stubs(:new).with(Oregano::Configurer)
 
-      @puppetd.setup
+      @oreganod.setup
     end
 
     [:enable, :disable].each do |action|
       it "should delegate to enable_disable_client if we #{action} the agent" do
-        @puppetd.options[action] = true
-        @puppetd.expects(:enable_disable_client).with(@agent)
+        @oreganod.options[action] = true
+        @oreganod.expects(:enable_disable_client).with(@agent)
 
-        @puppetd.setup
+        @oreganod.setup
       end
     end
 
     describe "when enabling or disabling agent" do
       [:enable, :disable].each do |action|
         it "should call client.#{action}" do
-          @puppetd.options[action] = true
+          @oreganod.options[action] = true
           @agent.expects(action)
           expect { execute_agent }.to exit_with 0
         end
       end
 
       it "should pass the disable message when disabling" do
-        @puppetd.options[:disable] = true
-        @puppetd.options[:disable_message] = "message"
+        @oreganod.options[:disable] = true
+        @oreganod.options[:disable_message] = "message"
         @agent.expects(:disable).with("message")
 
         expect { execute_agent }.to exit_with 0
       end
 
       it "should pass the default disable message when disabling without a message" do
-        @puppetd.options[:disable] = true
-        @puppetd.options[:disable_message] = nil
+        @oreganod.options[:disable] = true
+        @oreganod.options[:disable_message] = nil
         @agent.expects(:disable).with("reason not specified")
 
         expect { execute_agent }.to exit_with 0
@@ -406,7 +406,7 @@ describe Puppet::Application::Agent do
     end
 
     it "should inform the daemon about our agent if :client is set to 'true'" do
-      @puppetd.options[:client] = true
+      @oreganod.options[:client] = true
 
       execute_agent
 
@@ -414,8 +414,8 @@ describe Puppet::Application::Agent do
     end
 
     it "should daemonize if needed" do
-      Puppet.features.stubs(:microsoft_windows?).returns false
-      Puppet[:daemonize] = true
+      Oregano.features.stubs(:microsoft_windows?).returns false
+      Oregano[:daemonize] = true
 
       @daemon.expects(:daemonize)
 
@@ -423,58 +423,58 @@ describe Puppet::Application::Agent do
     end
 
     it "should wait for a certificate" do
-      @puppetd.options[:waitforcert] = 123
+      @oreganod.options[:waitforcert] = 123
       @ssl_host.expects(:wait_for_cert).with(123)
 
       execute_agent
     end
 
     it "should not wait for a certificate in fingerprint mode" do
-      @puppetd.options[:fingerprint] = true
-      @puppetd.options[:waitforcert] = 123
-      @puppetd.options[:digest] = 'MD5'
+      @oreganod.options[:fingerprint] = true
+      @oreganod.options[:waitforcert] = 123
+      @oreganod.options[:digest] = 'MD5'
 
       certificate = mock 'certificate'
       certificate.stubs(:digest).with('MD5').returns('ABCDE')
       @ssl_host.stubs(:certificate).returns(certificate)
 
       @ssl_host.expects(:wait_for_cert).never
-      @puppetd.expects(:puts).with('ABCDE')
+      @oreganod.expects(:puts).with('ABCDE')
 
       execute_agent
     end
 
     describe "when setting up for fingerprint" do
       before(:each) do
-        @puppetd.options[:fingerprint] = true
+        @oreganod.options[:fingerprint] = true
       end
 
       it "should not setup as an agent" do
-        @puppetd.expects(:setup_agent).never
-        @puppetd.setup
+        @oreganod.expects(:setup_agent).never
+        @oreganod.setup
       end
 
       it "should not create an agent" do
-        Puppet::Agent.stubs(:new).with(Puppet::Configurer).never
-        @puppetd.setup
+        Oregano::Agent.stubs(:new).with(Oregano::Configurer).never
+        @oreganod.setup
       end
 
       it "should not daemonize" do
         @daemon.expects(:daemonize).never
-        @puppetd.setup
+        @oreganod.setup
       end
     end
 
     describe "when configuring agent for catalog run" do
       it "should set should_fork as true when running normally" do
-        Puppet::Agent.expects(:new).with(anything, true)
-        @puppetd.setup
+        Oregano::Agent.expects(:new).with(anything, true)
+        @oreganod.setup
       end
 
       it "should not set should_fork as false for --onetime" do
-        Puppet[:onetime] = true
-        Puppet::Agent.expects(:new).with(anything, false)
-        @puppetd.setup
+        Oregano[:onetime] = true
+        Oregano::Agent.expects(:new).with(anything, false)
+        @oreganod.setup
       end
     end
   end
@@ -482,29 +482,29 @@ describe Puppet::Application::Agent do
 
   describe "when running" do
     before :each do
-      @puppetd.options[:fingerprint] = false
+      @oreganod.options[:fingerprint] = false
     end
 
     it "should dispatch to fingerprint if --fingerprint is used" do
-      @puppetd.options[:fingerprint] = true
+      @oreganod.options[:fingerprint] = true
 
-      @puppetd.stubs(:fingerprint)
+      @oreganod.stubs(:fingerprint)
 
       execute_agent
     end
 
     it "should dispatch to onetime if --onetime is used" do
-      @puppetd.options[:onetime] = true
+      @oreganod.options[:onetime] = true
 
-      @puppetd.stubs(:onetime)
+      @oreganod.stubs(:onetime)
 
       execute_agent
     end
 
     it "should dispatch to main if --onetime and --fingerprint are not used" do
-      @puppetd.options[:onetime] = false
+      @oreganod.options[:onetime] = false
 
-      @puppetd.stubs(:main)
+      @oreganod.stubs(:main)
 
       execute_agent
     end
@@ -513,9 +513,9 @@ describe Puppet::Application::Agent do
 
       before :each do
         @agent.stubs(:run).returns(:report)
-        Puppet[:onetime] = true
-        @puppetd.options[:client] = :client
-        @puppetd.options[:detailed_exitcodes] = false
+        Oregano[:onetime] = true
+        @oreganod.options[:client] = :client
+        @oreganod.options[:detailed_exitcodes] = false
       end
 
       it "should setup traps" do
@@ -531,7 +531,7 @@ describe Puppet::Application::Agent do
       end
 
       it "should run the agent with the supplied job_id" do
-        @puppetd.options[:job_id] = 'special id'
+        @oreganod.options[:job_id] = 'special id'
         @agent.expects(:run).with(:job_id => 'special id').returns(:report)
 
         expect { execute_agent }.to exit_with 0
@@ -545,18 +545,18 @@ describe Puppet::Application::Agent do
 
       describe "and --detailed-exitcodes" do
         before :each do
-          @puppetd.options[:detailed_exitcodes] = true
+          @oreganod.options[:detailed_exitcodes] = true
         end
 
         it "should exit with agent computed exit status" do
-          Puppet[:noop] = false
+          Oregano[:noop] = false
           @agent.stubs(:run).returns(666)
 
           expect { execute_agent }.to exit_with 666
         end
 
         it "should exit with the agent's exit status, even if --noop is set." do
-          Puppet[:noop] = true
+          Oregano[:noop] = true
           @agent.stubs(:run).returns(666)
 
           expect { execute_agent }.to exit_with 666
@@ -567,17 +567,17 @@ describe Puppet::Application::Agent do
     describe "with --fingerprint" do
       before :each do
         @cert = mock 'cert'
-        @puppetd.options[:fingerprint] = true
-        @puppetd.options[:digest] = :MD5
+        @oreganod.options[:fingerprint] = true
+        @oreganod.options[:digest] = :MD5
       end
 
       it "should fingerprint the certificate if it exists" do
         @ssl_host.stubs(:certificate).returns(@cert)
         @cert.stubs(:digest).with('MD5').returns "fingerprint"
 
-        @puppetd.expects(:puts).with "fingerprint"
+        @oreganod.expects(:puts).with "fingerprint"
 
-        @puppetd.fingerprint
+        @oreganod.fingerprint
       end
 
       it "should fingerprint the certificate request if no certificate have been signed" do
@@ -585,15 +585,15 @@ describe Puppet::Application::Agent do
         @ssl_host.stubs(:certificate_request).returns(@cert)
         @cert.stubs(:digest).with('MD5').returns "fingerprint"
 
-        @puppetd.expects(:puts).with "fingerprint"
+        @oreganod.expects(:puts).with "fingerprint"
 
-        @puppetd.fingerprint
+        @oreganod.fingerprint
       end
     end
 
     describe "without --onetime and --fingerprint" do
       before :each do
-        Puppet.stubs(:notice)
+        Oregano.stubs(:notice)
       end
 
       it "should start our daemon" do
@@ -605,7 +605,7 @@ describe Puppet::Application::Agent do
   end
 
   def execute_agent
-    @puppetd.setup
-    @puppetd.run_command
+    @oreganod.setup
+    @oreganod.run_command
   end
 end

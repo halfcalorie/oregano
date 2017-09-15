@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/network_device'
-require 'puppet/util/network_device/cisco/facts'
+require 'oregano/util/network_device'
+require 'oregano/util/network_device/cisco/facts'
 
-describe Puppet::Util::NetworkDevice::Cisco::Facts do
+describe Oregano::Util::NetworkDevice::Cisco::Facts do
   before(:each) do
     @transport = stub_everything 'transport'
-    @facts = Puppet::Util::NetworkDevice::Cisco::Facts.new(@transport)
+    @facts = Oregano::Util::NetworkDevice::Cisco::Facts.new(@transport)
   end
 
   {

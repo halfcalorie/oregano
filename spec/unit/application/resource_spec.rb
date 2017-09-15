@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/application/resource'
-require 'puppet_spec/character_encoding'
+require 'oregano/application/resource'
+require 'oregano_spec/character_encoding'
 
-describe Puppet::Application::Resource do
-  include PuppetSpec::Files
+describe Oregano::Application::Resource do
+  include OreganoSpec::Files
   before :each do
-    @resource_app = Puppet::Application[:resource]
-    Puppet::Util::Log.stubs(:newdestination)
+    @resource_app = Oregano::Application[:resource]
+    Oregano::Util::Log.stubs(:newdestination)
   end
 
   describe "in preinit" do
@@ -29,8 +29,8 @@ describe Puppet::Application::Resource do
     it "should load a display all types with types option" do
       type1 = stub_everything 'type1', :name => :type1
       type2 = stub_everything 'type2', :name => :type2
-      Puppet::Type.stubs(:loadall)
-      Puppet::Type.stubs(:eachtype).multiple_yields(type1,type2)
+      Oregano::Type.stubs(:loadall)
+      Oregano::Type.stubs(:eachtype).multiple_yields(type1,type2)
       @resource_app.expects(:puts).with(['type1','type2'])
       expect { @resource_app.handle_types(nil) }.to exit_with 0
     end
@@ -45,7 +45,7 @@ describe Puppet::Application::Resource do
     it "should get a parameter in the printed data if extra_params are passed" do
       tty  = stub("tty",  :tty? => true )
       path = tmpfile('testfile')
-      command_line = Puppet::Util::CommandLine.new("puppet", [ 'resource', 'file', path ], tty )
+      command_line = Oregano::Util::CommandLine.new("oregano", [ 'resource', 'file', path ], tty )
       @resource_app.stubs(:command_line).returns command_line
 
       # provider is a parameter that should always be available
@@ -57,11 +57,11 @@ describe Puppet::Application::Resource do
 
   describe "during setup" do
     before :each do
-      Puppet::Log.stubs(:newdestination)
+      Oregano::Log.stubs(:newdestination)
     end
 
     it "should set console as the log destination" do
-      Puppet::Log.expects(:newdestination).with(:console)
+      Oregano::Log.expects(:newdestination).with(:console)
 
       @resource_app.setup
     end
@@ -69,14 +69,14 @@ describe Puppet::Application::Resource do
     it "should set log level to debug if --debug was passed" do
       @resource_app.options.stubs(:[]).with(:debug).returns(true)
       @resource_app.setup
-      expect(Puppet::Log.level).to eq(:debug)
+      expect(Oregano::Log.level).to eq(:debug)
     end
 
     it "should set log level to info if --verbose was passed" do
       @resource_app.options.stubs(:[]).with(:debug).returns(false)
       @resource_app.options.stubs(:[]).with(:verbose).returns(true)
       @resource_app.setup
-      expect(Puppet::Log.level).to eq(:info)
+      expect(Oregano::Log.level).to eq(:info)
     end
 
   end
@@ -85,7 +85,7 @@ describe Puppet::Application::Resource do
     before :each do
       @type = stub_everything 'type', :properties => []
       @resource_app.command_line.stubs(:args).returns(['mytype'])
-      Puppet::Type.stubs(:type).returns(@type)
+      Oregano::Type.stubs(:type).returns(@type)
 
       @res = stub_everything "resource"
       @res.stubs(:prune_parameters).returns(@res)
@@ -94,9 +94,9 @@ describe Puppet::Application::Resource do
 
       @resource_app.stubs(:puts)
 
-      Puppet::Resource.indirection.stubs(:find  ).never
-      Puppet::Resource.indirection.stubs(:search).never
-      Puppet::Resource.indirection.stubs(:save  ).never
+      Oregano::Resource.indirection.stubs(:find  ).never
+      Oregano::Resource.indirection.stubs(:search).never
+      Oregano::Resource.indirection.stubs(:save  ).never
     end
 
     it "should raise an error if no type is given" do
@@ -105,27 +105,27 @@ describe Puppet::Application::Resource do
     end
 
     it "should raise an error if the type is not found" do
-      Puppet::Type.stubs(:type).returns(nil)
+      Oregano::Type.stubs(:type).returns(nil)
 
       expect { @resource_app.main }.to raise_error(RuntimeError, 'Could not find type mytype')
     end
 
     it "should search for resources" do
-      Puppet::Resource.indirection.expects(:search).with('mytype/', {}).returns([])
+      Oregano::Resource.indirection.expects(:search).with('mytype/', {}).returns([])
       @resource_app.main
     end
 
     it "should describe the given resource" do
       @resource_app.command_line.stubs(:args).returns(['type','name'])
-      Puppet::Resource.indirection.expects(:find).with('type/name').returns(@res)
+      Oregano::Resource.indirection.expects(:find).with('type/name').returns(@res)
       @resource_app.main
     end
 
     it "should add given parameters to the object" do
       @resource_app.command_line.stubs(:args).returns(['type','name','param=temp'])
 
-      Puppet::Resource.indirection.expects(:save).with(@res, 'type/name').returns([@res, @report])
-      Puppet::Resource.expects(:new).with('type', 'name', :parameters => {'param' => 'temp'}).returns(@res)
+      Oregano::Resource.indirection.expects(:save).with(@res, 'type/name').returns([@res, @report])
+      Oregano::Resource.expects(:new).with('type', 'name', :parameters => {'param' => 'temp'}).returns(@res)
 
       @resource_app.main
     end
@@ -134,17 +134,17 @@ describe Puppet::Application::Resource do
   describe "when printing output" do
     it "should ensure all values to be printed are in the external encoding" do
       resources = [
-        Puppet::Type.type(:user).new(:name => "\u2603".force_encoding(Encoding::UTF_8)).to_resource,
-        Puppet::Type.type(:user).new(:name => "Jos\xE9".force_encoding(Encoding::ISO_8859_1)).to_resource
+        Oregano::Type.type(:user).new(:name => "\u2603".force_encoding(Encoding::UTF_8)).to_resource,
+        Oregano::Type.type(:user).new(:name => "Jos\xE9".force_encoding(Encoding::ISO_8859_1)).to_resource
       ]
-      Puppet::Resource.indirection.expects(:search).with('user/', {}).returns(resources)
+      Oregano::Resource.indirection.expects(:search).with('user/', {}).returns(resources)
       @resource_app.command_line.stubs(:args).returns(['user'])
 
       # All of our output should be in external encoding
       @resource_app.expects(:puts).with { |args| expect(args.encoding).to eq(Encoding::ISO_8859_1) }
 
       # This would raise an error if we weren't handling it
-      PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::ISO_8859_1) do
+      OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::ISO_8859_1) do
         expect { @resource_app.main }.not_to raise_error
       end
     end
@@ -164,8 +164,8 @@ describe Puppet::Application::Resource do
 
     it "should output a file resource when given a file path" do
       path = File.expand_path('/etc')
-      res = Puppet::Type.type(:file).new(:path => path).to_resource
-      Puppet::Resource.indirection.expects(:find).returns(res)
+      res = Oregano::Type.type(:file).new(:path => path).to_resource
+      Oregano::Resource.indirection.expects(:find).returns(res)
 
       @resource_app.command_line.stubs(:args).returns(['file', path])
       @resource_app.expects(:puts).with do |args|
@@ -177,13 +177,13 @@ describe Puppet::Application::Resource do
   end
 
   describe 'when handling a custom type' do
-    it 'the Puppet::Pops::Loaders instance is available' do
-      Puppet::Type.newtype(:testing) do
+    it 'the Oregano::Pops::Loaders instance is available' do
+      Oregano::Type.newtype(:testing) do
         newparam(:name) do
           isnamevar
         end
         def self.instances
-          fail('Loader not found') unless Puppet::Pops::Loaders.find_loader(nil).is_a?(Puppet::Pops::Loader::Loader)
+          fail('Loader not found') unless Oregano::Pops::Loaders.find_loader(nil).is_a?(Oregano::Pops::Loader::Loader)
           @instances ||= [new(:name => name)]
         end
       end

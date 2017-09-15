@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/agent'
-require 'puppet/agent/locker'
+require 'oregano/agent'
+require 'oregano/agent/locker'
 
 class DisablerTester
-  include Puppet::Agent::Disabler
+  include Oregano::Agent::Disabler
 end
 
-describe Puppet::Agent::Disabler do
+describe Oregano::Agent::Disabler do
   before do
     @disabler = DisablerTester.new
   end
@@ -20,14 +20,14 @@ describe Puppet::Agent::Disabler do
   ##  the tests. --cprice 2012-04-16
 
   it "should use an JsonLockfile instance as its disable_lockfile" do
-    expect(@disabler.send(:disable_lockfile)).to be_instance_of(Puppet::Util::JsonLockfile)
+    expect(@disabler.send(:disable_lockfile)).to be_instance_of(Oregano::Util::JsonLockfile)
   end
 
-  it "should use puppet's :agent_disabled_lockfile' setting to determine its lockfile path" do
+  it "should use oregano's :agent_disabled_lockfile' setting to determine its lockfile path" do
     lockfile = File.expand_path("/my/lock.disabled")
-    Puppet[:agent_disabled_lockfile] = lockfile
-    lock = Puppet::Util::JsonLockfile.new(lockfile)
-    Puppet::Util::JsonLockfile.expects(:new).with(lockfile).returns lock
+    Oregano[:agent_disabled_lockfile] = lockfile
+    lock = Oregano::Util::JsonLockfile.new(lockfile)
+    Oregano::Util::JsonLockfile.expects(:new).with(lockfile).returns lock
 
     @disabler.send(:disable_lockfile)
   end
@@ -55,7 +55,7 @@ describe Puppet::Agent::Disabler do
   end
 
   it "should report the disable message when disabled" do
-    Puppet[:agent_disabled_lockfile] = PuppetSpec::Files.tmpfile("lock")
+    Oregano[:agent_disabled_lockfile] = OreganoSpec::Files.tmpfile("lock")
 
     msg = "I'm busy, go away"
     @disabler.disable(msg)

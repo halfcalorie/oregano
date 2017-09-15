@@ -15,7 +15,7 @@ agents.each do |agent|
   agent.user_present(name)
 
   step "delete the user"
-  on agent, puppet_resource('user', name, 'ensure=absent')
+  on agent, oregano_resource('user', name, 'ensure=absent')
 
   step "verify the user was deleted"
   fail_test "User #{name} was not deleted" if agent.user_list.include? name

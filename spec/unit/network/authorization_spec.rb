@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http'
-require 'puppet/network/http/api/indirected_routes'
-require 'puppet/network/authorization'
+require 'oregano/network/http'
+require 'oregano/network/http/api/indirected_routes'
+require 'oregano/network/authorization'
 
-describe Puppet::Network::Authorization do
+describe Oregano::Network::Authorization do
   class AuthTest
-    include Puppet::Network::Authorization
+    include Oregano::Network::Authorization
   end
 
   subject { AuthTest.new }
@@ -14,21 +14,21 @@ describe Puppet::Network::Authorization do
   context "when creating an authconfig object" do
     before :each do
       # Other tests may have created an authconfig, so we have to undo that.
-      @orig_auth_config = Puppet::Network::AuthConfigLoader.instance_variable_get(:@auth_config)
-      @orig_auth_config_file = Puppet::Network::AuthConfigLoader.instance_variable_get(:@auth_config_file)
+      @orig_auth_config = Oregano::Network::AuthConfigLoader.instance_variable_get(:@auth_config)
+      @orig_auth_config_file = Oregano::Network::AuthConfigLoader.instance_variable_get(:@auth_config_file)
 
-      Puppet::Network::AuthConfigLoader.instance_variable_set(:@auth_config, nil)
-      Puppet::Network::AuthConfigLoader.instance_variable_set(:@auth_config_file, nil)
+      Oregano::Network::AuthConfigLoader.instance_variable_set(:@auth_config, nil)
+      Oregano::Network::AuthConfigLoader.instance_variable_set(:@auth_config_file, nil)
     end
 
     after :each do
-      Puppet::Network::AuthConfigLoader.instance_variable_set(:@auth_config, @orig_auth_config)
-      Puppet::Network::AuthConfigLoader.instance_variable_set(:@auth_config_file, @orig_auth_config_file)
+      Oregano::Network::AuthConfigLoader.instance_variable_set(:@auth_config, @orig_auth_config)
+      Oregano::Network::AuthConfigLoader.instance_variable_set(:@auth_config_file, @orig_auth_config_file)
     end
 
     it "creates default ACL entries if no file has been read" do
-      Puppet::Network::AuthConfigParser.expects(:new_from_file).raises Errno::ENOENT
-      Puppet::Network::DefaultAuthProvider.any_instance.expects(:insert_default_acl)
+      Oregano::Network::AuthConfigParser.expects(:new_from_file).raises Errno::ENOENT
+      Oregano::Network::DefaultAuthProvider.any_instance.expects(:insert_default_acl)
 
       subject.authconfig
     end
@@ -46,11 +46,11 @@ describe Puppet::Network::Authorization do
 
   context "when checking authorization" do
     after :each do
-      Puppet::Network::Authorization.authconfigloader_class = nil
+      Oregano::Network::Authorization.authconfigloader_class = nil
     end
 
     it "delegates to the authconfig object" do
-      Puppet::Network::Authorization.authconfigloader_class =
+      Oregano::Network::Authorization.authconfigloader_class =
           TestAuthConfigLoader
       TestAuthConfig.any_instance.expects(:check_authorization).with(
           :save, '/mypath', {:param1 => "value1"}).returns("yay, it worked!")

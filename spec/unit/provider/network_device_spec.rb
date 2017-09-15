@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/provider/network_device'
+require 'oregano/provider/network_device'
 require 'ostruct'
 
-Puppet::Type.type(:vlan).provide :test, :parent => Puppet::Provider::NetworkDevice do
+Oregano::Type.type(:vlan).provide :test, :parent => Oregano::Provider::NetworkDevice do
   mk_resource_methods
   def self.lookup(device, name)
   end
@@ -14,7 +14,7 @@ Puppet::Type.type(:vlan).provide :test, :parent => Puppet::Provider::NetworkDevi
   end
 end
 
-provider_class = Puppet::Type.type(:vlan).provider(:test)
+provider_class = Oregano::Type.type(:vlan).provider(:test)
 
 describe provider_class do
   before do
@@ -72,7 +72,7 @@ describe provider_class do
         @resource_class = mock 'resource_class'
         provider_class.stubs(:resource_type).returns @resource_class
 
-        @property_class = stub 'property_class', :array_matching => :all, :superclass => Puppet::Property
+        @property_class = stub 'property_class', :array_matching => :all, :superclass => Oregano::Property
         @resource_class.stubs(:attrclass).with(:one).returns(@property_class)
         @resource_class.stubs(:valid_parameter?).returns true
       end
@@ -88,7 +88,7 @@ describe provider_class do
     before do
       @instance = provider_class.new(:device)
 
-      @property_class = stub 'property_class', :array_matching => :all, :superclass => Puppet::Property
+      @property_class = stub 'property_class', :array_matching => :all, :superclass => Oregano::Property
       @resource_class = stub 'resource_class', :attrclass => @property_class, :valid_parameter? => true, :validproperties => [:description]
       provider_class.stubs(:resource_type).returns @resource_class
     end

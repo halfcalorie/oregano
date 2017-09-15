@@ -1,10 +1,10 @@
 require 'spec_helper'
 
 describe "the epp function" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
-  let :node     do Puppet::Node.new('localhost') end
-  let :compiler do Puppet::Parser::Compiler.new(node) end
+  let :node     do Oregano::Node.new('localhost') end
+  let :compiler do Oregano::Parser::Compiler.new(node) end
   let :scope    do compiler.topscope end
 
   context "when accessing scope variables as $ variables" do
@@ -120,7 +120,7 @@ describe "the epp function" do
   end
 
   describe 'when loading from modules' do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
     it 'an epp template is found' do
       modules_dir = dir_containing('modules', {
         'testmodule'  => {
@@ -128,7 +128,7 @@ describe "the epp function" do
               'the_x.epp' => 'The x is <%= $x %>'
             }
         }})
-      Puppet.override({:current_environment => (env = Puppet::Node::Environment.create(:testload, [ modules_dir ]))}, "test") do
+      Oregano.override({:current_environment => (env = Oregano::Node::Environment.create(:testload, [ modules_dir ]))}, "test") do
         node.environment = env
         expect(epp_function.call(scope, 'testmodule/the_x.epp', { 'x' => '3'} )).to eql("The x is 3")
       end
@@ -140,7 +140,7 @@ describe "the epp function" do
     filename = File.join(file_path, "template.epp")
     File.open(filename, "w+") { |f| f.write(content) }
 
-    Puppet::Parser::Files.stubs(:find_template).returns(filename)
+    Oregano::Parser::Files.stubs(:find_template).returns(filename)
     epp_function.call(scope, 'template', args_hash)
   end
 
@@ -149,7 +149,7 @@ describe "the epp function" do
     filename = File.join(file_path, "template.epp")
     File.open(filename, "w+") { |f| f.write(content) }
 
-    Puppet::Parser::Files.stubs(:find_template).returns(filename)
+    Oregano::Parser::Files.stubs(:find_template).returns(filename)
     epp_function.call(scope, 'template')
   end
 

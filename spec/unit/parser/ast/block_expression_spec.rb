@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/parser/ast/block_expression'
+require 'oregano/parser/ast/block_expression'
 
-describe 'Puppet::Parser::AST::BlockExpression' do
-  class StackDepthAST < Puppet::Parser::AST
+describe 'Oregano::Parser::AST::BlockExpression' do
+  class StackDepthAST < Oregano::Parser::AST
     attr_reader :call_depth
     def evaluate(*options)
       @call_depth = caller.length
@@ -23,7 +23,7 @@ describe 'Puppet::Parser::AST::BlockExpression' do
   end
 
   def block_of(children)
-    Puppet::Parser::AST::BlockExpression.new(:children => children)
+    Oregano::Parser::AST::BlockExpression.new(:children => children)
   end
 
   def assert_all_at_same_depth(*probes)

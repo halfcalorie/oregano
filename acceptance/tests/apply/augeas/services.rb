@@ -32,7 +32,7 @@ augeas { 'add_services_entry':
 }
 EOF
 
-      on hosts, puppet_apply('--verbose'), :stdin => manifest
+      on hosts, oregano_apply('--verbose'), :stdin => manifest
       on hosts, "fgrep 'Doom 666/udp' /etc/services"
     end
 
@@ -48,7 +48,7 @@ augeas { 'change_service_protocol':
 }
 EOF
 
-      on hosts, puppet_apply('--verbose'), :stdin => manifest
+      on hosts, oregano_apply('--verbose'), :stdin => manifest
       on hosts, "fgrep 'Doom 666/tcp' /etc/services"
     end
 
@@ -64,7 +64,7 @@ augeas { 'del_service_entry':
 }
 EOF
 
-      on hosts, puppet_apply('--verbose'), :stdin => manifest
+      on hosts, oregano_apply('--verbose'), :stdin => manifest
       on hosts, "fgrep 'Doom 666/tcp' /etc/services", :acceptable_exit_codes => [1]
     end
   ensure

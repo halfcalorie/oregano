@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/type'
+require 'oregano/type'
 
-describe Puppet::Type.type(:file).attrclass(:noop) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).attrclass(:noop) do
+  include OreganoSpec::Files
 
   before do
-    Puppet.settings.stubs(:use)
-    @file = Puppet::Type.newfile :path => make_absolute("/what/ever")
+    Oregano.settings.stubs(:use)
+    @file = Oregano::Type.newfile :path => make_absolute("/what/ever")
   end
 
   it "should accept true as a value" do
@@ -21,7 +21,7 @@ describe Puppet::Type.type(:file).attrclass(:noop) do
 
   describe "when set on a resource" do
     it "should default to the :noop setting" do
-      Puppet[:noop] = true
+      Oregano[:noop] = true
       expect(@file.noop).to eq(true)
     end
 

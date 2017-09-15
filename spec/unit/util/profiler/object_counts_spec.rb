@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/util/profiler'
+require 'oregano/util/profiler'
 
-describe Puppet::Util::Profiler::ObjectCounts do
+describe Oregano::Util::Profiler::ObjectCounts do
   it "reports the changes in the system object counts" do
-    profiler = Puppet::Util::Profiler::ObjectCounts.new(nil, nil)
+    profiler = Oregano::Util::Profiler::ObjectCounts.new(nil, nil)
 
     message = profiler.finish(profiler.start)
 

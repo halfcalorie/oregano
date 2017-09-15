@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:exec) do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:exec) do
+  include OreganoSpec::Files
 
   def exec_tester(command, exitstatus = 0, rest = {})
-    Puppet.features.stubs(:root?).returns(true)
+    Oregano.features.stubs(:root?).returns(true)
 
     output = rest.delete(:output) || ''
 
-    output = Puppet::Util::Execution::ProcessOutput.new(output, exitstatus)
+    output = Oregano::Util::Execution::ProcessOutput.new(output, exitstatus)
     tries  = rest[:tries] || 1
 
     args = {
@@ -20,10 +20,10 @@ describe Puppet::Type.type(:exec) do
       :returns   => 0
     }.merge(rest)
 
-    exec = Puppet::Type.type(:exec).new(args)
+    exec = Oregano::Type.type(:exec).new(args)
 
     status = stub "process", :exitstatus => exitstatus
-    Puppet::Util::Execution.expects(:execute).times(tries).
+    Oregano::Util::Execution.expects(:execute).times(tries).
       with() { |*args|
         args[0] == command &&
         args[1][:override_locale] == false &&
@@ -42,7 +42,7 @@ describe Puppet::Type.type(:exec) do
   describe "when not stubbing the provider" do
     before do
       path = tmpdir('path')
-      ext = Puppet.features.microsoft_windows? ? '.exe' : ''
+      ext = Oregano.features.microsoft_windows? ? '.exe' : ''
       true_cmd = File.join(path, "true#{ext}")
       false_cmd = File.join(path, "false#{ext}")
 
@@ -56,7 +56,7 @@ describe Puppet::Type.type(:exec) do
     end
 
     it "should return :executed_command as its event" do
-      resource = Puppet::Type.type(:exec).new :command => @command
+      resource = Oregano::Type.type(:exec).new :command => @command
       expect(resource.parameter(:returns).event.name).to eq(:executed_command)
     end
 
@@ -67,12 +67,12 @@ describe Puppet::Type.type(:exec) do
 
       it "should report a failure" do
         expect { exec_tester('false', 1).refresh }.
-          to raise_error(Puppet::Error, /^'false' returned 1 instead of/)
+          to raise_error(Oregano::Error, /^'false' returned 1 instead of/)
       end
 
       it "should redact sensitive commands on failure" do
         expect { exec_tester('false', 1, :sensitive_parameters => [:command]).refresh }.
-            to raise_error(Puppet::Error, /^\[command redacted\] returned 1 instead of/)
+            to raise_error(Oregano::Error, /^\[command redacted\] returned 1 instead of/)
       end
 
       it "should not report a failure if the exit status is specified in a returns array" do
@@ -81,12 +81,12 @@ describe Puppet::Type.type(:exec) do
 
       it "should report a failure if the exit status is not specified in a returns array" do
         expect { exec_tester('false', 1, :returns => [0, 100]).refresh }.
-          to raise_error(Puppet::Error, /^'false' returned 1 instead of/)
+          to raise_error(Oregano::Error, /^'false' returned 1 instead of/)
       end
 
       it "should report redact sensitive commands if the exit status is not specified in a returns array" do
         expect { exec_tester('false', 1, :returns => [0, 100], :sensitive_parameters => [:command]).refresh }.
-            to raise_error(Puppet::Error, /^\[command redacted\] returned 1 instead of/)
+            to raise_error(Oregano::Error, /^\[command redacted\] returned 1 instead of/)
       end
 
       it "should log the output on success" do
@@ -102,7 +102,7 @@ describe Puppet::Type.type(:exec) do
       it "should log the output on failure" do
         output = "output1\noutput2\n"
         expect { exec_tester('false', 1, :output => output, :logoutput => true).refresh }.
-          to raise_error(Puppet::Error)
+          to raise_error(Oregano::Error)
 
         output.split("\n").each do |line|
           log = @logs.shift
@@ -116,7 +116,7 @@ describe Puppet::Type.type(:exec) do
       it "should log the output on failure" do
         output = "output1\noutput2\n"
         expect { exec_tester('false', 1, :output => output, :logoutput => :on_failure).refresh }.
-          to raise_error(Puppet::Error, /^'false' returned 1 instead of/)
+          to raise_error(Oregano::Error, /^'false' returned 1 instead of/)
 
         output.split("\n").each do |line|
           log = @logs.shift
@@ -128,7 +128,7 @@ describe Puppet::Type.type(:exec) do
       it "should redact the command on failure" do
         output = "output1\noutput2\n"
         expect { exec_tester('false', 1, :output => output, :logoutput => :on_failure, :sensitive_parameters => [:command]).refresh }.
-            to raise_error(Puppet::Error, /^\[command redacted\] returned 1 instead of/)
+            to raise_error(Oregano::Error, /^\[command redacted\] returned 1 instead of/)
 
         output.split("\n").each do |line|
           log = @logs.shift
@@ -143,7 +143,7 @@ describe Puppet::Type.type(:exec) do
         expect {
           exec_tester('false', 1, :output => output, :returns => [0, 100],
                :logoutput => :on_failure).refresh
-        }.to raise_error(Puppet::Error, /^'false' returned 1 instead of/)
+        }.to raise_error(Oregano::Error, /^'false' returned 1 instead of/)
 
         output.split("\n").each do |line|
           log = @logs.shift
@@ -158,7 +158,7 @@ describe Puppet::Type.type(:exec) do
         expect {
           exec_tester('false', 1, :output => output, :returns => [0, 100],
                       :logoutput => :on_failure, :sensitive_parameters => [:command]).refresh
-        }.to raise_error(Puppet::Error, /^\[command redacted\] returned 1 instead of/)
+        }.to raise_error(Oregano::Error, /^\[command redacted\] returned 1 instead of/)
 
         output.split("\n").each do |line|
           log = @logs.shift
@@ -182,22 +182,22 @@ describe Puppet::Type.type(:exec) do
       it "should repeat the command attempt 'tries' times on failure and produce an error" do
         tries = 5
         resource = exec_tester("false", 1, :tries => tries, :try_sleep => 0)
-        expect { resource.refresh }.to raise_error(Puppet::Error)
+        expect { resource.refresh }.to raise_error(Oregano::Error)
       end
     end
   end
 
   it "should be able to autorequire files mentioned in the command" do
     foo = make_absolute('/bin/foo')
-    catalog = Puppet::Resource::Catalog.new
-    tmp = Puppet::Type.type(:file).new(:name => foo)
-    execer = Puppet::Type.type(:exec).new(:name => foo)
+    catalog = Oregano::Resource::Catalog.new
+    tmp = Oregano::Type.type(:file).new(:name => foo)
+    execer = Oregano::Type.type(:exec).new(:name => foo)
 
     catalog.add_resource tmp
     catalog.add_resource execer
     dependencies = execer.autorequire(catalog)
 
-    expect(dependencies.collect(&:to_s)).to eq([Puppet::Relationship.new(tmp, execer).to_s])
+    expect(dependencies.collect(&:to_s)).to eq([Oregano::Relationship.new(tmp, execer).to_s])
   end
 
   describe "when handling the path parameter" do
@@ -207,7 +207,7 @@ describe Puppet::Type.type(:exec) do
       "both array and path-separator delimited lists" => ["one", "two#{File::PATH_SEPARATOR}three", "four"],
     }.each do |test, input|
       it "should accept #{test}" do
-        type = Puppet::Type.type(:exec).new(:name => @command, :path => input)
+        type = Oregano::Type.type(:exec).new(:name => @command, :path => input)
         expect(type[:path]).to eq(expect)
       end
     end
@@ -226,48 +226,48 @@ describe Puppet::Type.type(:exec) do
       end
 
       it "should use the path separator of the current platform" do
-        type = Puppet::Type.type(:exec).new(:name => @command, :path => "fooqbarqbaz")
+        type = Oregano::Type.type(:exec).new(:name => @command, :path => "fooqbarqbaz")
         expect(type[:path]).to eq(%w[foo bar baz])
       end
     end
   end
 
   describe "when setting user" do
-    describe "on POSIX systems", :if => Puppet.features.posix? do
+    describe "on POSIX systems", :if => Oregano.features.posix? do
       it "should fail if we are not root" do
-        Puppet.features.stubs(:root?).returns(false)
+        Oregano.features.stubs(:root?).returns(false)
         expect {
-          Puppet::Type.type(:exec).new(:name => '/bin/true whatever', :user => 'input')
-        }.to raise_error Puppet::Error, /Parameter user failed/
+          Oregano::Type.type(:exec).new(:name => '/bin/true whatever', :user => 'input')
+        }.to raise_error Oregano::Error, /Parameter user failed/
       end
 
       it "accepts the current user" do
-        Puppet.features.stubs(:root?).returns(false)
+        Oregano.features.stubs(:root?).returns(false)
         Etc.stubs(:getpwuid).returns(Struct::Passwd.new('input'))
 
-        type = Puppet::Type.type(:exec).new(:name => '/bin/true whatever', :user => 'input')
+        type = Oregano::Type.type(:exec).new(:name => '/bin/true whatever', :user => 'input')
 
         expect(type[:user]).to eq('input')
       end
 
       ['one', 2, 'root', 4294967295, 4294967296].each do |value|
         it "should accept '#{value}' as user if we are root" do
-          Puppet.features.stubs(:root?).returns(true)
-          type = Puppet::Type.type(:exec).new(:name => '/bin/true whatever', :user => value)
+          Oregano.features.stubs(:root?).returns(true)
+          type = Oregano::Type.type(:exec).new(:name => '/bin/true whatever', :user => value)
           expect(type[:user]).to eq(value)
         end
       end
     end
 
-    describe "on Windows systems", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows systems", :if => Oregano.features.microsoft_windows? do
       before :each do
-        Puppet.features.stubs(:root?).returns(true)
+        Oregano.features.stubs(:root?).returns(true)
       end
 
       it "should reject user parameter" do
         expect {
-          Puppet::Type.type(:exec).new(:name => 'c:\windows\notepad.exe', :user => 'input')
-        }.to raise_error Puppet::Error, /Unable to execute commands as other users on Windows/
+          Oregano::Type.type(:exec).new(:name => 'c:\windows\notepad.exe', :user => 'input')
+        }.to raise_error Oregano::Error, /Unable to execute commands as other users on Windows/
       end
     end
   end
@@ -276,19 +276,19 @@ describe Puppet::Type.type(:exec) do
     shared_examples_for "exec[:group]" do
       ['one', 2, 'wheel', 4294967295, 4294967296].each do |value|
         it "should accept '#{value}' without error or judgement" do
-          type = Puppet::Type.type(:exec).new(:name => @command, :group => value)
+          type = Oregano::Type.type(:exec).new(:name => @command, :group => value)
           expect(type[:group]).to eq(value)
         end
       end
     end
 
     describe "when running as root" do
-      before :each do Puppet.features.stubs(:root?).returns(true) end
+      before :each do Oregano.features.stubs(:root?).returns(true) end
       it_behaves_like "exec[:group]"
     end
 
     describe "when not running as root" do
-      before :each do Puppet.features.stubs(:root?).returns(false) end
+      before :each do Oregano.features.stubs(:root?).returns(false) end
       it_behaves_like "exec[:group]"
     end
   end
@@ -297,7 +297,7 @@ describe Puppet::Type.type(:exec) do
     it_should_behave_like "all path parameters", :cwd, :array => false do
       def instance(path)
         # Specify shell provider so we don't have to care about command validation
-        Puppet::Type.type(:exec).new(:name => @executable, :cwd => path, :provider => :shell)
+        Oregano::Type.type(:exec).new(:name => @executable, :cwd => path, :provider => :shell)
       end
     end
   end
@@ -311,14 +311,14 @@ describe Puppet::Type.type(:exec) do
 
         def test(command, valid)
           if @param == :name then
-            instance = Puppet::Type.type(:exec).new()
+            instance = Oregano::Type.type(:exec).new()
           else
-            instance = Puppet::Type.type(:exec).new(:name => @executable)
+            instance = Oregano::Type.type(:exec).new(:name => @executable)
           end
           if valid then
             instance.provider.expects(:validatecmd).returns(true)
           else
-            instance.provider.expects(:validatecmd).raises(Puppet::Error, "from a stub")
+            instance.provider.expects(:validatecmd).raises(Oregano::Error, "from a stub")
           end
           instance[@param] = command
         end
@@ -329,7 +329,7 @@ describe Puppet::Type.type(:exec) do
 
         it "should fail if the provider calls the command invalid" do
           expect { test(command, false) }.
-            to raise_error Puppet::Error, /Parameter #{@param} failed on Exec\[.*\]: from a stub/
+            to raise_error Oregano::Error, /Parameter #{@param} failed on Exec\[.*\]: from a stub/
         end
       end
     end
@@ -338,7 +338,7 @@ describe Puppet::Type.type(:exec) do
   shared_examples_for "all exec command parameters that take arrays" do |param|
     describe "when given an array of inputs" do
       before :each do
-        @test = Puppet::Type.type(:exec).new(:name => @executable)
+        @test = Oregano::Type.type(:exec).new(:name => @executable)
       end
 
       it "should accept the array when all commands return valid" do
@@ -370,11 +370,11 @@ describe Puppet::Type.type(:exec) do
   describe "when setting command" do
     subject { described_class.new(:name => @command) }
     it "fails when passed an Array" do
-      expect { subject[:command] = [] }.to raise_error Puppet::Error, /Command must be a String/
+      expect { subject[:command] = [] }.to raise_error Oregano::Error, /Command must be a String/
     end
 
     it "fails when passed a Hash" do
-      expect { subject[:command] = {} }.to raise_error Puppet::Error, /Command must be a String/
+      expect { subject[:command] = {} }.to raise_error Oregano::Error, /Command must be a String/
     end
   end
 
@@ -384,7 +384,7 @@ describe Puppet::Type.type(:exec) do
 
   describe "for simple parameters" do
     before :each do
-      @exec = Puppet::Type.type(:exec).new(:name => @executable)
+      @exec = Oregano::Type.type(:exec).new(:name => @executable)
     end
 
     describe "when setting environment" do
@@ -403,7 +403,7 @@ describe Puppet::Type.type(:exec) do
       }.each do |name, data|
         it "should reject #{name} without assignment" do
           expect { @exec[:environment] = data }.
-            to raise_error Puppet::Error, /Invalid environment setting/
+            to raise_error Oregano::Error, /Invalid environment setting/
         end
       end
     end
@@ -424,45 +424,45 @@ describe Puppet::Type.type(:exec) do
       ['1/2', '', 'foo', '5foo'].each do |invalid|
         it "should reject '#{invalid}' as invalid" do
           expect { @exec[:timeout] = invalid }.
-            to raise_error Puppet::Error, /The timeout must be a number/
+            to raise_error Oregano::Error, /The timeout must be a number/
         end
 
         it "should reject '#{invalid}' in an array as invalid" do
           expect { @exec[:timeout] = [invalid] }.
-            to raise_error Puppet::Error, /The timeout must be a number/
+            to raise_error Oregano::Error, /The timeout must be a number/
         end
       end
 
       describe 'when timeout is exceeded' do
         subject do
-          ruby_path = Puppet::Util::Execution.ruby_path()
-          Puppet::Type.type(:exec).new(:name => "#{ruby_path} -e 'sleep 1'", :timeout => '0.1')
+          ruby_path = Oregano::Util::Execution.ruby_path()
+          Oregano::Type.type(:exec).new(:name => "#{ruby_path} -e 'sleep 1'", :timeout => '0.1')
         end
 
-        context 'on POSIX', :unless => Puppet.features.microsoft_windows? do
-          it 'sends a SIGTERM and raises a Puppet::Error' do
+        context 'on POSIX', :unless => Oregano.features.microsoft_windows? do
+          it 'sends a SIGTERM and raises a Oregano::Error' do
             Process.expects(:kill).at_least_once
-            expect { subject.refresh }.to raise_error Puppet::Error, "Command exceeded timeout"
+            expect { subject.refresh }.to raise_error Oregano::Error, "Command exceeded timeout"
           end
         end
 
-        context 'on Windows', :if => Puppet.features.microsoft_windows? do
-          it 'raises a Puppet::Error' do
-            expect { subject.refresh }.to raise_error Puppet::Error, "Command exceeded timeout"
+        context 'on Windows', :if => Oregano.features.microsoft_windows? do
+          it 'raises a Oregano::Error' do
+            expect { subject.refresh }.to raise_error Oregano::Error, "Command exceeded timeout"
           end
         end
       end
 
       it "should convert timeout to a float" do
         command = make_absolute('/bin/false')
-        resource = Puppet::Type.type(:exec).new :command => command, :timeout => "12"
+        resource = Oregano::Type.type(:exec).new :command => command, :timeout => "12"
         expect(resource[:timeout]).to be_a(Float)
         expect(resource[:timeout]).to eq(12.0)
       end
 
       it "should munge negative timeouts to 0.0" do
         command = make_absolute('/bin/false')
-        resource = Puppet::Type.type(:exec).new :command => command, :timeout => "-12.0"
+        resource = Oregano::Type.type(:exec).new :command => command, :timeout => "-12.0"
         expect(resource.parameter(:timeout).value).to be_a(Float)
         expect(resource.parameter(:timeout).value).to eq(0.0)
       end
@@ -487,14 +487,14 @@ describe Puppet::Type.type(:exec) do
       [-3.5, -1, 0, 0.2, '1/2', '1_000_000', '+12', '', 'foo'].each do |invalid|
         it "should reject '#{invalid}' as invalid" do
           expect { @exec[:tries] = invalid }.
-            to raise_error Puppet::Error, /Tries must be an integer/
+            to raise_error Oregano::Error, /Tries must be an integer/
         end
 
         if "REVISIT: too much test log spam" == "a good thing" then
           it "should reject '#{invalid}' in an array as invalid" do
             pending "inconsistent, but this is not supporting arrays, unlike timeout"
             expect { @exec[:tries] = [invalid] }.
-              to raise_error Puppet::Error, /Tries must be an integer/
+              to raise_error Oregano::Error, /Tries must be an integer/
           end
         end
       end
@@ -526,14 +526,14 @@ describe Puppet::Type.type(:exec) do
       }.each do |invalid, error|
         it "should reject '#{invalid}' as invalid" do
           expect { @exec[:try_sleep] = invalid }.
-            to raise_error Puppet::Error, /try_sleep #{error}/
+            to raise_error Oregano::Error, /try_sleep #{error}/
         end
 
         if "REVISIT: too much test log spam" == "a good thing" then
           it "should reject '#{invalid}' in an array as invalid" do
             pending "inconsistent, but this is not supporting arrays, unlike timeout"
             expect { @exec[:try_sleep] = [invalid] }.
-              to raise_error Puppet::Error, /try_sleep #{error}/
+              to raise_error Oregano::Error, /try_sleep #{error}/
           end
         end
       end
@@ -550,7 +550,7 @@ describe Puppet::Type.type(:exec) do
       [1, 0, "1", "0", "yes", "y", "no", "n"].each do |value|
         it "should reject '#{value}'" do
           expect { @exec[:refreshonly] = value }.
-            to raise_error(Puppet::Error,
+            to raise_error(Oregano::Error,
               /Invalid value #{value.inspect}\. Valid values are true, false/
             )
         end
@@ -562,7 +562,7 @@ describe Puppet::Type.type(:exec) do
     it_should_behave_like "all path parameters", :creates, :array => true do
       def instance(path)
         # Specify shell provider so we don't have to care about command validation
-        Puppet::Type.type(:exec).new(:name => @executable, :creates => path, :provider => :shell)
+        Oregano::Type.type(:exec).new(:name => @executable, :creates => path, :provider => :shell)
       end
     end
   end
@@ -579,7 +579,7 @@ describe Puppet::Type.type(:exec) do
 
   describe "#check" do
     before :each do
-      @test = Puppet::Type.type(:exec).new(:name => @executable)
+      @test = Oregano::Type.type(:exec).new(:name => @executable)
     end
 
     describe ":refreshonly" do
@@ -701,7 +701,7 @@ describe Puppet::Type.type(:exec) do
         end
 
         it "should emit output to debug" do
-          Puppet::Util::Log.level = :debug
+          Oregano::Util::Log.level = :debug
           @test[param] = @fail
           expect(@test.check_all_attributes).to eq(true)
           expect(@logs.shift.message).to eq("test output")
@@ -712,7 +712,7 @@ describe Puppet::Type.type(:exec) do
 
   describe "#retrieve" do
     before :each do
-      @exec_resource = Puppet::Type.type(:exec).new(:name => @bogus_cmd)
+      @exec_resource = Oregano::Type.type(:exec).new(:name => @bogus_cmd)
     end
 
     it "should return :notrun when check_all_attributes returns true" do
@@ -734,7 +734,7 @@ describe Puppet::Type.type(:exec) do
 
   describe "#output" do
     before :each do
-      @exec_resource = Puppet::Type.type(:exec).new(:name => @bogus_cmd)
+      @exec_resource = Oregano::Type.type(:exec).new(:name => @bogus_cmd)
     end
 
     it "should return the provider's run output" do
@@ -751,7 +751,7 @@ describe Puppet::Type.type(:exec) do
 
   describe "#refresh" do
     before :each do
-      @exec_resource = Puppet::Type.type(:exec).new(:name => @bogus_cmd)
+      @exec_resource = Oregano::Type.type(:exec).new(:name => @bogus_cmd)
     end
 
     it "should call provider run with the refresh parameter if it is set" do
@@ -785,14 +785,14 @@ describe Puppet::Type.type(:exec) do
   end
 
   describe "relative and absolute commands vs path" do
-    let :type do Puppet::Type.type(:exec) end
+    let :type do Oregano::Type.type(:exec) end
     let :rel  do 'echo' end
     let :abs  do make_absolute('/bin/echo') end
     let :path do make_absolute('/bin') end
 
     it "should fail with relative command and no path" do
       expect { type.new(:command => rel) }.
-        to raise_error Puppet::Error, /no path was specified/
+        to raise_error Oregano::Error, /no path was specified/
     end
 
     it "should accept a relative command with a path" do
@@ -809,9 +809,9 @@ describe Puppet::Type.type(:exec) do
   end
   describe "when providing a umask" do
     it "should fail if an invalid umask is used" do
-      resource = Puppet::Type.type(:exec).new :command => @command
-      expect { resource[:umask] = '0028'}.to raise_error(Puppet::ResourceError, /umask specification is invalid/)
-      expect { resource[:umask] = '28' }.to raise_error(Puppet::ResourceError, /umask specification is invalid/)
+      resource = Oregano::Type.type(:exec).new :command => @command
+      expect { resource[:umask] = '0028'}.to raise_error(Oregano::ResourceError, /umask specification is invalid/)
+      expect { resource[:umask] = '28' }.to raise_error(Oregano::ResourceError, /umask specification is invalid/)
     end
   end
 end

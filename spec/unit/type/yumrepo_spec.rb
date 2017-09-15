@@ -1,43 +1,43 @@
 require 'spec_helper'
-require 'puppet'
+require 'oregano'
 
 shared_examples_for "a yumrepo parameter that can be absent" do |param|
   it "can be set as :absent" do
-    described_class.new(:name => 'puppetlabs', param => :absent)
+    described_class.new(:name => 'oreganolabs', param => :absent)
   end
   it "can be set as \"absent\"" do
-    described_class.new(:name => 'puppetlabs', param => 'absent')
+    described_class.new(:name => 'oreganolabs', param => 'absent')
   end
 end
 
 shared_examples_for "a yumrepo parameter that expects a natural value" do |param|
   it "accepts a valid positive integer" do
-    instance = described_class.new(:name => 'puppetlabs', param => '12')
+    instance = described_class.new(:name => 'oreganolabs', param => '12')
     expect(instance[param]).to eq '12'
   end
   it "rejects invalid negative integer" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => '-12'
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
   it "rejects invalid non-integer" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => 'I\'m a six'
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
   it "rejects invalid string with integers inside" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => 'I\'m a 6'
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
 end
 
@@ -46,30 +46,30 @@ shared_examples_for "a yumrepo parameter that expects a boolean parameter" do |p
 
   valid_values.each do |value|
     it "accepts #{value} downcased to #{value.downcase} and capitalizes it" do
-      instance = described_class.new(:name => 'puppetlabs', param => value.downcase)
+      instance = described_class.new(:name => 'oreganolabs', param => value.downcase)
       expect(instance[param]).to eq value.downcase.capitalize
     end
     it "fails on valid value #{value} contained in another value" do
         expect {
           described_class.new(
-            :name => 'puppetlabs',
+            :name => 'oreganolabs',
             param => "bla#{value}bla"
           )
-        }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+        }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
     end
   end
 
   it "rejects invalid boolean values" do
     expect {
-      described_class.new(:name => 'puppetlabs', param => 'flase')
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+      described_class.new(:name => 'oreganolabs', param => 'flase')
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
 end
 
 shared_examples_for "a yumrepo parameter that accepts a single URL" do |param|
   it "can accept a single URL" do
     described_class.new(
-      :name => 'puppetlabs',
+      :name => 'oreganolabs',
       param => 'http://localhost/yumrepos'
     )
   end
@@ -77,26 +77,26 @@ shared_examples_for "a yumrepo parameter that accepts a single URL" do |param|
   it "fails if an invalid URL is provided" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => "that's no URL!"
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
 
   it "fails if a valid URL uses an invalid URI scheme" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => 'ldap://localhost/yumrepos'
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
 end
 
 shared_examples_for "a yumrepo parameter that accepts multiple URLs" do |param|
   it "can accept multiple URLs" do
     described_class.new(
-      :name => 'puppetlabs',
+      :name => 'oreganolabs',
       param => 'http://localhost/yumrepos http://localhost/more-yumrepos'
     )
   end
@@ -104,10 +104,10 @@ shared_examples_for "a yumrepo parameter that accepts multiple URLs" do |param|
   it "fails if multiple URLs are given and one is invalid" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => "http://localhost/yumrepos That's no URL!"
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
 end
 
@@ -115,7 +115,7 @@ shared_examples_for "a yumrepo parameter that accepts kMG units" do |param|
   %w[k M G].each do |unit|
     it "can accept an integer with #{unit} units" do
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => "123#{unit}"
       )
     end
@@ -124,14 +124,14 @@ shared_examples_for "a yumrepo parameter that accepts kMG units" do |param|
   it "fails if wrong unit passed" do
     expect {
       described_class.new(
-        :name => 'puppetlabs',
+        :name => 'oreganolabs',
         param => '123J'
       )
-    }.to raise_error(Puppet::ResourceError, /Parameter #{param} failed/)
+    }.to raise_error(Oregano::ResourceError, /Parameter #{param} failed/)
   end
 end
 
-describe Puppet::Type.type(:yumrepo) do
+describe Oregano::Type.type(:yumrepo) do
   it "has :name as its namevar" do
     expect(described_class.key_attributes).to eq [:name]
   end
@@ -140,8 +140,8 @@ describe Puppet::Type.type(:yumrepo) do
 
     describe "name" do
       it "is a valid parameter" do
-        instance = described_class.new(:name => 'puppetlabs')
-        expect(instance.name).to eq 'puppetlabs'
+        instance = described_class.new(:name => 'oreganolabs')
+        expect(instance.name).to eq 'oreganolabs'
       end
     end
 
@@ -207,22 +207,22 @@ describe Puppet::Type.type(:yumrepo) do
 
       %w[roundrobin priority].each do |value|
         it "accepts a value of #{value}" do
-          described_class.new(:name => "puppetlabs", :failovermethod => value)
+          described_class.new(:name => "oreganolabs", :failovermethod => value)
         end
         it "fails on valid value #{value} contained in another value" do
           expect {
             described_class.new(
-              :name => 'puppetlabs',
+              :name => 'oreganolabs',
               :failovermethod => "bla#{value}bla"
             )
-          }.to raise_error(Puppet::ResourceError, /Parameter failovermethod failed/)
+          }.to raise_error(Oregano::ResourceError, /Parameter failovermethod failed/)
         end
       end
 
       it "raises an error if an invalid value is given" do
         expect {
-          described_class.new(:name => "puppetlabs", :failovermethod => "notavalidvalue")
-        }.to raise_error(Puppet::ResourceError, /Parameter failovermethod failed/)
+          described_class.new(:name => "oreganolabs", :failovermethod => "notavalidvalue")
+        }.to raise_error(Oregano::ResourceError, /Parameter failovermethod failed/)
       end
 
       it_behaves_like "a yumrepo parameter that can be absent", :failovermethod
@@ -236,22 +236,22 @@ describe Puppet::Type.type(:yumrepo) do
     describe "http_caching" do
       %w[packages all none].each do |value|
         it "accepts a valid value of #{value}" do
-          described_class.new(:name => 'puppetlabs', :http_caching => value)
+          described_class.new(:name => 'oreganolabs', :http_caching => value)
         end
         it "fails on valid value #{value} contained in another value" do
           expect {
             described_class.new(
-              :name => 'puppetlabs',
+              :name => 'oreganolabs',
               :http_caching => "bla#{value}bla"
             )
-          }.to raise_error(Puppet::ResourceError, /Parameter http_caching failed/)
+          }.to raise_error(Oregano::ResourceError, /Parameter http_caching failed/)
         end
       end
 
       it "rejects invalid values" do
         expect {
-          described_class.new(:name => 'puppetlabs', :http_caching => 'yes')
-        }.to raise_error(Puppet::ResourceError, /Parameter http_caching failed/)
+          described_class.new(:name => 'oreganolabs', :http_caching => 'yes')
+        }.to raise_error(Oregano::ResourceError, /Parameter http_caching failed/)
       end
 
       it_behaves_like "a yumrepo parameter that can be absent", :http_caching
@@ -269,14 +269,14 @@ describe Puppet::Type.type(:yumrepo) do
       it "accepts dhm units" do
         %W[d h m].each do |unit|
           described_class.new(
-            :name            => 'puppetlabs',
+            :name            => 'oreganolabs',
             :metadata_expire => "123#{unit}"
           )
         end
       end
 
       it "accepts never as value" do
-        described_class.new(:name => 'puppetlabs', :metadata_expire => 'never')
+        described_class.new(:name => 'oreganolabs', :metadata_expire => 'never')
       end
     end
 
@@ -293,7 +293,7 @@ describe Puppet::Type.type(:yumrepo) do
       it_behaves_like "a yumrepo parameter that can be absent", :proxy
       it "accepts _none_" do
         described_class.new(
-          :name  => 'puppetlabs',
+          :name  => 'oreganolabs',
           :proxy => "_none_"
         )
       end
@@ -358,7 +358,7 @@ describe Puppet::Type.type(:yumrepo) do
 
       it "accepts percentage as unit" do
         described_class.new(
-          :name     => 'puppetlabs',
+          :name     => 'oreganolabs',
           :throttle => '123%'
         )
       end

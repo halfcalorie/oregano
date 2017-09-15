@@ -1,13 +1,13 @@
-test_name "Install puppet gem"
+test_name "Install oregano gem"
 
-require 'puppet/acceptance/common_utils'
+require 'oregano/acceptance/common_utils'
 
 agents.each do |agent|
   sha = ENV['SHA']
-  base_url = "http://builds.puppetlabs.lan/puppet/#{sha}/artifacts"
+  base_url = "http://builds.oreganolabs.lan/oregano/#{sha}/artifacts"
 
-  ruby_command = Puppet::Acceptance::CommandUtils.ruby_command(agent)
-  gem_command = Puppet::Acceptance::CommandUtils.gem_command(agent)
+  ruby_command = Oregano::Acceptance::CommandUtils.ruby_command(agent)
+  gem_command = Oregano::Acceptance::CommandUtils.gem_command(agent)
 
   # retrieve the build data, since the gem version is based on the short git
   # describe, not the full git SHA
@@ -21,20 +21,20 @@ agents.each do |agent|
 
     arch = agent[:ruby_arch] || 'x86'
     gem_arch = arch == 'x64' ? 'x64-mingw32' : 'x86-mingw32'
-    url = "#{base_url}/puppet-#{gem_version}-#{gem_arch}.gem"
+    url = "#{base_url}/oregano-#{gem_version}-#{gem_arch}.gem"
   else
-    url = "#{base_url}/puppet-#{gem_version}.gem"
+    url = "#{base_url}/oregano-#{gem_version}.gem"
   end
 
-  step "Download puppet gem from #{url}"
-  on(agent, "curl -s -o puppet.gem #{url}")
+  step "Download oregano gem from #{url}"
+  on(agent, "curl -s -o oregano.gem #{url}")
 
-  step "Install puppet.gem"
-  on(agent, "#{gem_command} install puppet.gem")
+  step "Install oregano.gem"
+  on(agent, "#{gem_command} install oregano.gem")
 
   step "Verify it's sane"
-  on(agent, puppet('--version'))
-  on(agent, puppet('apply', "-e \"notify { 'hello': }\"")) do |result|
+  on(agent, oregano('--version'))
+  on(agent, oregano('apply', "-e \"notify { 'hello': }\"")) do |result|
     assert_match(/defined 'message' as 'hello'/, result.stdout)
   end
 end

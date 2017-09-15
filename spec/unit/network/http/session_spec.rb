@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/http'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP::Session do
+describe Oregano::Network::HTTP::Session do
   let(:connection) { stub('connection') }
 
   def create_session(connection, expiration_time = nil)
     expiration_time ||= Time.now + 60 * 60
 
-    Puppet::Network::HTTP::Session.new(connection, expiration_time)
+    Oregano::Network::HTTP::Session.new(connection, expiration_time)
   end
 
   it 'provides access to its connection' do

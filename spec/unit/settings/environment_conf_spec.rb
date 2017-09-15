@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/settings/environment_conf.rb'
+require 'oregano/settings/environment_conf.rb'
 
-describe Puppet::Settings::EnvironmentConf do
+describe Oregano::Settings::EnvironmentConf do
 
   def setup_environment_conf(config, conf_hash)
     conf_hash.each do |setting,value|
@@ -13,7 +13,7 @@ describe Puppet::Settings::EnvironmentConf do
 
   context "with config" do
     let(:config) { stub('config') }
-    let(:envconf) { Puppet::Settings::EnvironmentConf.new("/some/direnv", config, ["/global/modulepath"]) }
+    let(:envconf) { Oregano::Settings::EnvironmentConf.new("/some/direnv", config, ["/global/modulepath"]) }
 
     it "reads a modulepath from config and does not include global_module_path" do
       setup_environment_conf(config, :modulepath => '/some/modulepath')
@@ -46,7 +46,7 @@ describe Puppet::Settings::EnvironmentConf do
     end
 
     it "can retrieve untruthy settings" do
-      Puppet[:static_catalogs] = true
+      Oregano[:static_catalogs] = true
       setup_environment_conf(config, :static_catalogs => false)
 
       expect(envconf.static_catalogs).to eq(false)
@@ -60,7 +60,7 @@ describe Puppet::Settings::EnvironmentConf do
   end
 
   context "without config" do
-    let(:envconf) { Puppet::Settings::EnvironmentConf.new("/some/direnv", nil, ["/global/modulepath"]) }
+    let(:envconf) { Oregano::Settings::EnvironmentConf.new("/some/direnv", nil, ["/global/modulepath"]) }
 
     it "returns a default modulepath when config has none, with global_module_path" do
       expect(envconf.modulepath).to eq(
@@ -93,13 +93,13 @@ describe Puppet::Settings::EnvironmentConf do
   describe "with disable_per_environment_manifest" do
 
     let(:config) { stub('config') }
-    let(:envconf) { Puppet::Settings::EnvironmentConf.new("/some/direnv", config, ["/global/modulepath"]) }
+    let(:envconf) { Oregano::Settings::EnvironmentConf.new("/some/direnv", config, ["/global/modulepath"]) }
 
     context "set true" do
 
       before(:each) do
-        Puppet[:default_manifest] = File.expand_path('/default/manifest')
-        Puppet[:disable_per_environment_manifest] = true
+        Oregano[:default_manifest] = File.expand_path('/default/manifest')
+        Oregano[:disable_per_environment_manifest] = true
       end
 
       it "ignores environment.conf manifest" do
@@ -126,8 +126,8 @@ describe Puppet::Settings::EnvironmentConf do
     it "uses environment.conf when false" do
       setup_environment_conf(config, :manifest => '/some/manifest.pp')
 
-      Puppet[:default_manifest] = File.expand_path('/default/manifest')
-      Puppet[:disable_per_environment_manifest] = false
+      Oregano[:default_manifest] = File.expand_path('/default/manifest')
+      Oregano[:disable_per_environment_manifest] = false
 
       expect(envconf.manifest).to eq(File.expand_path('/some/manifest.pp'))
     end

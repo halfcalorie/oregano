@@ -1,21 +1,21 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/file_bucket/dipper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano/file_bucket/dipper'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-describe Puppet::Type.type(:sshkey).provider(:parsed), '(integration)',
-  :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Type.type(:sshkey).provider(:parsed), '(integration)',
+  :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   before :each do
     # Don't backup to filebucket
-    Puppet::FileBucket::Dipper.any_instance.stubs(:backup)
+    Oregano::FileBucket::Dipper.any_instance.stubs(:backup)
     # We don't want to execute anything
     described_class.stubs(:filetype).
-      returns Puppet::Util::FileType::FileTypeFlat
+      returns Oregano::Util::FileType::FileTypeFlat
 
     @sshkey_file = tmpfile('sshkey_integration_specs')
     FileUtils.cp(my_fixture('sample'), @sshkey_file)
@@ -114,7 +114,7 @@ describe Puppet::Type.type(:sshkey).provider(:parsed), '(integration)',
                     target => '#{@sshkey_file}' }"
       expect {
       apply_compiled_manifest(manifest)
-      }.to raise_error(Puppet::ResourceError, /Invalid value "#{invalid_type}"/)
+      }.to raise_error(Oregano::ResourceError, /Invalid value "#{invalid_type}"/)
     end
 
     #single host_alias
@@ -141,9 +141,9 @@ describe Puppet::Type.type(:sshkey).provider(:parsed), '(integration)',
       expect(File.read(@sshkey_file)).not_to match(/#{sshkey_name}\s/)
     end
 
-    #puppet resource sshkey
+    #oregano resource sshkey
     it "should fetch an entry from resources" do
-      @resource_app = Puppet::Application[:resource]
+      @resource_app = Oregano::Application[:resource]
       @resource_app.preinit
       @resource_app.command_line.stubs(:args).
         returns([type_under_test, sshkey_name, "target=#{@sshkey_file}"])

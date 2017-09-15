@@ -1,6 +1,6 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/character_encoding'
+require 'oregano_spec/character_encoding'
 
 # The Ruby::Etc module is largely non-functional on Windows - many methods
 # simply return nil regardless of input, the Etc::Group struct is not defined,
@@ -9,7 +9,7 @@ require 'puppet_spec/character_encoding'
 # - We correctly set external encoding values IF they're valid UTF-8 bytes
 # - We do not modify non-UTF-8 values if they're NOT valid UTF-8 bytes
 
-describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
+describe Oregano::Etc, :if => !Oregano.features.microsoft_windows? do
   # http://www.fileformat.info/info/unicode/char/5e0c/index.htm
   # 希 Han Character 'rare; hope, expect, strive for'
   # In EUC_KR: \xfd \xf1 - 253 241
@@ -52,7 +52,7 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
   let(:euc_kr_group_struct) do
     # In an EUC_KR environment, values will come back as EUC_KR, even if they're
     # not valid in that encoding. For values that are valid in UTF-8 we expect
-    # their external encoding to be set to UTF-8 by Puppet::Etc. For values that
+    # their external encoding to be set to UTF-8 by Oregano::Etc. For values that
     # are invalid in UTF-8, we expect the string to be kept intact, unmodified,
     # as we can't transcode it.
     group = Etc::Group.new
@@ -107,10 +107,10 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
     it "should return a new Struct object with corresponding canonical_ members" do
       group = Etc::Group.new
       Etc.expects(subject).with(*params).returns(group)
-      puppet_group = Puppet::Etc.send(subject, *params)
+      oregano_group = Oregano::Etc.send(subject, *params)
 
-      expect(puppet_group.members).to include(*group.members)
-      expect(puppet_group.members).to include(*group.members.map { |mem| "canonical_#{mem}".to_sym })
+      expect(oregano_group.members).to include(*group.members)
+      expect(oregano_group.members).to include(*group.members.map { |mem| "canonical_#{mem}".to_sym })
 
       # Confirm we haven't just added the new members to the original struct object, ie this is really a new struct
       expect(group.members.any? { |elem| elem.match(/^canonical_/) }).to be_falsey
@@ -122,8 +122,8 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
       end
 
       let(:overridden) {
-        PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
-          Puppet::Etc.send(subject, *params)
+        OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
+          Oregano::Etc.send(subject, *params)
         end
       }
 
@@ -172,8 +172,8 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
       end
 
       let(:overridden) {
-        PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::EUC_KR) do
-          Puppet::Etc.send(subject, *params)
+        OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::EUC_KR) do
+          Oregano::Etc.send(subject, *params)
         end
       }
 
@@ -214,8 +214,8 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
       end
 
       let(:overridden) {
-        PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::ASCII) do
-          Puppet::Etc.send(subject, *params)
+        OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::ASCII) do
+          Oregano::Etc.send(subject, *params)
         end
       }
 
@@ -256,10 +256,10 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
     it "should return a new Struct object with corresponding canonical_ members" do
       user = Etc::Passwd.new
       Etc.expects(subject).with(*params).returns(user)
-      puppet_user = Puppet::Etc.send(subject, *params)
+      oregano_user = Oregano::Etc.send(subject, *params)
 
-      expect(puppet_user.members).to include(*user.members)
-      expect(puppet_user.members).to include(*user.members.map { |mem| "canonical_#{mem}".to_sym })
+      expect(oregano_user.members).to include(*user.members)
+      expect(oregano_user.members).to include(*user.members.map { |mem| "canonical_#{mem}".to_sym })
       # Confirm we haven't just added the new members to the original struct object, ie this is really a new struct
       expect(user.members.any? { |elem| elem.match(/^canonical_/)}).to be_falsey
     end
@@ -270,8 +270,8 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
       end
 
       let(:overridden) {
-        PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
-          Puppet::Etc.send(subject, *params)
+        OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::UTF_8) do
+          Oregano::Etc.send(subject, *params)
         end
       }
 
@@ -307,8 +307,8 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
       end
 
       let(:overridden) {
-        PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::EUC_KR) do
-          Puppet::Etc.send(subject, *params)
+        OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::EUC_KR) do
+          Oregano::Etc.send(subject, *params)
         end
       }
 
@@ -340,8 +340,8 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
       end
 
       let(:overridden) {
-        PuppetSpec::CharacterEncoding.with_external_encoding(Encoding::ASCII) do
-          Puppet::Etc.send(subject, *params)
+        OreganoSpec::CharacterEncoding.with_external_encoding(Encoding::ASCII) do
+          Oregano::Etc.send(subject, *params)
         end
       }
 
@@ -377,7 +377,7 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
 
     it "should call Etc.getgrnam with the supplied group name" do
       Etc.expects(:getgrnam).with('foo')
-      Puppet::Etc.getgrnam('foo')
+      Oregano::Etc.getgrnam('foo')
     end
   end
 
@@ -386,7 +386,7 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
 
     it "should call Etc.getgrgid with supplied group id" do
       Etc.expects(:getgrgid).with(0)
-      Puppet::Etc.getgrgid(0)
+      Oregano::Etc.getgrgid(0)
     end
   end
 
@@ -399,7 +399,7 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
 
     it "should call Etc.getpwnam with that username" do
       Etc.expects(:getpwnam).with('foo')
-      Puppet::Etc.getpwnam('foo')
+      Oregano::Etc.getpwnam('foo')
     end
   end
 
@@ -408,35 +408,35 @@ describe Puppet::Etc, :if => !Puppet.features.microsoft_windows? do
 
     it "should call Etc.getpwuid with the id" do
       Etc.expects(:getpwuid).with(2)
-      Puppet::Etc.getpwuid(2)
+      Oregano::Etc.getpwuid(2)
     end
   end
 
   describe "endgrent" do
     it "should call Etc.getgrent" do
       Etc.expects(:getgrent)
-      Puppet::Etc.getgrent
+      Oregano::Etc.getgrent
     end
   end
 
   describe "setgrent" do
     it "should call Etc.setgrent" do
       Etc.expects(:setgrent)
-      Puppet::Etc.setgrent
+      Oregano::Etc.setgrent
     end
   end
 
   describe "endpwent" do
     it "should call Etc.endpwent" do
       Etc.expects(:endpwent)
-      Puppet::Etc.endpwent
+      Oregano::Etc.endpwent
     end
   end
 
   describe "setpwent" do
     it "should call Etc.setpwent" do
       Etc.expects(:setpwent)
-      Puppet::Etc.setpwent
+      Oregano::Etc.setpwent
     end
   end
 end

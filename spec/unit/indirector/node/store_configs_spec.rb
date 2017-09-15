@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/node'
-require 'puppet/indirector/memory'
-require 'puppet/indirector/node/store_configs'
+require 'oregano/node'
+require 'oregano/indirector/memory'
+require 'oregano/indirector/node/store_configs'
 
-class Puppet::Node::StoreConfigsTesting < Puppet::Indirector::Memory
+class Oregano::Node::StoreConfigsTesting < Oregano::Indirector::Memory
 end
 
-describe Puppet::Node::StoreConfigs do
+describe Oregano::Node::StoreConfigs do
   after :each do
-    Puppet::Node.indirection.reset_terminus_class
-    Puppet::Node.indirection.cache_class = nil
+    Oregano::Node.indirection.reset_terminus_class
+    Oregano::Node.indirection.cache_class = nil
   end
 
   it_should_behave_like "a StoreConfigs terminus"

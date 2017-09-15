@@ -1,4 +1,4 @@
-test_name 'PUP-6586 Ensure puppet does not continually reset password for disabled user' do
+test_name 'PUP-6586 Ensure oregano does not continually reset password for disabled user' do
 
   confine :to, :platform => 'windows'
 
@@ -12,7 +12,7 @@ test_name 'PUP-6586 Ensure puppet does not continually reset password for disabl
 
   teardown do
     agents.each do |agent|
-      on(agent, puppet_resource('user', "#{name}", 'ensure=absent'))
+      on(agent, oregano_resource('user', "#{name}", 'ensure=absent'))
     end
   end
 
@@ -24,7 +24,7 @@ user {'#{name}':
 MANIFEST
 
   agents.each do |agent|
-    step "create user #{name} with puppet" do
+    step "create user #{name} with oregano" do
       apply_manifest_on(agent, manifest, :catch_failures => true)
     end
 
@@ -32,7 +32,7 @@ MANIFEST
       on(agent, "net user #{name} /ACTIVE:NO", :acceptable_exit_codes => 0)
     end
 
-    step "test that password is not reset by puppet" do
+    step "test that password is not reset by oregano" do
       # :catch_changes will fail the test if there were changes during
       # run execution
       apply_manifest_on(agent, manifest, :catch_changes => true)

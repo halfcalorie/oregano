@@ -1,9 +1,9 @@
-require 'puppet/acceptance/common_utils'
-require 'puppet/acceptance/temp_file_utils'
-extend Puppet::Acceptance::CAUtils
-extend Puppet::Acceptance::TempFileUtils
-require 'puppet/acceptance/classifier_utils'
-extend Puppet::Acceptance::ClassifierUtils
+require 'oregano/acceptance/common_utils'
+require 'oregano/acceptance/temp_file_utils'
+extend Oregano::Acceptance::CAUtils
+extend Oregano::Acceptance::TempFileUtils
+require 'oregano/acceptance/classifier_utils'
+extend Oregano::Acceptance::ClassifierUtils
 
 disable_pe_enterprise_mcollective_agent_classes
 
@@ -21,7 +21,7 @@ test_name "certificate extensions available as trusted data" do
   teardown do
     step "Cleanup the test agent certs"
     agent_certnames.each do |cn|
-      on(master, puppet("cert", "clean", cn), :acceptable_exit_codes => [0,24])
+      on(master, oregano("cert", "clean", cn), :acceptable_exit_codes => [0,24])
     end
   end
 
@@ -34,13 +34,13 @@ test_name "certificate extensions available as trusted data" do
     },
     'master' => {
       'autosign' => true,
-      'dns_alt_names' => "puppet,#{hostname},#{fqdn}",
+      'dns_alt_names' => "oregano,#{hostname},#{fqdn}",
     }
   }
 
   csr_attributes = YAML.dump({
     'extension_requests' => {
-      # registered puppet extensions
+      # registered oregano extensions
       'pp_uuid' => 'b5e63090-5167-11e3-8f96-0800200c9a66',
       'pp_instance_id' => 'i-3fkva',
       # private (arbitrary) extensions
@@ -54,8 +54,8 @@ test_name "certificate extensions available as trusted data" do
     File {
       ensure => directory,
       mode => "0770",
-      owner => #{master.puppet['user']},
-      group => #{master.puppet['group']},
+      owner => #{master.oregano['user']},
+      group => #{master.oregano['group']},
     }
     file {
       '#{environments_dir}':;
@@ -73,7 +73,7 @@ test_name "certificate extensions available as trusted data" do
     }
   MANIFEST
 
-  with_puppet_running_on(master, master_config) do
+  with_oregano_running_on(master, master_config) do
     agents.each do |agent|
       next if agent == master
 
@@ -86,7 +86,7 @@ test_name "certificate extensions available as trusted data" do
       agent_certnames << agent_certname
 
       step "Check in as #{agent_certname}"
-      on(agent, puppet("agent", "--test",
+      on(agent, oregano("agent", "--test",
                        "--server", master,
                        "--waitforcert", 0,
                        "--csr_attributes", agent_csr_attributes,

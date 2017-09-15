@@ -29,8 +29,8 @@ extend Beaker::DSL::InstallUtils
         on host, "ln -s #{source_dir} #{checkout_dir}"
         on host, "cd #{checkout_dir} && if [ -f install.rb ]; then ruby ./install.rb ; else true; fi"
       else
-        puppet_dir = host.tmpdir('puppet')
-        on(host, "chmod 755 #{puppet_dir}")
+        oregano_dir = host.tmpdir('oregano')
+        on(host, "chmod 755 #{oregano_dir}")
 
         gemfile_contents = <<END
 source '#{ENV["GEM_SOURCE"] || "https://rubygems.org"}'
@@ -38,69 +38,69 @@ gem '#{repository[:name]}', :git => '#{repository[:path]}', :ref => '#{ENV['SHA'
 END
         case host['platform']
         when /windows/
-          create_remote_file(host, "#{puppet_dir}/Gemfile", gemfile_contents)
+          create_remote_file(host, "#{oregano_dir}/Gemfile", gemfile_contents)
           # bundle must be passed a Windows style path for a binstubs location
-          binstubs_dir = on(host, "cygpath -m \"#{host['puppetbindir']}\"").stdout.chomp
+          binstubs_dir = on(host, "cygpath -m \"#{host['oreganobindir']}\"").stdout.chomp
           # note passing --shebang to bundle is not useful because Cygwin
           # already finds the Ruby interpreter OK with the standard shebang of:
           # !/usr/bin/env ruby
           # the problem is a Cygwin style path is passed to the interpreter and this can't be modified:
           # http://cygwin.1069669.n5.nabble.com/Pass-windows-style-paths-to-the-interpreter-from-the-shebang-line-td43870.html
-          on host, "cd #{puppet_dir} && cmd.exe /c \"bundle install --system --binstubs #{binstubs_dir}\""
-          # puppet.bat isn't written by Bundler, but facter.bat is - copy this generic file
-          on host, "cd #{host['puppetbindir']} && test -f ./puppet.bat || cp ./facter.bat ./puppet.bat"
-          # to access gem / facter / puppet / bundle / irb with Cygwin generally requires aliases
+          on host, "cd #{oregano_dir} && cmd.exe /c \"bundle install --system --binstubs #{binstubs_dir}\""
+          # oregano.bat isn't written by Bundler, but facter.bat is - copy this generic file
+          on host, "cd #{host['oreganobindir']} && test -f ./oregano.bat || cp ./facter.bat ./oregano.bat"
+          # to access gem / facter / oregano / bundle / irb with Cygwin generally requires aliases
           # so that commands in /usr/bin are overridden and the binstub wrappers won't run inside Cygwin
           # but rather will execute as batch files through cmd.exe
           # without being overridden, Cygwin reads the shebang and causes errors like:
-          # C:\cygwin64\bin\ruby.exe: No such file or directory -- /usr/bin/puppet (LoadError)
-          # NOTE /usr/bin/puppet is a Cygwin style path that our custom Ruby build
-          # does not understand - it expects a standard Windows path like c:\cygwin64\bin\puppet
+          # C:\cygwin64\bin\ruby.exe: No such file or directory -- /usr/bin/oregano (LoadError)
+          # NOTE /usr/bin/oregano is a Cygwin style path that our custom Ruby build
+          # does not understand - it expects a standard Windows path like c:\cygwin64\bin\oregano
 
           # a workaround in interactive SSH is to add aliases to local session / .bashrc:
-          #   on host, "echo \"alias puppet='C:/\\cygwin64/\\bin/\\puppet.bat'\" >> ~/.bashrc"
+          #   on host, "echo \"alias oregano='C:/\\cygwin64/\\bin/\\oregano.bat'\" >> ~/.bashrc"
           # note that this WILL NOT impact Beaker runs though
-          puppet_bundler_install_dir = on(host, "cd #{puppet_dir} && cmd.exe /c bundle show puppet").stdout.chomp
+          oregano_bundler_install_dir = on(host, "cd #{oregano_dir} && cmd.exe /c bundle show oregano").stdout.chomp
         when /el-7/
           gemfile_contents = gemfile_contents + "gem 'json'\n"
-          create_remote_file(host, "#{puppet_dir}/Gemfile", gemfile_contents)
-          on host, "cd #{puppet_dir} && bundle install --system --binstubs #{host['puppetbindir']}"
-          puppet_bundler_install_dir = on(host, "cd #{puppet_dir} && bundle show puppet").stdout.chomp
+          create_remote_file(host, "#{oregano_dir}/Gemfile", gemfile_contents)
+          on host, "cd #{oregano_dir} && bundle install --system --binstubs #{host['oreganobindir']}"
+          oregano_bundler_install_dir = on(host, "cd #{oregano_dir} && bundle show oregano").stdout.chomp
         when /solaris/
-          create_remote_file(host, "#{puppet_dir}/Gemfile", gemfile_contents)
-          on host, "cd #{puppet_dir} && bundle install --system --binstubs #{host['puppetbindir']} --shebang #{host['puppetbindir']}/ruby"
-          puppet_bundler_install_dir = on(host, "cd #{puppet_dir} && bundle show puppet").stdout.chomp
+          create_remote_file(host, "#{oregano_dir}/Gemfile", gemfile_contents)
+          on host, "cd #{oregano_dir} && bundle install --system --binstubs #{host['oreganobindir']} --shebang #{host['oreganobindir']}/ruby"
+          oregano_bundler_install_dir = on(host, "cd #{oregano_dir} && bundle show oregano").stdout.chomp
         else
-          create_remote_file(host, "#{puppet_dir}/Gemfile", gemfile_contents)
-          on host, "cd #{puppet_dir} && bundle install --system --binstubs #{host['puppetbindir']}"
-          puppet_bundler_install_dir = on(host, "cd #{puppet_dir} && bundle show puppet").stdout.chomp
+          create_remote_file(host, "#{oregano_dir}/Gemfile", gemfile_contents)
+          on host, "cd #{oregano_dir} && bundle install --system --binstubs #{host['oreganobindir']}"
+          oregano_bundler_install_dir = on(host, "cd #{oregano_dir} && bundle show oregano").stdout.chomp
         end
 
-        # install.rb should also be called from the Puppet gem install dir
-        # this is required for the puppetres.dll event log dll on Windows
-        on host, "cd #{puppet_bundler_install_dir} && if [ -f install.rb ]; then ruby ./install.rb ; else true; fi"
+        # install.rb should also be called from the Oregano gem install dir
+        # this is required for the oreganores.dll event log dll on Windows
+        on host, "cd #{oregano_bundler_install_dir} && if [ -f install.rb ]; then ruby ./install.rb ; else true; fi"
       end
     end
   end
 
-  step "Hosts: create basic puppet.conf" do
+  step "Hosts: create basic oregano.conf" do
     hosts.each do |host|
-      confdir = host.puppet['confdir']
+      confdir = host.oregano['confdir']
       on host, "mkdir -p #{confdir}"
-      puppetconf = File.join(confdir, 'puppet.conf')
+      oreganoconf = File.join(confdir, 'oregano.conf')
 
       if host['roles'].include?('agent')
-        on host, "echo '[agent]' > '#{puppetconf}' && " +
-                 "echo server=#{master} >> '#{puppetconf}'"
+        on host, "echo '[agent]' > '#{oreganoconf}' && " +
+                 "echo server=#{master} >> '#{oreganoconf}'"
       else
-        on host, "touch '#{puppetconf}'"
+        on host, "touch '#{oreganoconf}'"
       end
     end
   end
 
   step "Hosts: create environments directory like AIO does" do
     hosts.each do |host|
-      codedir = host.puppet['codedir']
+      codedir = host.oregano['codedir']
       on host, "mkdir -p #{codedir}/environments/production/manifests"
       on host, "mkdir -p #{codedir}/environments/production/modules"
       on host, "chmod -R 755 #{codedir}"

@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/nagios_maker'
+require 'oregano/util/nagios_maker'
 
-describe Puppet::Util::NagiosMaker do
+describe Oregano::Util::NagiosMaker do
   before do
-    @module = Puppet::Util::NagiosMaker
+    @module = Oregano::Util::NagiosMaker
 
     @nagtype = stub 'nagios type', :parameters => [], :namevar => :name
     Nagios::Base.stubs(:type).with(:test).returns(@nagtype)
@@ -21,25 +21,25 @@ describe Puppet::Util::NagiosMaker do
   it "should fail if it cannot find the named Naginator type" do
     Nagios::Base.stubs(:type).returns(nil)
 
-    expect { @module.create_nagios_type(:no_such_type) }.to raise_error(Puppet::DevError)
+    expect { @module.create_nagios_type(:no_such_type) }.to raise_error(Oregano::DevError)
   end
 
   it "should create a new RAL type with the provided name prefixed with 'nagios_'" do
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 
   it "should mark the created type as ensurable" do
     @type.expects(:ensurable)
 
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 
   it "should create a namevar parameter for the nagios type's name parameter" do
     @type.expects(:newparam).with(:name, :namevar => true)
 
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 
@@ -50,7 +50,7 @@ describe Puppet::Util::NagiosMaker do
     @type.expects(:newproperty).with(:two)
     @type.expects(:newproperty).with(:target)
 
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 
@@ -60,7 +60,7 @@ describe Puppet::Util::NagiosMaker do
     @type.expects(:newproperty).with(:other)
     @type.expects(:newproperty).with(:target)
 
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 
@@ -70,28 +70,28 @@ describe Puppet::Util::NagiosMaker do
     @type.expects(:newproperty).with(:one)
     @type.expects(:newproperty).with(:target)
 
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 
   it "should create a target property" do
     @type.expects(:newproperty).with(:target)
 
-    Puppet::Type.expects(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.expects(:newtype).with(:nagios_test).returns(@type)
     @module.create_nagios_type(:test)
   end
 end
 
-describe Puppet::Util::NagiosMaker, " when creating the naginator provider" do
+describe Oregano::Util::NagiosMaker, " when creating the naginator provider" do
   before do
-    @module = Puppet::Util::NagiosMaker
+    @module = Oregano::Util::NagiosMaker
     @provider = stub 'provider', :nagios_type => nil
 
     @nagtype = stub 'nagios type', :parameters => [], :namevar => :name
     Nagios::Base.stubs(:type).with(:test).returns(@nagtype)
 
     @type = stub 'type', :newparam => nil, :ensurable => nil, :newproperty => nil, :desc => nil
-    Puppet::Type.stubs(:newtype).with(:nagios_test).returns(@type)
+    Oregano::Type.stubs(:newtype).with(:nagios_test).returns(@type)
   end
 
   it "should add a naginator provider" do
@@ -100,8 +100,8 @@ describe Puppet::Util::NagiosMaker, " when creating the naginator provider" do
     @module.create_nagios_type(:test)
   end
 
-  it "should set Puppet::Provider::Naginator as the parent class of the provider" do
-    @type.expects(:provide).with { |name, options| options[:parent] == Puppet::Provider::Naginator }.returns @provider
+  it "should set Oregano::Provider::Naginator as the parent class of the provider" do
+    @type.expects(:provide).with { |name, options| options[:parent] == Oregano::Provider::Naginator }.returns @provider
 
     @module.create_nagios_type(:test)
   end

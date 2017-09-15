@@ -138,7 +138,7 @@ test_name 'PUP-6777 Manage users with UTF-8 comments' do
 
   # This test is important because of ruby's Etc.getpwnam behavior which returns
   # strings in current locale if compatible - make sure we can get a system
-  # value in POSIX and compare it to incoming from puppet in UTF-8.
+  # value in POSIX and compare it to incoming from oregano in UTF-8.
   step "ensure ASCII comment can be modified to UTF-8 comment (with POSIX locale on *nix)" do
     set_comment_utf8 = <<-EOF
       user { '#{user3}':

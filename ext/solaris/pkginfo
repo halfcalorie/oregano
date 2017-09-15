@@ -1,6 +1,6 @@
-PKG=CSWpuppet
-NAME=puppet - System Automation Framework
+PKG=CSWoregano
+NAME=oregano - System Automation Framework
 VERSION=3.0.0
 CATEGORY=application
-VENDOR=https://projects.puppetlabs.com/projects/puppet
-EMAIL=info@puppetlabs.com
+VENDOR=https://projects.oreganolabs.com/projects/oregano
+EMAIL=info@oreganolabs.com

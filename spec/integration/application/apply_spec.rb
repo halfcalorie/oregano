@@ -1,34 +1,34 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
 describe "apply" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   before :each do
-    Puppet[:reports] = "none"
+    Oregano[:reports] = "none"
   end
 
   describe "when applying provided catalogs" do
     it "can apply catalogs provided in a file in json" do
       file_to_create = tmpfile("json_catalog")
-      catalog = Puppet::Resource::Catalog.new('mine', Puppet.lookup(:environments).get(Puppet[:environment]))
-      resource = Puppet::Resource.new(:file, file_to_create, :parameters => {:content => "my stuff"})
+      catalog = Oregano::Resource::Catalog.new('mine', Oregano.lookup(:environments).get(Oregano[:environment]))
+      resource = Oregano::Resource.new(:file, file_to_create, :parameters => {:content => "my stuff"})
       catalog.add_resource resource
 
       manifest = file_containing("manifest", catalog.to_json)
 
-      puppet = Puppet::Application[:apply]
-      puppet.options[:catalog] = manifest
+      oregano = Oregano::Application[:apply]
+      oregano.options[:catalog] = manifest
 
-      puppet.apply
+      oregano.apply
 
-      expect(Puppet::FileSystem.exist?(file_to_create)).to be_truthy
+      expect(Oregano::FileSystem.exist?(file_to_create)).to be_truthy
       expect(File.read(file_to_create)).to eq("my stuff")
     end
 
     context 'from environment with a pcore defined resource type' do
-      include PuppetSpec::Compiler
+      include OreganoSpec::Compiler
 
       let!(:envdir) { tmpdir('environments') }
       let(:env_name) { 'spec' }
@@ -36,21 +36,21 @@ describe "apply" do
         {
           '.resource_types' => {
             'applytest.pp' => <<-CODE
-            Puppet::Resource::ResourceType3.new(
+            Oregano::Resource::ResourceType3.new(
               'applytest',
-              [Puppet::Resource::Param.new(String, 'message')],
-              [Puppet::Resource::Param.new(String, 'name', true)])
+              [Oregano::Resource::Param.new(String, 'message')],
+              [Oregano::Resource::Param.new(String, 'name', true)])
           CODE
           },
           'modules' => {
             'amod' => {
               'lib' => {
-                'puppet' => {
+                'oregano' => {
                   'type' => { 'applytest.rb' => <<-CODE
-Puppet::Type.newtype(:applytest) do
+Oregano::Type.newtype(:applytest) do
 newproperty(:message) do
   def sync
-    Puppet.send(@resource[:loglevel], self.should)
+    Oregano.send(@resource[:loglevel], self.should)
   end
 
   def retrieve
@@ -66,7 +66,7 @@ end
 
 newparam(:name) do
   desc "An arbitrary tag for your own reference; the name of the message."
-  Puppet.notice('the Puppet::Type says hello')
+  Oregano.notice('the Oregano::Type says hello')
   isnamevar
 end
 end
@@ -79,43 +79,43 @@ end
         }
       }
 
-      let(:environments) { Puppet::Environments::Directories.new(envdir, []) }
-      let(:env) { Puppet::Node::Environment.create(:'spec', [File.join(envdir, 'spec', 'modules')]) }
-      let(:node) { Puppet::Node.new('test', :environment => env) }
+      let(:environments) { Oregano::Environments::Directories.new(envdir, []) }
+      let(:env) { Oregano::Node::Environment.create(:'spec', [File.join(envdir, 'spec', 'modules')]) }
+      let(:node) { Oregano::Node.new('test', :environment => env) }
       around(:each) do |example|
-        Puppet::Type.rmtype(:applytest)
-        Puppet[:environment] = env_name
+        Oregano::Type.rmtype(:applytest)
+        Oregano[:environment] = env_name
         dir_contained_in(envdir, env_name => dir_structure)
-        Puppet.override(:environments => environments, :current_environment => env) do
+        Oregano.override(:environments => environments, :current_environment => env) do
           example.run
         end
       end
 
       it 'does not load the pcore type' do
         catalog = compile_to_catalog('applytest { "applytest was here":}', node)
-        apply = Puppet::Application[:apply]
+        apply = Oregano::Application[:apply]
         apply.options[:catalog] = file_containing('manifest', catalog.to_json)
 
-        Puppet[:environmentpath] = envdir
-        Puppet::Pops::Loader::Runtime3TypeLoader.any_instance.expects(:find).never
-        expect { apply.run }.to have_printed(/the Puppet::Type says hello.*applytest was here/m)
+        Oregano[:environmentpath] = envdir
+        Oregano::Pops::Loader::Runtime3TypeLoader.any_instance.expects(:find).never
+        expect { apply.run }.to have_printed(/the Oregano::Type says hello.*applytest was here/m)
       end
 
       # Test just to verify that the Pcore Resource Type and not the Ruby one is produced when the catalog is produced
       it 'loads pcore resource type instead of ruby resource type during compile' do
-        Puppet[:code] = 'applytest { "applytest was here": }'
-        compiler = Puppet::Parser::Compiler.new(node)
-        tn = Puppet::Pops::Loader::TypedName.new(:resource_type_pp, 'applytest')
-        rt = Puppet::Pops::Resource::ResourceTypeImpl.new('applytest', [Puppet::Pops::Resource::Param.new(String, 'message')], [Puppet::Pops::Resource::Param.new(String, 'name', true)])
+        Oregano[:code] = 'applytest { "applytest was here": }'
+        compiler = Oregano::Parser::Compiler.new(node)
+        tn = Oregano::Pops::Loader::TypedName.new(:resource_type_pp, 'applytest')
+        rt = Oregano::Pops::Resource::ResourceTypeImpl.new('applytest', [Oregano::Pops::Resource::Param.new(String, 'message')], [Oregano::Pops::Resource::Param.new(String, 'name', true)])
 
         compiler.loaders.runtime3_type_loader.instance_variable_get(:@resource_3x_loader).expects(:set_entry).once.with(tn, rt, is_a(String))
-          .returns(Puppet::Pops::Loader::Loader::NamedEntry.new(tn, rt, nil))
-        expect { compiler.compile }.not_to have_printed(/the Puppet::Type says hello/)
+          .returns(Oregano::Pops::Loader::Loader::NamedEntry.new(tn, rt, nil))
+        expect { compiler.compile }.not_to have_printed(/the Oregano::Type says hello/)
       end
 
       it "does not fail when pcore type is loaded twice" do
-        Puppet[:code] = 'applytest { xyz: alias => aptest }; Resource[applytest]'
-        compiler = Puppet::Parser::Compiler.new(node)
+        Oregano[:code] = 'applytest { xyz: alias => aptest }; Resource[applytest]'
+        compiler = Oregano::Parser::Compiler.new(node)
         expect { compiler.compile }.not_to raise_error
       end
 
@@ -126,28 +126,28 @@ end
         # Ensure that:
         # a) The catalog contains aliases (using a name for the abc resource ensures this)
         # b) That Resource[applytest,xyz] is not defined in the catalog (although it's loaded)
-        # c) That this doesn't trigger a load of the Puppet::Type
+        # c) That this doesn't trigger a load of the Oregano::Type
         notices = eval_and_collect_notices('applytest { abc: name => some_alias }; notice(defined(Resource[applytest,xyz]))', node)
         expect(notices).to include('false')
-        expect(notices).not_to include('the Puppet::Type says hello')
+        expect(notices).not_to include('the Oregano::Type says hello')
       end
 
       it 'does not load the ruby type when when referenced from collector during compile' do
         notices = eval_and_collect_notices("@applytest { 'applytest was here': }\nApplytest<| title == 'applytest was here' |>", node)
-        expect(notices).not_to include('the Puppet::Type says hello')
+        expect(notices).not_to include('the Oregano::Type says hello')
       end
 
       it 'does not load the ruby type when when referenced from exported collector during compile' do
         notices = eval_and_collect_notices("@@applytest { 'applytest was here': }\nApplytest<<| |>>", node)
-        expect(notices).not_to include('the Puppet::Type says hello')
+        expect(notices).not_to include('the Oregano::Type says hello')
       end
     end
   end
 
   context 'from environment with pcore object types' do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
-    let!(:envdir) { Puppet[:environmentpath] }
+    let!(:envdir) { Oregano[:environmentpath] }
     let(:env_name) { 'spec' }
     let(:dir_structure) {
       {
@@ -207,12 +207,12 @@ end
       }
     }
 
-    let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(envdir, env_name, 'modules')]) }
-    let(:node) { Puppet::Node.new('test', :environment => env) }
+    let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(envdir, env_name, 'modules')]) }
+    let(:node) { Oregano::Node.new('test', :environment => env) }
 
     before(:each) do
       dir_contained_in(envdir, env_name => dir_structure)
-      PuppetSpec::Files.record_tmp(File.join(envdir, env_name))
+      OreganoSpec::Files.record_tmp(File.join(envdir, env_name))
     end
 
     it 'can compile the catalog' do
@@ -222,8 +222,8 @@ end
     it 'can apply the catalog' do
       catalog = compile_to_catalog('include mod', node)
 
-      Puppet[:environment] = env_name
-      apply = Puppet::Application[:apply]
+      Oregano[:environment] = env_name
+      apply = Oregano::Application[:apply]
       apply.options[:catalog] = file_containing('manifest', catalog.to_json)
       expect { apply.run_command; exit(0) }.to exit_with(0)
       expect(@logs.map(&:to_s)).to include('The Street 23')
@@ -233,12 +233,12 @@ end
   it "applies a given file even when a directory environment is specified" do
     manifest = file_containing("manifest.pp", "notice('it was applied')")
 
-    special = Puppet::Node::Environment.create(:special, [])
-    Puppet.override(:current_environment => special) do
-      Puppet[:environment] = 'special'
-      puppet = Puppet::Application[:apply]
-      puppet.stubs(:command_line).returns(stub('command_line', :args => [manifest]))
-      expect { puppet.run_command }.to exit_with(0)
+    special = Oregano::Node::Environment.create(:special, [])
+    Oregano.override(:current_environment => special) do
+      Oregano[:environment] = 'special'
+      oregano = Oregano::Application[:apply]
+      oregano.stubs(:command_line).returns(stub('command_line', :args => [manifest]))
+      expect { oregano.run_command }.to exit_with(0)
     end
 
     expect(@logs.map(&:to_s)).to include('it was applied')
@@ -247,30 +247,30 @@ end
   it "adds environment to the $server_facts variable" do
     manifest = file_containing("manifest.pp", "notice(\"$server_facts\")")
 
-    puppet = Puppet::Application[:apply]
-    puppet.stubs(:command_line).returns(stub('command_line', :args => [manifest]))
+    oregano = Oregano::Application[:apply]
+    oregano.stubs(:command_line).returns(stub('command_line', :args => [manifest]))
 
-    expect { puppet.run_command }.to exit_with(0)
+    expect { oregano.run_command }.to exit_with(0)
 
     expect(@logs.map(&:to_s)).to include(/{environment =>.*/)
   end
 
-  it "applies a given file even when an ENC is configured", :if => !Puppet.features.microsoft_windows? do
+  it "applies a given file even when an ENC is configured", :if => !Oregano.features.microsoft_windows? do
     manifest = file_containing("manifest.pp", "notice('specific manifest applied')")
     enc = script_containing('enc_script',
       :windows => '@echo classes: []' + "\n" + '@echo environment: special',
       :posix   => '#!/bin/sh' + "\n" + 'echo "classes: []"' + "\n" + 'echo "environment: special"')
 
-    Dir.mkdir(File.join(Puppet[:environmentpath], "special"), 0755)
+    Dir.mkdir(File.join(Oregano[:environmentpath], "special"), 0755)
 
-    special = Puppet::Node::Environment.create(:special, [])
-    Puppet.override(:current_environment => special) do
-      Puppet[:environment] = 'special'
-      Puppet[:node_terminus] = 'exec'
-      Puppet[:external_nodes] = enc
-      puppet = Puppet::Application[:apply]
-      puppet.stubs(:command_line).returns(stub('command_line', :args => [manifest]))
-      expect { puppet.run_command }.to exit_with(0)
+    special = Oregano::Node::Environment.create(:special, [])
+    Oregano.override(:current_environment => special) do
+      Oregano[:environment] = 'special'
+      Oregano[:node_terminus] = 'exec'
+      Oregano[:external_nodes] = enc
+      oregano = Oregano::Application[:apply]
+      oregano.stubs(:command_line).returns(stub('command_line', :args => [manifest]))
+      expect { oregano.run_command }.to exit_with(0)
     end
 
     expect(@logs.map(&:to_s)).to include('specific manifest applied')
@@ -278,8 +278,8 @@ end
 
   context "handles errors" do
     it "logs compile errors once" do
-      Puppet.initialize_settings([])
-      apply = Puppet::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => []))
+      Oregano.initialize_settings([])
+      apply = Oregano::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => []))
       apply.options[:code] = '08'
 
       msg = 'valid octal'
@@ -293,8 +293,8 @@ end
     end
 
     it "logs compile post processing errors once" do
-      Puppet.initialize_settings([])
-      apply = Puppet::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => []))
+      Oregano.initialize_settings([])
+      apply = Oregano::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => []))
       path = File.expand_path('/tmp/content_file_test.Q634Dlmtime')
       apply.options[:code] = "file { '#{path}':
         content => 'This is the test file content',
@@ -331,14 +331,14 @@ end
         }
       })
 
-      Puppet[:environmentpath] = envdir
+      Oregano[:environmentpath] = envdir
     end
 
     def init_cli_args_and_apply_app(args, execute)
-      Puppet.initialize_settings(args)
-      puppet = Puppet::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => args))
-      puppet.options[:code] = execute
-      return puppet
+      Oregano.initialize_settings(args)
+      oregano = Oregano::Application.find(:apply).new(stub('command_line', :subcommand_name => :apply, :args => args))
+      oregano.options[:code] = execute
+      return oregano
     end
 
     context "given the --modulepath option" do
@@ -386,8 +386,8 @@ end
       end
 
       before :each do
-        Puppet[:node_terminus] = 'exec'
-        Puppet[:external_nodes] = enc
+        Oregano[:node_terminus] = 'exec'
+        Oregano[:external_nodes] = enc
       end
 
       it "should use the environment that the ENC mandates" do
@@ -407,7 +407,7 @@ end
   end
 
   context 'when compiling a provided catalog with rich data and then applying from file' do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
     let(:env_dir) { tmpdir('environments') }
     let(:execute) { 'include amod' }
@@ -435,12 +435,12 @@ class amod::bad_type {
               EOF
               },
               'lib' => {
-                'puppet' => {
+                'oregano' => {
                   'functions' => {
                     'amod' => {
                       'bogus.rb' => <<-RUBY
                         # Function that leaks an object that is not recognized in the catalog
-                        Puppet::Functions.create_function(:'amod::bogus') do
+                        Oregano::Functions.create_function(:'amod::bogus') do
                           def bogus()
                             Time.new(2016, 10, 6, 23, 51, 14, '+02:00')
                           end
@@ -457,18 +457,18 @@ class amod::bad_type {
       env_dir
     end
 
-    let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'spec', 'modules')]) }
-    let(:node) { Puppet::Node.new('test', :environment => env) }
+    let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [File.join(populated_env_dir, 'spec', 'modules')]) }
+    let(:node) { Oregano::Node.new('test', :environment => env) }
 
     around(:each) do |example|
-      Puppet[:rich_data] = rich_data
-      Puppet.override(:loaders => Puppet::Pops::Loaders.new(env)) { example.run }
+      Oregano[:rich_data] = rich_data
+      Oregano.override(:loaders => Oregano::Pops::Loaders.new(env)) { example.run }
     end
 
     context 'and rich_data is set to false during compile' do
       it 'will notify a string that is the result of Regexp#inspect (from Runtime3xConverter)' do
         catalog = compile_to_catalog(execute, node)
-        apply = Puppet::Application[:apply]
+        apply = Oregano::Application[:apply]
         apply.options[:catalog] = file_containing('manifest', catalog.to_json)
         apply.expects(:apply_catalog).with do |catalog|
           catalog.resource(:notify, 'rx')['message'].is_a?(String)
@@ -483,7 +483,7 @@ class amod::bad_type {
 
       it 'will notify a string that is the result of to_s on uknown data types' do
         json = compile_to_catalog('include amod::bad_type', node).to_json
-        apply = Puppet::Application[:apply]
+        apply = Oregano::Application[:apply]
         apply.options[:catalog] = file_containing('manifest', json)
         apply.expects(:apply_catalog).with do |catalog|
           catalog.resource(:notify, 'bogus')['message'].is_a?(String)
@@ -493,7 +493,7 @@ class amod::bad_type {
 
       it 'will log a warning that a value of unknown type is converted into a string' do
         logs = []
-        json = Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        json = Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           compile_to_catalog('include amod::bad_type', node).to_json
         end
         logs = logs.select { |log| log.level == :warning }.map { |log| log.message }
@@ -507,15 +507,15 @@ class amod::bad_type {
 
       it 'will notify a regexp using Regexp#to_s' do
         catalog = compile_to_catalog(execute, node)
-        apply = Puppet::Application[:apply]
+        apply = Oregano::Application[:apply]
         apply.options[:catalog] = file_containing('manifest', catalog.to_json)
         apply.expects(:apply_catalog).with do |catalog|
           catalog.resource(:notify, 'rx')['message'].is_a?(Regexp)
-          catalog.resource(:notify, 'bin')['message'].is_a?(Puppet::Pops::Types::PBinaryType::Binary)
-          catalog.resource(:notify, 'ver')['message'].is_a?(SemanticPuppet::Version)
-          catalog.resource(:notify, 'vrange')['message'].is_a?(SemanticPuppet::VersionRange)
-          catalog.resource(:notify, 'tspan')['message'].is_a?(Puppet::Pops::Time::Timespan)
-          catalog.resource(:notify, 'tstamp')['message'].is_a?(Puppet::Pops::Time::Timestamp)
+          catalog.resource(:notify, 'bin')['message'].is_a?(Oregano::Pops::Types::PBinaryType::Binary)
+          catalog.resource(:notify, 'ver')['message'].is_a?(SemanticOregano::Version)
+          catalog.resource(:notify, 'vrange')['message'].is_a?(SemanticOregano::VersionRange)
+          catalog.resource(:notify, 'tspan')['message'].is_a?(Oregano::Pops::Time::Timespan)
+          catalog.resource(:notify, 'tstamp')['message'].is_a?(Oregano::Pops::Time::Timestamp)
         end
         apply.run
       end

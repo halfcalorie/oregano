@@ -1,17 +1,17 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:package).provider(:opkg) do
+describe Oregano::Type.type(:package).provider(:opkg) do
 
   let(:resource) do
-    Puppet::Type.type(:package).new(:name => 'package')
+    Oregano::Type.type(:package).new(:name => 'package')
   end
 
   let(:provider) { described_class.new(resource) }
 
   before do
-    Puppet::Util::Execution.stubs(:execute).never
-    Puppet::Util.stubs(:which).with("opkg").returns("/bin/opkg")
+    Oregano::Util::Execution.stubs(:execute).never
+    Oregano::Util.stubs(:which).with("opkg").returns("/bin/opkg")
     provider.stubs(:package_lists).returns ['.', '..', 'packages']
   end
 
@@ -47,7 +47,7 @@ describe Puppet::Type.type(:package).provider(:opkg) do
     end
 
     it "should call opkg install" do
-      Puppet::Util::Execution.expects(:execute).with(["/bin/opkg", "--force-overwrite", "install", resource[:name]], {:failonfail => true, :combine => true, :custom_environment => {}})
+      Oregano::Util::Execution.expects(:execute).with(["/bin/opkg", "--force-overwrite", "install", resource[:name]], {:failonfail => true, :combine => true, :custom_environment => {}})
       provider.install
     end
 
@@ -60,7 +60,7 @@ describe Puppet::Type.type(:package).provider(:opkg) do
         }.each do |source|
           it "should install #{source} directly" do
             resource[:source] = source
-            Puppet::Util::Execution.expects(:execute).with(["/bin/opkg", "--force-overwrite", "install", resource[:source]], {:failonfail => true, :combine => true, :custom_environment => {}})
+            Oregano::Util::Execution.expects(:execute).with(["/bin/opkg", "--force-overwrite", "install", resource[:source]], {:failonfail => true, :combine => true, :custom_environment => {}})
             provider.install
           end
         end
@@ -74,7 +74,7 @@ describe Puppet::Type.type(:package).provider(:opkg) do
         end
 
         it "should install from the path segment of the URL" do
-          Puppet::Util::Execution.expects(:execute).returns("")
+          Oregano::Util::Execution.expects(:execute).returns("")
           provider.install
         end
       end
@@ -82,16 +82,16 @@ describe Puppet::Type.type(:package).provider(:opkg) do
       context "with invalid URL for opkg" do
         before do
           # Emulate the `opkg` command returning a non-zero exit value
-          Puppet::Util::Execution.stubs(:execute).raises Puppet::ExecutionFailure, 'oops'
+          Oregano::Util::Execution.stubs(:execute).raises Oregano::ExecutionFailure, 'oops'
         end
 
-        context "puppet://server/whatever" do
+        context "oregano://server/whatever" do
           before do
-            resource[:source] = "puppet://server/whatever"
+            resource[:source] = "oregano://server/whatever"
           end
 
           it "should fail" do
-            expect { provider.install }.to raise_error Puppet::ExecutionFailure
+            expect { provider.install }.to raise_error Oregano::ExecutionFailure
           end
         end
 
@@ -101,7 +101,7 @@ describe Puppet::Type.type(:package).provider(:opkg) do
           end
 
           it "should fail" do
-            expect { provider.install }.to raise_error Puppet::ExecutionFailure
+            expect { provider.install }.to raise_error Oregano::ExecutionFailure
           end
         end
       end
@@ -117,7 +117,7 @@ describe Puppet::Type.type(:package).provider(:opkg) do
 
   describe "when uninstalling" do
     it "should run opkg remove bla" do
-      Puppet::Util::Execution.expects(:execute).with(["/bin/opkg", "remove", resource[:name]], {:failonfail => true, :combine => true, :custom_environment => {}})
+      Oregano::Util::Execution.expects(:execute).with(["/bin/opkg", "remove", resource[:name]], {:failonfail => true, :combine => true, :custom_environment => {}})
       provider.uninstall
     end
   end
@@ -133,7 +133,7 @@ uhttpd - 2012-10-30-e57bf6d8bfa465a50eea2c30269acdfe751a46fd
 OPKG_OUTPUT
       end
       it "returns an array of packages" do
-        Puppet::Util.stubs(:which).with("opkg").returns("/bin/opkg")
+        Oregano::Util.stubs(:which).with("opkg").returns("/bin/opkg")
         described_class.stubs(:which).with("opkg").returns("/bin/opkg")
         described_class.expects(:execpipe).with("/bin/opkg list-installed").yields(packages)
 
@@ -165,12 +165,12 @@ OPKG_OUTPUT
     end
 
     it "should return a nil if the package isn't found" do
-      Puppet::Util::Execution.expects(:execute).returns("")
+      Oregano::Util::Execution.expects(:execute).returns("")
       expect(provider.query).to be_nil
     end
 
     it "should return a hash indicating that the package is missing on error" do
-      Puppet::Util::Execution.expects(:execute).raises(Puppet::ExecutionFailure.new("ERROR!"))
+      Oregano::Util::Execution.expects(:execute).raises(Oregano::ExecutionFailure.new("ERROR!"))
       expect(provider.query).to eq({
         :ensure => :purged,
         :status => 'missing',

@@ -11,8 +11,8 @@ apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
   File {
     ensure => directory,
     mode => "0770",
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
   }
   file {
     '#{testdir}/environments':;
@@ -42,7 +42,7 @@ master_opts = {
   },
 }
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
 
   agents.each do |agent|
     run_agent_on(agent, "--no-daemonize --onetime --server #{master} --verbose --environment more_different")

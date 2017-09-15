@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-describe Puppet::Settings do
-  include PuppetSpec::Files
+describe Oregano::Settings do
+  include OreganoSpec::Files
 
   def minimal_default_settings
     { :noop => {:default => false, :desc => "noop"} }
@@ -14,7 +14,7 @@ describe Puppet::Settings do
     settings.define_settings(section, minimal_default_settings.update(settings_hash))
   end
 
-  let(:settings) { Puppet::Settings.new }
+  let(:settings) { Oregano::Settings.new }
 
   it "should be able to make needed directories" do
     define_settings(:main,
@@ -41,7 +41,7 @@ describe Puppet::Settings do
 
     settings.use(:main)
 
-    expect(Puppet::FileSystem.stat(settings[:maindir]).mode & 007777).to eq(0750)
+    expect(Oregano::FileSystem.stat(settings[:maindir]).mode & 007777).to eq(0750)
   end
 
   it "will properly parse a UTF-8 configuration file" do
@@ -70,7 +70,7 @@ environment=#{rune_utf8}
     expect(settings[:environment]).to eq(rune_utf8)
   end
 
-  it "reparses configuration if configuration file is touched", :if => !Puppet.features.microsoft_windows? do
+  it "reparses configuration if configuration file is touched", :if => !Oregano.features.microsoft_windows? do
     config = tmpfile("config")
     define_settings(:main,
       :config => {
@@ -84,7 +84,7 @@ environment=#{rune_utf8}
       }
     )
 
-    Puppet[:filetimeout] = '1s'
+    Oregano[:filetimeout] = '1s'
 
     File.open(config, 'w') do |file|
       file.puts <<-EOF

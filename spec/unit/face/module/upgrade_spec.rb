@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'puppet/face'
-require 'puppet/module_tool'
+require 'oregano/face'
+require 'oregano/module_tool'
 
-describe "puppet module upgrade" do
-  subject { Puppet::Face[:module, :current] }
+describe "oregano module upgrade" do
+  subject { Oregano::Face[:module, :current] }
 
   let(:options) do
     {}
   end
 
   describe "inline documentation" do
-    subject { Puppet::Face[:module, :current].get_action :upgrade }
+    subject { Oregano::Face[:module, :current].get_action :upgrade }
 
     its(:summary)     { should =~ /upgrade.*module/im }
     its(:description) { should =~ /upgrade.*module/im }

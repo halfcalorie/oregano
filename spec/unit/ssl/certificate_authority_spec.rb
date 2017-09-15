@@ -2,11 +2,11 @@
 # encoding: ASCII-8BIT
 require 'spec_helper'
 
-require 'puppet/ssl/certificate_authority'
+require 'oregano/ssl/certificate_authority'
 
-describe Puppet::SSL::CertificateAuthority do
+describe Oregano::SSL::CertificateAuthority do
   after do
-    Puppet::SSL::CertificateAuthority.instance_variable_set(:@singleton_instance, nil)
+    Oregano::SSL::CertificateAuthority.instance_variable_set(:@singleton_instance, nil)
   end
 
   def stub_ca_host
@@ -15,132 +15,132 @@ describe Puppet::SSL::CertificateAuthority do
     @cacert = mock 'certificate'
     @cacert.stubs(:content).returns "cacertificate"
 
-    @host = stub 'ssl_host', :key => @key, :certificate => @cacert, :name => Puppet::SSL::Host.ca_name
+    @host = stub 'ssl_host', :key => @key, :certificate => @cacert, :name => Oregano::SSL::Host.ca_name
   end
 
   it "should have a class method for returning a singleton instance" do
-    expect(Puppet::SSL::CertificateAuthority).to respond_to(:instance)
+    expect(Oregano::SSL::CertificateAuthority).to respond_to(:instance)
   end
 
   describe "when finding an existing instance" do
     describe "and the host is a CA host and the run_mode is master" do
       before do
-        Puppet[:ca] = true
-        Puppet.run_mode.stubs(:master?).returns true
+        Oregano[:ca] = true
+        Oregano.run_mode.stubs(:master?).returns true
 
         @ca = mock('ca')
-        Puppet::SSL::CertificateAuthority.stubs(:new).returns @ca
+        Oregano::SSL::CertificateAuthority.stubs(:new).returns @ca
       end
 
       it "should return an instance" do
-        expect(Puppet::SSL::CertificateAuthority.instance).to equal(@ca)
+        expect(Oregano::SSL::CertificateAuthority.instance).to equal(@ca)
       end
 
       it "should always return the same instance" do
-        expect(Puppet::SSL::CertificateAuthority.instance).to equal(Puppet::SSL::CertificateAuthority.instance)
+        expect(Oregano::SSL::CertificateAuthority.instance).to equal(Oregano::SSL::CertificateAuthority.instance)
       end
     end
 
     describe "and the host is not a CA host" do
       it "should return nil" do
-        Puppet[:ca] = false
-        Puppet.run_mode.stubs(:master?).returns true
+        Oregano[:ca] = false
+        Oregano.run_mode.stubs(:master?).returns true
 
         ca = mock('ca')
-        Puppet::SSL::CertificateAuthority.expects(:new).never
-        expect(Puppet::SSL::CertificateAuthority.instance).to be_nil
+        Oregano::SSL::CertificateAuthority.expects(:new).never
+        expect(Oregano::SSL::CertificateAuthority.instance).to be_nil
       end
     end
 
     describe "and the run_mode is not master" do
       it "should return nil" do
-        Puppet[:ca] = true
-        Puppet.run_mode.stubs(:master?).returns false
+        Oregano[:ca] = true
+        Oregano.run_mode.stubs(:master?).returns false
 
         ca = mock('ca')
-        Puppet::SSL::CertificateAuthority.expects(:new).never
-        expect(Puppet::SSL::CertificateAuthority.instance).to be_nil
+        Oregano::SSL::CertificateAuthority.expects(:new).never
+        expect(Oregano::SSL::CertificateAuthority.instance).to be_nil
       end
     end
   end
 
   describe "when initializing" do
     before do
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
 
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:setup)
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:setup)
     end
 
     it "should always set its name to the value of :certname" do
-      Puppet[:certname] = "ca_testing"
+      Oregano[:certname] = "ca_testing"
 
-      expect(Puppet::SSL::CertificateAuthority.new.name).to eq("ca_testing")
+      expect(Oregano::SSL::CertificateAuthority.new.name).to eq("ca_testing")
     end
 
     it "should create an SSL::Host instance whose name is the 'ca_name'" do
-      Puppet::SSL::Host.expects(:ca_name).returns "caname"
+      Oregano::SSL::Host.expects(:ca_name).returns "caname"
 
       host = stub 'host'
-      Puppet::SSL::Host.expects(:new).with("caname").returns host
+      Oregano::SSL::Host.expects(:new).with("caname").returns host
 
-      Puppet::SSL::CertificateAuthority.new
+      Oregano::SSL::CertificateAuthority.new
     end
 
     it "should use the :main, :ca, and :ssl settings sections" do
-      Puppet.settings.expects(:use).with(:main, :ssl, :ca)
-      Puppet::SSL::CertificateAuthority.new
+      Oregano.settings.expects(:use).with(:main, :ssl, :ca)
+      Oregano::SSL::CertificateAuthority.new
     end
 
     it "should make sure the CA is set up" do
-      Puppet::SSL::CertificateAuthority.any_instance.expects(:setup)
+      Oregano::SSL::CertificateAuthority.any_instance.expects(:setup)
 
-      Puppet::SSL::CertificateAuthority.new
+      Oregano::SSL::CertificateAuthority.new
     end
   end
 
   describe "when setting itself up" do
     it "should generate the CA certificate if it does not have one" do
-      Puppet.settings.stubs :use
+      Oregano.settings.stubs :use
 
       host = stub 'host'
-      Puppet::SSL::Host.stubs(:new).returns host
+      Oregano::SSL::Host.stubs(:new).returns host
 
       host.expects(:certificate).returns nil
 
-      Puppet::SSL::CertificateAuthority.any_instance.expects(:generate_ca_certificate)
-      Puppet::SSL::CertificateAuthority.new
+      Oregano::SSL::CertificateAuthority.any_instance.expects(:generate_ca_certificate)
+      Oregano::SSL::CertificateAuthority.new
     end
   end
 
   describe "when retrieving the certificate revocation list" do
     before do
-      Puppet.settings.stubs(:use)
-      Puppet[:cacrl] = "/my/crl"
+      Oregano.settings.stubs(:use)
+      Oregano[:cacrl] = "/my/crl"
 
       cert = stub("certificate", :content => "real_cert")
       key = stub("key", :content => "real_key")
       @host = stub 'host', :certificate => cert, :name => "hostname", :key => key
 
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:setup)
-      @ca = Puppet::SSL::CertificateAuthority.new
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:setup)
+      @ca = Oregano::SSL::CertificateAuthority.new
 
       @ca.stubs(:host).returns @host
     end
 
     it "should return any found CRL instance" do
       crl = mock 'crl'
-      Puppet::SSL::CertificateRevocationList.indirection.expects(:find).returns crl
+      Oregano::SSL::CertificateRevocationList.indirection.expects(:find).returns crl
       expect(@ca.crl).to equal(crl)
     end
 
     it "should create, generate, and save a new CRL instance of no CRL can be found" do
-      crl = Puppet::SSL::CertificateRevocationList.new("fakename")
-      Puppet::SSL::CertificateRevocationList.indirection.expects(:find).returns nil
+      crl = Oregano::SSL::CertificateRevocationList.new("fakename")
+      Oregano::SSL::CertificateRevocationList.indirection.expects(:find).returns nil
 
-      Puppet::SSL::CertificateRevocationList.expects(:new).returns crl
+      Oregano::SSL::CertificateRevocationList.expects(:new).returns crl
 
       crl.expects(:generate).with(@ca.host.certificate.content, @ca.host.key.content)
-      Puppet::SSL::CertificateRevocationList.indirection.expects(:save).with(crl)
+      Oregano::SSL::CertificateRevocationList.indirection.expects(:save).with(crl)
 
       expect(@ca.crl).to equal(crl)
     end
@@ -148,26 +148,26 @@ describe Puppet::SSL::CertificateAuthority do
 
   describe "when generating a self-signed CA certificate" do
     before do
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
 
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:setup)
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:crl)
-      @ca = Puppet::SSL::CertificateAuthority.new
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:setup)
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:crl)
+      @ca = Oregano::SSL::CertificateAuthority.new
 
       @host = stub 'host', :key => mock("key"), :name => "hostname", :certificate => mock('certificate')
 
-      Puppet::SSL::CertificateRequest.any_instance.stubs(:generate)
+      Oregano::SSL::CertificateRequest.any_instance.stubs(:generate)
 
       @ca.stubs(:host).returns @host
     end
 
     it "should create and store a password at :capass" do
-      Puppet[:capass] = File.expand_path("/path/to/pass")
+      Oregano[:capass] = File.expand_path("/path/to/pass")
 
-      Puppet::FileSystem.expects(:exist?).with(Puppet[:capass]).returns false
+      Oregano::FileSystem.expects(:exist?).with(Oregano[:capass]).returns false
 
       fh = StringIO.new
-      Puppet.settings.setting(:capass).expects(:open).with('w:ASCII').yields fh
+      Oregano.settings.setting(:capass).expects(:open).with('w:ASCII').yields fh
 
       @ca.stubs(:sign)
 
@@ -188,7 +188,7 @@ describe Puppet::SSL::CertificateAuthority do
 
     it "should create and sign a self-signed cert using the CA name" do
       request = mock 'request'
-      Puppet::SSL::CertificateRequest.expects(:new).with(@ca.host.name).returns request
+      Oregano::SSL::CertificateRequest.expects(:new).with(@ca.host.name).returns request
       request.expects(:generate).with(@ca.host.key)
       request.stubs(:request_extensions => [])
 
@@ -215,27 +215,27 @@ describe Puppet::SSL::CertificateAuthority do
 
   describe "when signing" do
     before do
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
 
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:password?).returns true
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:password?).returns true
 
       stub_ca_host
 
-      Puppet::SSL::Host.expects(:new).with(Puppet::SSL::Host.ca_name).returns @host
+      Oregano::SSL::Host.expects(:new).with(Oregano::SSL::Host.ca_name).returns @host
 
-      @ca = Puppet::SSL::CertificateAuthority.new
+      @ca = Oregano::SSL::CertificateAuthority.new
 
       @name = "myhost"
       @real_cert = stub 'realcert', :sign => nil
-      @cert = Puppet::SSL::Certificate.new(@name)
+      @cert = Oregano::SSL::Certificate.new(@name)
       @cert.content = @real_cert
 
-      Puppet::SSL::Certificate.stubs(:new).returns @cert
+      Oregano::SSL::Certificate.stubs(:new).returns @cert
 
-      Puppet::SSL::Certificate.indirection.stubs(:save)
+      Oregano::SSL::Certificate.indirection.stubs(:save)
 
       # Stub out the factory
-      Puppet::SSL::CertificateFactory.stubs(:build).returns @cert.content
+      Oregano::SSL::CertificateFactory.stubs(:build).returns @cert.content
 
       @request_content = stub "request content stub", :subject => OpenSSL::X509::Name.new([['CN', @name]]), :public_key => stub('public_key')
       @request = stub 'request', :name => @name, :request_extensions => [], :subject_alt_names => [], :content => @request_content
@@ -245,7 +245,7 @@ describe Puppet::SSL::CertificateAuthority do
       @inventory = stub 'inventory', :add => nil
       @ca.stubs(:inventory).returns @inventory
 
-      Puppet::SSL::CertificateRequest.indirection.stubs(:destroy)
+      Oregano::SSL::CertificateRequest.indirection.stubs(:destroy)
     end
 
     describe "its own certificate" do
@@ -255,14 +255,14 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should not look up a certificate request for the host" do
-        Puppet::SSL::CertificateRequest.indirection.expects(:find).never
+        Oregano::SSL::CertificateRequest.indirection.expects(:find).never
 
         @ca.sign(@name, {allow_dns_alt_names: true,
                          self_signing_csr: @request})
       end
 
       it "should use a certificate type of :ca" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           expect(args[0]).to eq(:ca)
         end.returns @cert.content
         @ca.sign(@name, {allow_dns_alt_names: true,
@@ -270,7 +270,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should pass the provided CSR as the CSR" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           expect(args[1]).to eq(@request)
         end.returns @cert.content
         @ca.sign(@name, {allow_dns_alt_names: true,
@@ -278,7 +278,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should use the provided CSR's content as the issuer" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           expect(args[2].subject.to_s).to eq("/CN=myhost")
         end.returns @cert.content
         @ca.sign(@name, {allow_dns_alt_names: true,
@@ -286,7 +286,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should pass the next serial as the serial number" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           expect(args[3]).to eq(@serial)
         end.returns @cert.content
         @ca.sign(@name, {allow_dns_alt_names: true,
@@ -303,7 +303,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should save the resulting certificate" do
-        Puppet::SSL::Certificate.indirection.expects(:save).with(@cert)
+        Oregano::SSL::Certificate.indirection.expects(:save).with(@cert)
 
         @ca.sign(@name, {allow_dns_alt_names: true,
                          self_signing_csr: @request})
@@ -315,12 +315,12 @@ describe Puppet::SSL::CertificateAuthority do
         @serial = 10
         @ca.stubs(:next_serial).returns @serial
 
-        Puppet::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
-        Puppet::SSL::CertificateRequest.indirection.stubs :save
+        Oregano::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
+        Oregano::SSL::CertificateRequest.indirection.stubs :save
       end
 
       it "should use a certificate type of :server" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           args[0] == :server
         end.returns @cert.content
 
@@ -328,13 +328,13 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should use look up a CSR for the host in the :ca_file terminus" do
-        Puppet::SSL::CertificateRequest.indirection.expects(:find).with(@name).returns @request
+        Oregano::SSL::CertificateRequest.indirection.expects(:find).with(@name).returns @request
 
         @ca.sign(@name)
       end
 
       it "should fail if no CSR can be found for the host" do
-        Puppet::SSL::CertificateRequest.indirection.expects(:find).with(@name).returns nil
+        Oregano::SSL::CertificateRequest.indirection.expects(:find).with(@name).returns nil
 
         expect { @ca.sign(@name) }.to raise_error(ArgumentError)
       end
@@ -355,7 +355,7 @@ describe Puppet::SSL::CertificateAuthority do
 
         expect {
           @ca.sign(@name)
-        }.to raise_error(Puppet::SSL::CertificateAuthority::CertificateSigningError,
+        }.to raise_error(Oregano::SSL::CertificateAuthority::CertificateSigningError,
                          /CSR '#{@name}' contains authorization extensions (.*?, .*?).*/)
       end
 
@@ -372,7 +372,7 @@ describe Puppet::SSL::CertificateAuthority do
 
         expect do
           @ca.sign(@name, {allow_dns_alt_names: false})
-        end.to raise_error(Puppet::SSL::CertificateAuthority::CertificateSigningError, /CSR '#{@name}' contains subject alternative names \(.*?\), which are disallowed. Use `puppet cert --allow-dns-alt-names sign #{@name}` to sign this request./)
+        end.to raise_error(Oregano::SSL::CertificateAuthority::CertificateSigningError, /CSR '#{@name}' contains subject alternative names \(.*?\), which are disallowed. Use `oregano cert --allow-dns-alt-names sign #{@name}` to sign this request./)
       end
 
       it "should not fail if the CSR does not contain alt names and they are expected" do
@@ -385,18 +385,18 @@ describe Puppet::SSL::CertificateAuthority do
 
         expect do
           @ca.sign(@name)
-        end.to raise_error(Puppet::SSL::CertificateAuthority::CertificateSigningError, /CSR '#{@name}' contains subject alternative names \(.*?\), which are disallowed. Use `puppet cert --allow-dns-alt-names sign #{@name}` to sign this request./)
+        end.to raise_error(Oregano::SSL::CertificateAuthority::CertificateSigningError, /CSR '#{@name}' contains subject alternative names \(.*?\), which are disallowed. Use `oregano cert --allow-dns-alt-names sign #{@name}` to sign this request./)
       end
 
       it "should use the CA certificate as the issuer" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           args[2] == @cacert.content
         end.returns @cert.content
         signed = @ca.sign(@name)
       end
 
       it "should pass the next serial as the serial number" do
-        Puppet::SSL::CertificateFactory.expects(:build).with do |*args|
+        Oregano::SSL::CertificateFactory.expects(:build).with do |*args|
           args[3] == @serial
         end.returns @cert.content
         @ca.sign(@name)
@@ -414,12 +414,12 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should save the resulting certificate" do
-        Puppet::SSL::Certificate.indirection.stubs(:save).with(@cert)
+        Oregano::SSL::Certificate.indirection.stubs(:save).with(@cert)
         @ca.sign(@name)
       end
 
       it "should remove the host's certificate request" do
-        Puppet::SSL::CertificateRequest.indirection.expects(:destroy).with(@name)
+        Oregano::SSL::CertificateRequest.indirection.expects(:destroy).with(@name)
 
         @ca.sign(@name)
       end
@@ -435,32 +435,32 @@ describe Puppet::SSL::CertificateAuthority do
         @serial = 10
         @ca.stubs(:next_serial).returns @serial
 
-        Puppet::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
+        Oregano::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
         @cert.stubs :save
       end
 
       it "should reject CSRs whose CN doesn't match the name for which we're signing them" do
         # Shorten this so the test doesn't take too long
-        Puppet[:keylength] = 1024
-        key = Puppet::SSL::Key.new('the_certname')
+        Oregano[:keylength] = 1024
+        key = Oregano::SSL::Key.new('the_certname')
         key.generate
 
-        csr = Puppet::SSL::CertificateRequest.new('the_certname')
+        csr = Oregano::SSL::CertificateRequest.new('the_certname')
         csr.generate(key)
 
         expect do
           @ca.check_internal_signing_policies('not_the_certname', csr)
         end.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /common name "the_certname" does not match expected certname "not_the_certname"/
         )
       end
 
       describe "when validating the CN" do
         before :all do
-          Puppet[:keylength] = 1024
-          Puppet[:passfile] = '/f00'
-          @signing_key = Puppet::SSL::Key.new('my_signing_key')
+          Oregano[:keylength] = 1024
+          Oregano[:passfile] = '/f00'
+          @signing_key = Oregano::SSL::Key.new('my_signing_key')
           @signing_key.generate
         end
 
@@ -474,7 +474,7 @@ describe Puppet::SSL::CertificateAuthority do
          '{552c04ca-bb1b-11e1-874b-60334b04494e}'
         ].each do |name|
           it "should accept #{name.inspect}" do
-            csr = Puppet::SSL::CertificateRequest.new(name)
+            csr = Oregano::SSL::CertificateRequest.new(name)
             csr.generate(@signing_key)
 
             @ca.check_internal_signing_policies(name, csr)
@@ -490,15 +490,15 @@ describe Puppet::SSL::CertificateAuthority do
         ].each do |name|
           it "should reject #{name.inspect}" do
             # We aren't even allowed to make objects with these names, so let's
-            # stub that to simulate an invalid one coming from outside Puppet
-            Puppet::SSL::CertificateRequest.stubs(:validate_certname)
-            csr = Puppet::SSL::CertificateRequest.new(name)
+            # stub that to simulate an invalid one coming from outside Oregano
+            Oregano::SSL::CertificateRequest.stubs(:validate_certname)
+            csr = Oregano::SSL::CertificateRequest.new(name)
             csr.generate(@signing_key)
 
             expect do
               @ca.check_internal_signing_policies(name, csr)
             end.to raise_error(
-              Puppet::SSL::CertificateAuthority::CertificateSigningError,
+              Oregano::SSL::CertificateAuthority::CertificateSigningError,
               /subject contains unprintable or non-ASCII characters/
             )
           end
@@ -544,7 +544,7 @@ describe Puppet::SSL::CertificateAuthority do
                                                        "value" => "yumm",
                                                        "critical" => true }]
         expect { @ca.check_internal_signing_policies(@name, @request) }.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /request extensions that are not permitted/
         )
       end
@@ -554,7 +554,7 @@ describe Puppet::SSL::CertificateAuthority do
                                                        "value" => "meh",
                                                        "critical" => false }]
         expect { @ca.check_internal_signing_policies(@name, @request) }.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /request extensions that are not permitted/
         )
       end
@@ -567,7 +567,7 @@ describe Puppet::SSL::CertificateAuthority do
                                                        "value" => "DNS:foo",
                                                        "critical" => true }]
         expect { @ca.check_internal_signing_policies(@name, @request) }.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /request extensions that are not permitted/
         )
       end
@@ -577,14 +577,14 @@ describe Puppet::SSL::CertificateAuthority do
         expect {
           @ca.check_internal_signing_policies(@name, @request, {allow_dns_alt_names: true})
         }.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /subjectAltName outside the DNS label space/
         )
       end
 
       it "should allow a subjectAltName if subject matches CA's certname" do
         @request.stubs(:subject_alt_names).returns ['DNS:foo']
-        Puppet[:certname] = @name
+        Oregano[:certname] = @name
 
         expect {
           @ca.check_internal_signing_policies(@name, @request, {allow_dns_alt_names: false})
@@ -596,7 +596,7 @@ describe Puppet::SSL::CertificateAuthority do
           returns(OpenSSL::X509::Name.new([["CN", "*.local"]]))
 
         expect { @ca.check_internal_signing_policies('*.local', @request) }.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /subject contains a wildcard/
         )
       end
@@ -606,7 +606,7 @@ describe Puppet::SSL::CertificateAuthority do
         expect {
           @ca.check_internal_signing_policies(@name, @request, {allow_dns_alt_names: true})
         }.to raise_error(
-          Puppet::SSL::CertificateAuthority::CertificateSigningError,
+          Oregano::SSL::CertificateAuthority::CertificateSigningError,
           /subjectAltName contains a wildcard/
         )
       end
@@ -616,17 +616,17 @@ describe Puppet::SSL::CertificateAuthority do
       @serial = 10
       @ca.stubs(:next_serial).returns @serial
 
-      Puppet::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
-      Puppet::SSL::Certificate.indirection.stubs :save
-      Puppet::SSL::Certificate.expects(:new).with(@name).returns @cert
+      Oregano::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
+      Oregano::SSL::Certificate.indirection.stubs :save
+      Oregano::SSL::Certificate.expects(:new).with(@name).returns @cert
 
       @ca.sign(@name)
     end
 
     it "should return the certificate instance" do
       @ca.stubs(:next_serial).returns @serial
-      Puppet::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
-      Puppet::SSL::Certificate.indirection.stubs :save
+      Oregano::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
+      Oregano::SSL::Certificate.indirection.stubs :save
       expect(@ca.sign(@name)).to equal(@cert)
     end
 
@@ -634,8 +634,8 @@ describe Puppet::SSL::CertificateAuthority do
       @ca.stubs(:next_serial).returns @serial
       @inventory.expects(:add).with(@cert)
 
-      Puppet::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
-      Puppet::SSL::Certificate.indirection.stubs :save
+      Oregano::SSL::CertificateRequest.indirection.stubs(:find).with(@name).returns @request
+      Oregano::SSL::Certificate.indirection.stubs :save
       @ca.sign(@name)
     end
 
@@ -644,22 +644,22 @@ describe Puppet::SSL::CertificateAuthority do
     end
 
     describe "when autosigning certificates" do
-      let(:csr) { Puppet::SSL::CertificateRequest.new("host") }
+      let(:csr) { Oregano::SSL::CertificateRequest.new("host") }
 
       describe "using the autosign setting" do
         let(:autosign) { File.expand_path("/auto/sign") }
 
         it "should do nothing if autosign is disabled" do
-          Puppet[:autosign] = false
+          Oregano[:autosign] = false
 
           @ca.expects(:sign).never
           @ca.autosign(csr)
         end
 
         it "should do nothing if no autosign.conf exists" do
-          Puppet[:autosign] = autosign
-          non_existent_file = Puppet::FileSystem::MemoryFile.a_missing_file(autosign)
-          Puppet::FileSystem.overlay(non_existent_file) do
+          Oregano[:autosign] = autosign
+          non_existent_file = Oregano::FileSystem::MemoryFile.a_missing_file(autosign)
+          Oregano::FileSystem.overlay(non_existent_file) do
             @ca.expects(:sign).never
             @ca.autosign(csr)
           end
@@ -669,13 +669,13 @@ describe Puppet::SSL::CertificateAuthority do
           let(:store) { stub 'store', :allow => nil, :allowed? => false }
 
           before do
-            Puppet[:autosign] = autosign
+            Oregano[:autosign] = autosign
           end
 
           describe "when creating the AuthStore instance to verify autosigning" do
             it "should create an AuthStore with each line in the configuration file allowed to be autosigned" do
-              Puppet::FileSystem.overlay(Puppet::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one\ntwo\n")) do
-                Puppet::Network::AuthStore.stubs(:new).returns store
+              Oregano::FileSystem.overlay(Oregano::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one\ntwo\n")) do
+                Oregano::Network::AuthStore.stubs(:new).returns store
 
                 store.expects(:allow).with("one")
                 store.expects(:allow).with("two")
@@ -685,8 +685,8 @@ describe Puppet::SSL::CertificateAuthority do
             end
 
             it "should reparse the autosign configuration on each call" do
-              Puppet::FileSystem.overlay(Puppet::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one")) do
-                Puppet::Network::AuthStore.stubs(:new).times(2).returns store
+              Oregano::FileSystem.overlay(Oregano::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one")) do
+                Oregano::Network::AuthStore.stubs(:new).times(2).returns store
 
                 @ca.autosign(csr)
                 @ca.autosign(csr)
@@ -694,8 +694,8 @@ describe Puppet::SSL::CertificateAuthority do
             end
 
             it "should ignore comments" do
-              Puppet::FileSystem.overlay(Puppet::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one\n#two\n")) do
-                Puppet::Network::AuthStore.stubs(:new).returns store
+              Oregano::FileSystem.overlay(Oregano::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one\n#two\n")) do
+                Oregano::Network::AuthStore.stubs(:new).returns store
 
                 store.expects(:allow).with("one")
 
@@ -704,8 +704,8 @@ describe Puppet::SSL::CertificateAuthority do
             end
 
             it "should ignore blank lines" do
-              Puppet::FileSystem.overlay(Puppet::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one\n\n")) do
-                Puppet::Network::AuthStore.stubs(:new).returns store
+              Oregano::FileSystem.overlay(Oregano::FileSystem::MemoryFile.a_regular_file_containing(autosign, "one\n\n")) do
+                Oregano::Network::AuthStore.stubs(:new).returns store
 
                 store.expects(:allow).with("one")
                 @ca.autosign(csr)
@@ -718,16 +718,16 @@ describe Puppet::SSL::CertificateAuthority do
       describe "using the autosign command setting" do
         let(:cmd) { File.expand_path('/autosign_cmd') }
         let(:autosign_cmd) { mock 'autosign_command' }
-        let(:autosign_executable) { Puppet::FileSystem::MemoryFile.an_executable(cmd) }
+        let(:autosign_executable) { Oregano::FileSystem::MemoryFile.an_executable(cmd) }
 
         before do
-          Puppet[:autosign] = cmd
+          Oregano[:autosign] = cmd
 
-          Puppet::SSL::CertificateAuthority::AutosignCommand.stubs(:new).returns autosign_cmd
+          Oregano::SSL::CertificateAuthority::AutosignCommand.stubs(:new).returns autosign_cmd
         end
 
         it "autosigns the CSR if the autosign command returned true" do
-          Puppet::FileSystem.overlay(autosign_executable) do
+          Oregano::FileSystem.overlay(autosign_executable) do
             autosign_cmd.expects(:allowed?).with(csr).returns true
 
             @ca.expects(:sign).with('host')
@@ -736,7 +736,7 @@ describe Puppet::SSL::CertificateAuthority do
         end
 
         it "doesn't autosign the CSR if the autosign_command returned false" do
-          Puppet::FileSystem.overlay(autosign_executable) do
+          Oregano::FileSystem.overlay(autosign_executable) do
             autosign_cmd.expects(:allowed?).with(csr).returns false
 
             @ca.expects(:sign).never
@@ -749,30 +749,30 @@ describe Puppet::SSL::CertificateAuthority do
 
   describe "when managing certificate clients" do
     before do
-      Puppet.settings.stubs(:use)
+      Oregano.settings.stubs(:use)
 
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:password?).returns true
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:password?).returns true
 
       stub_ca_host
 
-      Puppet::SSL::Host.expects(:new).returns @host
-      Puppet::SSL::CertificateAuthority.any_instance.stubs(:host).returns @host
+      Oregano::SSL::Host.expects(:new).returns @host
+      Oregano::SSL::CertificateAuthority.any_instance.stubs(:host).returns @host
 
       @cacert = mock 'certificate'
       @cacert.stubs(:content).returns "cacertificate"
-      @ca = Puppet::SSL::CertificateAuthority.new
+      @ca = Oregano::SSL::CertificateAuthority.new
     end
 
     it "should be able to list waiting certificate requests" do
       req1 = stub 'req1', :name => "one"
       req2 = stub 'req2', :name => "two"
-      Puppet::SSL::CertificateRequest.indirection.expects(:search).with("*").returns [req1, req2]
+      Oregano::SSL::CertificateRequest.indirection.expects(:search).with("*").returns [req1, req2]
 
       expect(@ca.waiting?).to eq(%w{one two})
     end
 
     it "should delegate removing hosts to the Host class" do
-      Puppet::SSL::Host.expects(:destroy).with("myhost")
+      Oregano::SSL::Host.expects(:destroy).with("myhost")
 
       @ca.destroy("myhost")
     end
@@ -784,32 +784,32 @@ describe Puppet::SSL::CertificateAuthority do
     it "should list certificates as the sorted list of all existing signed certificates" do
       cert1 = stub 'cert1', :name => "cert1"
       cert2 = stub 'cert2', :name => "cert2"
-      Puppet::SSL::Certificate.indirection.expects(:search).with("*").returns [cert1, cert2]
+      Oregano::SSL::Certificate.indirection.expects(:search).with("*").returns [cert1, cert2]
       expect(@ca.list).to eq(%w{cert1 cert2})
     end
 
     it "should list the full certificates" do
       cert1 = stub 'cert1', :name => "cert1"
       cert2 = stub 'cert2', :name => "cert2"
-      Puppet::SSL::Certificate.indirection.expects(:search).with("*").returns [cert1, cert2]
+      Oregano::SSL::Certificate.indirection.expects(:search).with("*").returns [cert1, cert2]
       expect(@ca.list_certificates).to eq([cert1, cert2])
     end
 
     it "should print a deprecation when using #list_certificates" do
-      Puppet::SSL::Certificate.indirection.stubs(:search).with("*").returns [:foo, :bar]
-      Puppet.expects(:deprecation_warning).with(regexp_matches(/list_certificates is deprecated/))
+      Oregano::SSL::Certificate.indirection.stubs(:search).with("*").returns [:foo, :bar]
+      Oregano.expects(:deprecation_warning).with(regexp_matches(/list_certificates is deprecated/))
       @ca.list_certificates
     end
 
     describe "and printing certificates" do
       it "should return nil if the certificate cannot be found" do
-        Puppet::SSL::Certificate.indirection.expects(:find).with("myhost").returns nil
+        Oregano::SSL::Certificate.indirection.expects(:find).with("myhost").returns nil
         expect(@ca.print("myhost")).to be_nil
       end
 
       it "should print certificates by calling :to_text on the host's certificate" do
         cert1 = stub 'cert1', :name => "cert1", :to_text => "mytext"
-        Puppet::SSL::Certificate.indirection.expects(:find).with("myhost").returns cert1
+        Oregano::SSL::Certificate.indirection.expects(:find).with("myhost").returns cert1
         expect(@ca.print("myhost")).to eq("mytext")
       end
     end
@@ -817,19 +817,19 @@ describe Puppet::SSL::CertificateAuthority do
     describe "and fingerprinting certificates" do
       before :each do
         @cert = stub 'cert', :name => "cert", :fingerprint => "DIGEST"
-        Puppet::SSL::Certificate.indirection.stubs(:find).with("myhost").returns @cert
-        Puppet::SSL::CertificateRequest.indirection.stubs(:find).with("myhost")
+        Oregano::SSL::Certificate.indirection.stubs(:find).with("myhost").returns @cert
+        Oregano::SSL::CertificateRequest.indirection.stubs(:find).with("myhost")
       end
 
       it "should raise an error if the certificate or CSR cannot be found" do
-        Puppet::SSL::Certificate.indirection.expects(:find).with("myhost").returns nil
-        Puppet::SSL::CertificateRequest.indirection.expects(:find).with("myhost").returns nil
+        Oregano::SSL::Certificate.indirection.expects(:find).with("myhost").returns nil
+        Oregano::SSL::CertificateRequest.indirection.expects(:find).with("myhost").returns nil
         expect { @ca.fingerprint("myhost") }.to raise_error(ArgumentError, /Could not find a certificate/)
       end
 
       it "should try to find a CSR if no certificate can be found" do
-        Puppet::SSL::Certificate.indirection.expects(:find).with("myhost").returns nil
-        Puppet::SSL::CertificateRequest.indirection.expects(:find).with("myhost").returns @cert
+        Oregano::SSL::Certificate.indirection.expects(:find).with("myhost").returns nil
+        Oregano::SSL::CertificateRequest.indirection.expects(:find).with("myhost").returns @cert
         @cert.expects(:fingerprint)
         @ca.fingerprint("myhost")
       end
@@ -853,7 +853,7 @@ describe Puppet::SSL::CertificateAuthority do
         OpenSSL::X509::Store.stubs(:new).returns @store
 
         @cert = stub 'cert', :content => "mycert"
-        Puppet::SSL::Certificate.indirection.stubs(:find).returns @cert
+        Oregano::SSL::Certificate.indirection.stubs(:find).returns @cert
 
         @crl = stub('crl', :content => "mycrl")
 
@@ -861,7 +861,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should fail if the host's certificate cannot be found" do
-        Puppet::SSL::Certificate.indirection.expects(:find).with("me").returns(nil)
+        Oregano::SSL::Certificate.indirection.expects(:find).with("me").returns(nil)
 
         expect { @ca.verify("me") }.to raise_error(ArgumentError)
       end
@@ -873,7 +873,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should add the CA Certificate to the store" do
-        Puppet[:cacert] = cacert
+        Oregano[:cacert] = cacert
         @store.expects(:add_file).with cacert
 
         @ca.verify("me")
@@ -886,7 +886,7 @@ describe Puppet::SSL::CertificateAuthority do
       end
 
       it "should set the store purpose to OpenSSL::X509::PURPOSE_SSL_CLIENT" do
-        Puppet[:cacert] = cacert
+        Oregano[:cacert] = cacert
         @store.expects(:add_file).with cacert
 
         @ca.verify("me")
@@ -913,7 +913,7 @@ describe Puppet::SSL::CertificateAuthority do
         @store.expects(:error)
         @store.expects(:error_string)
 
-        expect { @ca.verify("me") }.to raise_error(Puppet::SSL::CertificateAuthority::CertificateVerificationError)
+        expect { @ca.verify("me") }.to raise_error(Oregano::SSL::CertificateAuthority::CertificateVerificationError)
       end
 
       describe "certificate_is_alive?" do
@@ -945,7 +945,7 @@ describe Puppet::SSL::CertificateAuthority do
         end
 
         it "should be deprecated" do
-          Puppet.expects(:deprecation_warning).with(regexp_matches(/certificate_is_alive\? is deprecated/))
+          Oregano.expects(:deprecation_warning).with(regexp_matches(/certificate_is_alive\? is deprecated/))
           @ca.certificate_is_alive?(@cert)
         end
       end
@@ -960,7 +960,7 @@ describe Puppet::SSL::CertificateAuthority do
 
         @real_cert = stub 'real_cert', :serial => 15
         @cert = stub 'cert', :content => @real_cert
-        Puppet::SSL::Certificate.indirection.stubs(:find).returns @cert
+        Oregano::SSL::Certificate.indirection.stubs(:find).returns @cert
 
       end
 
@@ -980,7 +980,7 @@ describe Puppet::SSL::CertificateAuthority do
       it "should get the serial number from the local certificate if it exists" do
         @ca.crl.expects(:revoke).with { |serial, key| serial == 15 }
 
-        Puppet::SSL::Certificate.indirection.expects(:find).with("host").returns @cert
+        Oregano::SSL::Certificate.indirection.expects(:find).with("host").returns @cert
 
         @ca.revoke('host')
       end
@@ -988,7 +988,7 @@ describe Puppet::SSL::CertificateAuthority do
       it "should get the serial number from inventory if no local certificate exists" do
         real_cert = stub 'real_cert', :serial => 15
         cert = stub 'cert', :content => real_cert
-        Puppet::SSL::Certificate.indirection.expects(:find).with("host").returns nil
+        Oregano::SSL::Certificate.indirection.expects(:find).with("host").returns nil
 
         @ca.inventory.expects(:serials).with("host").returns [16]
 
@@ -999,7 +999,7 @@ describe Puppet::SSL::CertificateAuthority do
       it "should revoke all serials matching a name" do
         real_cert = stub 'real_cert', :serial => 15
         cert = stub 'cert', :content => real_cert
-        Puppet::SSL::Certificate.indirection.expects(:find).with("host").returns nil
+        Oregano::SSL::Certificate.indirection.expects(:find).with("host").returns nil
 
         @ca.inventory.expects(:serials).with("host").returns [16, 20, 25]
 
@@ -1012,7 +1012,7 @@ describe Puppet::SSL::CertificateAuthority do
       it "should raise an error if no certificate match" do
         real_cert = stub 'real_cert', :serial => 15
         cert = stub 'cert', :content => real_cert
-        Puppet::SSL::Certificate.indirection.expects(:find).with("host").returns nil
+        Oregano::SSL::Certificate.indirection.expects(:find).with("host").returns nil
 
         @ca.inventory.expects(:serials).with("host").returns []
 
@@ -1023,14 +1023,14 @@ describe Puppet::SSL::CertificateAuthority do
       context "revocation by serial number (#16798)" do
         it "revokes when given a lower case hexadecimal formatted string" do
           @ca.crl.expects(:revoke).with { |serial, key| serial == 15 }
-          Puppet::SSL::Certificate.indirection.expects(:find).with("0xf").returns nil
+          Oregano::SSL::Certificate.indirection.expects(:find).with("0xf").returns nil
 
           @ca.revoke('0xf')
         end
 
         it "revokes when given an upper case hexadecimal formatted string" do
           @ca.crl.expects(:revoke).with { |serial, key| serial == 15 }
-          Puppet::SSL::Certificate.indirection.expects(:find).with("0xF").returns nil
+          Oregano::SSL::Certificate.indirection.expects(:find).with("0xF").returns nil
 
           @ca.revoke('0xF')
         end
@@ -1040,7 +1040,7 @@ describe Puppet::SSL::CertificateAuthority do
           bighex_int = 365375409332725729550921208179070754913983135744
 
           @ca.crl.expects(:revoke).with(bighex_int, anything)
-          Puppet::SSL::Certificate.indirection.expects(:find).with(bighex).returns nil
+          Oregano::SSL::Certificate.indirection.expects(:find).with(bighex).returns nil
 
           @ca.revoke(bighex)
         end
@@ -1053,13 +1053,13 @@ describe Puppet::SSL::CertificateAuthority do
   end
 end
 
-require 'puppet/indirector/memory'
+require 'oregano/indirector/memory'
 
 module CertificateAuthorityGenerateSpecs
 describe "CertificateAuthority.generate" do
 
   def expect_to_increment_serial_file
-    Puppet.settings.setting(:serial).expects(:exclusive_open)
+    Oregano.settings.setting(:serial).expects(:exclusive_open)
   end
 
   def expect_to_sign_a_cert
@@ -1067,7 +1067,7 @@ describe "CertificateAuthority.generate" do
   end
 
   def expect_to_write_the_ca_password
-    Puppet.settings.setting(:capass).expects(:open).with('w:ASCII')
+    Oregano.settings.setting(:capass).expects(:open).with('w:ASCII')
   end
 
   def expect_ca_initialization
@@ -1076,18 +1076,18 @@ describe "CertificateAuthority.generate" do
   end
 
   INDIRECTED_CLASSES = [
-    Puppet::SSL::Certificate,
-    Puppet::SSL::CertificateRequest,
-    Puppet::SSL::CertificateRevocationList,
-    Puppet::SSL::Key,
+    Oregano::SSL::Certificate,
+    Oregano::SSL::CertificateRequest,
+    Oregano::SSL::CertificateRevocationList,
+    Oregano::SSL::Key,
   ]
 
   INDIRECTED_CLASSES.each do |const|
-    class const::Memory < Puppet::Indirector::Memory
+    class const::Memory < Oregano::Indirector::Memory
 
       # @return Array of all the indirector's values
       #
-      # This mirrors Puppet::Indirector::SslFile#search which returns all files
+      # This mirrors Oregano::Indirector::SslFile#search which returns all files
       # in the directory.
       def search(request)
         return @instances.values
@@ -1096,7 +1096,7 @@ describe "CertificateAuthority.generate" do
   end
 
   before do
-    Puppet::SSL::Inventory.stubs(:new).returns(stub("Inventory", :add => nil))
+    Oregano::SSL::Inventory.stubs(:new).returns(stub("Inventory", :add => nil))
     INDIRECTED_CLASSES.each { |const| const.indirection.terminus_class = :memory }
   end
 
@@ -1108,15 +1108,15 @@ describe "CertificateAuthority.generate" do
   end
 
   describe "when generating certificates" do
-    let(:ca) { Puppet::SSL::CertificateAuthority.new }
+    let(:ca) { Oregano::SSL::CertificateAuthority.new }
 
     before do
       expect_ca_initialization
     end
 
     it "should fail if a certificate already exists for the host" do
-      cert = Puppet::SSL::Certificate.new('pre.existing')
-      Puppet::SSL::Certificate.indirection.save(cert)
+      cert = Oregano::SSL::Certificate.new('pre.existing')
+      Oregano::SSL::Certificate.indirection.save(cert)
       expect { ca.generate(cert.name) }.to raise_error(ArgumentError, /a certificate already exists/i)
     end
 
@@ -1124,7 +1124,7 @@ describe "CertificateAuthority.generate" do
       let(:cn) { "new.host" }
 
       def expect_cert_does_not_exist(cn)
-        expect( Puppet::SSL::Certificate.indirection.find(cn) ).to be_nil
+        expect( Oregano::SSL::Certificate.indirection.find(cn) ).to be_nil
       end
 
       before do
@@ -1134,7 +1134,7 @@ describe "CertificateAuthority.generate" do
 
       it "should return the created certificate" do
         cert = ca.generate(cn)
-        expect( cert ).to be_kind_of(Puppet::SSL::Certificate)
+        expect( cert ).to be_kind_of(Oregano::SSL::Certificate)
         expect( cert.name ).to eq(cn)
       end
 
@@ -1150,7 +1150,7 @@ describe "CertificateAuthority.generate" do
 
       context "if autosign is false" do
         before do
-          Puppet[:autosign] = false
+          Oregano[:autosign] = false
         end
 
         it "should still generate and explicitly sign the request" do
@@ -1163,13 +1163,13 @@ describe "CertificateAuthority.generate" do
       context "if autosign is true (Redmine #6112)" do
 
         def run_mode_must_be_master_for_autosign_to_be_attempted
-          Puppet.stubs(:run_mode).returns(Puppet::Util::RunMode[:master])
+          Oregano.stubs(:run_mode).returns(Oregano::Util::RunMode[:master])
         end
 
         before do
-          Puppet[:autosign] = true
+          Oregano[:autosign] = true
           run_mode_must_be_master_for_autosign_to_be_attempted
-          Puppet::Util::Log.level = :info
+          Oregano::Util::Log.level = :info
         end
 
         it "should generate a cert without attempting to sign again" do

@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:zone) do
+describe Oregano::Type.type(:zone) do
   let(:zone)     { described_class.new(:name => 'dummy', :path => '/dummy', :provider => :solaris, :ip=>'if:1.2.3.4:2.3.4.5', :inherit=>'/', :dataset=>'tank') }
   let(:provider) { zone.provider }
   let(:ip)      { zone.property(:ip) }
@@ -12,7 +12,7 @@ describe Puppet::Type.type(:zone) do
 
   parameters.each do |parameter|
     it "should have a #{parameter} parameter" do
-      expect(described_class.attrclass(parameter).ancestors).to be_include(Puppet::Parameter)
+      expect(described_class.attrclass(parameter).ancestors).to be_include(Oregano::Parameter)
     end
   end
 
@@ -20,7 +20,7 @@ describe Puppet::Type.type(:zone) do
 
   properties.each do |property|
     it "should have a #{property} property" do
-      expect(described_class.attrclass(property).ancestors).to be_include(Puppet::Property)
+      expect(described_class.attrclass(property).ancestors).to be_include(Oregano::Property)
     end
   end
 
@@ -71,19 +71,19 @@ describe Puppet::Type.type(:zone) do
   it "should be invalid when :ip is missing a \":\" and iptype is :shared" do
     expect {
       described_class.new(:name => "dummy", :ip => "if", :path => "/dummy", :provider => :solaris)
-    }.to raise_error(Puppet::Error, /ip must contain interface name and ip address separated by a ":"/)
+    }.to raise_error(Oregano::Error, /ip must contain interface name and ip address separated by a ":"/)
   end
 
   it "should be invalid when :ip has a \":\" and iptype is :exclusive" do
     expect {
       described_class.new(:name => "dummy", :ip => "if:1.2.3.4", :iptype => :exclusive, :provider => :solaris)
-    }.to raise_error(Puppet::Error, /only interface may be specified when using exclusive IP stack/)
+    }.to raise_error(Oregano::Error, /only interface may be specified when using exclusive IP stack/)
   end
 
   it "should be invalid when :ip has two \":\" and iptype is :exclusive" do
     expect {
       described_class.new(:name => "dummy", :ip => "if:1.2.3.4:2.3.4.5", :iptype => :exclusive, :provider => :solaris)
-    }.to raise_error(Puppet::Error, /only interface may be specified when using exclusive IP stack/)
+    }.to raise_error(Oregano::Error, /only interface may be specified when using exclusive IP stack/)
   end
 
   it "should be valid when :iptype is :shared and using interface and ip" do
@@ -101,9 +101,9 @@ describe Puppet::Type.type(:zone) do
   it "should auto-require :dataset entries" do
     fs = 'random-pool/some-zfs'
 
-    catalog = Puppet::Resource::Catalog.new
-    relationship_graph = Puppet::Graph::RelationshipGraph.new(Puppet::Graph::RandomPrioritizer.new)
-    zfs = Puppet::Type.type(:zfs).new(:name => fs)
+    catalog = Oregano::Resource::Catalog.new
+    relationship_graph = Oregano::Graph::RelationshipGraph.new(Oregano::Graph::RandomPrioritizer.new)
+    zfs = Oregano::Type.type(:zfs).new(:name => fs)
     catalog.add_resource zfs
 
     zone = described_class.new(:name    => "dummy",
@@ -117,8 +117,8 @@ describe Puppet::Type.type(:zone) do
     relationship_graph.populate_from(catalog)
     expect(relationship_graph.dependencies(zone)).to eq([zfs])
   end
-  describe Puppet::Zone::StateMachine do
-    let (:sm) { Puppet::Zone::StateMachine.new }
+  describe Oregano::Zone::StateMachine do
+    let (:sm) { Oregano::Zone::StateMachine.new }
     before :each do
       sm.insert_state :absent, :down => :destroy
       sm.insert_state :configured, :up => :configure, :down => :uninstall

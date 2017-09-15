@@ -1,45 +1,45 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/file_bucket/file'
+require 'oregano/file_bucket/file'
 
 
-describe Puppet::FileBucket::File, :uses_checksums => true do
-  include PuppetSpec::Files
+describe Oregano::FileBucket::File, :uses_checksums => true do
+  include OreganoSpec::Files
 
   # this is the default from spec_helper, but it keeps getting reset at odd times
-  let(:bucketdir) { Puppet[:bucketdir] = tmpdir('bucket') }
+  let(:bucketdir) { Oregano[:bucketdir] = tmpdir('bucket') }
 
   it "defaults to serializing to `:binary`" do
-    expect(Puppet::FileBucket::File.default_format).to eq(:binary)
+    expect(Oregano::FileBucket::File.default_format).to eq(:binary)
   end
 
   it "only accepts binary" do
-    expect(Puppet::FileBucket::File.supported_formats).to eq([:binary])
+    expect(Oregano::FileBucket::File.supported_formats).to eq([:binary])
   end
 
   describe "making round trips through network formats" do
     with_digest_algorithms do
       it "can make a round trip through `binary`" do
-        file = Puppet::FileBucket::File.new(plaintext)
-        tripped = Puppet::FileBucket::File.convert_from(:binary, file.render)
+        file = Oregano::FileBucket::File.new(plaintext)
+        tripped = Oregano::FileBucket::File.convert_from(:binary, file.render)
         expect(tripped.contents).to eq(plaintext)
       end
     end
   end
 
   it "should require contents to be a string" do
-    expect { Puppet::FileBucket::File.new(5) }.to raise_error(ArgumentError, /contents must be a String or Pathname, got a (?:Fixnum|Integer)$/)
+    expect { Oregano::FileBucket::File.new(5) }.to raise_error(ArgumentError, /contents must be a String or Pathname, got a (?:Fixnum|Integer)$/)
   end
 
   it "should complain about options other than :bucket_path" do
     expect {
-      Puppet::FileBucket::File.new('5', :crazy_option => 'should not be passed')
+      Oregano::FileBucket::File.new('5', :crazy_option => 'should not be passed')
     }.to raise_error(ArgumentError, /Unknown option\(s\): crazy_option/)
   end
 
   with_digest_algorithms do
     it "it uses #{metadata[:digest_algorithm]} as the configured digest algorithm" do
-      file = Puppet::FileBucket::File.new(plaintext)
+      file = Oregano::FileBucket::File.new(plaintext)
 
       expect(file.contents).to eq(plaintext)
       expect(file.checksum_type).to eq(digest_algorithm)
@@ -49,12 +49,12 @@ describe Puppet::FileBucket::File, :uses_checksums => true do
   end
 
   describe "when using back-ends" do
-    it "should redirect using Puppet::Indirector" do
-      expect(Puppet::Indirector::Indirection.instance(:file_bucket_file).model).to equal(Puppet::FileBucket::File)
+    it "should redirect using Oregano::Indirector" do
+      expect(Oregano::Indirector::Indirection.instance(:file_bucket_file).model).to equal(Oregano::FileBucket::File)
     end
 
     it "should have a :save instance method" do
-      expect(Puppet::FileBucket::File.indirection).to respond_to(:save)
+      expect(Oregano::FileBucket::File.indirection).to respond_to(:save)
     end
   end
 end

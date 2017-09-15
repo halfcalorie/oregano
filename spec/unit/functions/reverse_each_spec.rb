@@ -1,18 +1,18 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 require 'shared_behaviours/iterative_functions'
 
 describe 'the reverse_each function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   it 'raises an error when given a type that cannot be iterated' do
     expect do
       compile_to_catalog(<<-MANIFEST)
         3.14.reverse_each |$v| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects an Iterable value, got Float/)
+    end.to raise_error(Oregano::Error, /expects an Iterable value, got Float/)
   end
 
   it 'raises an error when called with more than one argument and without a block' do
@@ -20,7 +20,7 @@ describe 'the reverse_each function' do
       compile_to_catalog(<<-MANIFEST)
         [1].reverse_each(1)
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects 1 argument, got 2/)
+    end.to raise_error(Oregano::Error, /expects 1 argument, got 2/)
   end
 
   it 'raises an error when called with more than one argument and a block' do
@@ -28,7 +28,7 @@ describe 'the reverse_each function' do
       compile_to_catalog(<<-MANIFEST)
         [1].reverse_each(1) |$v| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /expects 1 argument, got 2/)
+    end.to raise_error(Oregano::Error, /expects 1 argument, got 2/)
   end
 
   it 'raises an error when called with a block with too many required parameters' do
@@ -36,7 +36,7 @@ describe 'the reverse_each function' do
       compile_to_catalog(<<-MANIFEST)
         [1].reverse_each() |$v1, $v2| {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /block expects 1 argument, got 2/)
+    end.to raise_error(Oregano::Error, /block expects 1 argument, got 2/)
   end
 
   it 'raises an error when called with a block with too few parameters' do
@@ -44,7 +44,7 @@ describe 'the reverse_each function' do
       compile_to_catalog(<<-MANIFEST)
         [1].reverse_each() | | {  }
       MANIFEST
-    end.to raise_error(Puppet::Error, /block expects 1 argument, got none/)
+    end.to raise_error(Oregano::Error, /block expects 1 argument, got none/)
   end
 
   it 'does not raise an error when called with a block with too many but optional arguments' do

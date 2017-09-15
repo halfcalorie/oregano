@@ -20,8 +20,8 @@ apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
   File {
     ensure => directory,
     mode => "0770",
-    owner => #{master.puppet['user']},
-    group => #{master.puppet['group']},
+    owner => #{master.oregano['user']},
+    group => #{master.oregano['group']},
   }
   file {
     '#{testdir}/environments':;
@@ -30,9 +30,9 @@ apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
     '#{testdir}/environments/special/modules':;
     '#{testdir}/environments/special/modules/amod':;
     '#{testdir}/environments/special/modules/amod/lib':;
-    '#{testdir}/environments/special/modules/amod/lib/puppet':;
+    '#{testdir}/environments/special/modules/amod/lib/oregano':;
   }
-  file { '#{testdir}/environments/special/modules/amod/lib/puppet/foo.rb':
+  file { '#{testdir}/environments/special/modules/amod/lib/oregano/foo.rb':
     ensure => file,
     mode => "0640",
     content => "#special_version",
@@ -49,16 +49,16 @@ master_opts = {
   },
 }
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
 
   agents.each do |agent|
-    agent_vardir = agent.puppet['vardir']
+    agent_vardir = agent.oregano['vardir']
     teardown do
       on agent, "rm -rf \"#{agent_vardir}/lib\""
     end
 
     run_agent_on(agent, "--no-daemonize --onetime --server #{master}")
-    on agent, "cat \"#{agent_vardir}/lib/puppet/foo.rb\""
+    on agent, "cat \"#{agent_vardir}/lib/oregano/foo.rb\""
     assert_match(/#special_version/, stdout, "The plugin from environment 'special' was not synced")
   end
 end

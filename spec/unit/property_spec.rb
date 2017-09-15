@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/property'
+require 'oregano/property'
 
-describe Puppet::Property do
-  let :resource do Puppet::Type.type(:host).new :name => "foo" end
+describe Oregano::Property do
+  let :resource do Oregano::Type.type(:host).new :name => "foo" end
 
   let :subclass do
     # We need a completely fresh subclass every time, because we modify both
     # class and instance level things inside the tests.
-    subclass = Class.new(Puppet::Property) do
+    subclass = Class.new(Oregano::Property) do
       class << self
         attr_accessor :name
       end
@@ -111,7 +111,7 @@ describe Puppet::Property do
     end
 
     it "should use an event from the resource as the base event" do
-      event = Puppet::Transaction::Event.new
+      event = Oregano::Transaction::Event.new
       resource.expects(:event).returns event
 
       expect(property.event).to equal(event)
@@ -235,7 +235,7 @@ describe Puppet::Property do
     it "should fail if the value is not a defined value or alias and does not match a regex" do
       subclass.newvalue(:foo)
 
-      expect { property.should = "bar" }.to raise_error(Puppet::Error, /Invalid value "bar"./)
+      expect { property.should = "bar" }.to raise_error(Oregano::Error, /Invalid value "bar"./)
     end
 
     it "should succeeed if the value is one of the defined values" do
@@ -282,7 +282,7 @@ describe Puppet::Property do
 
       resource.provider.expects(:satisfies?).with([:a, :b]).returns false
 
-      expect { property.should = :foo }.to raise_error(Puppet::Error)
+      expect { property.should = :foo }.to raise_error(Oregano::Error)
     end
 
     it "should internally raise an ArgumentError if required features are missing" do
@@ -347,14 +347,14 @@ describe Puppet::Property do
   end
 
   describe "when setting a value" do
-    it "should catch exceptions and raise Puppet::Error" do
+    it "should catch exceptions and raise Oregano::Error" do
       subclass.newvalue(:foo) { raise "eh" }
-      expect { property.set(:foo) }.to raise_error(Puppet::Error)
+      expect { property.set(:foo) }.to raise_error(Oregano::Error)
     end
 
     it "fails when the provider does not handle the attribute" do
       subclass.name = "unknown"
-      expect { property.set(:a_value) }.to raise_error(Puppet::Error)
+      expect { property.set(:a_value) }.to raise_error(Oregano::Error)
     end
 
     it "propogates the errors about missing methods from the provider" do

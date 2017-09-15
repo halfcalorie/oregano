@@ -25,14 +25,14 @@ function idFree() {
 }
 
 function create_puser () {
-  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Users/puppet
-  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Users/puppet UniqueID $1
-  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Users/puppet PrimaryGroupID $2
+  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Users/oregano
+  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Users/oregano UniqueID $1
+  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Users/oregano PrimaryGroupID $2
 }
 
 function create_pgroup () {
-  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Groups/puppet
-  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Groups/puppet PrimaryGroupID $1
+  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Groups/oregano
+  "${dscl}" -f "${dspath}" localonly -create /Local/Target/Groups/oregano PrimaryGroupID $1
 }
 
 function scan_users () {
@@ -71,37 +71,37 @@ function scan_groups () {
   fi
 }
 
-echo "looking for Puppet User"
-"${dscl}" -f "${dspath}" localonly -read /Local/Target/Users/puppet
+echo "looking for Oregano User"
+"${dscl}" -f "${dspath}" localonly -read /Local/Target/Users/oregano
 puser_exists=$?
-echo "Looking for Puppet Group"
-"${dscl}" -f "${dspath}" localonly -read /Local/Target/Groups/puppet
+echo "Looking for Oregano Group"
+"${dscl}" -f "${dspath}" localonly -read /Local/Target/Groups/oregano
 pgroup_exists=$?
 # exit status 56 indicates user/group not found
 # exit status 0 indicates user/group does exist
 
 if [ $pgroup_exists == '0' ] && [ $puser_exists == '0' ]; then
-  #Puppet user and group already exist
-  echo "Puppet User / Group already exist, not adding anything"
-  #storing the existing UID/GID to set permissions for /var/lib/puppet and /etc/puppet/puppet.conf
-  last_group_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Groups/puppet PrimaryGroupID | awk '{print $2}'`
-  last_user_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Users/puppet UniqueID | awk '{print $2}'`
+  #Oregano user and group already exist
+  echo "Oregano User / Group already exist, not adding anything"
+  #storing the existing UID/GID to set permissions for /var/lib/oregano and /etc/oregano/oregano.conf
+  last_group_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Groups/oregano PrimaryGroupID | awk '{print $2}'`
+  last_user_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Users/oregano UniqueID | awk '{print $2}'`
 elif [ $pgroup_exists == '0' ] && [ $puser_exists == '56' ]; then
-  #puppet group exists, but user does not
-  last_group_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Groups/puppet PrimaryGroupID | awk '{print $2}'`
+  #oregano group exists, but user does not
+  last_group_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Groups/oregano PrimaryGroupID | awk '{print $2}'`
   scan_users
-  echo "Creating Puppet User (uid: $last_user_id) in existing Puppet Group (gid: $last_group_id)"
+  echo "Creating Oregano User (uid: $last_user_id) in existing Oregano Group (gid: $last_group_id)"
   create_puser $last_user_id $last_group_id
 elif [ $pgroup_exists == '56' ] && [ $puser_exists == '0' ]; then
-  #puppet user exists, but group does not
-  last_user_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Users/puppet UniqueID | awk '{print $2}'`
+  #oregano user exists, but group does not
+  last_user_id=`"${dscl}" -f "${dspath}" localonly -read /Local/Target/Users/oregano UniqueID | awk '{print $2}'`
   scan_groups
-  echo "Creating Puppet Group (gid: $last_group_id), Puppet User exists (uid: $last_user_id)"
+  echo "Creating Oregano Group (gid: $last_group_id), Oregano User exists (uid: $last_user_id)"
   create_pgroup $last_group_id
 elif [ $pgroup_exists == '56' ] && [ $puser_exists == '56' ]; then
   scan_users
   scan_groups
-  echo "Creating Puppet User (uid: $last_user_id) in new Puppet Group (gid: $last_group_id)"
+  echo "Creating Oregano User (uid: $last_user_id) in new Oregano Group (gid: $last_group_id)"
   create_pgroup $last_group_id
   create_puser $last_user_id $last_group_id
 else

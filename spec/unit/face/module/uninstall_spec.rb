@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/face'
-require 'puppet/module_tool'
+require 'oregano/face'
+require 'oregano/module_tool'
 
-describe "puppet module uninstall" do
-  include PuppetSpec::Files
+describe "oregano module uninstall" do
+  include OreganoSpec::Files
 
   describe "action" do
     let(:name)    { 'module-name' }
@@ -12,10 +12,10 @@ describe "puppet module uninstall" do
     it 'should invoke the Uninstaller app' do
       args = [ name, options ]
 
-      Puppet::ModuleTool.expects(:set_option_defaults).with(options)
-      Puppet::ModuleTool::Applications::Uninstaller.expects(:run).with(*args)
+      Oregano::ModuleTool.expects(:set_option_defaults).with(options)
+      Oregano::ModuleTool::Applications::Uninstaller.expects(:run).with(*args)
 
-      Puppet::Face[:module, :current].uninstall(name, options)
+      Oregano::Face[:module, :current].uninstall(name, options)
     end
 
     context 'slash-separated module name' do
@@ -24,16 +24,16 @@ describe "puppet module uninstall" do
       it 'should invoke the Uninstaller app' do
         args = [ 'module-name', options ]
 
-        Puppet::ModuleTool.expects(:set_option_defaults).with(options)
-        Puppet::ModuleTool::Applications::Uninstaller.expects(:run).with(*args)
+        Oregano::ModuleTool.expects(:set_option_defaults).with(options)
+        Oregano::ModuleTool::Applications::Uninstaller.expects(:run).with(*args)
 
-        Puppet::Face[:module, :current].uninstall(name, options)
+        Oregano::Face[:module, :current].uninstall(name, options)
       end
     end
   end
 
   describe "inline documentation" do
-    subject { Puppet::Face.find_action(:module, :uninstall) }
+    subject { Oregano::Face.find_action(:module, :uninstall) }
 
     its(:summary)     { should =~ /uninstall.*module/im }
     its(:description) { should =~ /uninstall.*module/im }

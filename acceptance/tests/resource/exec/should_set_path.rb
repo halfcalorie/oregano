@@ -10,7 +10,7 @@ agents.each do |agent|
   on agent, "rm -f #{file}"
 
   step "invoke the exec resource with a path set"
-  on(agent, puppet_resource('exec', 'test',
+  on(agent, oregano_resource('exec', 'test',
                    "command='#{agent.touch(file, false)}'", "path='#{agent.path}'"))
 
   step "verify that the files were created"

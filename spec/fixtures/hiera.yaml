@@ -4,6 +4,6 @@
   - spec_hiera
 :backends:
   - yaml
-  - puppet
+  - oregano
 :yaml:
   :datadir: './spec/fixtures'

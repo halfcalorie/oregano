@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/ssl/oids'
+require 'oregano/ssl/oids'
 
-describe Puppet::SSL::Oids do
+describe Oregano::SSL::Oids do
   describe "defining application OIDs" do
 
     {
-      'puppetlabs'          => '1.3.6.1.4.1.34380',
+      'oreganolabs'          => '1.3.6.1.4.1.34380',
       'ppCertExt'           => '1.3.6.1.4.1.34380.1',
       'ppRegCertExt'        => '1.3.6.1.4.1.34380.1.1',
       'pp_uuid'             => '1.3.6.1.4.1.34380.1.1.1',

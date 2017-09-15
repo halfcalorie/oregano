@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/network/http'
+require 'oregano/network/http'
 require 'webrick'
-require 'puppet/network/http/webrick/rest'
+require 'oregano/network/http/webrick/rest'
 
-describe Puppet::Network::HTTP::WEBrickREST do
-  it "should include the Puppet::Network::HTTP::Handler module" do
-    expect(Puppet::Network::HTTP::WEBrickREST.ancestors).to be_include(Puppet::Network::HTTP::Handler)
+describe Oregano::Network::HTTP::WEBrickREST do
+  it "should include the Oregano::Network::HTTP::Handler module" do
+    expect(Oregano::Network::HTTP::WEBrickREST.ancestors).to be_include(Oregano::Network::HTTP::Handler)
   end
 
   describe "when receiving a request" do
@@ -19,8 +19,8 @@ describe Puppet::Network::HTTP::WEBrickREST do
       @response    = mock('webrick http response')
       @model_class = stub('indirected model class')
       @webrick     = stub('webrick http server', :mount => true, :[] => {})
-      Puppet::Indirector::Indirection.stubs(:model).with(:foo).returns(@model_class)
-      @handler = Puppet::Network::HTTP::WEBrickREST.new(@webrick)
+      Oregano::Indirector::Indirection.stubs(:model).with(:foo).returns(@model_class)
+      @handler = Oregano::Network::HTTP::WEBrickREST.new(@webrick)
     end
 
     it "should delegate its :service method to its :process method" do
@@ -93,7 +93,7 @@ describe Puppet::Network::HTTP::WEBrickREST do
 
     describe "and determining the request parameters" do
       def query_of(options)
-        request = Puppet::Indirector::Request.new(:myind, :find, "my key", nil, options)
+        request = Oregano::Indirector::Request.new(:myind, :find, "my key", nil, options)
         WEBrick::HTTPUtils.parse_query(request.query_string.sub(/^\?/, ''))
       end
 

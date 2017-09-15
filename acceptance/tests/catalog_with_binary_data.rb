@@ -1,12 +1,12 @@
 test_name "C100300: Catalog containing binary data is applied correctly" do
   skip_test 'requires a master for serving module content' if master.nil?
 
-  require 'puppet/acceptance/common_utils'
-  require 'puppet/acceptance/environment_utils'
-  extend Puppet::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/common_utils'
+  require 'oregano/acceptance/environment_utils'
+  extend Oregano::Acceptance::EnvironmentUtils
 
-  require 'puppet/acceptance/agent_fqdn_utils'
-  extend Puppet::Acceptance::AgentFqdnUtils
+  require 'oregano/acceptance/agent_fqdn_utils'
+  extend Oregano::Acceptance::AgentFqdnUtils
 
   tag 'risk:medium',
       'server'
@@ -60,12 +60,12 @@ test_name "C100300: Catalog containing binary data is applied correctly" do
   end
 
   step "start the master" do
-    with_puppet_running_on(master, {}) do
+    with_oregano_running_on(master, {}) do
 
-      step "run puppet and ensure that binary data was correctly applied" do
+      step "run oregano and ensure that binary data was correctly applied" do
         agents.each do |agent|
-          on(agent, puppet('agent', '--test', "--environment '#{tmp_environment}'", "--server #{master.hostname}"), :acceptable_exit_codes => 2)
-          on(agent, "#{Puppet::Acceptance::CommandUtils::ruby_command(agent)} -e 'puts File.binread(\"#{agent_tmp_dirs[agent_to_fqdn(agent)]}/#{test_num}\").bytes.map {|b| b.to_s(16)}'") do |res|
+          on(agent, oregano('agent', '--test', "--environment '#{tmp_environment}'", "--server #{master.hostname}"), :acceptable_exit_codes => 2)
+          on(agent, "#{Oregano::Acceptance::CommandUtils::ruby_command(agent)} -e 'puts File.binread(\"#{agent_tmp_dirs[agent_to_fqdn(agent)]}/#{test_num}\").bytes.map {|b| b.to_s(16)}'") do |res|
             assert_match(/c0\nff/, res.stdout, 'Binary file did not contain originally specified data')
           end
         end

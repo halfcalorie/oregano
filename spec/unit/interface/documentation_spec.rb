@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/interface'
+require 'oregano/interface'
 
-class Puppet::Interface::TinyDocs::Test
-  include Puppet::Interface::TinyDocs
+class Oregano::Interface::TinyDocs::Test
+  include Oregano::Interface::TinyDocs
   attr_accessor :name, :options, :display_global_options
   def initialize
     self.name    = "tinydoc-test"
@@ -12,12 +12,12 @@ class Puppet::Interface::TinyDocs::Test
   end
 
   def get_option(name)
-    Puppet::Interface::Option.new(nil, "--#{name}")
+    Oregano::Interface::Option.new(nil, "--#{name}")
   end
 end
 
-describe Puppet::Interface::TinyDocs do
-  subject { Puppet::Interface::TinyDocs::Test.new }
+describe Oregano::Interface::TinyDocs do
+  subject { Oregano::Interface::TinyDocs::Test.new }
 
   context "#build_synopsis" do
     before :each do

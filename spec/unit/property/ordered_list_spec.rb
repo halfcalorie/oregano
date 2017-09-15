@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/property/ordered_list'
+require 'oregano/property/ordered_list'
 
-ordered_list_class = Puppet::Property::OrderedList
+ordered_list_class = Oregano::Property::OrderedList
 
 describe ordered_list_class do
 
   it "should be a subclass of List" do
-    expect(ordered_list_class.superclass).to eq(Puppet::Property::List)
+    expect(ordered_list_class.superclass).to eq(Oregano::Property::List)
   end
 
   describe "as an instance" do

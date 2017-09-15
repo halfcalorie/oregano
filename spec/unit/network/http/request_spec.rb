@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet_spec/network'
-require 'puppet/network/http'
+require 'oregano_spec/network'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP::Request do
-  include PuppetSpec::Network
+describe Oregano::Network::HTTP::Request do
+  include OreganoSpec::Network
 
-  let(:json_formatter) { Puppet::Network::FormatHandler.format(:json) }
-  let(:pson_formatter) { Puppet::Network::FormatHandler.format(:pson) }
+  let(:json_formatter) { Oregano::Network::FormatHandler.format(:json) }
+  let(:pson_formatter) { Oregano::Network::FormatHandler.format(:pson) }
 
   def headers
     {

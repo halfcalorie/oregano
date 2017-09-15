@@ -1,1 +1,1 @@
-on(master, puppet('resource', 'service', master['puppetservice'], "ensure=running"))
+on(master, oregano('resource', 'service', master['oreganoservice'], "ensure=running"))

@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/confine/exists'
+require 'oregano/confine/exists'
 
-describe Puppet::Confine::Exists do
+describe Oregano::Confine::Exists do
   before do
-    @confine = Puppet::Confine::Exists.new("/my/file")
+    @confine = Oregano::Confine::Exists.new("/my/file")
     @confine.label = "eh"
   end
 
   it "should be named :exists" do
-    expect(Puppet::Confine::Exists.name).to eq(:exists)
+    expect(Oregano::Confine::Exists.name).to eq(:exists)
   end
   
   it "should not pass if exists is nil" do
-    confine = Puppet::Confine::Exists.new(nil)
+    confine = Oregano::Confine::Exists.new(nil)
     confine.label = ":exists => nil"
     confine.expects(:pass?).with(nil)
     expect(confine).not_to be_valid
@@ -30,12 +30,12 @@ describe Puppet::Confine::Exists do
   end
 
   it "should return false if the value does not point to a file" do
-    Puppet::FileSystem.expects(:exist?).with("/my/file").returns false
+    Oregano::FileSystem.expects(:exist?).with("/my/file").returns false
     expect(@confine.pass?("/my/file")).to be_falsey
   end
 
   it "should return true if the value points to a file" do
-    Puppet::FileSystem.expects(:exist?).with("/my/file").returns true
+    Oregano::FileSystem.expects(:exist?).with("/my/file").returns true
     expect(@confine.pass?("/my/file")).to be_truthy
   end
 
@@ -62,11 +62,11 @@ describe Puppet::Confine::Exists do
   end
 
   it "should produce a summary containing all missing files" do
-    Puppet::FileSystem.stubs(:exist?).returns true
-    Puppet::FileSystem.expects(:exist?).with("/two").returns false
-    Puppet::FileSystem.expects(:exist?).with("/four").returns false
+    Oregano::FileSystem.stubs(:exist?).returns true
+    Oregano::FileSystem.expects(:exist?).with("/two").returns false
+    Oregano::FileSystem.expects(:exist?).with("/four").returns false
 
-    confine = Puppet::Confine::Exists.new %w{/one /two /three /four}
+    confine = Oregano::Confine::Exists.new %w{/one /two /three /four}
     expect(confine.summary).to eq(%w{/two /four})
   end
 
@@ -75,6 +75,6 @@ describe Puppet::Confine::Exists do
     c2 = mock '2', :summary => %w{two}
     c3 = mock '3', :summary => %w{three}
 
-    expect(Puppet::Confine::Exists.summarize([c1, c2, c3])).to eq(%w{one two three})
+    expect(Oregano::Confine::Exists.summarize([c1, c2, c3])).to eq(%w{one two three})
   end
 end

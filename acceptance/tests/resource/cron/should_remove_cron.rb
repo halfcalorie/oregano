@@ -1,4 +1,4 @@
-test_name "puppet should remove a crontab entry as expected"
+test_name "oregano should remove a crontab entry as expected"
 confine :except, :platform => 'windows'
 confine :except, :platform => /^eos-/ # See PUP-5500
 tag 'audit:medium',
@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CronUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CronUtils
 
 teardown do
   step "Cron: cleanup"
@@ -18,14 +18,14 @@ teardown do
 end
 
 agents.each do |host|
-  step "ensure the user exist via puppet"
+  step "ensure the user exist via oregano"
   setup host
 
   step "create the existing job by hand..."
   run_cron_on(host,:add,'tstuser',"* * * * * /bin/true")
 
-  step "apply the resource on the host using puppet resource"
-  on(host, puppet_resource("cron", "crontest", "user=tstuser",
+  step "apply the resource on the host using oregano resource"
+  on(host, oregano_resource("cron", "crontest", "user=tstuser",
                            "command=/bin/true", "ensure=absent")) do
     assert_match(/crontest\D+ensure:\s+removed/, stdout, "Didn't remove crobtab entry for tstuser on #{host}")
   end

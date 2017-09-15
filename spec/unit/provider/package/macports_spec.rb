@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:macports)
+provider_class = Oregano::Type.type(:package).provider(:macports)
 
 describe provider_class do
   let :resource_name do
@@ -8,7 +8,7 @@ describe provider_class do
   end
 
   let :resource do
-    Puppet::Type.type(:package).new(:name => resource_name, :provider => :macports)
+    Oregano::Type.type(:package).new(:name => resource_name, :provider => :macports)
   end
 
   let :provider do

@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
 require File.join(File.dirname(__FILE__), '/../factory_rspec_helper')
 
 module EppParserRspecHelper
   include FactoryRspecHelper
   def parse(code)
-    parser = Puppet::Pops::Parser::EppParser.new()
+    parser = Oregano::Pops::Parser::EppParser.new()
     parser.parse_string(code)
   end
 end
@@ -15,16 +15,16 @@ describe "epp parser" do
   include EppParserRspecHelper
 
   it "should instantiate an epp parser" do
-    parser = Puppet::Pops::Parser::EppParser.new()
-    expect(parser.class).to eq(Puppet::Pops::Parser::EppParser)
+    parser = Oregano::Pops::Parser::EppParser.new()
+    expect(parser.class).to eq(Oregano::Pops::Parser::EppParser)
   end
 
   it "should parse a code string and return a program with epp" do
-    parser = Puppet::Pops::Parser::EppParser.new()
+    parser = Oregano::Pops::Parser::EppParser.new()
     model = parser.parse_string("Nothing to see here, move along...").model
-    expect(model.class).to eq(Puppet::Pops::Model::Program)
-    expect(model.body.class).to eq(Puppet::Pops::Model::LambdaExpression)
-    expect(model.body.body.class).to eq(Puppet::Pops::Model::EppExpression)
+    expect(model.class).to eq(Oregano::Pops::Model::Program)
+    expect(model.body.class).to eq(Oregano::Pops::Model::LambdaExpression)
+    expect(model.body.body.class).to eq(Oregano::Pops::Model::EppExpression)
   end
 
   context "when facing bad input it reports" do

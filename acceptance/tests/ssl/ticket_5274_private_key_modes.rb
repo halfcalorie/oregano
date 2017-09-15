@@ -1,5 +1,5 @@
 test_name "PUP-5274: CA and host private keys should not be world readable" do
-  require 'puppet/acceptance/common_utils'
+  require 'oregano/acceptance/common_utils'
 
   confine :except, :platform => 'windows'
 
@@ -9,11 +9,11 @@ test_name "PUP-5274: CA and host private keys should not be world readable" do
       'server'             # this code path in Ruby is deprecated...
 
   def get_setting(host, ssldir, command)
-    on(host, puppet("agent --ssldir #{ssldir} #{command}")).stdout.chomp
+    on(host, oregano("agent --ssldir #{ssldir} #{command}")).stdout.chomp
   end
 
   def get_mode(host, path)
-    ruby = Puppet::Acceptance::CommandUtils.ruby_command(host)
+    ruby = Oregano::Acceptance::CommandUtils.ruby_command(host)
     on(host, "#{ruby} -e 'puts (File.stat(\"#{path}\").mode & 07777).to_s(8)'").stdout.chomp
   end
 
@@ -24,7 +24,7 @@ test_name "PUP-5274: CA and host private keys should not be world readable" do
     hostprivkey   = get_setting(host, ssldir, "--configprint hostprivkey --certname foo")
 
     step "create ca and foo cert and private keys"
-    on(host, puppet("cert generate foo --ssldir #{ssldir}"))
+    on(host, oregano("cert generate foo --ssldir #{ssldir}"))
 
     expected_permissions = {
       cakey         => "640",
@@ -39,7 +39,7 @@ test_name "PUP-5274: CA and host private keys should not be world readable" do
     end
 
     step "generate a second cert"
-    on(host, puppet("cert generate bar --ssldir #{ssldir}"))
+    on(host, oregano("cert generate bar --ssldir #{ssldir}"))
 
     [cakey, privatekeydir, hostprivkey].each do |path|
       step "verify #{path} still has permissions #{expected_permissions[path]}"

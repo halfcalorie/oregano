@@ -6,7 +6,7 @@ tag 'audit:medium',
 
 #
 # This test is intended to ensure that custom facts downloaded onto an agent via
-# pluginsync are resolvable by puppet applications besides agent/apply.
+# pluginsync are resolvable by oregano applications besides agent/apply.
 #
 
 agents.each do |agent|
@@ -14,16 +14,16 @@ agents.each do |agent|
   codedir = agent.tmpdir('4847-codedir')
   on agent, "mkdir -p #{codedir}/facts"
   on agent, "mkdir -p #{codedir}/lib/facter"
-  on agent, "mkdir -p #{codedir}/lib/puppet/{type,provider/test4847}"
+  on agent, "mkdir -p #{codedir}/lib/oregano/{type,provider/test4847}"
 
-  on agent, "cat > #{codedir}/lib/puppet/type/test4847.rb", :stdin => <<TYPE
-Puppet::Type.newtype(:test4847) do
+  on agent, "cat > #{codedir}/lib/oregano/type/test4847.rb", :stdin => <<TYPE
+Oregano::Type.newtype(:test4847) do
   newparam(:name, :namevar => true)
 end
 TYPE
 
-  on agent, "cat > #{codedir}/lib/puppet/provider/test4847/only.rb", :stdin => <<PROVIDER
-Puppet::Type.type(:test4847).provide(:only) do
+  on agent, "cat > #{codedir}/lib/oregano/provider/test4847/only.rb", :stdin => <<PROVIDER
+Oregano::Type.type(:test4847).provide(:only) do
   commands :anything => "#{codedir}/must_exist.exe"
   def self.instances
     warn "fact foo=\#{Facter.value('foo')}, snafu=\#{Facter.value('snafu')}"
@@ -48,7 +48,7 @@ Facter.add('snafu') do
 end
 FACT
 
-  on agent, puppet('apply'), :stdin => <<MANIFEST
+  on agent, oregano('apply'), :stdin => <<MANIFEST
   # The file name is chosen to work on Windows and *nix.
   file { "#{codedir}/must_exist.exe":
     ensure => file,
@@ -66,7 +66,7 @@ FACT
   }
 MANIFEST
 
-  on agent, puppet('resource', 'test4847',
+  on agent, oregano('resource', 'test4847',
                    '--libdir', File.join(codedir, 'lib'),
                    '--factpath', File.join(codedir, 'facts')) do
     assert_match(/fact foo=bar, snafu=zifnab/, stderr)

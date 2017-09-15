@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/configurer'
+require 'oregano/configurer'
 
-describe Puppet::Configurer::DownloaderFactory do
-  let(:factory)     { Puppet::Configurer::DownloaderFactory.new }
-  let(:environment) { Puppet::Node::Environment.create(:myenv, []) }
+describe Oregano::Configurer::DownloaderFactory do
+  let(:factory)     { Oregano::Configurer::DownloaderFactory.new }
+  let(:environment) { Oregano::Node::Environment.create(:myenv, []) }
 
   let(:plugin_downloader) do
     factory.create_plugin_downloader(environment)
@@ -27,27 +27,27 @@ describe Puppet::Configurer::DownloaderFactory do
       expect(plugin_downloader.name).to eq('plugin')
     end
 
-    it 'downloads files into Puppet[:plugindest]' do
+    it 'downloads files into Oregano[:plugindest]' do
       plugindest = File.expand_path("/tmp/pdest")
-      Puppet[:plugindest] = plugindest
+      Oregano[:plugindest] = plugindest
 
       expect(plugin_downloader.file[:path]).to eq(plugindest)
     end
 
-    it 'downloads files from Puppet[:pluginsource]' do
-      Puppet[:pluginsource] = 'puppet:///myotherplugins'
+    it 'downloads files from Oregano[:pluginsource]' do
+      Oregano[:pluginsource] = 'oregano:///myotherplugins'
 
-      expect(plugin_downloader.file[:source]).to eq([Puppet[:pluginsource]])
+      expect(plugin_downloader.file[:source]).to eq([Oregano[:pluginsource]])
     end
 
-    it 'ignores files from Puppet[:pluginsignore]' do
-      Puppet[:pluginsignore] = 'pignore'
+    it 'ignores files from Oregano[:pluginsignore]' do
+      Oregano[:pluginsignore] = 'pignore'
 
       expect(plugin_downloader.file[:ignore]).to eq(['pignore'])
     end
 
-    it 'splits Puppet[:pluginsignore] on whitespace' do
-      Puppet[:pluginsignore] = ".svn CVS .git"
+    it 'splits Oregano[:pluginsignore] on whitespace' do
+      Oregano[:pluginsignore] = ".svn CVS .git"
 
       expect(plugin_downloader.file[:ignore]).to eq(%w[.svn CVS .git])
     end
@@ -62,32 +62,32 @@ describe Puppet::Configurer::DownloaderFactory do
       expect(facts_downloader.name).to eq('pluginfacts')
     end
 
-    it 'downloads files into Puppet[:pluginfactdest]' do
+    it 'downloads files into Oregano[:pluginfactdest]' do
       plugindest = File.expand_path("/tmp/pdest")
-      Puppet[:pluginfactdest] = plugindest
+      Oregano[:pluginfactdest] = plugindest
 
       expect(facts_downloader.file[:path]).to eq(plugindest)
     end
 
-    it 'downloads files from Puppet[:pluginfactsource]' do
-      Puppet[:pluginfactsource] = 'puppet:///myotherfacts'
+    it 'downloads files from Oregano[:pluginfactsource]' do
+      Oregano[:pluginfactsource] = 'oregano:///myotherfacts'
 
-      expect(facts_downloader.file[:source]).to eq([Puppet[:pluginfactsource]])
+      expect(facts_downloader.file[:source]).to eq([Oregano[:pluginfactsource]])
     end
 
-    it 'ignores files from Puppet[:pluginsignore]' do
-      Puppet[:pluginsignore] = 'pignore'
+    it 'ignores files from Oregano[:pluginsignore]' do
+      Oregano[:pluginsignore] = 'pignore'
 
       expect(facts_downloader.file[:ignore]).to eq(['pignore'])
     end
 
-    context "on POSIX", :if => Puppet.features.posix? do
+    context "on POSIX", :if => Oregano.features.posix? do
       it "uses source permissions" do
         uses_source_permissions(facts_downloader)
       end
     end
 
-    context "on Windows", :if => Puppet.features.microsoft_windows? do
+    context "on Windows", :if => Oregano.features.microsoft_windows? do
       it "ignores source permissions during external fact pluginsync" do
         ignores_source_permissions(facts_downloader)
       end

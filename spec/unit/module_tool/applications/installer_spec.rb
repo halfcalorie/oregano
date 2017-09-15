@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'puppet/module_tool/applications'
-require 'puppet_spec/module_tool/shared_functions'
-require 'puppet_spec/module_tool/stub_source'
+require 'oregano/module_tool/applications'
+require 'oregano_spec/module_tool/shared_functions'
+require 'oregano_spec/module_tool/stub_source'
 
 require 'tmpdir'
 
-describe Puppet::ModuleTool::Applications::Installer do
-  include PuppetSpec::ModuleTool::SharedFunctions
-  include PuppetSpec::Files
-  include PuppetSpec::Fixtures
+describe Oregano::ModuleTool::Applications::Installer do
+  include OreganoSpec::ModuleTool::SharedFunctions
+  include OreganoSpec::Files
+  include OreganoSpec::Fixtures
 
   before do
     FileUtils.mkdir_p(primary_dir)
@@ -18,35 +18,35 @@ describe Puppet::ModuleTool::Applications::Installer do
   let(:vardir)        { tmpdir('installer') }
   let(:primary_dir)   { File.join(vardir, "primary") }
   let(:secondary_dir) { File.join(vardir, "secondary") }
-  let(:remote_source) { PuppetSpec::ModuleTool::StubSource.new }
+  let(:remote_source) { OreganoSpec::ModuleTool::StubSource.new }
 
   let(:install_dir) do
-    mock("Puppet::ModuleTool::InstallDirectory").tap do |dir|
+    mock("Oregano::ModuleTool::InstallDirectory").tap do |dir|
       dir.stubs(:prepare)
       dir.stubs(:target).returns(primary_dir)
     end
   end
 
   before do
-    SemanticPuppet::Dependency.clear_sources
-    installer = Puppet::ModuleTool::Applications::Installer.any_instance
+    SemanticOregano::Dependency.clear_sources
+    installer = Oregano::ModuleTool::Applications::Installer.any_instance
     installer.stubs(:module_repository).returns(remote_source)
   end
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     before :each do
-      Puppet.settings.stubs(:[])
-      Puppet.settings.stubs(:[]).with(:module_working_dir).returns(Dir.mktmpdir('installertmp'))
+      Oregano.settings.stubs(:[])
+      Oregano.settings.stubs(:[]).with(:module_working_dir).returns(Dir.mktmpdir('installertmp'))
     end
   end
 
   def installer(modname, target_dir, options)
-    Puppet::ModuleTool.set_option_defaults(options)
-    Puppet::ModuleTool::Applications::Installer.new(modname, target_dir, options)
+    Oregano::ModuleTool.set_option_defaults(options)
+    Oregano::ModuleTool::Applications::Installer.new(modname, target_dir, options)
   end
 
   let(:environment) do
-    Puppet.lookup(:current_environment).override_with(
+    Oregano.lookup(:current_environment).override_with(
       :vardir     => vardir,
       :modulepath => [ primary_dir, secondary_dir ]
     )
@@ -72,7 +72,7 @@ describe Puppet::ModuleTool::Applications::Installer do
 
       it 'installs the specified tarball' do
         expect(subject).to include :result => :success
-        graph_should_include 'puppetlabs-stdlib', nil => v('3.2.0')
+        graph_should_include 'oreganolabs-stdlib', nil => v('3.2.0')
       end
 
       context 'with --ignore-dependencies' do
@@ -83,7 +83,7 @@ describe Puppet::ModuleTool::Applications::Installer do
         it 'installs the specified tarball' do
           remote_source.expects(:fetch).never
           expect(subject).to include :result => :success
-          graph_should_include 'puppetlabs-stdlib', nil => v('3.2.0')
+          graph_should_include 'oreganolabs-stdlib', nil => v('3.2.0')
         end
       end
 
@@ -92,8 +92,8 @@ describe Puppet::ModuleTool::Applications::Installer do
 
         it 'installs the specified tarball' do
           expect(subject).to include :result => :success
-          graph_should_include 'puppetlabs-java', nil => v('1.0.0')
-          graph_should_include 'puppetlabs-stdlib', nil => v('4.1.0')
+          graph_should_include 'oreganolabs-java', nil => v('1.0.0')
+          graph_should_include 'oreganolabs-stdlib', nil => v('4.1.0')
         end
 
         context 'with --ignore-dependencies' do
@@ -104,8 +104,8 @@ describe Puppet::ModuleTool::Applications::Installer do
           it 'installs the specified tarball without dependencies' do
             remote_source.expects(:fetch).never
             expect(subject).to include :result => :success
-            graph_should_include 'puppetlabs-java', nil => v('1.0.0')
-            graph_should_include 'puppetlabs-stdlib', nil
+            graph_should_include 'oreganolabs-java', nil => v('1.0.0')
+            graph_should_include 'oreganolabs-stdlib', nil
           end
         end
       end
@@ -349,7 +349,7 @@ describe Puppet::ModuleTool::Applications::Installer do
 
     context 'when a module with the same name is already installed' do
       let(:module) { 'pmtacceptance-stdlib' }
-      before { preinstall('puppetlabs-stdlib', '4.1.0') }
+      before { preinstall('oreganolabs-stdlib', '4.1.0') }
 
       it 'fails to install, since two modules with the same name cannot be installed simultaneously' do
         expect(subject).to include :result => :failure

@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/forge'
+require 'oregano/forge'
 
-describe Puppet::Forge::Errors do
+describe Oregano::Forge::Errors do
   describe 'SSLVerifyError' do
-    subject { Puppet::Forge::Errors::SSLVerifyError }
+    subject { Oregano::Forge::Errors::SSLVerifyError }
     let(:exception) { subject.new(:uri => 'https://fake.com:1111') }
 
     it 'should return a valid single line error' do
@@ -21,7 +21,7 @@ Could not connect via HTTPS to https://fake.com:1111
   end
 
   describe 'CommunicationError' do
-    subject { Puppet::Forge::Errors::CommunicationError }
+    subject { Oregano::Forge::Errors::CommunicationError }
     let(:socket_exception) { SocketError.new('There was a problem') }
     let(:exception) { subject.new(:uri => 'http://fake.com:1111', :original => socket_exception) }
 
@@ -40,19 +40,19 @@ Could not connect to http://fake.com:1111
   end
 
   describe 'ResponseError' do
-    subject { Puppet::Forge::Errors::ResponseError }
+    subject { Oregano::Forge::Errors::ResponseError }
     let(:response) { stub(:body => '{}', :code => '404', :message => "not found") }
 
     context 'without message' do
       let(:exception) { subject.new(:uri => 'http://fake.com:1111', :response => response, :input => 'user/module') }
 
       it 'should return a valid single line error' do
-        expect(exception.message).to eq('Request to Puppet Forge failed. Detail: 404 not found.')
+        expect(exception.message).to eq('Request to Oregano Forge failed. Detail: 404 not found.')
       end
 
       it 'should return a valid multiline error' do
         expect(exception.multiline).to eq <<-eos.chomp
-Request to Puppet Forge failed.
+Request to Oregano Forge failed.
   The server being queried was http://fake.com:1111
   The HTTP response we received was '404 not found'
         eos
@@ -63,12 +63,12 @@ Request to Puppet Forge failed.
       let(:exception) { subject.new(:uri => 'http://fake.com:1111', :response => response, :input => 'user/module', :message => 'no such module') }
 
       it 'should return a valid single line error' do
-        expect(exception.message).to eq('Request to Puppet Forge failed. Detail: no such module / 404 not found.')
+        expect(exception.message).to eq('Request to Oregano Forge failed. Detail: no such module / 404 not found.')
       end
 
       it 'should return a valid multiline error' do
         expect(exception.multiline).to eq <<-eos.chomp
-Request to Puppet Forge failed.
+Request to Oregano Forge failed.
   The server being queried was http://fake.com:1111
   The HTTP response we received was '404 not found'
   The message we received said 'no such module'

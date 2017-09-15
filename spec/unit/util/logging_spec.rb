@@ -1,18 +1,18 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/logging'
+require 'oregano/util/logging'
 
 class LoggingTester
-  include Puppet::Util::Logging
+  include Oregano::Util::Logging
 end
 
-describe Puppet::Util::Logging do
+describe Oregano::Util::Logging do
   before do
     @logger = LoggingTester.new
   end
 
-  Puppet::Util::Log.eachlevel do |level|
+  Oregano::Util::Log.eachlevel do |level|
     it "should have a method for sending '#{level}' logs" do
       expect(@logger).to respond_to(level)
     end
@@ -20,62 +20,62 @@ describe Puppet::Util::Logging do
 
   it "should have a method for sending a log with a specified log level" do
     @logger.expects(:to_s).returns "I'm a string!"
-    Puppet::Util::Log.expects(:create).with { |args| args[:source] == "I'm a string!" and args[:level] == "loglevel" and args[:message] == "mymessage" }
+    Oregano::Util::Log.expects(:create).with { |args| args[:source] == "I'm a string!" and args[:level] == "loglevel" and args[:message] == "mymessage" }
 
     @logger.send_log "loglevel", "mymessage"
   end
 
   describe "when sending a log" do
     it "should use the Log's 'create' entrance method" do
-      Puppet::Util::Log.expects(:create)
+      Oregano::Util::Log.expects(:create)
 
       @logger.notice "foo"
     end
 
     it "should send itself converted to a string as the log source" do
       @logger.expects(:to_s).returns "I'm a string!"
-      Puppet::Util::Log.expects(:create).with { |args| args[:source] == "I'm a string!" }
+      Oregano::Util::Log.expects(:create).with { |args| args[:source] == "I'm a string!" }
 
       @logger.notice "foo"
     end
 
     it "should queue logs sent without a specified destination" do
-      Puppet::Util::Log.close_all
-      Puppet::Util::Log.expects(:queuemessage)
+      Oregano::Util::Log.close_all
+      Oregano::Util::Log.expects(:queuemessage)
 
       @logger.notice "foo"
     end
 
     it "should use the path of any provided resource type" do
-      resource = Puppet::Type.type(:host).new :name => "foo"
+      resource = Oregano::Type.type(:host).new :name => "foo"
 
       resource.expects(:path).returns "/path/to/host".to_sym
 
-      Puppet::Util::Log.expects(:create).with { |args| args[:source] == "/path/to/host" }
+      Oregano::Util::Log.expects(:create).with { |args| args[:source] == "/path/to/host" }
 
       resource.notice "foo"
     end
 
     it "should use the path of any provided resource parameter" do
-      resource = Puppet::Type.type(:host).new :name => "foo"
+      resource = Oregano::Type.type(:host).new :name => "foo"
 
       param = resource.parameter(:name)
 
       param.expects(:path).returns "/path/to/param".to_sym
 
-      Puppet::Util::Log.expects(:create).with { |args| args[:source] == "/path/to/param" }
+      Oregano::Util::Log.expects(:create).with { |args| args[:source] == "/path/to/param" }
 
       param.notice "foo"
     end
 
     it "should send the provided argument as the log message" do
-      Puppet::Util::Log.expects(:create).with { |args| args[:message] == "foo" }
+      Oregano::Util::Log.expects(:create).with { |args| args[:message] == "foo" }
 
       @logger.notice "foo"
     end
 
     it "should join any provided arguments into a single string for the message" do
-      Puppet::Util::Log.expects(:create).with { |args| args[:message] == "foo bar baz" }
+      Oregano::Util::Log.expects(:create).with { |args| args[:message] == "foo bar baz" }
 
       @logger.notice ["foo", "bar", "baz"]
     end
@@ -86,7 +86,7 @@ describe Puppet::Util::Logging do
 
         @logger.send(attr.to_s + "=", "myval")
 
-        Puppet::Util::Log.expects(:create).with { |args| args[attr] == "myval" }
+        Oregano::Util::Log.expects(:create).with { |args| args[attr] == "myval" }
         @logger.notice "foo"
       end
     end
@@ -94,7 +94,7 @@ describe Puppet::Util::Logging do
 
   describe "when sending a deprecation warning" do
     it "does not log a message when deprecation warnings are disabled" do
-      Puppet.expects(:[]).with(:disable_warnings).returns %w[deprecations]
+      Oregano.expects(:[]).with(:disable_warnings).returns %w[deprecations]
       @logger.expects(:warning).never
       @logger.deprecation_warning 'foo'
     end
@@ -139,41 +139,41 @@ describe Puppet::Util::Logging do
     end
   end
 
-  describe "when sending a puppet_deprecation_warning" do
+  describe "when sending a oregano_deprecation_warning" do
     it "requires file and line or key options" do
       expect do
-        @logger.puppet_deprecation_warning("foo")
-      end.to raise_error(Puppet::DevError, /Need either :file and :line, or :key/)
+        @logger.oregano_deprecation_warning("foo")
+      end.to raise_error(Oregano::DevError, /Need either :file and :line, or :key/)
       expect do
-        @logger.puppet_deprecation_warning("foo", :file => 'bar')
-      end.to raise_error(Puppet::DevError, /Need either :file and :line, or :key/)
+        @logger.oregano_deprecation_warning("foo", :file => 'bar')
+      end.to raise_error(Oregano::DevError, /Need either :file and :line, or :key/)
       expect do
-        @logger.puppet_deprecation_warning("foo", :key => 'akey')
-        @logger.puppet_deprecation_warning("foo", :file => 'afile', :line => 1)
+        @logger.oregano_deprecation_warning("foo", :key => 'akey')
+        @logger.oregano_deprecation_warning("foo", :file => 'afile', :line => 1)
       end.to_not raise_error
     end
 
     it "warns with file and line" do
       @logger.expects(:warning).with(regexp_matches(/deprecated foo.*afile:5/m))
-      @logger.puppet_deprecation_warning("deprecated foo", :file => 'afile', :line => 5)
+      @logger.oregano_deprecation_warning("deprecated foo", :file => 'afile', :line => 5)
     end
 
     it "warns keyed from file and line" do
       @logger.expects(:warning).with(regexp_matches(/deprecated foo.*afile:5/m)).once
       5.times do
-        @logger.puppet_deprecation_warning("deprecated foo", :file => 'afile', :line => 5)
+        @logger.oregano_deprecation_warning("deprecated foo", :file => 'afile', :line => 5)
       end
     end
 
     it "warns with separate key only once regardless of file and line" do
       @logger.expects(:warning).with(regexp_matches(/deprecated foo.*afile:5/m)).once
-      @logger.puppet_deprecation_warning("deprecated foo", :key => 'some_key', :file => 'afile', :line => 5)
-      @logger.puppet_deprecation_warning("deprecated foo", :key => 'some_key', :file => 'bfile', :line => 3)
+      @logger.oregano_deprecation_warning("deprecated foo", :key => 'some_key', :file => 'afile', :line => 5)
+      @logger.oregano_deprecation_warning("deprecated foo", :key => 'some_key', :file => 'bfile', :line => 3)
     end
 
     it "warns with key but no file and line" do
       @logger.expects(:warning).with(regexp_matches(/deprecated foo.*unknown:unknown/m))
-      @logger.puppet_deprecation_warning("deprecated foo", :key => 'some_key')
+      @logger.oregano_deprecation_warning("deprecated foo", :key => 'some_key')
     end
   end
 
@@ -209,7 +209,7 @@ describe Puppet::Util::Logging do
       end
     end
 
-    Puppet::Util::Log.eachlevel do |level|
+    Oregano::Util::Log.eachlevel do |level|
       it "can use log level #{level}" do
         @logger.expects(:send_log).with(level, regexp_matches(/wet paint.*/m)).once
         5.times do
@@ -223,11 +223,11 @@ describe Puppet::Util::Logging do
     let(:logger) { LoggingTester.new }
 
     around(:each) do |example|
-      Puppet.settings.initialize_global_settings
+      Oregano.settings.initialize_global_settings
       logger.clear_deprecation_warnings
-      Puppet[:disable_warnings] = ['undefined_variables']
+      Oregano[:disable_warnings] = ['undefined_variables']
       example.run
-      Puppet[:disable_warnings] = []
+      Oregano[:disable_warnings] = []
       logger.unstub(:send_log)
     end
 
@@ -241,11 +241,11 @@ describe Puppet::Util::Logging do
     let(:logger) { LoggingTester.new }
 
     around(:each) do |example|
-      Puppet.settings.initialize_global_settings
+      Oregano.settings.initialize_global_settings
       logger.clear_deprecation_warnings
-      Puppet[:disable_warnings] = ['deprecations']
+      Oregano[:disable_warnings] = ['deprecations']
       example.run
-      Puppet[:disable_warnings] = []
+      Oregano[:disable_warnings] = []
       logger.unstub(:send_log)
     end
 
@@ -257,11 +257,11 @@ describe Puppet::Util::Logging do
 
   describe "when formatting exceptions" do
     it "should be able to format a chain of exceptions" do
-      exc3 = Puppet::Error.new("original")
+      exc3 = Oregano::Error.new("original")
       exc3.set_backtrace(["1.rb:4:in `a'","2.rb:2:in `b'","3.rb:1"])
-      exc2 = Puppet::Error.new("second", exc3)
+      exc2 = Oregano::Error.new("second", exc3)
       exc2.set_backtrace(["4.rb:8:in `c'","5.rb:1:in `d'","6.rb:3"])
-      exc1 = Puppet::Error.new("third", exc2)
+      exc1 = Oregano::Error.new("third", exc2)
       exc1.set_backtrace(["7.rb:31:in `e'","8.rb:22:in `f'","9.rb:9"])
       # whoa ugly
       expect(@logger.format_exception(exc1)).to match(/third
@@ -296,11 +296,11 @@ original
       end
 
       it 'does not enable Facter debugging for debug level' do
-        Puppet::Util::Log.level = :debug
+        Oregano::Util::Log.level = :debug
       end
 
       it 'does not enable Facter debugging non-debug level' do
-        Puppet::Util::Log.level = :info
+        Oregano::Util::Log.level = :info
       end
     end
 
@@ -311,12 +311,12 @@ original
 
       it 'enables Facter debugging when debug level' do
         Facter.stubs(:debugging).with(true)
-        Puppet::Util::Log.level = :debug
+        Oregano::Util::Log.level = :debug
       end
 
       it 'disables Facter debugging when not debug level' do
         Facter.stubs(:debugging).with(false)
-        Puppet::Util::Log.level = :info
+        Oregano::Util::Log.level = :info
       end
     end
 
@@ -327,11 +327,11 @@ original
       end
 
       it 'does not enable Facter trace when enabled' do
-        Puppet[:trace] = true
+        Oregano[:trace] = true
       end
 
       it 'does not enable Facter trace when disabled' do
-        Puppet[:trace] = false
+        Oregano[:trace] = false
       end
     end
 
@@ -342,12 +342,12 @@ original
 
       it 'enables Facter trace when enabled' do
         Facter.stubs(:trace).with(true)
-        Puppet[:trace] = true
+        Oregano[:trace] = true
       end
 
       it 'disables Facter trace when disabled' do
         Facter.stubs(:trace).with(false)
-        Puppet[:trace] = false
+        Oregano[:trace] = false
       end
     end
 
@@ -358,7 +358,7 @@ original
       end
 
       it 'does not call Facter.on_message' do
-        expect(Puppet::Util::Logging::setup_facter_logging!).to be_falsey
+        expect(Oregano::Util::Logging::setup_facter_logging!).to be_falsey
       end
     end
 
@@ -370,7 +370,7 @@ original
       def setup(level, message)
         Facter.stubs(:on_message).yields level, message
 
-        # Transform from Facter level to Puppet level
+        # Transform from Facter level to Oregano level
         case level
         when :trace
           level = :debug
@@ -382,7 +382,7 @@ original
           level = :crit
         end
 
-        Puppet::Util::Log.stubs(:create).with do |options|
+        Oregano::Util::Log.stubs(:create).with do |options|
           expect(options[:level]).to eq(level)
           expect(options[:message]).to eq(message)
           expect(options[:source]).to eq('Facter')
@@ -392,7 +392,7 @@ original
       [:trace, :debug, :info, :warn, :error, :fatal].each do |level|
         it "calls Facter.on_message and handles #{level} messages" do
           setup(level, "#{level} message")
-          expect(Puppet::Util::Logging::setup_facter_logging!).to be_truthy
+          expect(Oregano::Util::Logging::setup_facter_logging!).to be_truthy
         end
       end
     end

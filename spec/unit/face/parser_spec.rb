@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-require 'puppet/face'
+require 'oregano/face'
 
-describe Puppet::Face[:parser, :current] do
-  include PuppetSpec::Files
+describe Oregano::Face[:parser, :current] do
+  include OreganoSpec::Files
 
-  let(:parser) { Puppet::Face[:parser, :current] }
+  let(:parser) { Oregano::Face[:parser, :current] }
 
   context "validate" do
     context "from an interactive terminal" do
@@ -17,14 +17,14 @@ describe Puppet::Face[:parser, :current] do
       after(:each) do
         # Reset cache of loaders (many examples run in the *root* environment
         # which exists in "eternity")
-        Puppet.lookup(:current_environment).loaders = nil
+        Oregano.lookup(:current_environment).loaders = nil
       end
 
       it "validates the configured site manifest when no files are given" do
         manifest = file_containing('site.pp', "{ invalid =>")
 
-        configured_environment = Puppet::Node::Environment.create(:default, [], manifest)
-        Puppet.override(:current_environment => configured_environment) do
+        configured_environment = Oregano::Node::Environment.create(:default, [], manifest)
+        Oregano.override(:current_environment => configured_environment) do
           expect { parser.validate() }.to exit_with(1)
         end
       end
@@ -42,7 +42,7 @@ describe Puppet::Face[:parser, :current] do
         }.to_not raise_error
       end
 
-      it "runs error free when there is a puppet function in manifest being validated" do
+      it "runs error free when there is a oregano function in manifest being validated" do
         expect {
           manifest = file_containing('site.pp', "function valid() { 'valid' } notify{ valid(): }")
           parser.validate(manifest)
@@ -60,15 +60,15 @@ describe Puppet::Face[:parser, :current] do
       it "reports missing files" do
         expect do
           parser.validate("missing.pp")
-        end.to raise_error(Puppet::Error, /One or more file\(s\) specified did not exist.*missing\.pp/m)
+        end.to raise_error(Oregano::Error, /One or more file\(s\) specified did not exist.*missing\.pp/m)
       end
 
       it "parses supplied manifest files in the context of a directory environment" do
         manifest = file_containing('test.pp', "{ invalid =>")
 
-        env = Puppet::Node::Environment.create(:special, [])
-        env_loader = Puppet::Environments::Static.new(env)
-        Puppet.override({:environments => env_loader, :current_environment => env}) do
+        env = Oregano::Node::Environment.create(:special, [])
+        env_loader = Oregano::Environments::Static.new(env)
+        Oregano.override({:environments => env_loader, :current_environment => env}) do
           expect { parser.validate(manifest) }.to exit_with(1)
         end
 
@@ -80,7 +80,7 @@ describe Puppet::Face[:parser, :current] do
     it "validates the contents of STDIN when no files given and STDIN is not a tty" do
       from_a_piped_input_of("{ invalid =>")
 
-      Puppet.override(:current_environment => Puppet::Node::Environment.create(:special, [])) do
+      Oregano.override(:current_environment => Oregano::Node::Environment.create(:special, [])) do
         expect { parser.validate() }.to exit_with(1)
       end
     end
@@ -108,7 +108,7 @@ describe Puppet::Face[:parser, :current] do
     it "prints the AST of STDIN when no files given and STDIN is not a tty" do
       from_a_piped_input_of("notice hi")
 
-      Puppet.override(:current_environment => Puppet::Node::Environment.create(:special, [])) do
+      Oregano.override(:current_environment => Oregano::Node::Environment.create(:special, [])) do
         expect(parser.dump()).to eq("(invoke notice hi)\n")
       end
     end
@@ -127,11 +127,11 @@ describe Puppet::Face[:parser, :current] do
       output = parser.dump(utf8_bom_manifest)
 
       expect(output).to eq("")
-      expect(@logs[1].message).to eq("Illegal UTF-8 Byte Order mark at beginning of input: [EF BB BF] - remove these from the puppet source")
+      expect(@logs[1].message).to eq("Illegal UTF-8 Byte Order mark at beginning of input: [EF BB BF] - remove these from the oregano source")
       expect(@logs[1].level).to eq(:err)
     end
 
-    it "runs error free when there is a puppet function in manifest being dumped" do
+    it "runs error free when there is a oregano function in manifest being dumped" do
       expect {
         manifest = file_containing('site.pp', "function valid() { 'valid' } notify{ valid(): }")
         parser.dump(manifest)

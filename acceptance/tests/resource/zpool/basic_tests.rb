@@ -6,8 +6,8 @@ tag 'audit:medium',
     'audit:acceptance' # Could be done as integration tests, but would
                        # require drastically changing the system running the test
 
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::ZPoolUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::ZPoolUtils
 
 teardown do
   step "ZPool: cleanup"
@@ -46,8 +46,8 @@ agents.each do |agent|
     assert_match( /tstpool/ , result.stdout, "err: #{agent}")
   end
 
-  step "ZPool: verify puppet resource reports on the disk array"
-  on(agent, puppet("resource zpool tstpool")) do
+  step "ZPool: verify oregano resource reports on the disk array"
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/ensure => 'present'/, result.stdout, "err: #{agent}")
     assert_match(/disk +=> .'.+dsk1 .+dsk2'./, result.stdout, "err: #{agent}")
   end
@@ -73,8 +73,8 @@ agents.each do |agent|
     assert_match( /tstpool.*\n\s+mirror.*\n\s*\/ztstpool\/dsk1.*\n\s*\/ztstpool\/dsk2.*\n\s*\/ztstpool\/dsk3/m, result.stdout, "err: #{agent}")
   end
 
-  step "ZPool: verify puppet resource reports on the mirror"
-  on(agent, puppet("resource zpool tstpool")) do
+  step "ZPool: verify oregano resource reports on the mirror"
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/ensure => 'present'/, result.stdout, "err: #{agent}")
     assert_match(/mirror => \['\/ztstpool\/dsk1 \/ztstpool\/dsk2 \/ztstpool\/dsk3'\]/, result.stdout, "err: #{agent}")
   end
@@ -102,8 +102,8 @@ agents.each do |agent|
     assert_match( /tstpool.*\n\s+mirror.*\n\s*\/ztstpool\/dsk1.*\n\s*\/ztstpool\/dsk2.*\n\s+mirror.*\n\s*\/ztstpool\/dsk3.*\n\s*\/ztstpool\/dsk5/m, result.stdout, "err: #{agent}")
   end
 
-  step "ZPool: verify puppet resource reports on both mirrors"
-  on(agent, puppet("resource zpool tstpool")) do
+  step "ZPool: verify oregano resource reports on both mirrors"
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/ensure => 'present'/, result.stdout, "err: #{agent}")
     assert_match(/mirror => \['\/ztstpool\/dsk1 \/ztstpool\/dsk2', '\/ztstpool\/dsk3 \/ztstpool\/dsk5'\]/, result.stdout, "err: #{agent}")
   end
@@ -129,8 +129,8 @@ agents.each do |agent|
     assert_match( /tstpool.*\n\s+raidz.*\n\s*\/ztstpool\/dsk1.*\n\s*\/ztstpool\/dsk2.*\n\s*\/ztstpool\/dsk3/m, result.stdout, "err: #{agent}")
   end
 
-  step "ZPool: verify puppet reports on the raidz pool"
-  on(agent, puppet("resource zpool tstpool")) do
+  step "ZPool: verify oregano reports on the raidz pool"
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/ensure => 'present'/, result.stdout, "err: #{agent}")
     assert_match(/raidz  => \['\/ztstpool\/dsk1 \/ztstpool\/dsk2 \/ztstpool\/dsk3'\]/, result.stdout, "err: #{agent}")
   end
@@ -158,8 +158,8 @@ agents.each do |agent|
     assert_match( /tstpool.*\n\s+raidz.*\n\s*\/ztstpool\/dsk1.*\n\s*\/ztstpool\/dsk2.*\n\s+raidz.*\n\s*\/ztstpool\/dsk3.*\n\s*\/ztstpool\/dsk5/m, result.stdout, "err: #{agent}")
   end
 
-  step "ZPool: verify puppet resource reports on both raidz"
-  on(agent, puppet("resource zpool tstpool")) do
+  step "ZPool: verify oregano resource reports on both raidz"
+  on(agent, oregano("resource zpool tstpool")) do
     assert_match(/ensure => 'present'/, result.stdout, "err: #{agent}")
     assert_match(/raidz  => \['\/ztstpool\/dsk1 \/ztstpool\/dsk2', '\/ztstpool\/dsk3 \/ztstpool\/dsk5'\]/, result.stdout, "err: #{agent}")
   end

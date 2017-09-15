@@ -1,44 +1,44 @@
 #!/usr/bin/env ruby
 require 'spec_helper'
 
-if Puppet.features.microsoft_windows?
+if Oregano.features.microsoft_windows?
   class WindowsSecurityTester
-    require 'puppet/util/windows/security'
-    include Puppet::Util::Windows::Security
+    require 'oregano/util/windows/security'
+    include Oregano::Util::Windows::Security
   end
 end
 
-describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe "Oregano::Util::Windows::Security", :if => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   before :all do
 
     # necessary for localized name of guests
-    guests_name = Puppet::Util::Windows::SID.sid_to_name('S-1-5-32-546')
-    guests = Puppet::Util::Windows::ADSI::Group.new(guests_name)
+    guests_name = Oregano::Util::Windows::SID.sid_to_name('S-1-5-32-546')
+    guests = Oregano::Util::Windows::ADSI::Group.new(guests_name)
 
     @sids = {
-      :current_user => Puppet::Util::Windows::SID.name_to_sid(Puppet::Util::Windows::ADSI::User.current_user_name),
-      :system => Puppet::Util::Windows::SID::LocalSystem,
-      :administrators => Puppet::Util::Windows::SID::BuiltinAdministrators,
-      :guest => Puppet::Util::Windows::SID.name_to_sid(guests.members[0]),
-      :users => Puppet::Util::Windows::SID::BuiltinUsers,
-      :power_users => Puppet::Util::Windows::SID::PowerUsers,
-      :none => Puppet::Util::Windows::SID::Nobody,
-      :everyone => Puppet::Util::Windows::SID::Everyone
+      :current_user => Oregano::Util::Windows::SID.name_to_sid(Oregano::Util::Windows::ADSI::User.current_user_name),
+      :system => Oregano::Util::Windows::SID::LocalSystem,
+      :administrators => Oregano::Util::Windows::SID::BuiltinAdministrators,
+      :guest => Oregano::Util::Windows::SID.name_to_sid(guests.members[0]),
+      :users => Oregano::Util::Windows::SID::BuiltinUsers,
+      :power_users => Oregano::Util::Windows::SID::PowerUsers,
+      :none => Oregano::Util::Windows::SID::Nobody,
+      :everyone => Oregano::Util::Windows::SID::Everyone
     }
     # The TCP/IP NetBIOS Helper service (aka 'lmhosts') has ended up
     # disabled on some VMs for reasons we couldn't track down. This
     # condition causes tests which rely on resolving UNC style paths
     # (like \\localhost) to fail with unhelpful error messages.
     # Put a check for this upfront to aid debug should this strike again.
-    service = Puppet::Type.type(:service).new(:name => 'lmhosts')
+    service = Oregano::Type.type(:service).new(:name => 'lmhosts')
     expect(service.provider.status).to eq(:running), 'lmhosts service is not running'
   end
 
   let (:sids) { @sids }
   let (:winsec) { WindowsSecurityTester.new }
-  let (:klass) { Puppet::Util::Windows::File }
+  let (:klass) { Oregano::Util::Windows::File }
 
   def set_group_depending_on_current_user(path)
     if sids[:current_user] == sids[:system]
@@ -56,7 +56,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
   def grant_everyone_full_access(path)
     sd = winsec.get_security_descriptor(path)
     everyone = 'S-1-1-0'
-    inherit = Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE | Puppet::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
+    inherit = Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE | Oregano::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
     sd.dacl.allow(everyone, klass::FILE_ALL_ACCESS, inherit)
     winsec.set_security_descriptor(path, sd)
   end
@@ -109,12 +109,12 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
     describe "on a volume that supports ACLs" do
       describe "for a normal user" do
         before :each do
-          Puppet.features.stubs(:root?).returns(false)
+          Oregano.features.stubs(:root?).returns(false)
         end
 
         after :each do
           winsec.set_mode(WindowsSecurityTester::S_IRWXU, parent)
-          winsec.set_mode(WindowsSecurityTester::S_IRWXU, path) if Puppet::FileSystem.exist?(path)
+          winsec.set_mode(WindowsSecurityTester::S_IRWXU, path) if Oregano::FileSystem.exist?(path)
         end
 
         describe "#supports_acl?" do
@@ -127,7 +127,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
           it "should raise an exception if it cannot get volume information" do
             expect {
               winsec.supports_acl?('foobar')
-            }.to raise_error(Puppet::Error, /Failed to get volume information/)
+            }.to raise_error(Oregano::Error, /Failed to get volume information/)
           end
         end
 
@@ -138,7 +138,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
           it "should raise an exception when setting to a different user" do
             expect { winsec.set_owner(sids[:guest], path) }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(1307) # ERROR_INVALID_OWNER
             end
           end
@@ -151,7 +151,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
           it "should raise an exception if an invalid path is provided" do
             expect { winsec.get_owner("c:\\doesnotexist.txt") }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(2) # ERROR_FILE_NOT_FOUND
             end
           end
@@ -176,7 +176,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
           it "should raise an exception if an invalid path is provided" do
             expect { winsec.get_group("c:\\doesnotexist.txt") }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(2) # ERROR_FILE_NOT_FOUND
             end
           end
@@ -253,7 +253,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
               expect(ace).not_to be_inherited
             end
 
-            if Puppet::FileSystem.directory?(path)
+            if Oregano::FileSystem.directory?(path)
               system_aces.each do |ace|
                 expect(ace).to be_object_inherit
                 expect(ace).to be_container_inherit
@@ -290,18 +290,18 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
             before :each do
               winsec.set_group(sids[:none], path)
               winsec.set_mode(0600, path)
-              Puppet::Util::Windows::File.add_attributes(path, klass::FILE_ATTRIBUTE_READONLY)
-              expect(Puppet::Util::Windows::File.get_attributes(path) & klass::FILE_ATTRIBUTE_READONLY).to be_nonzero
+              Oregano::Util::Windows::File.add_attributes(path, klass::FILE_ATTRIBUTE_READONLY)
+              expect(Oregano::Util::Windows::File.get_attributes(path) & klass::FILE_ATTRIBUTE_READONLY).to be_nonzero
             end
 
             it "should make them writable if any sid has write permission" do
               winsec.set_mode(WindowsSecurityTester::S_IWUSR, path)
-              expect(Puppet::Util::Windows::File.get_attributes(path) & klass::FILE_ATTRIBUTE_READONLY).to eq(0)
+              expect(Oregano::Util::Windows::File.get_attributes(path) & klass::FILE_ATTRIBUTE_READONLY).to eq(0)
             end
 
             it "should leave them read-only if no sid has write permission and should allow full access for SYSTEM" do
               winsec.set_mode(WindowsSecurityTester::S_IRUSR | WindowsSecurityTester::S_IXGRP, path)
-              expect(Puppet::Util::Windows::File.get_attributes(path) & klass::FILE_ATTRIBUTE_READONLY).to be_nonzero
+              expect(Oregano::Util::Windows::File.get_attributes(path) & klass::FILE_ATTRIBUTE_READONLY).to be_nonzero
 
               system_aces = winsec.get_aces_for_path_by_sid(path, sids[:system])
 
@@ -315,7 +315,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
           it "should raise an exception if an invalid path is provided" do
             expect { winsec.set_mode(sids[:guest], "c:\\doesnotexist.txt") }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(2) # ERROR_FILE_NOT_FOUND
             end
           end
@@ -340,20 +340,20 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
             guest_aces = winsec.get_aces_for_path_by_sid(path, sids[:guest])
             expect(guest_aces.find do |ace|
-              ace.type == Puppet::Util::Windows::AccessControlEntry::ACCESS_DENIED_ACE_TYPE
+              ace.type == Oregano::Util::Windows::AccessControlEntry::ACCESS_DENIED_ACE_TYPE
             end).not_to be_nil
           end
 
           it "should skip inherit-only ace" do
             sd = winsec.get_security_descriptor(path)
-            dacl = Puppet::Util::Windows::AccessControlList.new
+            dacl = Oregano::Util::Windows::AccessControlList.new
             dacl.allow(
               sids[:current_user], klass::STANDARD_RIGHTS_ALL | klass::SPECIFIC_RIGHTS_ALL
             )
             dacl.allow(
               sids[:everyone],
               klass::FILE_GENERIC_READ,
-              Puppet::Util::Windows::AccessControlEntry::INHERIT_ONLY_ACE | Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE
+              Oregano::Util::Windows::AccessControlEntry::INHERIT_ONLY_ACE | Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE
             )
             winsec.set_security_descriptor(path, sd)
 
@@ -362,7 +362,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
           it "should raise an exception if an invalid path is provided" do
             expect { winsec.get_mode("c:\\doesnotexist.txt") }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(2) # ERROR_FILE_NOT_FOUND
             end
           end
@@ -382,7 +382,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
           it "should be present when the access control list is unprotected" do
             # add a bunch of aces to the parent with permission to add children
             allow = klass::STANDARD_RIGHTS_ALL | klass::SPECIFIC_RIGHTS_ALL
-            inherit = Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE | Puppet::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
+            inherit = Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE | Oregano::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
 
             sd = winsec.get_security_descriptor(parent)
             sd.dacl.allow(
@@ -406,9 +406,9 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
         end
       end
 
-      describe "for an administrator", :if => (Puppet.features.root? && Puppet.features.microsoft_windows?) do
+      describe "for an administrator", :if => (Oregano.features.root? && Oregano.features.microsoft_windows?) do
         before :each do
-          is_dir = Puppet::FileSystem.directory?(path)
+          is_dir = Oregano::FileSystem.directory?(path)
           winsec.set_mode(WindowsSecurityTester::S_IRWXU | WindowsSecurityTester::S_IRWXG, path)
           set_group_depending_on_current_user(path)
           winsec.set_owner(sids[:guest], path)
@@ -417,7 +417,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
         end
 
         after :each do
-          if Puppet::FileSystem.exist?(path)
+          if Oregano::FileSystem.exist?(path)
             winsec.set_owner(sids[:current_user], path)
             winsec.set_mode(WindowsSecurityTester::S_IRWXU, path)
           end
@@ -440,12 +440,12 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
           end
 
           it "should raise an exception if an invalid sid is provided" do
-            expect { winsec.set_owner("foobar", path) }.to raise_error(Puppet::Error, /Failed to convert string SID/)
+            expect { winsec.set_owner("foobar", path) }.to raise_error(Oregano::Error, /Failed to convert string SID/)
           end
 
           it "should raise an exception if an invalid path is provided" do
             expect { winsec.set_owner(sids[:guest], "c:\\doesnotexist.txt") }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(2) # ERROR_FILE_NOT_FOUND
             end
           end
@@ -482,12 +482,12 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
           end
 
           it "should raise an exception if an invalid sid is provided" do
-            expect { winsec.set_group("foobar", path) }.to raise_error(Puppet::Error, /Failed to convert string SID/)
+            expect { winsec.set_group("foobar", path) }.to raise_error(Oregano::Error, /Failed to convert string SID/)
           end
 
           it "should raise an exception if an invalid path is provided" do
             expect { winsec.set_group(sids[:guest], "c:\\doesnotexist.txt") }.to raise_error do |error|
-              expect(error).to be_a(Puppet::Util::Windows::Error)
+              expect(error).to be_a(Oregano::Util::Windows::Error)
               expect(error.code).to eq(2) # ERROR_FILE_NOT_FOUND
             end
           end
@@ -501,15 +501,15 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
         describe "when the sid refers to a deleted trustee" do
           it "should retrieve the user sid" do
             sid = nil
-            user = Puppet::Util::Windows::ADSI::User.create("puppet#{rand(10000)}")
+            user = Oregano::Util::Windows::ADSI::User.create("oregano#{rand(10000)}")
             user.password = 'PUPPET_RULeZ_123!'
             user.commit
             begin
-              sid = Puppet::Util::Windows::ADSI::User.new(user.name).sid.sid
+              sid = Oregano::Util::Windows::ADSI::User.new(user.name).sid.sid
               winsec.set_owner(sid, path)
               winsec.set_mode(WindowsSecurityTester::S_IRWXU, path)
             ensure
-              Puppet::Util::Windows::ADSI::User.delete(user.name)
+              Oregano::Util::Windows::ADSI::User.delete(user.name)
             end
 
             expect(winsec.get_owner(path)).to eq(sid)
@@ -518,14 +518,14 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
 
           it "should retrieve the group sid" do
             sid = nil
-            group = Puppet::Util::Windows::ADSI::Group.create("puppet#{rand(10000)}")
+            group = Oregano::Util::Windows::ADSI::Group.create("oregano#{rand(10000)}")
             group.commit
             begin
-              sid = Puppet::Util::Windows::ADSI::Group.new(group.name).sid.sid
+              sid = Oregano::Util::Windows::ADSI::Group.new(group.name).sid.sid
               winsec.set_group(sid, path)
               winsec.set_mode(WindowsSecurityTester::S_IRWXG, path)
             ensure
-              Puppet::Util::Windows::ADSI::Group.delete(group.name)
+              Oregano::Util::Windows::ADSI::Group.delete(group.name)
             end
             expect(winsec.get_group(path)).to eq(sid)
             expect(winsec.get_mode(path)).to eq(WindowsSecurityTester::S_IRWXG)
@@ -537,7 +537,7 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
             sd = winsec.get_security_descriptor(path)
             # don't allow inherited aces to affect the test
             protect = true
-            new_sd = Puppet::Util::Windows::SecurityDescriptor.new(sd.owner, sd.group, [], protect)
+            new_sd = Oregano::Util::Windows::SecurityDescriptor.new(sd.owner, sd.group, [], protect)
             winsec.set_security_descriptor(path, new_sd)
 
             expect(winsec.get_mode(path)).to eq(WindowsSecurityTester::S_ISYSTEM_MISSING)
@@ -830,12 +830,12 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
     end
 
     it "preserves aces for other users" do
-      dacl = Puppet::Util::Windows::AccessControlList.new
+      dacl = Oregano::Util::Windows::AccessControlList.new
       sids_in_dacl = [sids[:current_user], sids[:users]]
       sids_in_dacl.each do |sid|
         dacl.allow(sid, read_execute)
       end
-      sd = Puppet::Util::Windows::SecurityDescriptor.new(sids[:guest], sids[:guest], dacl, true)
+      sd = Oregano::Util::Windows::SecurityDescriptor.new(sids[:guest], sids[:guest], dacl, true)
       winsec.set_security_descriptor(path, sd)
 
       aces = winsec.get_security_descriptor(path).dacl.to_a
@@ -864,9 +864,9 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
       # inherit only aces can only be set on directories
       dir = tmpdir('inheritonlyace')
 
-      inherit_flags = Puppet::Util::Windows::AccessControlEntry::INHERIT_ONLY_ACE |
-        Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
-        Puppet::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
+      inherit_flags = Oregano::Util::Windows::AccessControlEntry::INHERIT_ONLY_ACE |
+        Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
+        Oregano::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
 
       sd = winsec.get_security_descriptor(dir)
       sd.dacl.allow(sd.owner, klass::FILE_ALL_ACCESS, inherit_flags)
@@ -886,8 +886,8 @@ describe "Puppet::Util::Windows::Security", :if => Puppet.features.microsoft_win
       # inheritance can only be set on directories
       dir = tmpdir('denyaces')
 
-      inherit_flags = Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
-          Puppet::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
+      inherit_flags = Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
+          Oregano::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE
 
       sd = winsec.get_security_descriptor(dir)
       sd.dacl.deny(sids[:guest], klass::FILE_ALL_ACCESS, inherit_flags)

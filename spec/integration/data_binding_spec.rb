@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe "Data binding" do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
-  let(:dir) { tmpdir("puppetdir") }
+  let(:dir) { tmpdir("oreganodir") }
   let(:data) {{
     'global' => {
       'testing::binding::value' => 'the value',
@@ -51,11 +51,11 @@ describe "Data binding" do
   }}
 
   before do
-    # Drop all occurances of cached hiera instances. This will reset @hiera in Puppet::Indirector::Hiera, Testing::DataBinding::Hiera,
-    # and Puppet::DataBinding::Hiera. Different classes are active as indirection depending on configuration
-    ObjectSpace.each_object(Class).select {|klass| klass <= Puppet::Indirector::Hiera }.each { |klass| klass.instance_variable_set(:@hiera, nil) }
-    Puppet[:data_binding_terminus] = 'hiera'
-    Puppet[:modulepath] = dir
+    # Drop all occurances of cached hiera instances. This will reset @hiera in Oregano::Indirector::Hiera, Testing::DataBinding::Hiera,
+    # and Oregano::DataBinding::Hiera. Different classes are active as indirection depending on configuration
+    ObjectSpace.each_object(Class).select {|klass| klass <= Oregano::Indirector::Hiera }.each { |klass| klass.instance_variable_set(:@hiera, nil) }
+    Oregano[:data_binding_terminus] = 'hiera'
+    Oregano[:modulepath] = dir
   end
 
   context "with testing::binding and global data only" do
@@ -159,7 +159,7 @@ describe "Data binding" do
       end
     end
 
-    Puppet[:hiera_config] = hiera_config_file
+    Oregano[:hiera_config] = hiera_config_file
   end
 
   def configure_hiera_for_two_tier(data)
@@ -181,7 +181,7 @@ describe "Data binding" do
       end
     end
 
-    Puppet[:hiera_config] = hiera_config_file
+    Oregano[:hiera_config] = hiera_config_file
   end
 
   def create_manifest_in_module(module_name, name, manifest)

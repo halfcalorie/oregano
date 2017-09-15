@@ -64,20 +64,20 @@ def do_configs(configs, target, strip = 'conf/')
   end
 
   if $operatingsystem == 'windows'
-    src_dll = 'ext/windows/eventlog/puppetres.dll'
-    dst_dll = File.join(InstallOptions.bin_dir, 'puppetres.dll')
+    src_dll = 'ext/windows/eventlog/oreganores.dll'
+    dst_dll = File.join(InstallOptions.bin_dir, 'oreganores.dll')
     FileUtils.install(src_dll, dst_dll, {:mode => 0644, :preserve => true, :verbose => true})
 
     require 'win32/registry'
     include Win32::Registry::Constants
 
     begin
-      Win32::Registry::HKEY_LOCAL_MACHINE.create('SYSTEM\CurrentControlSet\services\eventlog\Application\Puppet', KEY_ALL_ACCESS | 0x0100) do |reg|
+      Win32::Registry::HKEY_LOCAL_MACHINE.create('SYSTEM\CurrentControlSet\services\eventlog\Application\Oregano', KEY_ALL_ACCESS | 0x0100) do |reg|
         reg.write_s('EventMessageFile', dst_dll.tr('/', '\\'))
         reg.write_i('TypesSupported', 0x7)
       end
     rescue Win32::Registry::Error => e
-      warn "Failed to create puppet eventlog registry key: #{e}"
+      warn "Failed to create oregano eventlog registry key: #{e}"
     end
   end
 end
@@ -179,7 +179,7 @@ def prepare_installation
     end
     opts.on('--[no-]tests', 'Prevents the execution of unit tests.', 'Default off.') do |ontest|
       InstallOptions.tests = ontest
-      warn "The tests flag is no longer functional in Puppet and is deprecated as of Dec 19, 2012. It will be removed in a future version of Puppet."
+      warn "The tests flag is no longer functional in Oregano and is deprecated as of Dec 19, 2012. It will be removed in a future version of Oregano."
     end
     opts.on('--[no-]configs', 'Prevents the installation of config files', 'Default off.') do |ontest|
       InstallOptions.configs = ontest
@@ -187,25 +187,25 @@ def prepare_installation
     opts.on('--destdir[=OPTIONAL]', 'Installation prefix for all targets', 'Default essentially /') do |destdir|
       InstallOptions.destdir = destdir
     end
-    opts.on('--configdir[=OPTIONAL]', 'Installation directory for config files', 'Default /etc/puppetlabs/puppet') do |configdir|
+    opts.on('--configdir[=OPTIONAL]', 'Installation directory for config files', 'Default /etc/oreganolabs/oregano') do |configdir|
       InstallOptions.configdir = configdir
     end
-    opts.on('--codedir[=OPTIONAL]', 'Installation directory for code files', 'Default /etc/puppetlabs/code') do |codedir|
+    opts.on('--codedir[=OPTIONAL]', 'Installation directory for code files', 'Default /etc/oreganolabs/code') do |codedir|
       InstallOptions.codedir = codedir
     end
-    opts.on('--vardir[=OPTIONAL]', 'Installation directory for var files', 'Default /opt/puppetlabs/puppet/cache') do |vardir|
+    opts.on('--vardir[=OPTIONAL]', 'Installation directory for var files', 'Default /opt/oreganolabs/oregano/cache') do |vardir|
       InstallOptions.vardir = vardir
     end
-    opts.on('--rundir[=OPTIONAL]', 'Installation directory for state files', 'Default /var/run/puppetlabs') do |rundir|
+    opts.on('--rundir[=OPTIONAL]', 'Installation directory for state files', 'Default /var/run/oreganolabs') do |rundir|
       InstallOptions.rundir = rundir
     end
-    opts.on('--logdir[=OPTIONAL]', 'Installation directory for log files', 'Default /var/log/puppetlabs/puppet') do |logdir|
+    opts.on('--logdir[=OPTIONAL]', 'Installation directory for log files', 'Default /var/log/oreganolabs/oregano') do |logdir|
       InstallOptions.logdir = logdir
     end
     opts.on('--bindir[=OPTIONAL]', 'Installation directory for binaries', 'overrides RbConfig::CONFIG["bindir"]') do |bindir|
       InstallOptions.bindir = bindir
     end
-    opts.on('--localedir[=OPTIONAL]', 'Installation directory for locale information', 'Default /opt/puppetlabs/puppet/share/locale') do |localedir|
+    opts.on('--localedir[=OPTIONAL]', 'Installation directory for locale information', 'Default /opt/oreganolabs/oregano/share/locale') do |localedir|
       InstallOptions.localedir = localedir
     end
     opts.on('--ruby[=OPTIONAL]', 'Ruby interpreter to use with installation', 'overrides ruby used to call install.rb') do |ruby|
@@ -273,41 +273,41 @@ def prepare_installation
   if not InstallOptions.configdir.nil?
     configdir = InstallOptions.configdir
   elsif $operatingsystem == "windows"
-    configdir = File.join(Dir::COMMON_APPDATA, "PuppetLabs", "puppet", "etc")
+    configdir = File.join(Dir::COMMON_APPDATA, "OreganoLabs", "oregano", "etc")
   else
-    configdir = "/etc/puppetlabs/puppet"
+    configdir = "/etc/oreganolabs/oregano"
   end
 
   if not InstallOptions.codedir.nil?
     codedir = InstallOptions.codedir
   elsif $operatingsystem == "windows"
-    codedir = File.join(Dir::COMMON_APPDATA, "PuppetLabs", "code")
+    codedir = File.join(Dir::COMMON_APPDATA, "OreganoLabs", "code")
   else
-    codedir = "/etc/puppetlabs/code"
+    codedir = "/etc/oreganolabs/code"
   end
 
   if not InstallOptions.vardir.nil?
     vardir = InstallOptions.vardir
   elsif $operatingsystem == "windows"
-    vardir = File.join(Dir::COMMON_APPDATA, "PuppetLabs", "puppet", "cache")
+    vardir = File.join(Dir::COMMON_APPDATA, "OreganoLabs", "oregano", "cache")
   else
-    vardir = "/opt/puppetlabs/puppet/cache"
+    vardir = "/opt/oreganolabs/oregano/cache"
   end
 
   if not InstallOptions.rundir.nil?
     rundir = InstallOptions.rundir
   elsif $operatingsystem == "windows"
-    rundir = File.join(Dir::COMMON_APPDATA, "PuppetLabs", "puppet", "var", "run")
+    rundir = File.join(Dir::COMMON_APPDATA, "OreganoLabs", "oregano", "var", "run")
   else
-    rundir = "/var/run/puppetlabs"
+    rundir = "/var/run/oreganolabs"
   end
 
   if not InstallOptions.logdir.nil?
     logdir = InstallOptions.logdir
   elsif $operatingsystem == "windows"
-    logdir = File.join(Dir::COMMON_APPDATA, "PuppetLabs", "puppet", "var", "log")
+    logdir = File.join(Dir::COMMON_APPDATA, "OreganoLabs", "oregano", "var", "log")
   else
-    logdir = "/var/log/puppetlabs/puppet"
+    logdir = "/var/log/oreganolabs/oregano"
   end
 
   if not InstallOptions.bindir.nil?
@@ -320,9 +320,9 @@ def prepare_installation
     localedir = InstallOptions.localedir
   else
     if $operatingsystem == "windows"
-      localedir = File.join(Dir::PROGRAM_FILES, "Puppet Labs", "Puppet", "puppet", "share", "locale")
+      localedir = File.join(Dir::PROGRAM_FILES, "Oregano Labs", "Oregano", "oregano", "share", "locale")
     else
-      localedir = "/opt/puppetlabs/puppet/share/locale"
+      localedir = "/opt/oreganolabs/oregano/share/locale"
     end
   end
 
@@ -406,7 +406,7 @@ def build_rdoc(files)
   return unless $haverdoc
   begin
     r = RDoc::RDoc.new
-    r.document(["--main", "README", "--title", "Puppet -- Site Configuration Management", "--line-numbers"] + files)
+    r.document(["--main", "README", "--title", "Oregano -- Site Configuration Management", "--line-numbers"] + files)
   rescue RDoc::RDocError => e
     $stderr.puts e.message
   rescue Exception => e
@@ -435,7 +435,7 @@ end
 # (e.g., bin/rdoc becomes rdoc); the shebang line handles running it. Under
 # windows, we add an '.rb' extension and let file associations do their stuff.
 def install_binfile(from, op_file, target)
-  tmp_file = Tempfile.new('puppet-binfile')
+  tmp_file = Tempfile.new('oregano-binfile')
 
   if not InstallOptions.ruby.nil?
     ruby = InstallOptions.ruby
@@ -467,7 +467,7 @@ def install_binfile(from, op_file, target)
       end
 
       if not installed_wrapper
-        tmp_file2 = Tempfile.new('puppet-wrapper')
+        tmp_file2 = Tempfile.new('oregano-wrapper')
         cwv = <<-EOS
 @echo off
 SETLOCAL
@@ -476,7 +476,7 @@ if exist "%~dp0environment.bat" (
 ) else (
   SET "PATH=%~dp0;%PATH%"
 )
-ruby.exe -S -- puppet %*
+ruby.exe -S -- oregano %*
 EOS
         File.open(tmp_file2.path, "w") { |cw| cw.puts cwv }
         FileUtils.install(tmp_file2.path, File.join(target, "#{op_file}.bat"), :mode => 0755, :preserve => true, :verbose => true)
@@ -490,10 +490,10 @@ EOS
   tmp_file.unlink
 end
 
-# Change directory into the puppet root so we don't get the wrong files for install.
+# Change directory into the oregano root so we don't get the wrong files for install.
 FileUtils.cd File.dirname(__FILE__) do
   # Set these values to what you want installed.
-  configs = glob(%w{conf/auth.conf conf/puppet.conf conf/hiera.yaml})
+  configs = glob(%w{conf/auth.conf conf/oregano.conf conf/hiera.yaml})
   bins  = glob(%w{bin/*})
   rdoc  = glob(%w{bin/* lib/**/*.rb README* }).reject { |e| e=~ /\.(bat|cmd)$/ }
   ri    = glob(%w{bin/*.rb lib/**/*.rb}).reject { |e| e=~ /\.(bat|cmd)$/ }

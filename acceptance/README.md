@@ -23,34 +23,34 @@ bundle install --path=.bundle/gems
 
 ### Using Git Mirrors
 
-By default if you are installing from source, packages will be installed from Github, from their puppetlabs forks.  This can be selectively overridden for all installed projects, or per project, by setting environment variables.
+By default if you are installing from source, packages will be installed from Github, from their oreganolabs forks.  This can be selectively overridden for all installed projects, or per project, by setting environment variables.
 
 GIT_SERVER => this will be the address the git server used for all installed projects.  Defaults to 'github.com'.
-FORK => this will be the fork of the project for all installed projects.  Defaults to 'puppetlabs'.
+FORK => this will be the fork of the project for all installed projects.  Defaults to 'oreganolabs'.
 
 To customize the server or fork for a specific project use PROJECT_NAME_GIT_SERVER and PROJECT_NAME_FORK.
 
 For example, run with these options:
 
 ```sh
-bundle exec rake ci:test:git CONFIG=config/nodes/win2008r2.yaml SHA=abcd PUPPET_GIT_SERVER=percival.corp.puppetlabs.net GIT_SERVER=github.delivery.puppetlabs.net
+bundle exec rake ci:test:git CONFIG=config/nodes/win2008r2.yaml SHA=abcd PUPPET_GIT_SERVER=percival.corp.oreganolabs.net GIT_SERVER=github.delivery.oreganolabs.net
 ```
 
 Beaker will install the following:
 
 ```
 :install=>
-  ["git://github.delivery.puppetlabs.net/puppetlabs-facter.git#stable",
-   "git://github.delivery.puppetlabs.net/puppetlabs-hiera.git#stable",
-   "git://percival.corp.puppetlabs.net/puppetlabs-puppet.git#abcd"],
+  ["git://github.delivery.oreganolabs.net/oreganolabs-facter.git#stable",
+   "git://github.delivery.oreganolabs.net/oreganolabs-hiera.git#stable",
+   "git://percival.corp.oreganolabs.net/oreganolabs-oregano.git#abcd"],
 ```
 
-This corresponds to installing facter and hiera stable from our internal mirror, while installing puppet SHA abcd from a git daemon on my local machine percival.  See below for details on setting up a local git daemon.
+This corresponds to installing facter and hiera stable from our internal mirror, while installing oregano SHA abcd from a git daemon on my local machine percival.  See below for details on setting up a local git daemon.
 
 Running Tests on the vcloud
 ---------------------------
 
-In order to use the Puppet Labs vcloud, you'll need to be a Puppet Labs employee.
+In order to use the Oregano Labs vcloud, you'll need to be a Oregano Labs employee.
 Community members should see the [guide to running the tests on vagrant boxen](#running-tests-on-vagrant-boxen).
 
 ### Authentication
@@ -59,26 +59,26 @@ Normally the ci tasks are called from a prepared Jenkins job.
 
 If you are running this on your laptop, you will need this ssh private key in order for beaker to be able to log into the vms created from the hosts file:
 
-https://github.com/puppetlabs/puppetlabs-modules/blob/production/secure/jenkins/id_rsa-acceptance
-https://github.com/puppetlabs/puppetlabs-modules/blob/production/secure/jenkins/id_rsa-acceptance.pub
+https://github.com/oreganolabs/oreganolabs-modules/blob/production/secure/jenkins/id_rsa-acceptance
+https://github.com/oreganolabs/oreganolabs-modules/blob/production/secure/jenkins/id_rsa-acceptance.pub
 
-Please note in acceptance/Rakefile where the ssh key is defaulted to. It may be looking in ~/.ssh/id_rsa-acceptance, but it may want to look in the working directory (e.g. puppet/acceptance).
+Please note in acceptance/Rakefile where the ssh key is defaulted to. It may be looking in ~/.ssh/id_rsa-acceptance, but it may want to look in the working directory (e.g. oregano/acceptance).
 
 You will also need QA credentials to vsphere in a ~/.fog file.  These credentials can be found on any of the Jenkins coordinator hosts. You may want to check periodically to ensure that the credentials you have are still valid as they may change periodically.
 
 ### Packages
 
-In order to run the tests on hosts provisioned from packages produced by Delivery, you will need to reference a Puppet commit sha that has been packaged using Delivery's Vanagon based packaging jobs.
+In order to run the tests on hosts provisioned from packages produced by Delivery, you will need to reference a Oregano commit sha that has been packaged using Delivery's Vanagon based packaging jobs.
 
 Typically if you are investigating a failure, you will have a SHA from a failed jenkins run which should correspond to a successful pipeline run, and you should not need to run the pipeline manually.
 
-A finished pipeline will have repository information available at http://builds.puppetlabs.lan/puppet-agent/  So you can also browse this list and select a recent sha which has repo_configs/ available.
+A finished pipeline will have repository information available at http://builds.oreganolabs.lan/oregano-agent/  So you can also browse this list and select a recent sha which has repo_configs/ available.
 
-The ci:test:aio task depends on having a local installation of `wget`. When executing the `ci:test:aio` task, you must set the `SHA` and the `SUITE_VERSION` to identify a puppet-agent package version to test.
+The ci:test:aio task depends on having a local installation of `wget`. When executing the `ci:test:aio` task, you must set the `SHA` and the `SUITE_VERSION` to identify a oregano-agent package version to test.
 
 Optionally you may set the TEST (TEST=a/test.rb,and/another/test.rb), and may pass additional OPTIONS to beaker (OPTIONS='--opt foo').
 
-To select host types to test, use the `TEST_TARGET` value that [beaker-hostgenerator](https://github.com/puppetlabs/beaker-hostgenerator) understands. For instance, such an invocation may look like:
+To select host types to test, use the `TEST_TARGET` value that [beaker-hostgenerator](https://github.com/oreganolabs/beaker-hostgenerator) understands. For instance, such an invocation may look like:
 
 ```sh
 bundle exec rake ci:test:aio TEST_TARGET='windows2012r2-64a' SHA='75a9199bb09061204117a0d169bf9558d9a86cc1' SUITE_VERSION='1.8.1.2.g75a9199'
@@ -104,7 +104,7 @@ Alternatively you may provision via git clone by calling the ci:test:git task.  
 
 #### Source Checkout for Different Fork
 
-If you have a branch pushed to your fork which you wish to test prior to merging into puppetlabs/puppet, you can do so be setting the FORK environment variable.  So, if I have a branch 'issue/master/wonder-if-this-explodes' pushed to my jpartlow puppet fork that I want to test on Windows, I could invoke the following:
+If you have a branch pushed to your fork which you wish to test prior to merging into oreganolabs/oregano, you can do so be setting the FORK environment variable.  So, if I have a branch 'issue/master/wonder-if-this-explodes' pushed to my jpartlow oregano fork that I want to test on Windows, I could invoke the following:
 
 ```sh
 bundle exec rake ci:test:git CONFIG=config/nodes/win2008r2.yaml SHA=issue/master/wonder-if-this-explodes FORK=jpartlow
@@ -149,12 +149,12 @@ There also may be scenarios where you want to specify the host(s) to release. E.
 Running Tests on Vagrant Boxen
 ------------------------------
 
-This guide assumes that you have an acceptable Ruby (i.e. 1.9+) installed along with the bundler gem, that you have the puppet repo checked out locally somewhere, and that the name of the checkout folder is `puppet`.
+This guide assumes that you have an acceptable Ruby (i.e. 1.9+) installed along with the bundler gem, that you have the oregano repo checked out locally somewhere, and that the name of the checkout folder is `oregano`.
 I used Ruby 1.9.3-p484
 
-Change to the `acceptance` directory in the root of the puppet repo:
+Change to the `acceptance` directory in the root of the oregano repo:
 ```sh
-cd /path/to/repo/puppet/acceptance
+cd /path/to/repo/oregano/acceptance
 ```
 Install the necessary gems with bundler:
 ```sh
@@ -183,12 +183,12 @@ HOSTS:
     hypervisor: vagrant
     ip: 192.168.80.100
     box: centos-64-x64-vbox4210-nocm
-    box_url: http://puppet-vagrant-boxes.puppetlabs.com/centos-64-x64-vbox4210-nocm.box
+    box_url: http://oregano-vagrant-boxes.oreganolabs.com/centos-64-x64-vbox4210-nocm.box
 
 CONFIG:
 ```
-This defines a 64-bit CentOS 6.4 vagrant box that serves as both a puppet master and a puppet agent for the test roles.
-(For more information on beaker config files, see [beaker's README](https://github.com/puppetlabs/beaker/blob/master/README.md).)
+This defines a 64-bit CentOS 6.4 vagrant box that serves as both a oregano master and a oregano agent for the test roles.
+(For more information on beaker config files, see [beaker's README](https://github.com/oreganolabs/beaker/blob/master/README.md).)
 Save this file as `config/nodes/centos6-local.yaml`; we'll be needing it later.
 
 Since we have only provided a CentOS box, we don't have anywhere to run windows tests, therefore we'll have to skip those tests.
@@ -203,9 +203,9 @@ echo "{tests: \"$(echo tests/* | sed -e 's| *tests/windows *||' -e 's/ /,/g')\"}
 
 The last thing that needs to be done before we can run the tests is to set up a way for the test box to check out our local changes for testing.
 We'll do this by starting a git daemon on our host.
-In another session, navigate to the folder that contains your checkout of the puppet repo, and then create the following symlink:
+In another session, navigate to the folder that contains your checkout of the oregano repo, and then create the following symlink:
 ```sh
-ln -s . puppetlabs-puppet.git
+ln -s . oreganolabs-oregano.git
 ```
 This works around the inflexible checkout path used by the test prep code.
 
@@ -228,13 +228,13 @@ From the description, we can see that we'll need to set a few environment variab
   + GIT_SERVER should be the IP address of the host (i.e. your machine) in the vagrant private network created for the test box.
     This is derived from the test box's ip by replacing the last octet with 1.
     For our example above, the host IP is 192.168.80.1
-  + FORK should be the path to a 'puppetlabs-puppet.git' directory that points to the repo.
-    In our case, this is the path to the symlink we created before, which is inside your puppet repo checkout, so FORK should just be the name of your checkout.
-    We'll assume that the name is `puppet`.
+  + FORK should be the path to a 'oreganolabs-oregano.git' directory that points to the repo.
+    In our case, this is the path to the symlink we created before, which is inside your oregano repo checkout, so FORK should just be the name of your checkout.
+    We'll assume that the name is `oregano`.
 
 Putting it all together, we construct the following command-line invocation to run the tests:
 ```sh
-CONFIG=config/nodes/centos6-local.yaml SHA=#{test-commit-sha} GIT_SERVER='192.168.80.1' FORK='puppet' bundle exec rake --trace ci:test:git
+CONFIG=config/nodes/centos6-local.yaml SHA=#{test-commit-sha} GIT_SERVER='192.168.80.1' FORK='oregano' bundle exec rake --trace ci:test:git
 ```
 Go ahead and run that sucker!
 

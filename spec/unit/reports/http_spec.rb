@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/reports'
+require 'oregano/reports'
 
-processor = Puppet::Reports.report(:http)
+processor = Oregano::Reports.report(:http)
 
 describe processor do
-  subject { Puppet::Transaction::Report.new.extend(processor) }
+  subject { Oregano::Transaction::Report.new.extend(processor) }
 
   describe "when setting up the connection" do
     let(:http) { stub_everything "http" }
@@ -16,9 +16,9 @@ describe processor do
     end
 
     it "configures the connection for ssl when using https" do
-      Puppet[:reporturl] = 'https://testing:8080/the/path'
+      Oregano[:reporturl] = 'https://testing:8080/the/path'
 
-      Puppet::Network::HttpPool.expects(:http_instance).with(
+      Oregano::Network::HttpPool.expects(:http_instance).with(
         'testing', 8080, true
       ).returns http
 
@@ -26,9 +26,9 @@ describe processor do
     end
 
     it "does not configure the connectino for ssl when using http" do
-      Puppet[:reporturl] = "http://testing:8080/the/path"
+      Oregano[:reporturl] = "http://testing:8080/the/path"
 
-      Puppet::Network::HttpPool.expects(:http_instance).with(
+      Oregano::Network::HttpPool.expects(:http_instance).with(
         'testing', 8080, false
       ).returns http
 
@@ -39,24 +39,24 @@ describe processor do
   describe "when making a request" do
     let(:connection) { stub_everything "connection" }
     let(:httpok) { Net::HTTPOK.new('1.1', 200, '') }
-    let(:options) { {:metric_id => [:puppet, :report, :http]} }
+    let(:options) { {:metric_id => [:oregano, :report, :http]} }
 
     before :each do
-      Puppet::Network::HttpPool.expects(:http_instance).returns(connection)
+      Oregano::Network::HttpPool.expects(:http_instance).returns(connection)
     end
 
     it "should use the path specified by the 'reporturl' setting" do
-      report_path = URI.parse(Puppet[:reporturl]).path
+      report_path = URI.parse(Oregano[:reporturl]).path
       connection.expects(:post).with(report_path, anything, anything, options).returns(httpok)
 
       subject.process
     end
 
     it "should use the username and password specified by the 'reporturl' setting" do
-      Puppet[:reporturl] = "https://user:pass@myhost.mydomain:1234/report/upload"
+      Oregano[:reporturl] = "https://user:pass@myhost.mydomain:1234/report/upload"
 
       connection.expects(:post).with(anything, anything, anything,
-                                     {:metric_id => [:puppet, :report, :http],
+                                     {:metric_id => [:oregano, :report, :http],
                                       :basic_auth => {
                                         :user => 'user',
                                         :password => 'pass'
@@ -83,7 +83,7 @@ describe processor do
           response = klass.new('1.1', code, '')
           connection.expects(:post).returns(response)
 
-          Puppet.expects(:err).never
+          Oregano.expects(:err).never
           subject.process
         end
       end
@@ -93,7 +93,7 @@ describe processor do
           response = klass.new('1.1', code, '')
           connection.expects(:post).returns(response)
 
-          Puppet.expects(:err)
+          Oregano.expects(:err)
           subject.process
         end
       end

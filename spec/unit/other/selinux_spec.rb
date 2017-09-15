@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/type/selboolean'
-require 'puppet/type/selmodule'
+require 'oregano/type/selboolean'
+require 'oregano/type/selmodule'
 
-describe Puppet::Type.type(:file), " when manipulating file contexts" do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file), " when manipulating file contexts" do
+  include OreganoSpec::Files
 
   before :each do
 
-    @file = Puppet::Type::File.new(
+    @file = Oregano::Type::File.new(
       :name => make_absolute("/tmp/foo"),
       :ensure => "file",
       :seluser => "user_u",
@@ -30,12 +30,12 @@ describe Puppet::Type.type(:file), " when manipulating file contexts" do
   end
 end
 
-describe Puppet::Type.type(:selboolean), " when manipulating booleans" do
+describe Oregano::Type.type(:selboolean), " when manipulating booleans" do
   before :each do
-    provider_class = Puppet::Type::Selboolean.provider(Puppet::Type::Selboolean.providers[0])
-    Puppet::Type::Selboolean.stubs(:defaultprovider).returns provider_class
+    provider_class = Oregano::Type::Selboolean.provider(Oregano::Type::Selboolean.providers[0])
+    Oregano::Type::Selboolean.stubs(:defaultprovider).returns provider_class
 
-    @bool = Puppet::Type::Selboolean.new(
+    @bool = Oregano::Type::Selboolean.new(
       :name => "foo",
       :value => "on",
       :persistent => true )
@@ -64,12 +64,12 @@ describe Puppet::Type.type(:selboolean), " when manipulating booleans" do
   end
 end
 
-describe Puppet::Type.type(:selmodule), " when checking policy modules" do
+describe Oregano::Type.type(:selmodule), " when checking policy modules" do
   before :each do
-    provider_class = Puppet::Type::Selmodule.provider(Puppet::Type::Selmodule.providers[0])
-    Puppet::Type::Selmodule.stubs(:defaultprovider).returns provider_class
+    provider_class = Oregano::Type::Selmodule.provider(Oregano::Type::Selmodule.providers[0])
+    Oregano::Type::Selmodule.stubs(:defaultprovider).returns provider_class
 
-    @module = Puppet::Type::Selmodule.new(
+    @module = Oregano::Type::Selmodule.new(
       :name => "foo",
       :selmoduledir => "/some/path",
       :selmodulepath => "/some/path/foo.pp",

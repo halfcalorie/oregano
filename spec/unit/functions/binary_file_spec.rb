@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
 describe 'the binary_file function' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
   def with_file_content(content)
     path = tmpfile('find-file-function')
@@ -35,9 +35,9 @@ describe 'the binary_file function' do
     with_file_content('binary_data') do |name|
       mod = mock 'module'
       mod.stubs(:file).with('myfile').returns(name)
-      Puppet[:code] = "notify { String(binary_file('mymod/myfile')):}"
-      node = Puppet::Node.new('localhost')
-      compiler = Puppet::Parser::Compiler.new(node)
+      Oregano[:code] = "notify { String(binary_file('mymod/myfile')):}"
+      node = Oregano::Node.new('localhost')
+      compiler = Oregano::Parser::Compiler.new(node)
       compiler.environment.stubs(:module).with('mymod').returns(mod)
       # Note that the Binary to string produces Base64 encoded version of 'binary_data' which is 'YmluYXJ5X2RhdGE='
       expect(compiler.compile().filter { |r| r.virtual? }).to have_resource("Notify[YmluYXJ5X2RhdGE=]")

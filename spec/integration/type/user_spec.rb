@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-describe Puppet::Type.type(:user), '(integration)', :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Type.type(:user), '(integration)', :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   context "when set to purge ssh keys from a file" do
     # different UTF-8 widths

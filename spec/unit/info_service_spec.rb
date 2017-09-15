@@ -1,40 +1,40 @@
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/modules'
+require 'oregano_spec/files'
+require 'oregano_spec/modules'
 
-require 'puppet/pops'
-require 'puppet/info_service'
-require 'puppet/pops/evaluator/literal_evaluator'
+require 'oregano/pops'
+require 'oregano/info_service'
+require 'oregano/pops/evaluator/literal_evaluator'
 
-describe "Puppet::InfoService" do
-  include PuppetSpec::Files
+describe "Oregano::InfoService" do
+  include OreganoSpec::Files
 
   context 'task information service' do
     let(:mod_name) { 'test1' }
     let(:task_name) { "#{mod_name}::thingtask" }
     let(:modpath) { tmpdir('modpath') }
     let(:env_name) { 'testing' }
-    let(:env) { Puppet::Node::Environment.create(env_name.to_sym, [modpath]) }
-    let(:env_loader) { Puppet::Environments::Static.new(env) }
+    let(:env) { Oregano::Node::Environment.create(env_name.to_sym, [modpath]) }
+    let(:env_loader) { Oregano::Environments::Static.new(env) }
 
     context 'tasks_per_environment method' do
       it "returns task data for the tasks in an environment" do
-        Puppet.override(:environments => env_loader) do
-          mod = PuppetSpec::Modules.create(mod_name, modpath, {:environment => env, :tasks => [['thingtask']]})
-          expect(Puppet::InfoService.tasks_per_environment(env_name)).to eq([{:name => task_name, :module => {:name => mod_name}}])
+        Oregano.override(:environments => env_loader) do
+          mod = OreganoSpec::Modules.create(mod_name, modpath, {:environment => env, :tasks => [['thingtask']]})
+          expect(Oregano::InfoService.tasks_per_environment(env_name)).to eq([{:name => task_name, :module => {:name => mod_name}}])
         end
       end
 
       it "should throw EnvironmentNotFound if given a nonexistent environment" do
-        expect{ Puppet::InfoService.tasks_per_environment('utopia') }.to raise_error(Puppet::Environments::EnvironmentNotFound)
+        expect{ Oregano::InfoService.tasks_per_environment('utopia') }.to raise_error(Oregano::Environments::EnvironmentNotFound)
       end
     end
 
     context 'task_data method' do
       before do
-        Puppet.override(:environments => env_loader) do
-          @mod = PuppetSpec::Modules.create(mod_name, modpath, {:environment => env, :tasks => [['thingtask', 'thingtask.json']]})
-          @result = Puppet::InfoService.task_data(env_name, mod_name, task_name)
+        Oregano.override(:environments => env_loader) do
+          @mod = OreganoSpec::Modules.create(mod_name, modpath, {:environment => env, :tasks => [['thingtask', 'thingtask.json']]})
+          @result = Oregano::InfoService.task_data(env_name, mod_name, task_name)
         end
       end
       describe 'in the happy case' do
@@ -53,20 +53,20 @@ describe "Puppet::InfoService" do
       end
 
       it "should raise EnvironmentNotFound if given a nonexistent environment" do
-        expect{ Puppet::InfoService.task_data('utopia', mod_name, task_name) }.to raise_error(Puppet::Environments::EnvironmentNotFound)
+        expect{ Oregano::InfoService.task_data('utopia', mod_name, task_name) }.to raise_error(Oregano::Environments::EnvironmentNotFound)
       end
 
       it "should raise MissingModule if the module does not exist" do
-        Puppet.override(:environments => env_loader) do
-          expect { Puppet::InfoService.task_data(env_name, 'notamodule', 'notamodule::thingtask') }
-            .to raise_error(Puppet::Module::MissingModule)
+        Oregano.override(:environments => env_loader) do
+          expect { Oregano::InfoService.task_data(env_name, 'notamodule', 'notamodule::thingtask') }
+            .to raise_error(Oregano::Module::MissingModule)
         end
       end
 
       it "should raise TaskNotFound if the task does not exist" do
-        Puppet.override(:environments => env_loader) do
-          expect { Puppet::InfoService.task_data(env_name, mod_name, 'testing1::notatask') }
-            .to raise_error(Puppet::Module::Task::TaskNotFound)
+        Oregano.override(:environments => env_loader) do
+          expect { Oregano::InfoService.task_data(env_name, mod_name, 'testing1::notatask') }
+            .to raise_error(Oregano::Module::Task::TaskNotFound)
         end
       end
     end
@@ -105,16 +105,16 @@ describe "Puppet::InfoService" do
     end
 
     it "errors if not given a hash" do
-      expect{ Puppet::InfoService.classes_per_environment("you wassup?")}.to raise_error(ArgumentError, 'Given argument must be a Hash')
+      expect{ Oregano::InfoService.classes_per_environment("you wassup?")}.to raise_error(ArgumentError, 'Given argument must be a Hash')
     end
 
     it "returns empty hash if given nothing" do
-      expect(Puppet::InfoService.classes_per_environment({})).to eq({})
+      expect(Oregano::InfoService.classes_per_environment({})).to eq({})
     end
 
     it "produces classes and parameters from a given file" do
       files = ['foo.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({'production' => files })
+      result = Oregano::InfoService.classes_per_environment({'production' => files })
       expect(result).to eq({
         "production"=>{
            "#{code_dir}/foo.pp"=> {:classes => [
@@ -139,7 +139,7 @@ describe "Puppet::InfoService" do
 
     it "produces classes and parameters from multiple files in same environment" do
       files = ['foo.pp', 'bar.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({'production' => files })
+      result = Oregano::InfoService.classes_per_environment({'production' => files })
       expect(result).to eq({
         "production"=>{
            "#{code_dir}/foo.pp"=>{:classes => [
@@ -185,7 +185,7 @@ describe "Puppet::InfoService" do
     it "produces classes and parameters from multiple files in multiple environments" do
       files_production = ['foo.pp', 'bar.pp'].map {|f| File.join(code_dir, f) }
       files_test = ['fee.pp', 'fum.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({
+      result = Oregano::InfoService.classes_per_environment({
         'production' => files_production,
         'test'       => files_test
       })
@@ -246,13 +246,13 @@ describe "Puppet::InfoService" do
     end
 
     it "avoids parsing file more than once when environments have same feature flag set" do
-      # in this version of puppet, all environments are equal in this respect
-      result = Puppet::Pops::Parser::EvaluatingParser.new.parse_file("#{code_dir}/fum.pp")
-      Puppet::Pops::Parser::EvaluatingParser.any_instance.expects(:parse_file).with("#{code_dir}/fum.pp").returns(result).once
+      # in this version of oregano, all environments are equal in this respect
+      result = Oregano::Pops::Parser::EvaluatingParser.new.parse_file("#{code_dir}/fum.pp")
+      Oregano::Pops::Parser::EvaluatingParser.any_instance.expects(:parse_file).with("#{code_dir}/fum.pp").returns(result).once
       files_production = ['fum.pp'].map {|f| File.join(code_dir, f) }
       files_test       = files_production
 
-      result = Puppet::InfoService.classes_per_environment({
+      result = Oregano::InfoService.classes_per_environment({
         'production' => files_production,
         'test'       => files_test
         })
@@ -265,7 +265,7 @@ describe "Puppet::InfoService" do
 
     it "produces expression string if a default value is not literal" do
       files = ['fee.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({'production' => files })
+      result = Oregano::InfoService.classes_per_environment({'production' => files })
       expect(result).to eq({
         "production"=>{
            "#{code_dir}/fee.pp"=>{:classes => [
@@ -279,7 +279,7 @@ describe "Puppet::InfoService" do
 
      it "produces source string for literals that are not pure json" do
        files = ['json_unsafe.pp'].map {|f| File.join(code_dir, f) }
-       result = Puppet::InfoService.classes_per_environment({'production' => files })
+       result = Oregano::InfoService.classes_per_environment({'production' => files })
        expect(result).to eq({
          "production"=>{
             "#{code_dir}/json_unsafe.pp" => {:classes => [
@@ -298,7 +298,7 @@ describe "Puppet::InfoService" do
 
     it "produces no type entry if type is not given" do
       files = ['fum.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({'production' => files })
+      result = Oregano::InfoService.classes_per_environment({'production' => files })
       expect(result).to eq({
         "production"=>{
            "#{code_dir}/fum.pp"=>{:classes => [
@@ -312,7 +312,7 @@ describe "Puppet::InfoService" do
 
     it 'does not evaluate default expressions' do
       files = ['intp.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({'production' => files })
+      result = Oregano::InfoService.classes_per_environment({'production' => files })
       expect(result).to eq({
         'production' =>{
           "#{code_dir}/intp.pp"=>{:classes => [
@@ -328,7 +328,7 @@ describe "Puppet::InfoService" do
 
     it "produces error entry if file is broken" do
       files = ['borked.pp'].map {|f| File.join(code_dir, f) }
-       result = Puppet::InfoService.classes_per_environment({'production' => files })
+       result = Oregano::InfoService.classes_per_environment({'production' => files })
        expect(result).to eq({
          "production"=>{
             "#{code_dir}/borked.pp"=>
@@ -340,7 +340,7 @@ describe "Puppet::InfoService" do
 
     it "produces empty {} if parsed result has no classes" do
       files = ['nothing.pp'].map {|f| File.join(code_dir, f) }
-       result = Puppet::InfoService.classes_per_environment({'production' => files })
+       result = Oregano::InfoService.classes_per_environment({'production' => files })
        expect(result).to eq({
          "production"=>{
            "#{code_dir}/nothing.pp"=> {:classes => [] }
@@ -350,7 +350,7 @@ describe "Puppet::InfoService" do
 
     it "produces error when given a file that does not exist" do
       files = ['the_tooth_fairy_does_not_exist.pp'].map {|f| File.join(code_dir, f) }
-      result = Puppet::InfoService.classes_per_environment({'production' => files })
+      result = Oregano::InfoService.classes_per_environment({'production' => files })
       expect(result).to eq({
         "production"=>{
           "#{code_dir}/the_tooth_fairy_does_not_exist.pp" => {:error  => "The file #{code_dir}/the_tooth_fairy_does_not_exist.pp does not exist"}

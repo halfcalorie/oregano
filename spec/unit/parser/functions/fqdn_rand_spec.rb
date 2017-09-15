@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/scope'
+require 'oregano_spec/scope'
 
 describe "the fqdn_rand function" do
-  include PuppetSpec::Scope
+  include OreganoSpec::Scope
 
   it "returns an integer" do
     expect(fqdn_rand(3)).to be_an(Integer)

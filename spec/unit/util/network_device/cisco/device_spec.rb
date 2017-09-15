@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/network_device/cisco/device'
-require 'puppet/util/network_device/transport/telnet'
+require 'oregano/util/network_device/cisco/device'
+require 'oregano/util/network_device/transport/telnet'
 
-if Puppet.features.telnet?
-  describe Puppet::Util::NetworkDevice::Cisco::Device do
+if Oregano.features.telnet?
+  describe Oregano::Util::NetworkDevice::Cisco::Device do
     before(:each) do
       @transport = stub_everything 'transport', :is_a? => true, :command => ""
-      @cisco = Puppet::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23/")
+      @cisco = Oregano::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23/")
       @cisco.transport = @transport
     end
 
     describe "when creating the device" do
       it "should find the enable password from the url" do
-        cisco = Puppet::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23/?enable=enable_password")
+        cisco = Oregano::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23/?enable=enable_password")
         expect(cisco.enable_password).to eq("enable_password")
       end
 
@@ -45,18 +45,18 @@ if Puppet.features.telnet?
       end
 
       it "should find the enable password from the options" do
-        cisco = Puppet::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23/?enable=enable_password", :enable_password => "mypass")
+        cisco = Oregano::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23/?enable=enable_password", :enable_password => "mypass")
         expect(cisco.enable_password).to eq("mypass")
       end
 
       it "should find the debug mode from the options" do
-        Puppet::Util::NetworkDevice::Transport::Telnet.expects(:new).with(true).returns(@transport)
-        cisco = Puppet::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23", :debug => true)
+        Oregano::Util::NetworkDevice::Transport::Telnet.expects(:new).with(true).returns(@transport)
+        cisco = Oregano::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23", :debug => true)
       end
 
       it "should set the debug mode to nil by default" do
-        Puppet::Util::NetworkDevice::Transport::Telnet.expects(:new).with(nil).returns(@transport)
-        cisco = Puppet::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23")
+        Oregano::Util::NetworkDevice::Transport::Telnet.expects(:new).with(nil).returns(@transport)
+        cisco = Oregano::Util::NetworkDevice::Cisco::Device.new("telnet://user:password@localhost:23")
       end
     end
 
@@ -470,7 +470,7 @@ eos
     describe "when finding device facts" do
       it "should delegate to the cisco facts entity" do
         facts = stub 'facts'
-        Puppet::Util::NetworkDevice::Cisco::Facts.expects(:new).returns(facts)
+        Oregano::Util::NetworkDevice::Cisco::Facts.expects(:new).returns(facts)
 
         facts.expects(:retrieve).returns(:facts)
 

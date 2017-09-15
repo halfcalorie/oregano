@@ -1,6 +1,6 @@
-test_name "puppet module install (with version)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module install (with version)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Install via pmt is not the primary support workflow
     'audit:acceptance',
@@ -22,7 +22,7 @@ agents.each do |agent|
   stub_forge_on(agent)
 
   step "install module '< #{module_version}' #{module_author}-#{module_name}"
-  on(agent, puppet("module install --version '< #{module_version}' #{module_author}-#{module_name}")) do
+  on(agent, oregano("module install --version '< #{module_version}' #{module_author}-#{module_name}")) do
     assert_module_installed_ui(stdout, module_author, module_name, module_version, '<')
     assert_module_installed_on_disk(agent, module_name)
   end

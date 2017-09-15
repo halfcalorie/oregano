@@ -1,32 +1,32 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/network/format_handler'
-require 'puppet/network/format_support'
+require 'oregano/network/format_handler'
+require 'oregano/network/format_support'
 
 class FormatTester
-  include Puppet::Network::FormatSupport
+  include Oregano::Network::FormatSupport
 end
 
-describe Puppet::Network::FormatHandler do
+describe Oregano::Network::FormatHandler do
   before(:each) do
-    @saved_formats = Puppet::Network::FormatHandler.instance_variable_get(:@formats).dup
-    Puppet::Network::FormatHandler.instance_variable_set(:@formats, {})
+    @saved_formats = Oregano::Network::FormatHandler.instance_variable_get(:@formats).dup
+    Oregano::Network::FormatHandler.instance_variable_set(:@formats, {})
   end
 
   after(:each) do
-    Puppet::Network::FormatHandler.instance_variable_set(:@formats, @saved_formats)
+    Oregano::Network::FormatHandler.instance_variable_set(:@formats, @saved_formats)
   end
 
   describe "when listing formats" do
     before(:each) do
-      one = Puppet::Network::FormatHandler.create(:one, :weight => 1)
+      one = Oregano::Network::FormatHandler.create(:one, :weight => 1)
       one.stubs(:supported?).returns(true)
-      two = Puppet::Network::FormatHandler.create(:two, :weight => 6)
+      two = Oregano::Network::FormatHandler.create(:two, :weight => 6)
       two.stubs(:supported?).returns(true)
-      three = Puppet::Network::FormatHandler.create(:three, :weight => 2)
+      three = Oregano::Network::FormatHandler.create(:three, :weight => 2)
       three.stubs(:supported?).returns(true)
-      four = Puppet::Network::FormatHandler.create(:four, :weight => 8)
+      four = Oregano::Network::FormatHandler.create(:four, :weight => 8)
       four.stubs(:supported?).returns(false)
     end
 
@@ -42,15 +42,15 @@ describe Puppet::Network::FormatHandler do
 
   describe "with a preferred serialization format setting" do
     before do
-      one = Puppet::Network::FormatHandler.create(:one, :weight => 1)
+      one = Oregano::Network::FormatHandler.create(:one, :weight => 1)
       one.stubs(:supported?).returns(true)
-      two = Puppet::Network::FormatHandler.create(:two, :weight => 6)
+      two = Oregano::Network::FormatHandler.create(:two, :weight => 6)
       two.stubs(:supported?).returns(true)
     end
 
     describe "that is supported" do
       before do
-        Puppet[:preferred_serialization_format] = :one
+        Oregano[:preferred_serialization_format] = :one
       end
 
       it "should return the preferred serialization format first" do
@@ -60,7 +60,7 @@ describe Puppet::Network::FormatHandler do
 
     describe "that is not supported" do
       before do
-        Puppet[:preferred_serialization_format] = :unsupported
+        Oregano[:preferred_serialization_format] = :unsupported
       end
 
       it "should return the default format first" do
@@ -68,15 +68,15 @@ describe Puppet::Network::FormatHandler do
       end
 
       it "should log a debug message" do
-        Puppet.expects(:debug).with("Value of 'preferred_serialization_format' (unsupported) is invalid for FormatTester, using default (two)")
-        Puppet.expects(:debug).with("FormatTester supports formats: two one")
+        Oregano.expects(:debug).with("Value of 'preferred_serialization_format' (unsupported) is invalid for FormatTester, using default (two)")
+        Oregano.expects(:debug).with("FormatTester supports formats: two one")
         FormatTester.supported_formats
       end
     end
   end
 
   describe "when using formats" do
-    let(:format) { Puppet::Network::FormatHandler.create(:my_format, :mime => "text/myformat") }
+    let(:format) { Oregano::Network::FormatHandler.create(:my_format, :mime => "text/myformat") }
 
     it "should use the Format to determine whether a given format is supported" do
       format.expects(:supported?).with(FormatTester)
@@ -103,7 +103,7 @@ describe Puppet::Network::FormatHandler do
       expect do
         FormatTester.convert_from(:my_format, "mydata")
       end.to raise_error(
-        Puppet::Network::FormatHandler::FormatError,
+        Oregano::Network::FormatHandler::FormatError,
         'Could not intern from my_format: foo'
       )
     end
@@ -118,7 +118,7 @@ describe Puppet::Network::FormatHandler do
       format.expects(:intern_multiple).with(FormatTester, "mydata").raises "foo"
       expect do
         FormatTester.convert_from_multiple(:my_format, "mydata")
-      end.to raise_error(Puppet::Network::FormatHandler::FormatError, 'Could not intern_multiple from my_format: foo')
+      end.to raise_error(Oregano::Network::FormatHandler::FormatError, 'Could not intern_multiple from my_format: foo')
     end
 
     it "should be able to use a specific hook for rendering multiple instances" do
@@ -131,12 +131,12 @@ describe Puppet::Network::FormatHandler do
       format.expects(:render_multiple).with("mydata").raises "foo"
       expect do
         FormatTester.render_multiple(:my_format, "mydata")
-      end.to raise_error(Puppet::Network::FormatHandler::FormatError, 'Could not render_multiple to my_format: foo')
+      end.to raise_error(Oregano::Network::FormatHandler::FormatError, 'Could not render_multiple to my_format: foo')
     end
   end
 
   describe "when an instance" do
-    let(:format) { Puppet::Network::FormatHandler.create(:foo, :mime => "text/foo") }
+    let(:format) { Oregano::Network::FormatHandler.create(:foo, :mime => "text/foo") }
 
     it "should list as supported a format that reports itself supported" do
       format.expects(:supported?).returns true
@@ -149,7 +149,7 @@ describe Puppet::Network::FormatHandler do
 
       expect do
         tester.render(:foo)
-      end.to raise_error(Puppet::Network::FormatHandler::FormatError, 'Could not render to foo: eh')
+      end.to raise_error(Oregano::Network::FormatHandler::FormatError, 'Could not render to foo: eh')
     end
 
     it "should call the format-specific converter when asked to convert to a given format" do

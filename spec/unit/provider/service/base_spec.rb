@@ -3,24 +3,24 @@ require 'spec_helper'
 require 'rbconfig'
 require 'fileutils'
 
-provider_class = Puppet::Type.type(:service).provider(:init)
+provider_class = Oregano::Type.type(:service).provider(:init)
 
 describe "base service provider" do
-  include PuppetSpec::Files
+  include OreganoSpec::Files
 
-  let :type do Puppet::Type.type(:service) end
+  let :type do Oregano::Type.type(:service) end
   let :provider do type.provider(:base) end
-  let(:executor) { Puppet::Util::Execution }
+  let(:executor) { Oregano::Util::Execution }
   let(:start_command) { 'start' }
   let(:status_command) { 'status' }
   let(:stop_command) { 'stop' }
 
   subject { provider }
 
-  if Puppet.features.microsoft_windows?
+  if Oregano.features.microsoft_windows?
     # Get a pid for $CHILD_STATUS to latch on to
     command = "cmd.exe /c \"exit 0\""
-    Puppet::Util::Execution.execute(command, {:failonfail => false})
+    Oregano::Util::Execution.execute(command, {:failonfail => false})
   end
 
   context "basic operations" do
@@ -38,7 +38,7 @@ describe "base service provider" do
       case command.shift
       when start_command
         expect(options[:failonfail]).to eq(true)
-        raise(Puppet::ExecutionFailure, 'failed to start') if @running
+        raise(Oregano::ExecutionFailure, 'failed to start') if @running
         @running = true
         return 'started'
       when status_command
@@ -47,7 +47,7 @@ describe "base service provider" do
         return @running ? 'running' : 'not running'
       when stop_command
         expect(options[:failonfail]).to eq(true)
-        raise(Puppet::ExecutionFailure, 'failed to stop') unless @running
+        raise(Oregano::ExecutionFailure, 'failed to stop') unless @running
         @running = false
         return 'stopped'
       else
@@ -82,13 +82,13 @@ describe "base service provider" do
 
     it "should raise an error if started twice" do
       subject.start
-      expect {subject.start }.to raise_error(Puppet::Error, 'Could not start Service[test]: failed to start')
+      expect {subject.start }.to raise_error(Oregano::Error, 'Could not start Service[test]: failed to start')
     end
 
     it "should raise an error if stopped twice" do
       subject.start
       subject.stop
-      expect {subject.stop }.to raise_error(Puppet::Error, 'Could not stop Service[test]: failed to stop')
+      expect {subject.stop }.to raise_error(Oregano::Error, 'Could not stop Service[test]: failed to stop')
     end
   end
 end

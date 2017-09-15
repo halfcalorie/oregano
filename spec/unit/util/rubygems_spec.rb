@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'puppet/util/rubygems'
+require 'oregano/util/rubygems'
 
-describe Puppet::Util::RubyGems::Source do
+describe Oregano::Util::RubyGems::Source do
   let(:gem_path) { File.expand_path('/foo/gems') }
   let(:gem_lib) { File.join(gem_path, 'lib') }
   let(:fake_gem) { stub(:full_gem_path => gem_path) }
@@ -9,24 +9,24 @@ describe Puppet::Util::RubyGems::Source do
   describe "::new" do
     it "returns NoGemsSource if rubygems is not present" do
       described_class.expects(:has_rubygems?).returns(false)
-      expect(described_class.new).to be_kind_of(Puppet::Util::RubyGems::NoGemsSource)
+      expect(described_class.new).to be_kind_of(Oregano::Util::RubyGems::NoGemsSource)
     end
 
     it "returns Gems18Source if Gem::Specification responds to latest_specs" do
       described_class.expects(:has_rubygems?).returns(true)
       Gem::Specification.expects(:respond_to?).with(:latest_specs).returns(true)
-      expect(described_class.new).to be_kind_of(Puppet::Util::RubyGems::Gems18Source)
+      expect(described_class.new).to be_kind_of(Oregano::Util::RubyGems::Gems18Source)
     end
 
     it "returns Gems18Source if Gem::Specification does not respond to latest_specs" do
       described_class.expects(:has_rubygems?).returns(true)
       Gem::Specification.expects(:respond_to?).with(:latest_specs).returns(false)
-      expect(described_class.new).to be_kind_of(Puppet::Util::RubyGems::OldGemsSource)
+      expect(described_class.new).to be_kind_of(Oregano::Util::RubyGems::OldGemsSource)
     end
   end
 
   describe '::NoGemsSource' do
-    before(:each) { described_class.stubs(:source).returns(Puppet::Util::RubyGems::NoGemsSource) }
+    before(:each) { described_class.stubs(:source).returns(Oregano::Util::RubyGems::NoGemsSource) }
 
     it "#directories returns an empty list" do
       expect(described_class.new.directories).to eq([])
@@ -38,7 +38,7 @@ describe Puppet::Util::RubyGems::Source do
   end
 
   describe '::Gems18Source' do
-    before(:each) { described_class.stubs(:source).returns(Puppet::Util::RubyGems::Gems18Source) }
+    before(:each) { described_class.stubs(:source).returns(Oregano::Util::RubyGems::Gems18Source) }
 
     it "#directories returns the lib subdirs of Gem::Specification.latest_specs" do
       Gem::Specification.expects(:latest_specs).with(true).returns([fake_gem])
@@ -53,7 +53,7 @@ describe Puppet::Util::RubyGems::Source do
   end
 
   describe '::OldGemsSource' do
-    before(:each) { described_class.stubs(:source).returns(Puppet::Util::RubyGems::OldGemsSource) }
+    before(:each) { described_class.stubs(:source).returns(Oregano::Util::RubyGems::OldGemsSource) }
 
     it "#directories returns the contents of Gem.latest_load_paths" do
       Gem.expects(:latest_load_paths).returns([gem_lib])

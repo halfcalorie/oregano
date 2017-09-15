@@ -2,11 +2,11 @@
 
 require 'spec_helper'
 
-describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix? do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).provider(:posix), :if => Oregano.features.posix? do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('posix_file_spec') }
-  let(:resource) { Puppet::Type.type(:file).new :path => path, :mode => '0777', :provider => described_class.name }
+  let(:resource) { Oregano::Type.type(:file).new :path => path, :mode => '0777', :provider => described_class.name }
   let(:provider) { resource.provider }
 
   describe "#mode" do
@@ -35,7 +35,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     it "should pass along any errors encountered" do
       expect do
         provider.mode = '0644'
-      end.to raise_error(Puppet::Error, /failed to set mode/)
+      end.to raise_error(Oregano::Error, /failed to set mode/)
     end
   end
 
@@ -51,7 +51,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     end
 
     it "should return nil if the argument is above the maximum uid" do
-      expect(provider.uid2name(Puppet[:maximum_uid] + 1)).to eq(nil)
+      expect(provider.uid2name(Oregano[:maximum_uid] + 1)).to eq(nil)
     end
 
     it "should return nil if the user doesn't exist" do
@@ -85,7 +85,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
   describe "#owner" do
     it "should return the uid of the file owner" do
       FileUtils.touch(path)
-      owner = Puppet::FileSystem.stat(path).uid
+      owner = Oregano::FileSystem.stat(path).uid
 
       expect(provider.owner).to eq(owner)
     end
@@ -95,7 +95,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     end
 
     it "should warn and return :silly if the value is beyond the maximum uid" do
-      stat = stub('stat', :uid => Puppet[:maximum_uid] + 1)
+      stat = stub('stat', :uid => Oregano[:maximum_uid] + 1)
       resource.stubs(:stat).returns(stat)
 
       expect(provider.owner).to eq(:silly)
@@ -127,7 +127,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     it "should pass along any error encountered setting the owner" do
       File.expects(:lchown).raises(ArgumentError)
 
-      expect { provider.owner = 25 }.to raise_error(Puppet::Error, /Failed to set owner to '25'/)
+      expect { provider.owner = 25 }.to raise_error(Oregano::Error, /Failed to set owner to '25'/)
     end
   end
 
@@ -143,7 +143,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     end
 
     it "should return nil if the argument is above the maximum gid" do
-      expect(provider.gid2name(Puppet[:maximum_uid] + 1)).to eq(nil)
+      expect(provider.gid2name(Oregano[:maximum_uid] + 1)).to eq(nil)
     end
 
     it "should return nil if the group doesn't exist" do
@@ -178,7 +178,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
   describe "#group" do
     it "should return the gid of the file group" do
       FileUtils.touch(path)
-      group = Puppet::FileSystem.stat(path).gid
+      group = Oregano::FileSystem.stat(path).gid
 
       expect(provider.group).to eq(group)
     end
@@ -188,7 +188,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     end
 
     it "should warn and return :silly if the value is beyond the maximum gid" do
-      stat = stub('stat', :gid => Puppet[:maximum_uid] + 1)
+      stat = stub('stat', :gid => Oregano[:maximum_uid] + 1)
       resource.stubs(:stat).returns(stat)
 
       expect(provider.group).to eq(:silly)
@@ -220,7 +220,7 @@ describe Puppet::Type.type(:file).provider(:posix), :if => Puppet.features.posix
     it "should pass along any error encountered setting the group" do
       File.expects(:lchown).raises(ArgumentError)
 
-      expect { provider.group = 25 }.to raise_error(Puppet::Error, /Failed to set group to '25'/)
+      expect { provider.group = 25 }.to raise_error(Oregano::Error, /Failed to set group to '25'/)
     end
   end
 

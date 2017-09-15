@@ -1,6 +1,6 @@
 test_name "Use environments from the environmentpath"
-require 'puppet/acceptance/classifier_utils'
-extend Puppet::Acceptance::ClassifierUtils
+require 'oregano/acceptance/classifier_utils'
+extend Oregano::Acceptance::ClassifierUtils
 
 tag 'audit:medium',
     'audit:integration',
@@ -40,7 +40,7 @@ def generate_module_content(module_name, options = {})
     mode => "0640",
     content => 'class #{module_name} {
       notify { "template-#{module_name}": message => template("#{module_name}/our_template.erb") }
-      file { "$agent_file_location/file-#{module_info}": source => "puppet:///modules/#{module_name}/data" }
+      file { "$agent_file_location/file-#{module_info}": source => "oregano:///modules/#{module_name}/data" }
     }'
   ;
   "#{path_to_module}/#{module_name}/lib/facter/environment_fact_#{module_name}.rb":
@@ -74,8 +74,8 @@ end
 apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
 File {
   ensure => directory,
-  owner => #{master.puppet['user']},
-  group => #{master.puppet['group']},
+  owner => #{master.oregano['user']},
+  group => #{master.oregano['group']},
   mode => "0770",
 }
 
@@ -134,7 +134,7 @@ def run_with_environment(agent, environment, options = {})
   }
 
   on(agent,
-     puppet("agent", *agent_config),
+     oregano("agent", *agent_config),
      :acceptable_exit_codes => [expected_exit_code]) do |result|
 
     yield atmp, result
@@ -153,7 +153,7 @@ if master.is_pe?
   master_opts['master']['basemodulepath'] << ":#{master['sitemoduledir']}"
 end
 
-with_puppet_running_on master, master_opts, testdir do
+with_oregano_running_on master, master_opts, testdir do
   agents.each do |agent|
     run_with_environment(agent, "shadowed") do |tmpdir,catalog_result|
       ["module-atmp-from-shadowed", "module-globalmod"].each do |expected|

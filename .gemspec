@@ -1,49 +1,49 @@
 # -*- encoding: utf-8 -*-
 #
 # PLEASE NOTE
-# This gemspec is not intended to be used for building the Puppet gem.  This
-# gemspec is intended for use with bundler when Puppet is a dependency of
+# This gemspec is not intended to be used for building the Oregano gem.  This
+# gemspec is intended for use with bundler when Oregano is a dependency of
 # another project.  For example, the stdlib project is able to integrate with
-# the master branch of Puppet by using a Gemfile path of
-# git://github.com/puppetlabs/puppet.git
+# the master branch of Oregano by using a Gemfile path of
+# git://github.com/oreganolabs/oregano.git
 #
 # Please see the [packaging
-# repository](https://github.com/puppetlabs/packaging) for information on how
-# to build the Puppet gem package.
+# repository](https://github.com/oreganolabs/packaging) for information on how
+# to build the Oregano gem package.
 
 Gem::Specification.new do |s|
-  s.name = "puppet"
+  s.name = "oregano"
   version = "5.2.0"
   mdata = version.match(/(\d+\.\d+\.\d+)/)
   s.version = mdata ? mdata[1] : version
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1")
   s.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
-  s.authors = ["Puppet Labs"]
+  s.authors = ["Oregano Labs"]
   s.date = "2012-08-17"
-  s.description = "Puppet, an automated configuration management tool"
-  s.email = "puppet@puppetlabs.com"
-  s.executables = ["puppet"]
-  s.files = ["bin/puppet"]
-  s.homepage = "https://puppetlabs.com"
-  s.rdoc_options = ["--title", "Puppet - Configuration Management", "--main", "README", "--line-numbers"]
+  s.description = "Oregano, an automated configuration management tool"
+  s.email = "oregano@oreganolabs.com"
+  s.executables = ["oregano"]
+  s.files = ["bin/oregano"]
+  s.homepage = "https://oreganolabs.com"
+  s.rdoc_options = ["--title", "Oregano - Configuration Management", "--main", "README", "--line-numbers"]
   s.require_paths = ["lib"]
-  s.rubyforge_project = "puppet"
-  s.summary = "Puppet, an automated configuration management tool"
+  s.rubyforge_project = "oregano"
+  s.summary = "Oregano, an automated configuration management tool"
   s.specification_version = 3
   s.add_runtime_dependency(%q<facter>, [">= 2.0.1", "< 4"])
   s.add_runtime_dependency(%q<hiera>, [">= 3.2.1", "< 4"])
-  # PUP-7115 - return to a gem dependency in Puppet 5
-  # s.add_runtime_dependency(%q<semantic_puppet>, ['>= 0.1.3', '< 2'])
+  # PUP-7115 - return to a gem dependency in Oregano 5
+  # s.add_runtime_dependency(%q<semantic_oregano>, ['>= 0.1.3', '< 2'])
   # i18n support (gettext-setup and dependencies)
   s.add_runtime_dependency(%q<gettext-setup>, [">= 0.10", "< 1"])
   s.add_runtime_dependency(%q<locale>, "~> 2.1")
-  # hocon is an optional hiera backend shipped in puppet-agent packages
+  # hocon is an optional hiera backend shipped in oregano-agent packages
   s.add_runtime_dependency(%q<hocon>, "~> 1.0")
-  # net-ssh is a runtime dependency of Puppet::Util::NetworkDevice::Transport::Ssh
+  # net-ssh is a runtime dependency of Oregano::Util::NetworkDevice::Transport::Ssh
   # Beaker 3.0.0 to 3.10.0 depends on net-ssh 3.3.0beta1
   # Beaker 3.11.0+ depends on net-ssh 4.0+
-  # be lenient to allow module testing where Beaker and Puppet are in same Gemfile
+  # be lenient to allow module testing where Beaker and Oregano are in same Gemfile
   s.add_runtime_dependency(%q<net-ssh>, [">= 3.0", "< 5"]) if Gem::Version.new(RUBY_VERSION.dup) >= Gem::Version.new('2.0.0')
 
   # loads platform specific gems like ffi, win32 platform gems

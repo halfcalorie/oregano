@@ -1,4 +1,4 @@
-test_name "verifies that puppet resource creates a user and assigns the correct group"
+test_name "verifies that oregano resource creates a user and assigns the correct group"
 confine :except, :platform => 'windows'
 confine :except, :platform => /^eos-/ # See ARISTA-37
 confine :except, :platform => /^cisco_/ # See PUP-5828
@@ -20,7 +20,7 @@ agents.each do |host|
   host.group_present(group)
 
   step "create user with group"
-  on(host, puppet_resource('user', user, 'ensure=present', "gid=#{group}"))
+  on(host, oregano_resource('user', user, 'ensure=present', "gid=#{group}"))
 
   step "verify the group exists and find the gid"
   group_gid = host.group_gid(group)
@@ -41,6 +41,6 @@ agents.each do |host|
   end
 
   step "clean up after the test is done"
-  on(host, puppet_resource('user', user, 'ensure=absent'))
-  on(host, puppet_resource('group', group, 'ensure=absent'))
+  on(host, oregano_resource('user', user, 'ensure=absent'))
+  on(host, oregano_resource('group', group, 'ensure=absent'))
 end

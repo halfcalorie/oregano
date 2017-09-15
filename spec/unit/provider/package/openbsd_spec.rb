@@ -2,15 +2,15 @@
 require 'spec_helper'
 require 'stringio'
 
-provider_class = Puppet::Type.type(:package).provider(:openbsd)
+provider_class = Oregano::Type.type(:package).provider(:openbsd)
 
 describe provider_class do
-  let(:package) { Puppet::Type.type(:package).new(:name => 'bash', :provider => 'openbsd') }
+  let(:package) { Oregano::Type.type(:package).new(:name => 'bash', :provider => 'openbsd') }
   let(:provider) { provider_class.new(package) }
 
   def expect_read_from_pkgconf(lines)
     pkgconf = stub(:readlines => lines)
-    Puppet::FileSystem.expects(:exist?).with('/etc/pkg.conf').returns(true)
+    Oregano::FileSystem.expects(:exist?).with('/etc/pkg.conf').returns(true)
     File.expects(:open).with('/etc/pkg.conf', 'rb').returns(pkgconf)
   end
 
@@ -56,7 +56,7 @@ describe provider_class do
 
   context "#instances" do
     it "should return nil if execution failed" do
-      provider_class.expects(:execpipe).raises(Puppet::ExecutionFailure, 'wawawa')
+      provider_class.expects(:execpipe).raises(Oregano::ExecutionFailure, 'wawawa')
       expect(provider_class.instances).to be_nil
     end
 
@@ -86,15 +86,15 @@ describe provider_class do
 
   context "#install" do
     it "should fail if the resource doesn't have a source" do
-      Puppet::FileSystem.expects(:exist?).with('/etc/pkg.conf').returns(false)
+      Oregano::FileSystem.expects(:exist?).with('/etc/pkg.conf').returns(false)
 
       expect {
         provider.install
-      }.to raise_error(Puppet::Error, /must specify a package source/)
+      }.to raise_error(Oregano::Error, /must specify a package source/)
     end
 
     it "should fail if /etc/pkg.conf exists, but is not readable" do
-      Puppet::FileSystem.expects(:exist?).with('/etc/pkg.conf').returns(true)
+      Oregano::FileSystem.expects(:exist?).with('/etc/pkg.conf').returns(true)
       File.expects(:open).with('/etc/pkg.conf', 'rb').raises(Errno::EACCES)
 
       expect {
@@ -106,7 +106,7 @@ describe provider_class do
       expect_read_from_pkgconf([])
       expect {
         provider.install
-      }.to raise_error(Puppet::Error, /No valid installpath found in \/etc\/pkg\.conf and no source was set/)
+      }.to raise_error(Oregano::Error, /No valid installpath found in \/etc\/pkg\.conf and no source was set/)
     end
 
     it "should install correctly when given a directory-unlike source" do
@@ -231,7 +231,7 @@ describe provider_class do
         expect_read_from_pkgconf([line])
         expect {
           provider.install
-        }.to raise_error(Puppet::Error, /No valid installpath found in \/etc\/pkg\.conf and no source was set/)
+        }.to raise_error(Oregano::Error, /No valid installpath found in \/etc\/pkg\.conf and no source was set/)
       end
     end
 
@@ -284,9 +284,9 @@ describe provider_class do
     end
 
     it "should return the full unversioned package name when updating without a flavor" do
-        provider.resource[:name] = 'puppet'
+        provider.resource[:name] = 'oregano'
         provider.resource[:ensure] = 'latest'
-        expect(provider.get_full_name).to eq('puppet')
+        expect(provider.get_full_name).to eq('oregano')
     end
 
     it "should use the ensure parameter if it is numeric" do
@@ -312,7 +312,7 @@ describe provider_class do
 
   context "#get_version" do
     it "should return nil if execution fails" do
-      provider.expects(:execpipe).raises(Puppet::ExecutionFailure, 'wawawa')
+      provider.expects(:execpipe).raises(Oregano::ExecutionFailure, 'wawawa')
       expect(provider.get_version).to be_nil
     end
 
@@ -354,8 +354,8 @@ describe provider_class do
     end
 
     it "should return multiple install_options when set" do
-      provider.resource[:install_options] = ['-L', '/opt/puppet']
-      expect(provider.resource[:install_options]).to eq(['-L', '/opt/puppet'])
+      provider.resource[:install_options] = ['-L', '/opt/oregano']
+      expect(provider.resource[:install_options]).to eq(['-L', '/opt/oregano'])
     end
 
     it 'should return install_options when set as hash' do

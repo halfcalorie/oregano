@@ -1,21 +1,21 @@
 require 'spec_helper'
 require 'matchers/include_in_order'
-require 'puppet_spec/compiler'
-require 'puppet/indirector/catalog/compiler'
+require 'oregano_spec/compiler'
+require 'oregano/indirector/catalog/compiler'
 
 describe "A catalog" do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   context "when compiled" do
-    let(:env) { Puppet::Node::Environment.create(:testing, []) }
-    let(:node) { Puppet::Node.new('test', :environment => env) }
-    let(:loaders) { Puppet::Pops::Loaders.new(env) }
+    let(:env) { Oregano::Node::Environment.create(:testing, []) }
+    let(:node) { Oregano::Node.new('test', :environment => env) }
+    let(:loaders) { Oregano::Pops::Loaders.new(env) }
 
     around :each do |example|
-      Puppet::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
-      Puppet.override(:loaders => loaders, :current_environment => env) do
+      Oregano::Parser::Compiler.any_instance.stubs(:loaders).returns(loaders)
+      Oregano.override(:loaders => loaders, :current_environment => env) do
         example.run
-        Puppet::Pops::Loaders.clear
+        Oregano::Pops::Loaders.clear
       end
     end
 
@@ -90,13 +90,13 @@ describe "A catalog" do
   end
 
   def master_catalog_for(manifest)
-    master_catalog = Puppet::Resource::Catalog::Compiler.new.filter(compile_to_catalog(manifest, node))
+    master_catalog = Oregano::Resource::Catalog::Compiler.new.filter(compile_to_catalog(manifest, node))
   end
 
   def master_and_agent_catalogs_for(manifest)
-    compiler = Puppet::Resource::Catalog::Compiler.new
+    compiler = Oregano::Resource::Catalog::Compiler.new
     master_catalog = compiler.filter(compile_to_catalog(manifest, node))
-    agent_catalog = Puppet::Resource::Catalog.convert_from(:json, master_catalog.render(:json))
+    agent_catalog = Oregano::Resource::Catalog.convert_from(:json, master_catalog.render(:json))
     [master_catalog, agent_catalog]
   end
 

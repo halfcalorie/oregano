@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:user).provider(:useradd) do
+describe Oregano::Type.type(:user).provider(:useradd) do
 
   before :each do
     described_class.stubs(:command).with(:password).returns '/usr/bin/chage'
@@ -12,7 +12,7 @@ describe Puppet::Type.type(:user).provider(:useradd) do
   end
 
   let(:resource) do
-    Puppet::Type.type(:user).new(
+    Oregano::Type.type(:user).new(
       :name       => 'myuser',
       :managehome => :false,
       :system     => :false,
@@ -24,7 +24,7 @@ describe Puppet::Type.type(:user).provider(:useradd) do
 
 
   let(:shadow_entry) {
-    return unless Puppet.features.libshadow?
+    return unless Oregano.features.libshadow?
     entry = Struct::PasswdEntry.new
     entry[:sp_namp]   = 'myuser' # login name
     entry[:sp_pwdp]   = '$6$FvW8Ib8h$qQMI/CR9m.QzIicZKutLpBgCBBdrch1IX0rTnxuI32K1pD9.RXZrmeKQlaC.RzODNuoUtPPIyQDufunvLOQWF0' # encrypted password
@@ -44,7 +44,7 @@ describe Puppet::Type.type(:user).provider(:useradd) do
     end
 
     it "should add -g when no gid is specified and group already exists" do
-      Puppet::Util.stubs(:gid).returns(true)
+      Oregano::Util.stubs(:gid).returns(true)
       resource[:ensure] = :present
       provider.expects(:execute).with(includes('-g'), kind_of(Hash))
       provider.create
@@ -118,7 +118,7 @@ describe Puppet::Type.type(:user).provider(:useradd) do
       it "should raise an exception for duplicate UIDs" do
         resource[:uid] = 505
         provider.stubs(:finduser).returns(true)
-        expect { provider.create }.to raise_error(Puppet::Error, "UID 505 already exists, use allowdupe to force user creation")
+        expect { provider.create }.to raise_error(Oregano::Error, "UID 505 already exists, use allowdupe to force user creation")
       end
 
       it "should not use -G for luseradd and should call usermod with -G after luseradd when groups property is set" do
@@ -350,17 +350,17 @@ describe Puppet::Type.type(:user).provider(:useradd) do
       end
 
       it "should return absent if libshadow feature is not present" do
-        Puppet.features.stubs(:libshadow?).returns false
+        Oregano.features.stubs(:libshadow?).returns false
         # Shadow::Passwd.expects(:getspnam).never # if we really don't have libshadow we dont have Shadow::Passwd either
         expect(provider.send(property)).to eq(:absent)
       end
 
-      it "should return absent if user cannot be found", :if => Puppet.features.libshadow? do
+      it "should return absent if user cannot be found", :if => Oregano.features.libshadow? do
         Shadow::Passwd.expects(:getspnam).with('myuser').returns nil
         expect(provider.send(property)).to eq(:absent)
       end
 
-      it "should return the correct value if libshadow is present", :if => Puppet.features.libshadow? do
+      it "should return the correct value if libshadow is present", :if => Oregano.features.libshadow? do
         Shadow::Passwd.expects(:getspnam).with('myuser').returns shadow_entry
         expect(provider.send(property)).to eq(expected_value)
       end
@@ -370,7 +370,7 @@ describe Puppet::Type.type(:user).provider(:useradd) do
       # before converting it to UTF-8 if appropriate. When re-querying the
       # system for attributes of this user such as password info, we need to
       # supply the pre-UTF8-converted value.
-      it "should query using the canonical_name attribute of the user", :if => Puppet.features.libshadow? do
+      it "should query using the canonical_name attribute of the user", :if => Oregano.features.libshadow? do
         canonical_name = [253, 241].pack('C*').force_encoding(Encoding::EUC_KR)
         provider = described_class.new(:name => '??', :canonical_name => canonical_name)
 
@@ -386,22 +386,22 @@ describe Puppet::Type.type(:user).provider(:useradd) do
     end
 
     it "should return absent if libshadow feature is not present" do
-      Puppet.features.stubs(:libshadow?).returns false
+      Oregano.features.stubs(:libshadow?).returns false
       expect(provider.expiry).to eq(:absent)
     end
 
-    it "should return absent if user cannot be found", :if => Puppet.features.libshadow? do
+    it "should return absent if user cannot be found", :if => Oregano.features.libshadow? do
       Shadow::Passwd.expects(:getspnam).with('myuser').returns nil
       expect(provider.expiry).to eq(:absent)
     end
 
-    it "should return absent if expiry is -1", :if => Puppet.features.libshadow? do
+    it "should return absent if expiry is -1", :if => Oregano.features.libshadow? do
       shadow_entry.sp_expire = -1
       Shadow::Passwd.expects(:getspnam).with('myuser').returns shadow_entry
       expect(provider.expiry).to eq(:absent)
     end
 
-    it "should convert to YYYY-MM-DD", :if => Puppet.features.libshadow? do
+    it "should convert to YYYY-MM-DD", :if => Oregano.features.libshadow? do
       Shadow::Passwd.expects(:getspnam).with('myuser').returns shadow_entry
       expect(provider.expiry).to eq('2013-01-01')
     end
@@ -447,13 +447,13 @@ describe Puppet::Type.type(:user).provider(:useradd) do
   describe "#check_valid_shell" do
     it "should raise an error if shell does not exist" do
       resource[:shell] = 'foo/bin/bash'
-      expect { provider.check_valid_shell }.to raise_error(Puppet::Error, /Shell foo\/bin\/bash must exist/)
+      expect { provider.check_valid_shell }.to raise_error(Oregano::Error, /Shell foo\/bin\/bash must exist/)
     end
 
     it "should raise an error if the shell is not executable" do
       FileTest.stubs(:executable?).with('LICENSE').returns false
       resource[:shell] = 'LICENSE'
-      expect { provider.check_valid_shell }.to raise_error(Puppet::Error, /Shell LICENSE must be executable/)
+      expect { provider.check_valid_shell }.to raise_error(Oregano::Error, /Shell LICENSE must be executable/)
     end
   end
 

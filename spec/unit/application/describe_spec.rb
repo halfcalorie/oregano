@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/application/describe'
+require 'oregano/application/describe'
 
-describe Puppet::Application::Describe do
+describe Oregano::Application::Describe do
   before :each do
-    @describe = Puppet::Application[:describe]
+    @describe = Oregano::Application[:describe]
   end
 
   it "should declare a main command" do
@@ -81,14 +81,14 @@ describe Puppet::Application::Describe do
     @f = Formatter.new(76)
 
     @teststring = <<TESTSTRING
-. 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 nick@magpie.puppetlabs.lan
+. 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 nick@magpie.oreganolabs.lan
 **this part should not repeat!**
 TESTSTRING
 
     @expected_result = <<EXPECTED
 .
 1234567890123456789012345678901234567890123456789012345678901234567890123456
-7890123456789012345678901234567890 nick@magpie.puppetlabs.lan
+7890123456789012345678901234567890 nick@magpie.oreganolabs.lan
 **this part should not repeat!**
 EXPECTED
 

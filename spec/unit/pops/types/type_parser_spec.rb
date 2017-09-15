@@ -1,37 +1,37 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe TypeParser do
   extend RSpec::Matchers::DSL
 
   let(:parser) { TypeParser.singleton }
   let(:types)  { TypeFactory }
-  it "rejects a puppet expression" do
-    expect { parser.parse("1 + 1") }.to raise_error(Puppet::ParseError, /The expression <1 \+ 1> is not a valid type specification/)
+  it "rejects a oregano expression" do
+    expect { parser.parse("1 + 1") }.to raise_error(Oregano::ParseError, /The expression <1 \+ 1> is not a valid type specification/)
   end
 
   it "rejects a empty type specification" do
-    expect { parser.parse("") }.to raise_error(Puppet::ParseError, /The expression <> is not a valid type specification/)
+    expect { parser.parse("") }.to raise_error(Oregano::ParseError, /The expression <> is not a valid type specification/)
   end
 
   it "rejects an invalid type simple type" do
-    expect { parser.parse("notAType") }.to raise_error(Puppet::ParseError, /The expression <notAType> is not a valid type specification/)
+    expect { parser.parse("notAType") }.to raise_error(Oregano::ParseError, /The expression <notAType> is not a valid type specification/)
   end
 
   it "rejects an unknown parameterized type" do
-    expect { parser.parse("notAType[Integer]") }.to raise_error(Puppet::ParseError,
+    expect { parser.parse("notAType[Integer]") }.to raise_error(Oregano::ParseError,
       /The expression <notAType\[Integer\]> is not a valid type specification/)
   end
 
   it "rejects an unknown type parameter" do
-    expect { parser.parse("Array[notAType]") }.to raise_error(Puppet::ParseError,
+    expect { parser.parse("Array[notAType]") }.to raise_error(Oregano::ParseError,
       /The expression <Array\[notAType\]> is not a valid type specification/)
   end
 
   it "rejects an unknown type parameter in a variant" do
-    expect { parser.parse("Variant[Integer,'not a type']") }.to raise_error(Puppet::ParseError,
+    expect { parser.parse("Variant[Integer,'not a type']") }.to raise_error(Oregano::ParseError,
       /The expression <Variant\[Integer,'not a type'\]> is not a valid type specification/)
   end
 
@@ -198,7 +198,7 @@ describe TypeParser do
   end
 
   context 'with loader context' do
-    let(:loader) { Puppet::Pops::Loader::BaseLoader.new(nil, "type_parser_unit_test_loader") }
+    let(:loader) { Oregano::Pops::Loader::BaseLoader.new(nil, "type_parser_unit_test_loader") }
 
     it 'interprets anything that is not found by the loader to be a type reference' do
       loader.expects(:load).with(:type, 'nonesuch').returns nil
@@ -409,15 +409,15 @@ describe TypeParser do
   end
 
   def raise_the_parameter_error(type, required, given)
-    raise_error(Puppet::ParseError, /#{type} requires #{required}, #{given} provided/)
+    raise_error(Oregano::ParseError, /#{type} requires #{required}, #{given} provided/)
   end
 
   def raise_type_error_for(type_name)
-    raise_error(Puppet::ParseError, /Unknown type <#{type_name}>/)
+    raise_error(Oregano::ParseError, /Unknown type <#{type_name}>/)
   end
 
   def raise_unparameterized_error_for(type_name)
-    raise_error(Puppet::ParseError, /Not a parameterized type <#{type_name}>/)
+    raise_error(Oregano::ParseError, /Not a parameterized type <#{type_name}>/)
   end
 
   def the_type_parsed_from(type)

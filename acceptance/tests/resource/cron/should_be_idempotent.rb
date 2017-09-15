@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CronUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CronUtils
 
 teardown do
   step "Cron: cleanup"
@@ -19,7 +19,7 @@ end
 
 
 agents.each do |agent|
-  step "ensure the user exist via puppet"
+  step "ensure the user exist via oregano"
   setup agent
 
   step "Cron: basic - verify that it can be created"

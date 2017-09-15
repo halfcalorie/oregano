@@ -11,9 +11,9 @@
     :command: /bin/date
     :record_type: :crontab
 :long_name:
-  :text: "# Puppet Name: long_name"
+  :text: "# Oregano Name: long_name"
   :record:
-    :line: "# Puppet Name: long_name"
+    :line: "# Oregano Name: long_name"
     :name: long_name
     :record_type: :comment
 :multiple_minutes:
@@ -85,9 +85,9 @@
     :command: /bin/date
     :record_type: :crontab
 :name:
-  :text: "# Puppet Name: testing"
+  :text: "# Oregano Name: testing"
   :record:
-    :line: "# Puppet Name: testing"
+    :line: "# Oregano Name: testing"
     :name: testing
     :record_type: :comment
 :another_env:
@@ -129,9 +129,9 @@
     :command: /bin/echo testing
     :record_type: :crontab
 :name_with_spaces:
-  :text: "# Puppet Name: another name"
+  :text: "# Oregano Name: another name"
   :record:
-    :line: "# Puppet Name: another name"
+    :line: "# Oregano Name: another name"
     :name: another name
     :record_type: :comment
 ---
@@ -147,9 +147,9 @@
     :command: /bin/date
     :record_type: :crontab
 :long_name:
-  :text: "# Puppet Name: long_name"
+  :text: "# Oregano Name: long_name"
   :record:
-    :line: "# Puppet Name: long_name"
+    :line: "# Oregano Name: long_name"
     :name: long_name
     :record_type: :comment
 :multiple_minutes:
@@ -221,9 +221,9 @@
     :command: /bin/date
     :record_type: :crontab
 :name:
-  :text: "# Puppet Name: testing"
+  :text: "# Oregano Name: testing"
   :record:
-    :line: "# Puppet Name: testing"
+    :line: "# Oregano Name: testing"
     :name: testing
     :record_type: :comment
 :another_env:
@@ -265,8 +265,8 @@
     :command: /bin/echo testing
     :record_type: :crontab
 :name_with_spaces:
-  :text: "# Puppet Name: another name"
+  :text: "# Oregano Name: another name"
   :record:
-    :line: "# Puppet Name: another name"
+    :line: "# Oregano Name: another name"
     :name: another name
     :record_type: :comment

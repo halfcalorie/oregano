@@ -1,21 +1,21 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require 'puppet/file_bucket/dipper'
-require 'puppet_spec/files'
-require 'puppet_spec/compiler'
+require 'oregano/file_bucket/dipper'
+require 'oregano_spec/files'
+require 'oregano_spec/compiler'
 
-describe Puppet::Type.type(:yumrepo).provider(:inifile), '(integration)',
-  :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
-  include PuppetSpec::Compiler
+describe Oregano::Type.type(:yumrepo).provider(:inifile), '(integration)',
+  :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
+  include OreganoSpec::Compiler
 
   before :each do
     # Don't backup to filebucket
-    Puppet::FileBucket::Dipper.any_instance.stubs(:backup)
+    Oregano::FileBucket::Dipper.any_instance.stubs(:backup)
     # We don't want to execute anything
     described_class.stubs(:filetype).
-      returns Puppet::Util::FileType::FileTypeFlat
+      returns Oregano::Util::FileType::FileTypeFlat
 
     @yumrepo_dir  = tmpdir('yumrepo_integration_specs')
     @yumrepo_file = tmpfile('yumrepo_file', @yumrepo_dir)
@@ -80,7 +80,7 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile), '(integration)',
 
     # The unit-tests cover all properties
     #   and we have to hard-code the "should" values here.
-    # Puppet::Type.type(:yumrepo).validproperties contains the full list
+    # Oregano::Type.type(:yumrepo).validproperties contains the full list
     #   but we can't get the property "should" values from the yumrepo-type
     #   without having an instance of type, which is what yumrepo defines...
     #   Just cover the most probable used properties.
@@ -114,9 +114,9 @@ describe Puppet::Type.type(:yumrepo).provider(:inifile), '(integration)',
       end
     end
 
-    ##puppet resource yumrepo
+    ##oregano resource yumrepo
     it "should fetch the yumrepo entries from resource face" do
-      @resource_app = Puppet::Application[:resource]
+      @resource_app = Oregano::Application[:resource]
       @resource_app.preinit
       @resource_app.command_line.stubs(:args).
         returns([type_under_test, super_creative])

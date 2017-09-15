@@ -20,9 +20,9 @@ test_name 'C99977 corrupted clientbucket' do
 
     step 'corrupt clientbucket of file' do
       if agent['platform'] =~ /windows/
-        vardir = 'C:/ProgramData/PuppetLabs/puppet/cache'
+        vardir = 'C:/ProgramData/OreganoLabs/oregano/cache'
       else
-        vardir = '/opt/puppetlabs/puppet/cache'
+        vardir = '/opt/oreganolabs/oregano/cache'
       end
       clientbucket_base = "#{vardir}/clientbucket"
       sha_array = unmanaged_sha.scan(/\w/)

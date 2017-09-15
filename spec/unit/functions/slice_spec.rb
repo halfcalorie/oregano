@@ -1,16 +1,16 @@
-require 'puppet'
+require 'oregano'
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 describe 'methods' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
   include Matchers::Resource
 
   before :each do
-    node      = Puppet::Node.new("floppy", :environment => 'production')
-    @compiler = Puppet::Parser::Compiler.new(node)
-    @scope    = Puppet::Parser::Scope.new(@compiler)
+    node      = Oregano::Node.new("floppy", :environment => 'production')
+    @compiler = Oregano::Parser::Compiler.new(node)
+    @scope    = Oregano::Parser::Scope.new(@compiler)
     @topscope = @scope.compiler.topscope
     @scope.parent = @topscope
   end

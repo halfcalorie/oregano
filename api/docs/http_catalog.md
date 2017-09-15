@@ -8,8 +8,8 @@ Find
 
 Retrieve a catalog.
 
-    POST /puppet/v3/catalog/:nodename
-    GET /puppet/v3/catalog/:nodename?environment=:environment
+    POST /oregano/v3/catalog/:nodename
+    GET /oregano/v3/catalog/:nodename?environment=:environment
 
 ### Supported HTTP Methods
 
@@ -24,7 +24,7 @@ POST, GET
 The POST and GET methods are functionally equivalent. Both provide the 3 parameters specified below: the POST in the
 request body, the GET in the query string.
 
-Puppet originally used GET; POST was added because some web servers have a maximum URI length of
+Oregano originally used GET; POST was added because some web servers have a maximum URI length of
 1024 bytes (which is easily exceeded with the `facts` parameter).
 
 The examples below use the POST method.
@@ -41,7 +41,7 @@ Four parameters should be provided to the POST or GET:
 
 Two optional parameters are required for static catalogs:
 - `static_catalog`: a boolean requesting a
-[static catalog](https://docs.puppetlabs.com/puppet/latest/reference/static_catalogs.html) if available; should always
+[static catalog](https://docs.oreganolabs.com/oregano/latest/reference/static_catalogs.html) if available; should always
 be `true`.
 - `checksum_type`: a dot-separated list of checksum types supported by the agent, for use in file resources of a static
 catalog. The order signifies preference, highest first.
@@ -57,7 +57,7 @@ Optional parameters that may be provided to the POST or GET:
 
 #### Catalog found
 
-    POST /puppet/v3/catalog/elmo.mydomain.com
+    POST /oregano/v3/catalog/elmo.mydomain.com
 
     environment=env&configured_environment=canary_env&facts_format=application%2Fjson&facts=%257B%2522name%2522%253A%2522elmo.mydomain.com%2522%252C%2522values%2522%253A%257B%2522architecture%2522%253A%2522x86_64%2522%257D%257D&transaction_uuid=aff261a2-1a34-4647-8c20-ff662ec11c4c
 
@@ -165,7 +165,7 @@ Optional parameters that may be provided to the POST or GET:
 #### Static Catalog found
 
 ~~~
-POST /puppet/v3/catalog/elmo.mydomain.com
+POST /oregano/v3/catalog/elmo.mydomain.com
 
 environment=env&configured_environment=canary_env&facts_format=application%2Fjson&facts=%7B%22name%22%3A%22elmo.mydomain.com%22%2C%22values%22%3A%7B%22architecture%22%3A%22x86_64%22%7D&transaction_uuid=aff261a2-1a34-4647-8c20-ff662ec11c4c&static_catalog=true&checksum_type=sha256.md5
 
@@ -256,7 +256,7 @@ Content-Type: application/json
       "exported": false,
       "parameters": {
         "ensure": "file",
-        "source": "puppet:///modules/a_module/foo"
+        "source": "oregano:///modules/a_module/foo"
       }
     },
     {
@@ -270,7 +270,7 @@ Content-Type: application/json
       "exported": false,
       "parameters": {
         "ensure": "present",
-        "source": "puppet:///modules/a_module/bar",
+        "source": "oregano:///modules/a_module/bar",
         "recurse", "true"
       }
   ],
@@ -306,33 +306,33 @@ Content-Type: application/json
         "type": "sha256",
         "value": "{sha256}5891b5b522d5df086d0ff0b110fbd9d21bb4fc7163af34d08286a2e846f6be03"
       },
-      "content_uri": "puppet:///modules/a_module/files/foo",
+      "content_uri": "oregano:///modules/a_module/files/foo",
       "destination": null,
       "group": 20,
       "links": "manage",
       "mode": 420,
       "owner": 501,
-      "path": "/etc/puppetlabs/code/environments/production/modules/a_module/files/foo.txt",
+      "path": "/etc/oreganolabs/code/environments/production/modules/a_module/files/foo.txt",
       "relative_path": null,
-      "source": "puppet:///modules/a_module/foo",
+      "source": "oregano:///modules/a_module/foo",
       "type": "file"
     }
   },
   "recursive_metadata": {
     "/tmp/bar": {
-      "puppet:///modules/a_module/bar": [
+      "oregano:///modules/a_module/bar": [
         {
           "checksum": {
             "type": "ctime",
             "value": "{ctime}2016-02-19 17:38:36 -0800"
           },
-          "content_uri": "puppet:///modules/a_module/files/bar",
+          "content_uri": "oregano:///modules/a_module/files/bar",
           "destination": null,
           "group": 20,
           "links": "manage",
           "mode": 420,
           "owner": 501,
-          "path": "/etc/puppetlabs/code/environments/production/modules/a_module/files/bar",
+          "path": "/etc/oreganolabs/code/environments/production/modules/a_module/files/bar",
           "relative_path": ".",
           "source": null,
           "type": "directory"
@@ -342,13 +342,13 @@ Content-Type: application/json
             "type": "sha256",
             "value": "{sha256}962dbd7362c34a20baac8afd13fba734d3d51cc2944477d96ee05a730e5edcb7"
           },
-          "content_uri": "puppet:///modules/a_module/files/bar/baz",
+          "content_uri": "oregano:///modules/a_module/files/bar/baz",
           "destination": null,
           "group": 20,
           "links": "manage",
           "mode": 420,
           "owner": 501,
-          "path": "/etc/puppetlabs/code/environments/production/modules/a_module/files/bar",
+          "path": "/etc/oreganolabs/code/environments/production/modules/a_module/files/bar",
           "relative_path": "baz",
           "source": null,
           "type": "file"

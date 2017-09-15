@@ -1,13 +1,13 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-describe Puppet::Pops::Adaptable::Adapter do
-  class ValueAdapter < Puppet::Pops::Adaptable::Adapter
+describe Oregano::Pops::Adaptable::Adapter do
+  class ValueAdapter < Oregano::Pops::Adaptable::Adapter
     attr_accessor :value
   end
 
-  class OtherAdapter < Puppet::Pops::Adaptable::Adapter
+  class OtherAdapter < Oregano::Pops::Adaptable::Adapter
     attr_accessor :value
     def OtherAdapter.create_adapter(o)
       x = new
@@ -17,13 +17,13 @@ describe Puppet::Pops::Adaptable::Adapter do
   end
 
   module Farm
-    class FarmAdapter < Puppet::Pops::Adaptable::Adapter
+    class FarmAdapter < Oregano::Pops::Adaptable::Adapter
       attr_accessor :value
     end
   end
 
   class Duck
-    include Puppet::Pops::Adaptable
+    include Oregano::Pops::Adaptable
   end
 
   it "should create specialized adapter instance on call to adapt" do

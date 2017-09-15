@@ -8,7 +8,7 @@
 require 'spec_helper'
 require 'stringio'
 
-provider_class = Puppet::Type.type(:selmodule).provider(:semodule)
+provider_class = Oregano::Type.type(:selmodule).provider(:semodule)
 
 describe provider_class do
   before :each do

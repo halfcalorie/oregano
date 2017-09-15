@@ -1,20 +1,20 @@
 test_name 'C99630: hiera v3 custom backend' do
-  require 'puppet/acceptance/environment_utils.rb'
-  extend Puppet::Acceptance::EnvironmentUtils
-  require 'puppet/acceptance/temp_file_utils.rb'
-  extend Puppet::Acceptance::TempFileUtils
+  require 'oregano/acceptance/environment_utils.rb'
+  extend Oregano::Acceptance::EnvironmentUtils
+  require 'oregano/acceptance/temp_file_utils.rb'
+  extend Oregano::Acceptance::TempFileUtils
 
 tag 'audit:medium',
     'audit:acceptance',
     'audit:refactor',  # Master is not needed for this test. Refactor
-                       # to use puppet apply with a local module tree.
+                       # to use oregano apply with a local module tree.
 
   app_type        = File.basename(__FILE__, '.*')
   tmp_environment = mk_tmp_environment_with_teardown(master, app_type)
   fq_tmp_environmentpath  = "#{environmentpath}/#{tmp_environment}"
-  puppetserver_config = "#{master['puppetserver-confdir']}/puppetserver.conf"
-  existing_loadpath = read_tk_config_string(on(master, "cat #{puppetserver_config}").stdout.strip)['jruby-puppet']['ruby-load-path'].first
-  confdir = master.puppet('master')['confdir']
+  oreganoserver_config = "#{master['oreganoserver-confdir']}/oreganoserver.conf"
+  existing_loadpath = read_tk_config_string(on(master, "cat #{oreganoserver_config}").stdout.strip)['jruby-oregano']['ruby-load-path'].first
+  confdir = master.oregano('master')['confdir']
 
   hiera_conf_backup = master.tmpfile('C99629-hiera-yaml')
 
@@ -64,17 +64,17 @@ end
   end
 
   step 'assert lookups using lookup subcommand on the master' do
-    on(master, puppet('lookup', "--environment #{tmp_environment}", '--explain', 'anykey'), :accept_all_exit_codes => true) do |result|
+    on(master, oregano('lookup', "--environment #{tmp_environment}", '--explain', 'anykey'), :accept_all_exit_codes => true) do |result|
       assert(result.exit_code == 0, "lookup subcommand didn't exit properly: (#{result.exit_code})")
       assert_match(/custom value/, result.stdout,
                    "lookup subcommand didn't find correct key")
     end
   end
 
-  with_puppet_running_on(master,{}) do
+  with_oregano_running_on(master,{}) do
     agents.each do |agent|
       step "agent manifest lookup on #{agent.hostname}" do
-        on(agent, puppet('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
+        on(agent, oregano('agent', "-t --server #{master.hostname} --environment #{tmp_environment}"),
            :accept_all_exit_codes => true) do |result|
           assert(result.exit_code == 2, "agent lookup didn't exit properly: (#{result.exit_code})")
           assert_match(/custom value/, result.stdout,

@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-describe Puppet::Pops::Visitor do
+describe Oregano::Pops::Visitor do
   describe "A visitor and a visitable in a configuration with min and max args set to 0" do
     class DuckProcessor
       def initialize
-        @friend_visitor = Puppet::Pops::Visitor.new(self, "friend", 0, 0)
+        @friend_visitor = Oregano::Pops::Visitor.new(self, "friend", 0, 0)
       end
 
       def hi(o, *args)
@@ -23,7 +23,7 @@ describe Puppet::Pops::Visitor do
     end
 
     class Duck
-      include Puppet::Pops::Visitable
+      include Oregano::Pops::Visitable
     end
 
     it "should select the expected method when there are no arguments" do
@@ -57,7 +57,7 @@ describe Puppet::Pops::Visitor do
   describe "A visitor and a visitable in a configuration with min =1, and max args set to 2" do
     class DuckProcessor2
       def initialize
-        @friend_visitor = Puppet::Pops::Visitor.new(self, "friend", 1, 2)
+        @friend_visitor = Oregano::Pops::Visitor.new(self, "friend", 1, 2)
       end
 
       def hi(o, *args)
@@ -70,7 +70,7 @@ describe Puppet::Pops::Visitor do
     end
 
     class Duck
-      include Puppet::Pops::Visitable
+      include Oregano::Pops::Visitable
     end
 
     it "should select the expected method when there are is one arguments" do

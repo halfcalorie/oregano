@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/literal_evaluator'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/literal_evaluator'
 
-describe "Puppet::Pops::Evaluator::LiteralEvaluator" do
-  let(:parser) {  Puppet::Pops::Parser::EvaluatingParser.new }
-  let(:leval)  {  Puppet::Pops::Evaluator::LiteralEvaluator.new }
+describe "Oregano::Pops::Evaluator::LiteralEvaluator" do
+  let(:parser) {  Oregano::Pops::Parser::EvaluatingParser.new }
+  let(:leval)  {  Oregano::Pops::Evaluator::LiteralEvaluator.new }
 
   { "1"       => 1,
     "3.14"    => 3.14,

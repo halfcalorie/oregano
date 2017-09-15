@@ -1,36 +1,36 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/files'
-require 'puppet_spec/modules'
-require 'puppet/module_tool/checksums'
+require 'oregano_spec/files'
+require 'oregano_spec/modules'
+require 'oregano/module_tool/checksums'
 
-describe Puppet::Module do
-  include PuppetSpec::Files
+describe Oregano::Module do
+  include OreganoSpec::Files
 
   let(:env) { mock("environment") }
   let(:path) { "/path" }
   let(:name) { "mymod" }
-  let(:mod) { Puppet::Module.new(name, path, env) }
+  let(:mod) { Oregano::Module.new(name, path, env) }
 
   before do
     # This is necessary because of the extra checks we have for the deprecated
     # 'plugins' directory
-    Puppet::FileSystem.stubs(:exist?).returns false
+    Oregano::FileSystem.stubs(:exist?).returns false
   end
 
   it "should have a class method that returns a named module from a given environment" do
-    env = Puppet::Node::Environment.create(:myenv, [])
+    env = Oregano::Node::Environment.create(:myenv, [])
     env.expects(:module).with(name).returns "yep"
-    Puppet.override(:environments => Puppet::Environments::Static.new(env)) do
-      expect(Puppet::Module.find(name, "myenv")).to eq("yep")
+    Oregano.override(:environments => Oregano::Environments::Static.new(env)) do
+      expect(Oregano::Module.find(name, "myenv")).to eq("yep")
     end
   end
 
   it "should return nil if asked for a named module that doesn't exist" do
-    env = Puppet::Node::Environment.create(:myenv, [])
+    env = Oregano::Node::Environment.create(:myenv, [])
     env.expects(:module).with(name).returns nil
-    Puppet.override(:environments => Puppet::Environments::Static.new(env)) do
-      expect(Puppet::Module.find(name, "myenv")).to be_nil
+    Oregano.override(:environments => Oregano::Environments::Static.new(env)) do
+      expect(Oregano::Module.find(name, "myenv")).to be_nil
     end
   end
 
@@ -39,61 +39,61 @@ describe Puppet::Module do
     let(:not_a_module) { tmpfile('thereisnomodule', first_modulepath) }
 
     it "should return false for a non-directory" do
-      expect(Puppet::Module.is_module_directory?('thereisnomodule', first_modulepath)).to be_falsey
+      expect(Oregano::Module.is_module_directory?('thereisnomodule', first_modulepath)).to be_falsey
     end
 
     it "should return true for a well named directories" do
-      PuppetSpec::Modules.generate_files('foo', first_modulepath)
-      PuppetSpec::Modules.generate_files('foo2', first_modulepath)
-      PuppetSpec::Modules.generate_files('foo_bar', first_modulepath)
-      expect(Puppet::Module.is_module_directory?('foo', first_modulepath)).to be_truthy
-      expect(Puppet::Module.is_module_directory?('foo2', first_modulepath)).to be_truthy
-      expect(Puppet::Module.is_module_directory?('foo_bar', first_modulepath)).to be_truthy
+      OreganoSpec::Modules.generate_files('foo', first_modulepath)
+      OreganoSpec::Modules.generate_files('foo2', first_modulepath)
+      OreganoSpec::Modules.generate_files('foo_bar', first_modulepath)
+      expect(Oregano::Module.is_module_directory?('foo', first_modulepath)).to be_truthy
+      expect(Oregano::Module.is_module_directory?('foo2', first_modulepath)).to be_truthy
+      expect(Oregano::Module.is_module_directory?('foo_bar', first_modulepath)).to be_truthy
     end
 
     it "should return false for badly named directories" do
-      PuppetSpec::Modules.generate_files('foo=bar', first_modulepath)
-      PuppetSpec::Modules.generate_files('.foo', first_modulepath)
-      expect(Puppet::Module.is_module_directory?('foo=bar', first_modulepath)).to be_falsey
-      expect(Puppet::Module.is_module_directory?('.foo', first_modulepath)).to be_falsey
+      OreganoSpec::Modules.generate_files('foo=bar', first_modulepath)
+      OreganoSpec::Modules.generate_files('.foo', first_modulepath)
+      expect(Oregano::Module.is_module_directory?('foo=bar', first_modulepath)).to be_falsey
+      expect(Oregano::Module.is_module_directory?('.foo', first_modulepath)).to be_falsey
     end
   end
 
   describe "is_module_directory_name?" do
     it "should return true for a valid directory module name" do
-      expect(Puppet::Module.is_module_directory_name?('foo')).to be_truthy
-      expect(Puppet::Module.is_module_directory_name?('foo2')).to be_truthy
-      expect(Puppet::Module.is_module_directory_name?('foo_bar')).to be_truthy
+      expect(Oregano::Module.is_module_directory_name?('foo')).to be_truthy
+      expect(Oregano::Module.is_module_directory_name?('foo2')).to be_truthy
+      expect(Oregano::Module.is_module_directory_name?('foo_bar')).to be_truthy
     end
 
     it "should return false for badly formed directory module names" do
-      expect(Puppet::Module.is_module_directory_name?('foo-bar')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('foo=bar')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('foo bar')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('foo.bar')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('-foo')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('foo-')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('foo--bar')).to be_falsey
-      expect(Puppet::Module.is_module_directory_name?('.foo')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('foo-bar')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('foo=bar')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('foo bar')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('foo.bar')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('-foo')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('foo-')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('foo--bar')).to be_falsey
+      expect(Oregano::Module.is_module_directory_name?('.foo')).to be_falsey
     end
   end
 
   describe "is_module_namespaced_name?" do
     it "should return true for a valid namespaced module name" do
-      expect(Puppet::Module.is_module_namespaced_name?('foo-bar')).to be_truthy
+      expect(Oregano::Module.is_module_namespaced_name?('foo-bar')).to be_truthy
     end
 
     it "should return false for badly formed namespaced module names" do
-      expect(Puppet::Module.is_module_namespaced_name?('foo')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('.foo-bar')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo2')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo_bar')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo=bar')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo bar')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo.bar')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('-foo')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo-')).to be_falsey
-      expect(Puppet::Module.is_module_namespaced_name?('foo--bar')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('.foo-bar')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo2')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo_bar')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo=bar')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo bar')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo.bar')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('-foo')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo-')).to be_falsey
+      expect(Oregano::Module.is_module_namespaced_name?('foo--bar')).to be_falsey
     end
   end
 
@@ -136,13 +136,13 @@ describe Puppet::Module do
 
   describe "when finding unmet dependencies" do
     before do
-      Puppet::FileSystem.unstub(:exist?)
+      Oregano::FileSystem.unstub(:exist?)
       @modpath = tmpdir('modpath')
-      Puppet.settings[:modulepath] = @modpath
+      Oregano.settings[:modulepath] = @modpath
     end
 
     it "should resolve module dependencies using forge names" do
-      parent = PuppetSpec::Modules.create(
+      parent = OreganoSpec::Modules.create(
         'parent',
         @modpath,
         :metadata => {
@@ -153,7 +153,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      child = PuppetSpec::Modules.create(
+      child = OreganoSpec::Modules.create(
         'child',
         @modpath,
         :metadata => {
@@ -170,7 +170,7 @@ describe Puppet::Module do
 
     it "should list modules that are missing" do
       metadata_file = "#{@modpath}/needy/metadata.json"
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'needy',
         @modpath,
         :metadata => {
@@ -188,14 +188,14 @@ describe Puppet::Module do
         :reason => :missing,
         :name   => "baz/foobar",
         :version_constraint => ">= 2.2.0",
-        :parent => { :name => 'puppetlabs/needy', :version => 'v9.9.9' },
+        :parent => { :name => 'oreganolabs/needy', :version => 'v9.9.9' },
         :mod_details => { :installed_version => nil }
       }])
     end
 
     it "should list modules that are missing and have invalid names" do
       metadata_file = "#{@modpath}/needy/metadata.json"
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'needy',
         @modpath,
         :metadata => {
@@ -213,21 +213,21 @@ describe Puppet::Module do
         :reason => :missing,
         :name   => "baz/foobar=bar",
         :version_constraint => ">= 2.2.0",
-        :parent => { :name => 'puppetlabs/needy', :version => 'v9.9.9' },
+        :parent => { :name => 'oreganolabs/needy', :version => 'v9.9.9' },
         :mod_details => { :installed_version => nil }
       }])
     end
 
     it "should list modules with unmet version requirement" do
-      env = Puppet::Node::Environment.create(:testing, [@modpath])
+      env = Oregano::Node::Environment.create(:testing, [@modpath])
 
       ['test_gte_req', 'test_specific_req', 'foobar'].each do |mod_name|
         mod_dir = "#{@modpath}/#{mod_name}"
         metadata_file = "#{mod_dir}/metadata.json"
         tasks_dir = "#{mod_dir}/tasks"
-        Puppet::FileSystem.stubs(:exist?).with(metadata_file).returns true
+        Oregano::FileSystem.stubs(:exist?).with(metadata_file).returns true
       end
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'test_gte_req',
         @modpath,
         :metadata => {
@@ -238,7 +238,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      mod2 = PuppetSpec::Modules.create(
+      mod2 = OreganoSpec::Modules.create(
         'test_specific_req',
         @modpath,
         :metadata => {
@@ -250,7 +250,7 @@ describe Puppet::Module do
         :environment => env
       )
 
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create(
         'foobar',
         @modpath,
         :metadata => { :version => '2.0.0', :author  => 'baz' },
@@ -261,7 +261,7 @@ describe Puppet::Module do
         :reason => :version_mismatch,
         :name   => "baz/foobar",
         :version_constraint => ">= 2.2.0",
-        :parent => { :version => "v9.9.9", :name => "puppetlabs/test_gte_req" },
+        :parent => { :version => "v9.9.9", :name => "oreganolabs/test_gte_req" },
         :mod_details => { :installed_version => "2.0.0" }
       }])
 
@@ -269,16 +269,16 @@ describe Puppet::Module do
         :reason => :version_mismatch,
         :name   => "baz/foobar",
         :version_constraint => "v1.0.0",
-        :parent => { :version => "v9.9.9", :name => "puppetlabs/test_specific_req" },
+        :parent => { :version => "v9.9.9", :name => "oreganolabs/test_specific_req" },
         :mod_details => { :installed_version => "2.0.0" }
       }])
 
     end
 
     it "should consider a dependency without a version requirement to be satisfied" do
-      env = Puppet::Node::Environment.create(:testing, [@modpath])
+      env = Oregano::Node::Environment.create(:testing, [@modpath])
 
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'foobar',
         @modpath,
         :metadata => {
@@ -288,7 +288,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create(
         'foobar',
         @modpath,
         :metadata => {
@@ -302,10 +302,10 @@ describe Puppet::Module do
     end
 
     it "should consider a dependency without a semantic version to be unmet" do
-      env = Puppet::Node::Environment.create(:testing, [@modpath])
+      env = Oregano::Node::Environment.create(:testing, [@modpath])
 
       metadata_file = "#{@modpath}/foobar/metadata.json"
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'foobar',
         @modpath,
         :metadata => {
@@ -315,7 +315,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create(
         'foobar',
         @modpath,
         :metadata => {
@@ -327,7 +327,7 @@ describe Puppet::Module do
 
       expect(mod.unmet_dependencies).to eq([{
         :reason => :non_semantic_version,
-        :parent => { :version => "v9.9.9", :name => "puppetlabs/foobar" },
+        :parent => { :version => "v9.9.9", :name => "oreganolabs/foobar" },
         :mod_details => { :installed_version => "5.1" },
         :name => "baz/foobar",
         :version_constraint => ">= 0.0.0"
@@ -335,7 +335,7 @@ describe Puppet::Module do
     end
 
     it "should have valid dependencies when no dependencies have been specified" do
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'foobar',
         @modpath,
         :metadata => {
@@ -348,7 +348,7 @@ describe Puppet::Module do
 
     it "should throw an error if invalid dependencies are specified" do
       expect {
-        PuppetSpec::Modules.create(
+        OreganoSpec::Modules.create(
           'foobar',
           @modpath,
           :metadata => {
@@ -356,14 +356,14 @@ describe Puppet::Module do
           }
         )
       }.to raise_error(
-        Puppet::Module::MissingMetadata,
+        Oregano::Module::MissingMetadata,
         /dependencies in the file metadata.json of the module foobar must be an array, not: ''/)
     end
 
     it "should only list unmet dependencies" do
-      env = Puppet::Node::Environment.create(:testing, [@modpath])
+      env = Oregano::Node::Environment.create(:testing, [@modpath])
 
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         name,
         @modpath,
         :metadata => {
@@ -380,7 +380,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create(
         'satisfied',
         @modpath,
         :metadata => {
@@ -393,16 +393,16 @@ describe Puppet::Module do
       expect(mod.unmet_dependencies).to eq([{
         :reason => :missing,
         :mod_details => { :installed_version => nil },
-        :parent => { :version => "v9.9.9", :name => "puppetlabs/#{name}" },
+        :parent => { :version => "v9.9.9", :name => "oreganolabs/#{name}" },
         :name => "baz/notsatisfied",
         :version_constraint => ">= 2.2.0"
       }])
     end
 
     it "should be empty when all dependencies are met" do
-      env = Puppet::Node::Environment.create(:testing, [@modpath])
+      env = Oregano::Node::Environment.create(:testing, [@modpath])
 
-      mod = PuppetSpec::Modules.create(
+      mod = OreganoSpec::Modules.create(
         'mymod2',
         @modpath,
         :metadata => {
@@ -419,7 +419,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create(
         'satisfied',
         @modpath,
         :metadata => {
@@ -428,7 +428,7 @@ describe Puppet::Module do
         },
         :environment => env
       )
-      PuppetSpec::Modules.create(
+      OreganoSpec::Modules.create(
         'alsosatisfied',
         @modpath,
         :metadata => {
@@ -446,10 +446,10 @@ describe Puppet::Module do
   describe "initialize_i18n" do
 
     let(:modpath) { tmpdir('modpath') }
-    let(:modname) { 'puppetlabs-i18n'}
+    let(:modname) { 'oreganolabs-i18n'}
     let(:modroot) { "#{modpath}/#{modname}/" }
     let(:config_path) { "#{modroot}/locales/config.yaml" }
-    let(:mod_obj) { PuppetSpec::Modules.create( modname, modpath, :metadata => { :dependencies => [] }, :env => env ) }
+    let(:mod_obj) { OreganoSpec::Modules.create( modname, modpath, :metadata => { :dependencies => [] }, :env => env ) }
 
     it "is expected to initialize an un-initialized module" do
       expect(GettextSetup.translation_repositories.has_key? modname).to be false
@@ -482,11 +482,11 @@ describe Puppet::Module do
   end
 
   it "should return nil if asked for a module whose name is 'nil'" do
-    expect(Puppet::Module.find(nil, "myenv")).to be_nil
+    expect(Oregano::Module.find(nil, "myenv")).to be_nil
   end
 
   it "should provide support for logging" do
-    expect(Puppet::Module.ancestors).to be_include(Puppet::Util::Logging)
+    expect(Oregano::Module.ancestors).to be_include(Oregano::Util::Logging)
   end
 
   it "should be able to be converted to a string" do
@@ -494,20 +494,20 @@ describe Puppet::Module do
   end
 
   it "should fail if its name is not alphanumeric" do
-    expect { Puppet::Module.new(".something", "/path", env) }.to raise_error(Puppet::Module::InvalidName)
+    expect { Oregano::Module.new(".something", "/path", env) }.to raise_error(Oregano::Module::InvalidName)
   end
 
   it "should require a name at initialization" do
-    expect { Puppet::Module.new }.to raise_error(ArgumentError)
+    expect { Oregano::Module.new }.to raise_error(ArgumentError)
   end
 
   it "should accept an environment at initialization" do
-    expect(Puppet::Module.new("foo", "/path", env).environment).to eq(env)
+    expect(Oregano::Module.new("foo", "/path", env).environment).to eq(env)
   end
 
   describe '#modulepath' do
     it "should return the directory the module is installed in, if a path exists" do
-      mod = Puppet::Module.new("foo", "/a/foo", env)
+      mod = Oregano::Module.new("foo", "/a/foo", env)
       expect(mod.modulepath).to eq('/a')
     end
   end
@@ -523,31 +523,31 @@ describe Puppet::Module do
     end
     it "should be able to return individual #{filetype}" do
       module_file = File.join(path, dirname, "my/file")
-      Puppet::FileSystem.expects(:exist?).with(module_file).returns true
+      Oregano::FileSystem.expects(:exist?).with(module_file).returns true
       expect(mod.send(filetype.to_s.sub(/s$/, ''), "my/file")).to eq(module_file)
     end
 
     it "should consider #{filetype} to be present if their base directory exists" do
       module_file = File.join(path, dirname)
-      Puppet::FileSystem.expects(:exist?).with(module_file).returns true
+      Oregano::FileSystem.expects(:exist?).with(module_file).returns true
       expect(mod.send(filetype.to_s + "?")).to be_truthy
     end
 
     it "should consider #{filetype} to be absent if their base directory does not exist" do
       module_file = File.join(path, dirname)
-      Puppet::FileSystem.expects(:exist?).with(module_file).returns false
+      Oregano::FileSystem.expects(:exist?).with(module_file).returns false
       expect(mod.send(filetype.to_s + "?")).to be_falsey
     end
 
     it "should return nil if asked to return individual #{filetype} that don't exist" do
       module_file = File.join(path, dirname, "my/file")
-      Puppet::FileSystem.expects(:exist?).with(module_file).returns false
+      Oregano::FileSystem.expects(:exist?).with(module_file).returns false
       expect(mod.send(filetype.to_s.sub(/s$/, ''), "my/file")).to be_nil
     end
 
     it "should return the base directory if asked for a nil path" do
       base = File.join(path, dirname)
-      Puppet::FileSystem.expects(:exist?).with(base).returns true
+      Oregano::FileSystem.expects(:exist?).with(base).returns true
       expect(mod.send(filetype.to_s.sub(/s$/, ''), nil)).to eq(base)
     end
   end
@@ -562,71 +562,71 @@ describe Puppet::Module do
 
   describe "when finding tasks" do
     before do
-      Puppet::FileSystem.unstub(:exist?)
+      Oregano::FileSystem.unstub(:exist?)
       @modpath = tmpdir('modpath')
-      Puppet.settings[:modulepath] = @modpath
+      Oregano.settings[:modulepath] = @modpath
     end
 
     it "should have an empty array for the tasks when the tasks directory does not exist" do
-      mod = PuppetSpec::Modules.create('tasks_test_nodir', @modpath, :environment => env)
+      mod = OreganoSpec::Modules.create('tasks_test_nodir', @modpath, :environment => env)
       expect(mod.tasks).to eq([])
     end
 
     it "should have an empty array for the tasks when the tasks directory does exist and is empty" do
-      mod = PuppetSpec::Modules.create('tasks_test_empty', @modpath, {:environment => env,
+      mod = OreganoSpec::Modules.create('tasks_test_empty', @modpath, {:environment => env,
                                                                       :tasks => []})
       expect(mod.tasks).to eq([])
     end
 
     it "should list the expected tasks when the required files exist" do
       fake_tasks = [['task1'], ['task2.sh', 'task2.json']]
-      mod = PuppetSpec::Modules.create('tasks_smoke', @modpath, {:environment => env,
+      mod = OreganoSpec::Modules.create('tasks_smoke', @modpath, {:environment => env,
                                                                  :tasks => fake_tasks})
 
       expect(mod.tasks.count).to eq(2)
       expect(mod.tasks.map{|t| t.name}.sort).to eq(['tasks_smoke::task1', 'tasks_smoke::task2'])
-      expect(mod.tasks.map{|t| t.class}).to eq([Puppet::Module::Task] * 2)
+      expect(mod.tasks.map{|t| t.class}).to eq([Oregano::Module::Task] * 2)
     end
 
     it "should be able to find individual task files when they exist" do
       task_exe = 'stateskatetask.stk'
-      mod = PuppetSpec::Modules.create('task_file_smoke', @modpath, {:environment => env,
+      mod = OreganoSpec::Modules.create('task_file_smoke', @modpath, {:environment => env,
                                                                      :tasks => [[task_exe]]})
 
       expect(mod.task_file(task_exe)).to eq("#{mod.path}/tasks/#{task_exe}")
     end
 
     it "should return nil when asked for an individual task file if it does not exist" do
-      mod = PuppetSpec::Modules.create('task_file_neg', @modpath, {:environment => env,
+      mod = OreganoSpec::Modules.create('task_file_neg', @modpath, {:environment => env,
                                                                    :tasks => []})
       expect(mod.task_file('nosuchtask')).to be_nil
     end
 
     describe "does the task finding" do
       before :each do
-        Puppet::FileSystem.unstub(:exist?)
-        Puppet::Module::Task.unstub(:tasks_in_module)
+        Oregano::FileSystem.unstub(:exist?)
+        Oregano::Module::Task.unstub(:tasks_in_module)
       end
 
       let(:mod_name) { 'tasks_test_lazy' }
       let(:mod_tasks_dir) { File.join(@modpath, mod_name, 'tasks') }
 
       it "after the module is initialized" do
-        Puppet::FileSystem.expects(:exist?).with(mod_tasks_dir).never
-        Puppet::Module::Task.expects(:tasks_in_module).never
-        Puppet::Module.new(mod_name, @modpath, env)
+        Oregano::FileSystem.expects(:exist?).with(mod_tasks_dir).never
+        Oregano::Module::Task.expects(:tasks_in_module).never
+        Oregano::Module.new(mod_name, @modpath, env)
       end
 
       it "when the tasks method is called" do
-        Puppet::Module::Task.expects(:tasks_in_module)
-        mod = PuppetSpec::Modules.create(mod_name, @modpath, {:environment => env,
+        Oregano::Module::Task.expects(:tasks_in_module)
+        mod = OreganoSpec::Modules.create(mod_name, @modpath, {:environment => env,
                                                               :tasks => [['itascanstaccatotask']]})
         mod.tasks
       end
 
       it "only once for the lifetime of the module object" do
         Dir.expects(:glob).with("#{mod_tasks_dir}/*").once.returns ['allalaskataskattacktactics']
-        mod = PuppetSpec::Modules.create(mod_name, @modpath, {:environment => env,
+        mod = OreganoSpec::Modules.create(mod_name, @modpath, {:environment => env,
                                                               :tasks => []})
         mod.tasks
         mod.tasks
@@ -635,9 +635,9 @@ describe Puppet::Module do
   end
 end
 
-describe Puppet::Module, "when finding matching manifests" do
+describe Oregano::Module, "when finding matching manifests" do
   before do
-    @mod = Puppet::Module.new("mymod", "/a", mock("environment"))
+    @mod = Oregano::Module.new("mymod", "/a", mock("environment"))
     @pq_glob_with_extension = "yay/*.xx"
     @fq_glob_with_extension = "/a/manifests/#{@pq_glob_with_extension}"
   end
@@ -658,7 +658,7 @@ describe Puppet::Module, "when finding matching manifests" do
   end
 
   it "should default to the 'init' file if no glob pattern is specified" do
-    Puppet::FileSystem.expects(:exist?).with("/a/manifests/init.pp").returns(true)
+    Oregano::FileSystem.expects(:exist?).with("/a/manifests/init.pp").returns(true)
 
     expect(@mod.match_manifests(nil)).to eq(%w{/a/manifests/init.pp})
   end
@@ -684,16 +684,16 @@ describe Puppet::Module, "when finding matching manifests" do
   it "should raise an error if the pattern tries to leave the manifest directory" do
     expect do
       @mod.match_manifests("something/../../*")
-    end.to raise_error(Puppet::Module::InvalidFilePattern, 'The pattern "something/../../*" to find manifests in the module "mymod" is invalid and potentially unsafe.')
+    end.to raise_error(Oregano::Module::InvalidFilePattern, 'The pattern "something/../../*" to find manifests in the module "mymod" is invalid and potentially unsafe.')
   end
 end
 
-describe Puppet::Module do
-  include PuppetSpec::Files
+describe Oregano::Module do
+  include OreganoSpec::Files
 
   let!(:modpath) do
     path = tmpdir('modpath')
-    PuppetSpec::Modules.create('mymod', path)
+    OreganoSpec::Modules.create('mymod', path)
     path
   end
 
@@ -701,7 +701,7 @@ describe Puppet::Module do
 
   let!(:mymod_metadata) { File.join(mymodpath, 'metadata.json') }
 
-  let(:mymod) { Puppet::Module.new('mymod', mymodpath, nil) }
+  let(:mymod) { Oregano::Module.new('mymod', mymodpath, nil) }
 
   it "should use 'License' in its current path as its metadata file" do
     expect(mymod.license_file).to eq("#{modpath}/mymod/License")
@@ -745,9 +745,9 @@ describe Puppet::Module do
   end
 
   it "should parse its metadata file on initialization if it is present" do
-    Puppet::Module.any_instance.expects(:load_metadata)
+    Oregano::Module.any_instance.expects(:load_metadata)
 
-    Puppet::Module.new("yay", "/path", mock("env"))
+    Oregano::Module.new("yay", "/path", mock("env"))
   end
 
   it "should tolerate failure to parse" do
@@ -758,7 +758,7 @@ describe Puppet::Module do
 
   describe 'when --strict is warning' do
     before :each do
-      Puppet[:strict] = :warning
+      Oregano[:strict] = :warning
     end
 
     it "should warn about a failure to parse" do
@@ -771,7 +771,7 @@ describe Puppet::Module do
 
     describe 'when --strict is off' do
       before :each do
-        Puppet[:strict] = :off
+        Oregano[:strict] = :off
       end
 
       it "should not warn about a failure to parse" do
@@ -782,7 +782,7 @@ describe Puppet::Module do
       end
 
       it "should log debug output about a failure to parse when --debug is on" do
-        Puppet[:log_level] = :debug
+        Oregano[:log_level] = :debug
         File.stubs(:read).with(mymod_metadata, {:encoding => 'utf-8'}).returns(my_fixture('trailing-comma.json'))
 
         expect(mymod.has_metadata?).to be_falsey
@@ -792,7 +792,7 @@ describe Puppet::Module do
 
     describe 'when --strict is error' do
       before :each do
-        Puppet[:strict] = :error
+        Oregano[:strict] = :error
       end
 
       it "should fail on a failure to parse" do
@@ -806,7 +806,7 @@ describe Puppet::Module do
 
   def a_module_with_metadata(data)
     File.stubs(:read).with("/path/metadata.json", {:encoding => 'utf-8'}).returns data.to_json
-    Puppet::Module.new("foo", "/path", mock("env"))
+    Oregano::Module.new("foo", "/path", mock("env"))
   end
 
   describe "when loading the metadata file" do
@@ -829,7 +829,7 @@ describe Puppet::Module do
       it "should fail if #{attr} is not present in the metadata file" do
         data.delete(attr.to_sym)
         expect { a_module_with_metadata(data) }.to raise_error(
-          Puppet::Module::MissingMetadata,
+          Oregano::Module::MissingMetadata,
           "No #{attr} module metadata provided for foo"
         )
       end
@@ -852,8 +852,8 @@ describe Puppet::Module do
         EOF
       end
 
-      Puppet::Module.any_instance.stubs(:metadata_file).returns metadata_json
-      mod = Puppet::Module.new('foo', '/path', mock('env'))
+      Oregano::Module.any_instance.stubs(:metadata_file).returns metadata_json
+      mod = Oregano::Module.new('foo', '/path', mock('env'))
 
       mod.load_metadata
       expect(mod.author).to eq(rune_utf8)
@@ -863,7 +863,7 @@ describe Puppet::Module do
   it "should be able to tell if there are local changes" do
     modpath = tmpdir('modpath')
     foo_checksum = 'acbd18db4cc2f85cedef654fccc4a4d8'
-    checksummed_module = PuppetSpec::Modules.create(
+    checksummed_module = OreganoSpec::Modules.create(
       'changed',
       modpath,
       :metadata => {
@@ -876,41 +876,41 @@ describe Puppet::Module do
     foo_path = Pathname.new(File.join(checksummed_module.path, 'foo'))
 
     IO.binwrite(foo_path, 'notfoo')
-    expect(Puppet::ModuleTool::Checksums.new(foo_path).checksum(foo_path)).not_to eq(foo_checksum)
+    expect(Oregano::ModuleTool::Checksums.new(foo_path).checksum(foo_path)).not_to eq(foo_checksum)
 
     IO.binwrite(foo_path, 'foo')
-    expect(Puppet::ModuleTool::Checksums.new(foo_path).checksum(foo_path)).to eq(foo_checksum)
+    expect(Oregano::ModuleTool::Checksums.new(foo_path).checksum(foo_path)).to eq(foo_checksum)
   end
 
   it "should know what other modules require it" do
-    env = Puppet::Node::Environment.create(:testing, [modpath])
+    env = Oregano::Node::Environment.create(:testing, [modpath])
 
-    dependable = PuppetSpec::Modules.create(
+    dependable = OreganoSpec::Modules.create(
       'dependable',
       modpath,
-      :metadata => {:author => 'puppetlabs'},
+      :metadata => {:author => 'oreganolabs'},
       :environment => env
     )
-    PuppetSpec::Modules.create(
+    OreganoSpec::Modules.create(
       'needy',
       modpath,
       :metadata => {
         :author => 'beggar',
         :dependencies => [{
             "version_requirement" => ">= 2.2.0",
-            "name" => "puppetlabs/dependable"
+            "name" => "oreganolabs/dependable"
         }]
       },
       :environment => env
     )
-    PuppetSpec::Modules.create(
+    OreganoSpec::Modules.create(
       'wantit',
       modpath,
       :metadata => {
         :author => 'spoiled',
         :dependencies => [{
             "version_requirement" => "< 5.0.0",
-            "name" => "puppetlabs/dependable"
+            "name" => "oreganolabs/dependable"
         }]
       },
       :environment => env
@@ -934,11 +934,11 @@ describe Puppet::Module do
     let(:notices) { logs.select { |log| log.level == :notice }.map { |log| log.message } }
 
     it 'can parse a strict range' do
-      expect(Puppet::Module.parse_range('>=1.0.0', true).include?(SemanticPuppet::Version.parse('1.0.1-rc1'))).to be_falsey
+      expect(Oregano::Module.parse_range('>=1.0.0', true).include?(SemanticOregano::Version.parse('1.0.1-rc1'))).to be_falsey
     end
 
     it 'can parse a non-strict range' do
-      expect(Puppet::Module.parse_range('>=1.0.0', false).include?(SemanticPuppet::Version.parse('1.0.1-rc1'))).to be_truthy
+      expect(Oregano::Module.parse_range('>=1.0.0', false).include?(SemanticOregano::Version.parse('1.0.1-rc1'))).to be_truthy
     end
 
     context 'using parse method with an arity of 1' do
@@ -946,47 +946,47 @@ describe Puppet::Module do
         begin
           example.run
         ensure
-          Puppet::Module.instance_variable_set(:@semver_gem_version, nil)
-          Puppet::Module.instance_variable_set(:@parse_range_method, nil)
+          Oregano::Module.instance_variable_set(:@semver_gem_version, nil)
+          Oregano::Module.instance_variable_set(:@parse_range_method, nil)
         end
       end
 
       it 'will notify when non-strict ranges cannot be parsed' do
-        Puppet::Module.instance_variable_set(:@semver_gem_version, SemanticPuppet::Version.parse('1.0.0'))
-        Puppet::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticPuppet::VersionRange.parse(str, true) })
+        Oregano::Module.instance_variable_set(:@semver_gem_version, SemanticOregano::Version.parse('1.0.0'))
+        Oregano::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticOregano::VersionRange.parse(str, true) })
 
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
-          expect(Puppet::Module.parse_range('>=1.0.0', false).include?(SemanticPuppet::Version.parse('1.0.1-rc1'))).to be_falsey
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
+          expect(Oregano::Module.parse_range('>=1.0.0', false).include?(SemanticOregano::Version.parse('1.0.1-rc1'))).to be_falsey
         end
-        expect(notices).to include(/VersionRanges will always be strict when using non-vendored SemanticPuppet gem, version 1\.0\.0/)
+        expect(notices).to include(/VersionRanges will always be strict when using non-vendored SemanticOregano gem, version 1\.0\.0/)
       end
 
       it 'will notify when strict ranges cannot be parsed' do
-        Puppet::Module.instance_variable_set(:@semver_gem_version, SemanticPuppet::Version.parse('0.1.4'))
-        Puppet::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticPuppet::VersionRange.parse(str, false) })
+        Oregano::Module.instance_variable_set(:@semver_gem_version, SemanticOregano::Version.parse('0.1.4'))
+        Oregano::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticOregano::VersionRange.parse(str, false) })
 
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
-          expect(Puppet::Module.parse_range('>=1.0.0', true).include?(SemanticPuppet::Version.parse('1.0.1-rc1'))).to be_truthy
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
+          expect(Oregano::Module.parse_range('>=1.0.0', true).include?(SemanticOregano::Version.parse('1.0.1-rc1'))).to be_truthy
         end
-        expect(notices).to include(/VersionRanges will never be strict when using non-vendored SemanticPuppet gem, version 0\.1\.4/)
+        expect(notices).to include(/VersionRanges will never be strict when using non-vendored SemanticOregano gem, version 0\.1\.4/)
       end
 
       it 'will not notify when strict ranges can be parsed' do
-        Puppet::Module.instance_variable_set(:@semver_gem_version, SemanticPuppet::Version.parse('1.0.0'))
-        Puppet::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticPuppet::VersionRange.parse(str, true) })
+        Oregano::Module.instance_variable_set(:@semver_gem_version, SemanticOregano::Version.parse('1.0.0'))
+        Oregano::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticOregano::VersionRange.parse(str, true) })
 
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
-          expect(Puppet::Module.parse_range('>=1.0.0', true).include?(SemanticPuppet::Version.parse('1.0.1-rc1'))).to be_falsey
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
+          expect(Oregano::Module.parse_range('>=1.0.0', true).include?(SemanticOregano::Version.parse('1.0.1-rc1'))).to be_falsey
         end
         expect(notices).to be_empty
       end
 
       it 'will not notify when non-strict ranges can be parsed' do
-        Puppet::Module.instance_variable_set(:@semver_gem_version, SemanticPuppet::Version.parse('0.1.4'))
-        Puppet::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticPuppet::VersionRange.parse(str, false) })
+        Oregano::Module.instance_variable_set(:@semver_gem_version, SemanticOregano::Version.parse('0.1.4'))
+        Oregano::Module.instance_variable_set(:@parse_range_method, Proc.new { |str| SemanticOregano::VersionRange.parse(str, false) })
 
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
-          expect(Puppet::Module.parse_range('>=1.0.0', false).include?(SemanticPuppet::Version.parse('1.0.1-rc1'))).to be_truthy
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
+          expect(Oregano::Module.parse_range('>=1.0.0', false).include?(SemanticOregano::Version.parse('1.0.1-rc1'))).to be_truthy
         end
         expect(notices).to be_empty
       end

@@ -10,18 +10,18 @@ agents.each do |agent|
 
   fail_test("No groups found") unless groups
 
-  step "query with puppet"
-  on(agent, puppet_resource('group')) do
+  step "query with oregano"
+  on(agent, oregano_resource('group')) do
     stdout.each_line do |line|
       name = ( line.match(/^group \{ '([^']+)'/) or next )[1]
 
       unless groups.delete(name)
-        fail_test "group #{name} found by puppet, not natively"
+        fail_test "group #{name} found by oregano, not natively"
       end
     end
   end
 
   if groups.length > 0 then
-    fail_test "#{groups.length} groups found natively, not puppet: #{groups.join(', ')}"
+    fail_test "#{groups.length} groups found natively, not oregano: #{groups.join(', ')}"
   end
 end

@@ -2,12 +2,12 @@
 require 'spec_helper'
 
 require 'tmpdir'
-require 'puppet/interface'
+require 'oregano/interface'
 
-describe Puppet::Interface::FaceCollection do
+describe Oregano::Interface::FaceCollection do
 
   # To prevent conflicts with other specs that use faces, we must save and restore global state.
-  # Because there are specs that do 'describe Puppet::Face[...]', we must restore the same objects otherwise
+  # Because there are specs that do 'describe Oregano::Face[...]', we must restore the same objects otherwise
   # the 'subject' of the specs will differ.
   before :all do
     # Save FaceCollection's global state
@@ -25,7 +25,7 @@ describe Puppet::Interface::FaceCollection do
     end
 
     # Save Autoload's global state
-    @loaded = Puppet::Util::Autoload.instance_variable_get(:@loaded).dup
+    @loaded = Oregano::Util::Autoload.instance_variable_get(:@loaded).dup
   end
 
   after :all do
@@ -34,20 +34,20 @@ describe Puppet::Interface::FaceCollection do
     described_class.instance_variable_set :@loaded, @faces_loaded
     $".delete_if { |path| path =~ /face\/.*\.rb$/ }
     @required.each { |path| $".push path unless $".include? path }
-    Puppet::Util::Autoload.instance_variable_set(:@loaded, @loaded)
+    Oregano::Util::Autoload.instance_variable_set(:@loaded, @loaded)
   end
 
   before :each do
     # Before each test, clear the faces
     subject.instance_variable_get(:@faces).clear
     subject.instance_variable_set(:@loaded, false)
-    Puppet::Util::Autoload.instance_variable_get(:@loaded).clear
+    Oregano::Util::Autoload.instance_variable_get(:@loaded).clear
     $".delete_if { |path| path =~ /face\/.*\.rb$/ }
   end
 
   describe "::[]" do
     before :each do
-      subject.instance_variable_get("@faces")[:foo][SemanticPuppet::Version.parse('0.0.1')] = 10
+      subject.instance_variable_get("@faces")[:foo][SemanticOregano::Version.parse('0.0.1')] = 10
     end
 
     it "should return the face with the given name" do
@@ -55,25 +55,25 @@ describe Puppet::Interface::FaceCollection do
     end
 
     it "should attempt to load the face if it isn't found" do
-      subject.expects(:require).once.with('puppet/face/bar')
-      subject.expects(:require).once.with('puppet/face/0.0.1/bar')
+      subject.expects(:require).once.with('oregano/face/bar')
+      subject.expects(:require).once.with('oregano/face/0.0.1/bar')
       subject["bar", '0.0.1']
     end
 
     it "should attempt to load the default face for the specified version :current" do
-      subject.expects(:require).with('puppet/face/fozzie')
+      subject.expects(:require).with('oregano/face/fozzie')
       subject['fozzie', :current]
     end
 
     it "should return true if the face specified is registered" do
-      subject.instance_variable_get("@faces")[:foo][SemanticPuppet::Version.parse('0.0.1')] = 10
+      subject.instance_variable_get("@faces")[:foo][SemanticOregano::Version.parse('0.0.1')] = 10
       expect(subject["foo", '0.0.1']).to eq(10)
     end
 
     it "should attempt to require the face if it is not registered" do
       subject.expects(:require).with do |file|
-        subject.instance_variable_get("@faces")[:bar][SemanticPuppet::Version.parse('0.0.1')] = true
-        file == 'puppet/face/bar'
+        subject.instance_variable_get("@faces")[:bar][SemanticOregano::Version.parse('0.0.1')] = true
+        file == 'oregano/face/bar'
       end
       expect(subject["bar", '0.0.1']).to be_truthy
     end
@@ -85,30 +85,30 @@ describe Puppet::Interface::FaceCollection do
 
     it "should return false if the face file itself is missing" do
       subject.stubs(:require).
-        raises(LoadError, 'no such file to load -- puppet/face/bar').then.
-        raises(LoadError, 'no such file to load -- puppet/face/0.0.1/bar')
+        raises(LoadError, 'no such file to load -- oregano/face/bar').then.
+        raises(LoadError, 'no such file to load -- oregano/face/0.0.1/bar')
       expect(subject["bar", '0.0.1']).to be_falsey
     end
 
     it "should register the version loaded by `:current` as `:current`" do
       subject.expects(:require).with do |file|
         subject.instance_variable_get("@faces")[:huzzah]['2.0.1'] = :huzzah_face
-        file == 'puppet/face/huzzah'
+        file == 'oregano/face/huzzah'
       end
       subject["huzzah", :current]
       expect(subject.instance_variable_get("@faces")[:huzzah][:current]).to eq(:huzzah_face)
     end
 
     context "with something on disk" do
-      it "should register the version loaded from `puppet/face/{name}` as `:current`" do
+      it "should register the version loaded from `oregano/face/{name}` as `:current`" do
         expect(subject["huzzah", '2.0.1']).to be
         expect(subject["huzzah", :current]).to be
-        expect(Puppet::Face[:huzzah, '2.0.1']).to eq(Puppet::Face[:huzzah, :current])
+        expect(Oregano::Face[:huzzah, '2.0.1']).to eq(Oregano::Face[:huzzah, :current])
       end
 
       it "should index :current when the code was pre-required" do
         expect(subject.instance_variable_get("@faces")[:huzzah]).not_to be_key :current
-        require 'puppet/face/huzzah'
+        require 'oregano/face/huzzah'
         expect(subject[:huzzah, :current]).to be_truthy
       end
     end
@@ -121,35 +121,35 @@ describe Puppet::Interface::FaceCollection do
 
   describe "::get_action_for_face" do
     it "should return an action on the current face" do
-      expect(Puppet::Face::FaceCollection.get_action_for_face(:huzzah, :bar, :current)).
-        to be_an_instance_of Puppet::Interface::Action
+      expect(Oregano::Face::FaceCollection.get_action_for_face(:huzzah, :bar, :current)).
+        to be_an_instance_of Oregano::Interface::Action
     end
 
     it "should return an action on an older version of a face" do
-      action = Puppet::Face::FaceCollection.
+      action = Oregano::Face::FaceCollection.
         get_action_for_face(:huzzah, :obsolete, :current)
 
-      expect(action).to be_an_instance_of Puppet::Interface::Action
-      expect(action.face.version).to eq(SemanticPuppet::Version.parse('1.0.0'))
+      expect(action).to be_an_instance_of Oregano::Interface::Action
+      expect(action.face.version).to eq(SemanticOregano::Version.parse('1.0.0'))
     end
 
     it "should load the full older version of a face" do
-      action = Puppet::Face::FaceCollection.
+      action = Oregano::Face::FaceCollection.
         get_action_for_face(:huzzah, :obsolete, :current)
 
-      expect(action.face.version).to eq(SemanticPuppet::Version.parse('1.0.0'))
+      expect(action.face.version).to eq(SemanticOregano::Version.parse('1.0.0'))
       expect(action.face).to be_action :obsolete_in_core
     end
 
     it "should not add obsolete actions to the current version" do
-      action = Puppet::Face::FaceCollection.
+      action = Oregano::Face::FaceCollection.
         get_action_for_face(:huzzah, :obsolete, :current)
 
-      expect(action.face.version).to eq(SemanticPuppet::Version.parse('1.0.0'))
+      expect(action.face.version).to eq(SemanticOregano::Version.parse('1.0.0'))
       expect(action.face).to be_action :obsolete_in_core
 
-      current = Puppet::Face[:huzzah, :current]
-      expect(current.version).to eq(SemanticPuppet::Version.parse('2.0.1'))
+      current = Oregano::Face[:huzzah, :current]
+      expect(current.version).to eq(SemanticOregano::Version.parse('2.0.1'))
       expect(current).not_to be_action :obsolete_in_core
       expect(current).not_to be_action :obsolete
     end
@@ -157,7 +157,7 @@ describe Puppet::Interface::FaceCollection do
 
   describe "::register" do
     it "should store the face by name" do
-      face = Puppet::Face.new(:my_face, '0.0.1')
+      face = Oregano::Face.new(:my_face, '0.0.1')
       subject.register(face)
       expect(subject.instance_variable_get("@faces")).to eq({
         :my_face => { face.version => face }
@@ -195,11 +195,11 @@ describe Puppet::Interface::FaceCollection do
 
   context "faulty faces" do
     before :each do
-      $:.unshift "#{PuppetSpec::FIXTURE_DIR}/faulty_face"
+      $:.unshift "#{OreganoSpec::FIXTURE_DIR}/faulty_face"
     end
 
     after :each do
-      $:.delete_if {|x| x == "#{PuppetSpec::FIXTURE_DIR}/faulty_face"}
+      $:.delete_if {|x| x == "#{OreganoSpec::FIXTURE_DIR}/faulty_face"}
     end
 
     it "should not die if a face has a syntax error" do

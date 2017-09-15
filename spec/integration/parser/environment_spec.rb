@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "A parser environment setting" do
 
-  let(:confdir) { Puppet[:confdir] }
+  let(:confdir) { Oregano[:confdir] }
   let(:environmentpath) { File.expand_path("envdir", confdir) }
   let(:testingdir) { File.join(environmentpath, "testing") }
 
@@ -21,7 +21,7 @@ describe "A parser environment setting" do
       ENVCONF
     end
 
-    File.open(File.join(confdir, "puppet.conf"), "w") do |f|
+    File.open(File.join(confdir, "oregano.conf"), "w") do |f|
       f.puts(<<-EOF)
           environmentpath=#{environmentpath}
           parser='current'
@@ -36,12 +36,12 @@ describe "A parser environment setting" do
   end
 
   def a_catalog_compiled_for_environment(envname)
-    Puppet.initialize_settings
-    expect(Puppet[:environmentpath]).to eq(environmentpath)
-    node = Puppet::Node.new('testnode', :environment => 'testing')
-    expect(node.environment).to eq(Puppet.lookup(:environments).get('testing'))
-    Puppet.override(:current_environment => Puppet.lookup(:environments).get('testing')) do
-      Puppet::Parser::Compiler.compile(node)
+    Oregano.initialize_settings
+    expect(Oregano[:environmentpath]).to eq(environmentpath)
+    node = Oregano::Node.new('testnode', :environment => 'testing')
+    expect(node.environment).to eq(Oregano.lookup(:environments).get('testing'))
+    Oregano.override(:current_environment => Oregano.lookup(:environments).get('testing')) do
+      Oregano::Parser::Compiler.compile(node)
     end
   end
 end

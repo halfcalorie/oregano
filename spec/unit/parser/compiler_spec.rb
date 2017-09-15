@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 class CompilerTestResource
@@ -55,15 +55,15 @@ class CompilerTestResource
   end
 end
 
-describe Puppet::Parser::Compiler do
-  include PuppetSpec::Files
+describe Oregano::Parser::Compiler do
+  include OreganoSpec::Files
   include Matchers::Resource
 
   def resource(type, title)
-    Puppet::Parser::Resource.new(type, title, :scope => @scope)
+    Oregano::Parser::Resource.new(type, title, :scope => @scope)
   end
 
-  let(:environment) { Puppet::Node::Environment.create(:testing, []) }
+  let(:environment) { Oregano::Node::Environment.create(:testing, []) }
 
   before :each do
     # Push me faster, I wanna go back in time!  (Specifically, freeze time
@@ -73,19 +73,19 @@ describe Puppet::Parser::Compiler do
     now = Time.now
     Time.stubs(:now).returns(now)
 
-    @node = Puppet::Node.new("testnode",
-                             :facts => Puppet::Node::Facts.new("facts", {}),
+    @node = Oregano::Node.new("testnode",
+                             :facts => Oregano::Node::Facts.new("facts", {}),
                              :environment => environment)
     @known_resource_types = environment.known_resource_types
-    @compiler = Puppet::Parser::Compiler.new(@node)
-    @scope = Puppet::Parser::Scope.new(@compiler, :source => stub('source'))
-    @scope_resource = Puppet::Parser::Resource.new(:file, "/my/file", :scope => @scope)
+    @compiler = Oregano::Parser::Compiler.new(@node)
+    @scope = Oregano::Parser::Scope.new(@compiler, :source => stub('source'))
+    @scope_resource = Oregano::Parser::Resource.new(:file, "/my/file", :scope => @scope)
     @scope.resource = @scope_resource
   end
 
   it "should fail intelligently when a class-level compile fails" do
-    Puppet::Parser::Compiler.expects(:new).raises ArgumentError
-    expect { Puppet::Parser::Compiler.compile(@node) }.to raise_error(Puppet::Error)
+    Oregano::Parser::Compiler.expects(:new).raises ArgumentError
+    expect { Oregano::Parser::Compiler.compile(@node) }.to raise_error(Oregano::Error)
   end
 
   it "should use the node's environment as its environment" do
@@ -93,10 +93,10 @@ describe Puppet::Parser::Compiler do
   end
 
   it "fails if the node's environment has validation errors" do
-    conflicted_environment = Puppet::Node::Environment.create(:testing, [], '/some/environment.conf/manifest.pp')
+    conflicted_environment = Oregano::Node::Environment.create(:testing, [], '/some/environment.conf/manifest.pp')
     conflicted_environment.stubs(:validation_errors).returns(['bad environment'])
     @node.environment = conflicted_environment
-    expect { Puppet::Parser::Compiler.compile(@node) }.to raise_error(Puppet::Error, /Compilation has been halted because.*bad environment/)
+    expect { Oregano::Parser::Compiler.compile(@node) }.to raise_error(Oregano::Error, /Compilation has been halted because.*bad environment/)
   end
 
   it "should be able to return a class list containing all added classes" do
@@ -111,12 +111,12 @@ describe Puppet::Parser::Compiler do
 
     it 'should not create the settings class more than once' do
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
-        Puppet[:code] = 'undef'
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
+        Oregano[:code] = 'undef'
         @compiler.compile
 
-        @compiler = Puppet::Parser::Compiler.new(@node)
-        Puppet[:code] = 'undef'
+        @compiler = Oregano::Parser::Compiler.new(@node)
+        Oregano[:code] = 'undef'
         @compiler.compile
       end
       warnings = logs.select { |log| log.level == :warning }.map { |log| log.message }
@@ -136,71 +136,71 @@ describe Puppet::Parser::Compiler do
     end
 
     it "should copy any node classes into the class list" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.classes = %w{foo bar}
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
 
       expect(compiler.classlist).to match_array(['foo', 'bar'])
     end
 
     it "should transform node class hashes into a class list" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.classes = {'foo'=>{'one'=>'p1'}, 'bar'=>{'two'=>'p2'}}
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
 
       expect(compiler.classlist).to match_array(['foo', 'bar'])
     end
 
     it "should return a catalog with the specified code_id" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       code_id = 'b59e5df0578ef411f773ee6c33d8073c50e7b8fe'
-      compiler = Puppet::Parser::Compiler.new(node, :code_id => code_id)
+      compiler = Oregano::Parser::Compiler.new(node, :code_id => code_id)
 
       expect(compiler.catalog.code_id).to eq(code_id)
     end
 
     it "should add a 'main' stage to the catalog" do
-      expect(@compiler.catalog.resource(:stage, :main)).to be_instance_of(Puppet::Parser::Resource)
+      expect(@compiler.catalog.resource(:stage, :main)).to be_instance_of(Oregano::Parser::Resource)
     end
   end
 
   describe "sanitize_node" do
     it "should delete trusted from parameters" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.parameters['trusted'] =  { :a => 42 }
       node.parameters['preserve_me'] = 'other stuff'
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
       sanitized = compiler.node
       expect(sanitized.parameters['trusted']).to eq(nil)
       expect(sanitized.parameters['preserve_me']).to eq('other stuff')
     end
 
     it "should not report trusted_data if trusted is false" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.parameters['trusted'] = false
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
       sanitized = compiler.node
       expect(sanitized.trusted_data).to_not eq(false)
     end
 
     it "should not report trusted_data if trusted is not a hash" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.parameters['trusted'] = 'not a hash'
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
       sanitized = compiler.node
       expect(sanitized.trusted_data).to_not eq('not a hash')
     end
 
     it "should not report trusted_data if trusted hash doesn't include known keys" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.parameters['trusted'] = { :a => 42 }
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
       sanitized = compiler.node
       expect(sanitized.trusted_data).to_not eq({ :a => 42 })
     end
 
     it "should prefer trusted_data in the node above other plausible sources" do
-      node = Puppet::Node.new("mynode")
+      node = Oregano::Node.new("mynode")
       node.trusted_data = { 'authenticated' => true,
                            'certname'      => 'the real deal',
                            'extensions'    => 'things' }
@@ -209,7 +209,7 @@ describe Puppet::Parser::Compiler do
                                      'certname'      => 'not me',
                                      'extensions'    => 'things' }
 
-      compiler = Puppet::Parser::Compiler.new(node)
+      compiler = Oregano::Parser::Compiler.new(node)
       sanitized = compiler.node
       expect(sanitized.trusted_data).to eq({ 'authenticated' => true,
                                              'certname'      => 'the real deal',
@@ -220,11 +220,11 @@ describe Puppet::Parser::Compiler do
   describe "when managing scopes" do
 
     it "should create a top scope" do
-      expect(@compiler.topscope).to be_instance_of(Puppet::Parser::Scope)
+      expect(@compiler.topscope).to be_instance_of(Oregano::Parser::Scope)
     end
 
     it "should be able to create new scopes" do
-      expect(@compiler.newscope(@compiler.topscope)).to be_instance_of(Puppet::Parser::Scope)
+      expect(@compiler.newscope(@compiler.topscope)).to be_instance_of(Oregano::Parser::Scope)
     end
 
     it "should set the parent scope of the new scope to be the passed-in parent" do
@@ -290,8 +290,8 @@ describe Puppet::Parser::Compiler do
 
     it "should evaluate the main class if it exists" do
       compile_stub(:evaluate_main)
-      main_class = @known_resource_types.add Puppet::Resource::Type.new(:hostclass, "")
-      main_class.expects(:evaluate_code).with { |r| r.is_a?(Puppet::Parser::Resource) }
+      main_class = @known_resource_types.add Oregano::Resource::Type.new(:hostclass, "")
+      main_class.expects(:evaluate_code).with { |r| r.is_a?(Oregano::Parser::Resource) }
       @compiler.topscope.expects(:source=).with(main_class)
 
       @compiler.compile
@@ -300,13 +300,13 @@ describe Puppet::Parser::Compiler do
     it "should create a new, empty 'main' if no main class exists" do
       compile_stub(:evaluate_main)
       @compiler.compile
-      expect(@known_resource_types.find_hostclass("")).to be_instance_of(Puppet::Resource::Type)
+      expect(@known_resource_types.find_hostclass("")).to be_instance_of(Oregano::Resource::Type)
     end
 
     it "should add an edge between the main stage and main class" do
       @compiler.compile
-      expect(stage = @compiler.catalog.resource(:stage, "main")).to be_instance_of(Puppet::Parser::Resource)
-      expect(klass = @compiler.catalog.resource(:class, "")).to be_instance_of(Puppet::Parser::Resource)
+      expect(stage = @compiler.catalog.resource(:stage, "main")).to be_instance_of(Oregano::Parser::Resource)
+      expect(klass = @compiler.catalog.resource(:class, "")).to be_instance_of(Oregano::Parser::Resource)
 
       expect(@compiler.catalog.edge?(stage, klass)).to be_truthy
     end
@@ -376,7 +376,7 @@ describe Puppet::Parser::Compiler do
       end
 
       def add_resource(name, parent = nil)
-        resource = Puppet::Parser::Resource.new "file", name, :scope => @scope
+        resource = Oregano::Parser::Resource.new "file", name, :scope => @scope
         @compiler.add_resource(@scope, resource)
         @catalog.add_edge(parent, resource) if parent
         resource
@@ -384,7 +384,7 @@ describe Puppet::Parser::Compiler do
 
       it "should call finish() on all resources" do
         # Add a resource that does respond to :finish
-        resource = Puppet::Parser::Resource.new "file", "finish", :scope => @scope
+        resource = Oregano::Parser::Resource.new "file", "finish", :scope => @scope
         resource.expects(:finish)
 
         @compiler.add_resource(@scope, resource)
@@ -490,7 +490,7 @@ describe Puppet::Parser::Compiler do
       file2 = resource(:file, path)
 
       @compiler.add_resource(@scope, file1)
-      expect { @compiler.add_resource(@scope, file2) }.to raise_error(Puppet::Resource::Catalog::DuplicateResourceError)
+      expect { @compiler.add_resource(@scope, file2) }.to raise_error(Oregano::Resource::Catalog::DuplicateResourceError)
     end
 
     it "should add an edge from the scope resource to the added resource" do
@@ -583,7 +583,7 @@ describe Puppet::Parser::Compiler do
 
       @compiler.add_collection(coll)
 
-      expect { @compiler.compile }.to raise_error(Puppet::ParseError, 'Failed to realize virtual resources something')
+      expect { @compiler.compile }.to raise_error(Oregano::ParseError, 'Failed to realize virtual resources something')
     end
 
     it "should fail when there are unevaluated resource collections that refer to multiple specific resources" do
@@ -592,7 +592,7 @@ describe Puppet::Parser::Compiler do
 
       @compiler.add_collection(coll)
 
-      expect { @compiler.compile }.to raise_error(Puppet::ParseError, 'Failed to realize virtual resources one, two')
+      expect { @compiler.compile }.to raise_error(Oregano::ParseError, 'Failed to realize virtual resources one, two')
     end
   end
 
@@ -609,32 +609,32 @@ describe Puppet::Parser::Compiler do
 
     it "should fail if there's no source listed for the scope" do
       scope = stub 'scope', :source => nil
-      expect { @compiler.evaluate_classes(%w{one two}, scope) }.to raise_error(Puppet::DevError)
+      expect { @compiler.evaluate_classes(%w{one two}, scope) }.to raise_error(Oregano::DevError)
     end
 
     it "should raise an error if a class is not found" do
       @scope.environment.known_resource_types.expects(:find_hostclass).with("notfound").returns(nil)
-      expect{ @compiler.evaluate_classes(%w{notfound}, @scope) }.to raise_error(Puppet::Error, /Could not find class/)
+      expect{ @compiler.evaluate_classes(%w{notfound}, @scope) }.to raise_error(Oregano::Error, /Could not find class/)
     end
 
     it "should raise an error when it can't find class" do
       klasses = {'foo'=>nil}
       @node.classes = klasses
-      expect{ @compiler.compile }.to raise_error(Puppet::Error, /Could not find class foo for testnode/)
+      expect{ @compiler.compile }.to raise_error(Oregano::Error, /Could not find class foo for testnode/)
     end
   end
 
   describe "when evaluating found classes" do
 
     before do
-      Puppet.settings[:data_binding_terminus] = "none"
-      @class = @known_resource_types.add Puppet::Resource::Type.new(:hostclass, "myclass")
+      Oregano.settings[:data_binding_terminus] = "none"
+      @class = @known_resource_types.add Oregano::Resource::Type.new(:hostclass, "myclass")
       @resource = stub 'resource', :ref => "Class[myclass]", :type => "file"
     end
 
     around do |example|
-      Puppet.override(
-        :environments => Puppet::Environments::Static.new(environment),
+      Oregano.override(
+        :environments => Oregano::Environments::Static.new(environment),
         :description => "Static loader for specs"
       ) do
         example.run
@@ -653,13 +653,13 @@ describe Puppet::Parser::Compiler do
     describe "and the classes are specified as a hash with parameters" do
       before do
         @node.classes = {}
-        @ast_obj = Puppet::Parser::AST::Leaf.new(:value => 'foo')
+        @ast_obj = Oregano::Parser::AST::Leaf.new(:value => 'foo')
       end
 
       # Define the given class with default parameters
       def define_class(name, parameters)
         @node.classes[name] = parameters
-        klass = Puppet::Resource::Type.new(:hostclass, name, :arguments => {'p1' => @ast_obj, 'p2' => @ast_obj})
+        klass = Oregano::Resource::Type.new(:hostclass, name, :arguments => {'p1' => @ast_obj, 'p2' => @ast_obj})
         @compiler.environment.known_resource_types.add klass
       end
 
@@ -696,37 +696,37 @@ describe Puppet::Parser::Compiler do
       it "should ensure each node class is in catalog and has appropriate tags" do
         klasses = ['bar::foo']
         @node.classes = klasses
-        ast_obj = Puppet::Parser::AST::Leaf.new(:value => 'foo')
+        ast_obj = Oregano::Parser::AST::Leaf.new(:value => 'foo')
         klasses.each do |name|
-          klass = Puppet::Resource::Type.new(:hostclass, name, :arguments => {'p1' => ast_obj, 'p2' => ast_obj})
+          klass = Oregano::Resource::Type.new(:hostclass, name, :arguments => {'p1' => ast_obj, 'p2' => ast_obj})
           @compiler.environment.known_resource_types.add klass
         end
         catalog = @compiler.compile
 
         r2 = catalog.resources.detect {|r| r.title == 'Bar::Foo' }
-        expect(r2.tags).to eq(Puppet::Util::TagSet.new(['bar::foo', 'class', 'bar', 'foo']))
+        expect(r2.tags).to eq(Oregano::Util::TagSet.new(['bar::foo', 'class', 'bar', 'foo']))
       end
     end
 
     it "should fail if required parameters are missing" do
       klass = {'foo'=>{'a'=>'one'}}
       @node.classes = klass
-      klass = Puppet::Resource::Type.new(:hostclass, 'foo', :arguments => {'a' => nil, 'b' => nil})
+      klass = Oregano::Resource::Type.new(:hostclass, 'foo', :arguments => {'a' => nil, 'b' => nil})
       @compiler.environment.known_resource_types.add klass
-      expect { @compiler.compile }.to raise_error(Puppet::PreformattedError, /Class\[Foo\]: expects a value for parameter 'b'/)
+      expect { @compiler.compile }.to raise_error(Oregano::PreformattedError, /Class\[Foo\]: expects a value for parameter 'b'/)
     end
 
     it "should fail if invalid parameters are passed" do
       klass = {'foo'=>{'3'=>'one'}}
       @node.classes = klass
-      klass = Puppet::Resource::Type.new(:hostclass, 'foo', :arguments => {})
+      klass = Oregano::Resource::Type.new(:hostclass, 'foo', :arguments => {})
       @compiler.environment.known_resource_types.add klass
-      expect { @compiler.compile }.to raise_error(Puppet::PreformattedError, /Class\[Foo\]: has no parameter named '3'/)
+      expect { @compiler.compile }.to raise_error(Oregano::PreformattedError, /Class\[Foo\]: has no parameter named '3'/)
     end
 
     it "should ensure class is in catalog without params" do
       @node.classes = klasses = {'foo'=>nil}
-      foo = Puppet::Resource::Type.new(:hostclass, 'foo')
+      foo = Oregano::Resource::Type.new(:hostclass, 'foo')
       @compiler.environment.known_resource_types.add foo
       catalog = @compiler.compile
       expect(catalog.classes).to include 'foo'
@@ -762,7 +762,7 @@ describe Puppet::Parser::Compiler do
 
       @resource.expects(:evaluate).never
 
-      Puppet::Parser::Resource.expects(:new).never
+      Oregano::Parser::Resource.expects(:new).never
       @compiler.evaluate_classes(%w{myclass}, @scope, false)
     end
 
@@ -772,7 +772,7 @@ describe Puppet::Parser::Compiler do
       @scope.stubs(:class_scope).with(@class).returns(@scope)
       @compiler.expects(:add_resource).never
       @resource.expects(:evaluate).never
-      Puppet::Parser::Resource.expects(:new).never
+      Oregano::Parser::Resource.expects(:new).never
       @compiler.evaluate_classes(%w{MyClass}, @scope, false)
     end
   end
@@ -781,7 +781,7 @@ describe Puppet::Parser::Compiler do
 
     it "should do nothing" do
       @compiler.environment.known_resource_types.stubs(:nodes).returns(false)
-      Puppet::Parser::Resource.expects(:new).never
+      Oregano::Parser::Resource.expects(:new).never
 
       @compiler.send(:evaluate_ast_node)
     end
@@ -803,7 +803,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it "should fail if the named node cannot be found" do
-      expect { @compiler.send(:evaluate_ast_node) }.to raise_error(Puppet::ParseError)
+      expect { @compiler.send(:evaluate_ast_node) }.to raise_error(Oregano::ParseError)
     end
 
     it "should evaluate the first node class matching the node name" do
@@ -840,11 +840,11 @@ describe Puppet::Parser::Compiler do
   end
 
   describe 'when using meta parameters to form relationships' do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
     [:before, :subscribe, :notify, :require].each do | meta_p |
       it "an entry consisting of nested empty arrays is flattened for parameter #{meta_p}" do
           expect {
-          node = Puppet::Node.new('someone')
+          node = Oregano::Node.new('someone')
           manifest = <<-"MANIFEST"
             notify{hello_kitty: message => meow, #{meta_p} => [[],[]]}
             notify{hello_kitty2: message => meow, #{meta_p} => [[],[[]],[]]}
@@ -858,10 +858,10 @@ describe Puppet::Parser::Compiler do
   end
 
   describe "when evaluating node classes" do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
     describe "when provided classes in array format" do
-      let(:node) { Puppet::Node.new('someone', :classes => ['something']) }
+      let(:node) { Oregano::Node.new('someone', :classes => ['something']) }
 
       describe "when the class exists" do
         it "should succeed if the class is already included" do
@@ -885,13 +885,13 @@ describe Puppet::Parser::Compiler do
       end
 
       it "should fail if the class doesn't exist" do
-        expect { compile_to_catalog('', node) }.to raise_error(Puppet::Error, /Could not find class something/)
+        expect { compile_to_catalog('', node) }.to raise_error(Oregano::Error, /Could not find class something/)
       end
     end
 
     describe "when provided classes in hash format" do
       describe "for classes without parameters" do
-        let(:node) { Puppet::Node.new('someone', :classes => {'something' => {}}) }
+        let(:node) { Oregano::Node.new('someone', :classes => {'something' => {}}) }
 
         describe "when the class exists" do
           it "should succeed if the class is already included" do
@@ -917,12 +917,12 @@ describe Puppet::Parser::Compiler do
         end
 
         it "should fail if the class doesn't exist" do
-          expect { compile_to_catalog('', node) }.to raise_error(Puppet::Error, /Could not find class something/)
+          expect { compile_to_catalog('', node) }.to raise_error(Oregano::Error, /Could not find class something/)
         end
       end
 
       describe "for classes with parameters" do
-        let(:node) { Puppet::Node.new('someone', :classes => {'something' => {'configuron' => 'defrabulated'}}) }
+        let(:node) { Oregano::Node.new('someone', :classes => {'something' => {'configuron' => 'defrabulated'}}) }
 
         describe "when the class exists" do
           it "should fail if the class is already included" do
@@ -931,7 +931,7 @@ describe Puppet::Parser::Compiler do
             include something
             MANIFEST
 
-            expect { compile_to_catalog(manifest, node) }.to raise_error(Puppet::Error, /Class\[Something\] is already declared/)
+            expect { compile_to_catalog(manifest, node) }.to raise_error(Oregano::Error, /Class\[Something\] is already declared/)
           end
 
           it "should evaluate the class if it's not already included" do
@@ -947,11 +947,11 @@ describe Puppet::Parser::Compiler do
         end
 
         it "should fail if the class doesn't exist" do
-          expect { compile_to_catalog('', node) }.to raise_error(Puppet::Error, /Could not find class something/)
+          expect { compile_to_catalog('', node) }.to raise_error(Oregano::Error, /Could not find class something/)
         end
 
         it 'evaluates classes declared with parameters before unparameterized classes' do
-          node = Puppet::Node.new('someone', :classes => { 'app::web' => {}, 'app' => { 'port' => 8080 } })
+          node = Oregano::Node.new('someone', :classes => { 'app::web' => {}, 'app' => { 'port' => 8080 } })
           manifest = <<-MANIFEST
           class app($port = 80) { }
 
@@ -1006,7 +1006,7 @@ describe Puppet::Parser::Compiler do
     it "should fail if the compile is finished and resource overrides have not been applied" do
       @compiler.add_override(@override)
 
-      expect { @compiler.compile }.to raise_error Puppet::ParseError, 'Could not find resource(s) File[/foo] for overriding'
+      expect { @compiler.compile }.to raise_error Oregano::ParseError, 'Could not find resource(s) File[/foo] for overriding'
     end
   end
 end

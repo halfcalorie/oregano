@@ -1,7 +1,7 @@
 require 'securerandom'
-require 'puppet/acceptance/temp_file_utils'
+require 'oregano/acceptance/temp_file_utils'
 require 'yaml'
-extend Puppet::Acceptance::TempFileUtils
+extend Oregano::Acceptance::TempFileUtils
 
 test_name "ticket #16753 node data should be cached in yaml to allow it to be queried"
 
@@ -18,19 +18,19 @@ temp_dirs = initialize_temp_dirs
 temp_yamldir = File.join(temp_dirs[master.name], "yamldir")
 
 on master, "mkdir -p #{temp_yamldir}"
-user = puppet_user master
-group = puppet_group master
+user = oregano_user master
+group = oregano_group master
 on master, "chown #{user}:#{group} #{temp_yamldir}"
 
-if @options[:is_puppetserver]
+if @options[:is_oreganoserver]
   step "Prepare for custom tk-auth rules" do
-    on master, 'cp /etc/puppetlabs/puppetserver/conf.d/auth.conf /etc/puppetlabs/puppetserver/conf.d/auth.bak'
-    modify_tk_config(master, options['puppetserver-config'], {'jruby-puppet' => {'use-legacy-auth-conf' => false}})
+    on master, 'cp /etc/oreganolabs/oreganoserver/conf.d/auth.conf /etc/oreganolabs/oreganoserver/conf.d/auth.bak'
+    modify_tk_config(master, options['oreganoserver-config'], {'jruby-oregano' => {'use-legacy-auth-conf' => false}})
   end
 
   teardown do
-    modify_tk_config(master, options['puppetserver-config'], {'jruby-puppet' => {'use-legacy-auth-conf' => true}})
-    on master, 'cp /etc/puppetlabs/puppetserver/conf.d/auth.bak /etc/puppetlabs/puppetserver/conf.d/auth.conf'
+    modify_tk_config(master, options['oreganoserver-config'], {'jruby-oregano' => {'use-legacy-auth-conf' => true}})
+    on master, 'cp /etc/oreganolabs/oreganoserver/conf.d/auth.bak /etc/oreganolabs/oreganoserver/conf.d/auth.conf'
   end
 
   step "Setup tk-auth rules" do
@@ -40,42 +40,42 @@ authorization: {
     rules: [
         {
             match-request: {
-                path: "/puppet/v3/file"
+                path: "/oregano/v3/file"
                 type: path
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs file"
+            name: "oreganolabs file"
         },
         {
             match-request: {
-                path: "/puppet/v3/catalog/#{node_name}"
+                path: "/oregano/v3/catalog/#{node_name}"
                 type: path
                 method: [get, post]
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs catalog"
+            name: "oreganolabs catalog"
         },
         {
             match-request: {
-                path: "/puppet/v3/node/#{node_name}"
+                path: "/oregano/v3/node/#{node_name}"
                 type: path
                 method: get
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs node"
+            name: "oreganolabs node"
         },
         {
             match-request: {
-                path: "/puppet/v3/report/#{node_name}"
+                path: "/oregano/v3/report/#{node_name}"
                 type: path
                 method: put
             }
             allow: "*"
             sort-order: 500
-            name: "puppetlabs report"
+            name: "oreganolabs report"
         },
         {
           match-request: {
@@ -84,14 +84,14 @@ authorization: {
           }
           deny: "*"
           sort-order: 999
-          name: "puppetlabs deny all"
+          name: "oreganolabs deny all"
         }
     ]
 }
     TK_AUTH
 
     apply_manifest_on(master, <<-MANIFEST, :catch_failures => true)
-      file { '/etc/puppetlabs/puppetserver/conf.d/auth.conf':
+      file { '/etc/oreganolabs/oreganoserver/conf.d/auth.conf':
         ensure => file,
         mode => '0644',
         content => '#{tk_auth}',
@@ -101,15 +101,15 @@ authorization: {
 else
   step "setup legacy auth.conf rules" do
     auth_contents = <<-AUTHCONF
-path /puppet/v3/catalog/#{node_name}
+path /oregano/v3/catalog/#{node_name}
 auth yes
 allow *
 
-path /puppet/v3/node/#{node_name}
+path /oregano/v3/node/#{node_name}
 auth yes
 allow *
 
-path /puppet/v3/report/#{node_name}
+path /oregano/v3/report/#{node_name}
 auth yes
 allow *
     AUTHCONF
@@ -128,13 +128,13 @@ master_opts = {
   }
 }
 
-with_puppet_running_on master, master_opts do
+with_oregano_running_on master, master_opts do
 
   # only one agent is needed because we only care about the file written on the master
   run_agent_on(agents[0], "--no-daemonize --verbose --onetime --node_name_value #{node_name} --server #{master}")
 
-  yamldir = on(master, puppet('master', '--configprint', 'yamldir')).stdout.chomp
-  on master, puppet('node', 'search', '"*"', '--node_terminus', 'yaml', '--clientyamldir', yamldir, '--render-as', 'json') do
+  yamldir = on(master, oregano('master', '--configprint', 'yamldir')).stdout.chomp
+  on master, oregano('node', 'search', '"*"', '--node_terminus', 'yaml', '--clientyamldir', yamldir, '--render-as', 'json') do
     assert_match(/"name":["\s]*#{node_name}/, stdout,
                  "Expect node name '#{node_name}' to be present in node yaml content written by the WriteOnlyYaml terminus")
   end

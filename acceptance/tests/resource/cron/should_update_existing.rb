@@ -1,4 +1,4 @@
-test_name "puppet should update existing crontab entry"
+test_name "oregano should update existing crontab entry"
 confine :except, :platform => 'windows'
 confine :except, :platform => /^eos-/ # See PUP-5500
 tag 'audit:medium',
@@ -7,8 +7,8 @@ tag 'audit:medium',
                        # actual changing of resources could irreparably damage a
                        # host running this, or require special permissions.
 
-require 'puppet/acceptance/common_utils'
-extend Puppet::Acceptance::CronUtils
+require 'oregano/acceptance/common_utils'
+extend Oregano::Acceptance::CronUtils
 
 teardown do
   step "Cron: cleanup"
@@ -18,7 +18,7 @@ teardown do
 end
 
 agents.each do |host|
-  step "ensure the user exist via puppet"
+  step "ensure the user exist via oregano"
   setup host
 
   step "create the existing job by hand..."
@@ -30,7 +30,7 @@ agents.each do |host|
   end
 
   step "apply the resource change on the host"
-  on(host, puppet_resource("cron", "crontest", "user=tstuser", "command=/bin/true", "ensure=present", "hour='0-6'")) do
+  on(host, oregano_resource("cron", "crontest", "user=tstuser", "command=/bin/true", "ensure=present", "hour='0-6'")) do
     assert_match(/hour\s+=>\s+\['0-6'\]/, stdout, "Modifying cron entry failed for tstuser on #{host}")
   end
 

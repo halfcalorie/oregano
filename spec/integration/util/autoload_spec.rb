@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/util/autoload'
+require 'oregano/util/autoload'
 require 'fileutils'
 
 class AutoloadIntegrator
@@ -19,10 +19,10 @@ class AutoloadIntegrator
   end
 end
 
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-describe Puppet::Util::Autoload do
-  include PuppetSpec::Files
+describe Oregano::Util::Autoload do
+  include OreganoSpec::Files
 
   def with_file(name, *path)
     path = File.join(*path)
@@ -40,7 +40,7 @@ describe Puppet::Util::Autoload do
     Dir.mkdir(dir)
     rbdir = File.join(dir, path.to_s)
     Dir.mkdir(rbdir)
-    loader = Puppet::Util::Autoload.new(name, path)
+    loader = Oregano::Util::Autoload.new(name, path)
     yield rbdir, loader
     Dir.rmdir(rbdir)
     Dir.rmdir(dir)
@@ -49,7 +49,7 @@ describe Puppet::Util::Autoload do
   end
 
   it "should not fail when asked to load a missing file" do
-    expect(Puppet::Util::Autoload.new("foo", "bar").load(:eh)).to be_falsey
+    expect(Oregano::Util::Autoload.new("foo", "bar").load(:eh)).to be_falsey
   end
 
   it "should load and return true when it successfully loads a file" do
@@ -82,7 +82,7 @@ describe Puppet::Util::Autoload do
 
   it "should be able to load files directly from modules" do
     ## modulepath can't be used until after app settings are initialized, so we need to simulate that:
-    Puppet.settings.expects(:app_defaults_initialized?).returns(true).at_least_once
+    Oregano.settings.expects(:app_defaults_initialized?).returns(true).at_least_once
 
     modulepath = tmpfile("autoload_module_testing")
     libdir = File.join(modulepath, "mymod", "lib", "foo")
@@ -90,7 +90,7 @@ describe Puppet::Util::Autoload do
 
     file = File.join(libdir, "plugin.rb")
 
-    Puppet.override(:environments => Puppet::Environments::Static.new(Puppet::Node::Environment.create(:production, [modulepath]))) do
+    Oregano.override(:environments => Oregano::Environments::Static.new(Oregano::Node::Environment.create(:production, [modulepath]))) do
       with_loader("foo", "foo") do |dir, loader|
         with_file(:plugin, file.split("/")) do
           loader.load(:plugin)

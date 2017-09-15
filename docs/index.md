@@ -1,4 +1,4 @@
-# Puppet Developer Documentation
+# Oregano Developer Documentation
 
 Setting up and running tests
 

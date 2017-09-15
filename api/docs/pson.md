@@ -1,12 +1,12 @@
 PSON
 =============
 
-PSON is a variant of [JSON](http://json.org) that puppet uses for serializing
+PSON is a variant of [JSON](http://json.org) that oregano uses for serializing
 data to transmit across the network or store on disk. Whereas JSON requires
 that the serialized form is valid unicode (usually UTF-8), PSON is 8-bit ASCII,
 which allows it to represent arbitrary byte sequences in strings.
 
-Puppet uses the MIME types "pson" and "text/pson" to refer to PSON.
+Oregano uses the MIME types "pson" and "text/pson" to refer to PSON.
 
 Differences from JSON
 ---------------------

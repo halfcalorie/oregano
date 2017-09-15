@@ -1,9 +1,9 @@
 require 'spec_helper'
 require 'stringio'
 
-require 'puppet/settings/ini_file'
+require 'oregano/settings/ini_file'
 
-describe Puppet::Settings::IniFile do
+describe Oregano::Settings::IniFile do
   # different UTF-8 widths
   # 1-byte A
   # 2-byte ۿ - http://www.fileformat.info/info/unicode/char/06ff/index.htm - 0xDB 0xBF / 219 191
@@ -19,7 +19,7 @@ describe Puppet::Settings::IniFile do
     CONFIG
     config_fh = a_config_file_containing(original_config)
 
-    Puppet::Settings::IniFile.update(config_fh) do; end
+    Oregano::Settings::IniFile.update(config_fh) do; end
 
     expect(config_fh.string).to eq original_config
   end
@@ -27,7 +27,7 @@ describe Puppet::Settings::IniFile do
   it "adds a set name and value to an empty file" do
     config_fh = a_config_file_containing("")
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("the_section", "name", "value")
     end
 
@@ -37,7 +37,7 @@ describe Puppet::Settings::IniFile do
   it "adds a UTF-8 name and value to an empty file" do
     config_fh = a_config_file_containing("")
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("the_section", mixed_utf8, mixed_utf8.reverse)
     end
 
@@ -51,7 +51,7 @@ describe Puppet::Settings::IniFile do
     CONF
 
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("main", "name", "value")
     end
 
@@ -68,7 +68,7 @@ name = value
     foo = default
     CONF
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set(mixed_utf8, 'foo', 'bar')
     end
 
@@ -81,7 +81,7 @@ name = value
   it "preserves comments when writing a new name and value" do
     config_fh = a_config_file_containing("# this is a comment")
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("the_section", "name", "value")
     end
 
@@ -96,7 +96,7 @@ name = value
     # this is the trailing comment
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("section", "name", "changed value")
     end
 
@@ -117,7 +117,7 @@ name = value
     # this is the trailing comment
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("section", "ascii", mixed_utf8)
       config.set("section", mixed_utf8, mixed_utf8.reverse)
     end
@@ -139,7 +139,7 @@ name = value
     name = original value
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("section", "name", "changed value")
     end
 
@@ -156,7 +156,7 @@ name = value
     name = original value
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("main", "name", "changed value")
     end
 
@@ -175,7 +175,7 @@ name = value
     dont = change
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("section", "updated", "new")
     end
 
@@ -197,7 +197,7 @@ updated = new
     dont = change
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("section", "updated", "new")
     end
 
@@ -219,7 +219,7 @@ updated = new
     other_name = different original value
     CONFIG
 
-    Puppet::Settings::IniFile.update(config_fh) do |config|
+    Oregano::Settings::IniFile.update(config_fh) do |config|
       config.set("section", "name", "changed value")
       config.set("section", "other_name", "other changed value")
     end

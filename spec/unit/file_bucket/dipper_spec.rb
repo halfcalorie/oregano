@@ -3,10 +3,10 @@ require 'spec_helper'
 
 require 'pathname'
 
-require 'puppet/file_bucket/dipper'
-require 'puppet/indirector/file_bucket_file/rest'
-require 'puppet/indirector/file_bucket_file/file'
-require 'puppet/util/checksums'
+require 'oregano/file_bucket/dipper'
+require 'oregano/indirector/file_bucket_file/rest'
+require 'oregano/indirector/file_bucket_file/file'
+require 'oregano/util/checksums'
 
 shared_examples_for "a restorable file" do
   let(:dest) { tmpfile('file_bucket_dest') }
@@ -16,10 +16,10 @@ shared_examples_for "a restorable file" do
       it "should restore the file" do
         request = nil
 
-        klass.any_instance.expects(:find).with { |r| request = r }.returns(Puppet::FileBucket::File.new(plaintext))
+        klass.any_instance.expects(:find).with { |r| request = r }.returns(Oregano::FileBucket::File.new(plaintext))
 
         expect(dipper.restore(dest, checksum)).to eq(checksum)
-        expect(digest(Puppet::FileSystem.binread(dest))).to eq(checksum)
+        expect(digest(Oregano::FileSystem.binread(dest))).to eq(checksum)
 
         expect(request.key).to eq("#{digest_algorithm}/#{checksum}")
         expect(request.server).to eq(server)
@@ -34,7 +34,7 @@ shared_examples_for "a restorable file" do
       end
 
       it "should overwrite existing file if it has different checksum" do
-        klass.any_instance.expects(:find).returns(Puppet::FileBucket::File.new(plaintext))
+        klass.any_instance.expects(:find).returns(Oregano::FileBucket::File.new(plaintext))
 
         File.open(dest, 'wb') {|f| f.print('other contents') }
 
@@ -44,8 +44,8 @@ shared_examples_for "a restorable file" do
   end
 end
 
-describe Puppet::FileBucket::Dipper, :uses_checksums => true do
-  include PuppetSpec::Files
+describe Oregano::FileBucket::Dipper, :uses_checksums => true do
+  include OreganoSpec::Files
 
   def make_tmp_file(contents)
     file = tmpfile("file_bucket_file")
@@ -54,30 +54,30 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
   end
 
   it "should fail in an informative way when there are failures checking for the file on the server" do
-    @dipper = Puppet::FileBucket::Dipper.new(:Path => make_absolute("/my/bucket"))
+    @dipper = Oregano::FileBucket::Dipper.new(:Path => make_absolute("/my/bucket"))
 
     file = make_tmp_file('contents')
-    Puppet::FileBucket::File.indirection.expects(:head).raises ArgumentError
+    Oregano::FileBucket::File.indirection.expects(:head).raises ArgumentError
 
-    expect { @dipper.backup(file) }.to raise_error(Puppet::Error)
+    expect { @dipper.backup(file) }.to raise_error(Oregano::Error)
   end
 
   it "should fail in an informative way when there are failures backing up to the server" do
-    @dipper = Puppet::FileBucket::Dipper.new(:Path => make_absolute("/my/bucket"))
+    @dipper = Oregano::FileBucket::Dipper.new(:Path => make_absolute("/my/bucket"))
 
     file = make_tmp_file('contents')
-    Puppet::FileBucket::File.indirection.expects(:head).returns false
-    Puppet::FileBucket::File.indirection.expects(:save).raises ArgumentError
+    Oregano::FileBucket::File.indirection.expects(:head).returns false
+    Oregano::FileBucket::File.indirection.expects(:save).raises ArgumentError
 
-    expect { @dipper.backup(file) }.to raise_error(Puppet::Error)
+    expect { @dipper.backup(file) }.to raise_error(Oregano::Error)
   end
 
   describe "when diffing on a local filebucket" do
-    describe "in non-windows environments", :unless => Puppet.features.microsoft_windows? do
+    describe "in non-windows environments", :unless => Oregano.features.microsoft_windows? do
       with_digest_algorithms do
 
         it "should fail in an informative way when one or more checksum doesn't exists" do
-          @dipper = Puppet::FileBucket::Dipper.new(:Path => tmpdir("bucket"))
+          @dipper = Oregano::FileBucket::Dipper.new(:Path => tmpdir("bucket"))
           wrong_checksum = "DEADBEEF"
 
           # First checksum fails
@@ -93,7 +93,7 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
         it "should properly diff files on the filebucket" do
           file1 = make_tmp_file("OriginalContent\n")
           file2 = make_tmp_file("ModifiedContent\n")
-          @dipper = Puppet::FileBucket::Dipper.new(:Path => tmpdir("bucket"))
+          @dipper = Oregano::FileBucket::Dipper.new(:Path => tmpdir("bucket"))
           checksum1 = @dipper.backup(file1)
           checksum2 = @dipper.backup(file2)
 
@@ -101,13 +101,13 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
           # Lines we need to see match 'Content' instead of trimming diff output filter out
           # surrounding noise...or hard code the check values
           if Facter.value(:osfamily) == 'Solaris' &&
-            Puppet::Util::Package.versioncmp(Facter.value(:operatingsystemrelease), '11.0') >= 0
+            Oregano::Util::Package.versioncmp(Facter.value(:operatingsystemrelease), '11.0') >= 0
             # Use gdiff on Solaris
-            diff12 = Puppet::Util::Execution.execute("gdiff -uN #{file1} #{file2}| grep Content")
-            diff21 = Puppet::Util::Execution.execute("gdiff -uN #{file2} #{file1}| grep Content")
+            diff12 = Oregano::Util::Execution.execute("gdiff -uN #{file1} #{file2}| grep Content")
+            diff21 = Oregano::Util::Execution.execute("gdiff -uN #{file2} #{file1}| grep Content")
           else
-            diff12 = Puppet::Util::Execution.execute("diff -uN #{file1} #{file2}| grep Content")
-            diff21 = Puppet::Util::Execution.execute("diff -uN #{file2} #{file1}| grep Content")
+            diff12 = Oregano::Util::Execution.execute("diff -uN #{file1} #{file2}| grep Content")
+            diff21 = Oregano::Util::Execution.execute("diff -uN #{file2} #{file1}| grep Content")
           end
 
           expect(@dipper.diff(checksum1, checksum2, nil, nil)).to include(diff12)
@@ -121,9 +121,9 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
 
         end
       end
-      describe "in windows environment", :if => Puppet.features.microsoft_windows? do
+      describe "in windows environment", :if => Oregano.features.microsoft_windows? do
         it "should fail in an informative way when trying to diff" do
-          @dipper = Puppet::FileBucket::Dipper.new(:Path => tmpdir("bucket"))
+          @dipper = Oregano::FileBucket::Dipper.new(:Path => tmpdir("bucket"))
           wrong_checksum = "DEADBEEF"
 
           # First checksum fails
@@ -136,19 +136,19 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
     end
   end
   it "should fail in an informative way when there are failures listing files on the server" do
-    @dipper = Puppet::FileBucket::Dipper.new(:Path => "/unexistent/bucket")
-    Puppet::FileBucket::File.indirection.expects(:find).returns nil
+    @dipper = Oregano::FileBucket::Dipper.new(:Path => "/unexistent/bucket")
+    Oregano::FileBucket::File.indirection.expects(:find).returns nil
 
-    expect { @dipper.list(nil, nil) }.to raise_error(Puppet::Error)
+    expect { @dipper.list(nil, nil) }.to raise_error(Oregano::Error)
   end
 
   describe "listing files in local filebucket" do
     with_digest_algorithms do
       it "should list all files present" do
-        Puppet[:bucketdir] =  "/my/bucket"
+        Oregano[:bucketdir] =  "/my/bucket"
         file_bucket = tmpdir("bucket")
 
-        @dipper = Puppet::FileBucket::Dipper.new(:Path => file_bucket)
+        @dipper = Oregano::FileBucket::Dipper.new(:Path => file_bucket)
 
         onehour=60*60
         twohours=onehour*2
@@ -190,7 +190,7 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
       end
 
       it "should filter with the provided dates" do
-        Puppet[:bucketdir] =  "/my/bucket"
+        Oregano[:bucketdir] =  "/my/bucket"
         file_bucket = tmpdir("bucket")
 
         twentyminutes=60*20
@@ -200,7 +200,7 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
         threehours=onehour*3
 
         # First File created now
-        @dipper = Puppet::FileBucket::Dipper.new(:Path => file_bucket)
+        @dipper = Oregano::FileBucket::Dipper.new(:Path => file_bucket)
         file1 = make_tmp_file(plaintext)
         real_path = Pathname.new(file1).realpath
 
@@ -248,30 +248,30 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
   end
 
   describe "when diffing on a remote filebucket" do
-    describe "in non-windows environments", :unless => Puppet.features.microsoft_windows? do
+    describe "in non-windows environments", :unless => Oregano.features.microsoft_windows? do
       with_digest_algorithms do
         it "should fail in an informative way when one or more checksum doesn't exists" do
-          @dipper = Puppet::FileBucket::Dipper.new(:Server => "puppetmaster", :Port => "31337")
+          @dipper = Oregano::FileBucket::Dipper.new(:Server => "oreganomaster", :Port => "31337")
           wrong_checksum = "DEADBEEF"
 
-          Puppet::FileBucketFile::Rest.any_instance.expects(:find).returns(nil)
-          expect { @dipper.diff(wrong_checksum, "WEIRDCKSM", nil, nil) }.to raise_error(Puppet::Error, "Failed to diff files")
+          Oregano::FileBucketFile::Rest.any_instance.expects(:find).returns(nil)
+          expect { @dipper.diff(wrong_checksum, "WEIRDCKSM", nil, nil) }.to raise_error(Oregano::Error, "Failed to diff files")
 
         end
 
         it "should properly diff files on the filebucket" do
-          @dipper = Puppet::FileBucket::Dipper.new(:Server => "puppetmaster", :Port => "31337")
+          @dipper = Oregano::FileBucket::Dipper.new(:Server => "oreganomaster", :Port => "31337")
 
-          Puppet::FileBucketFile::Rest.any_instance.expects(:find).returns("Probably valid diff")
+          Oregano::FileBucketFile::Rest.any_instance.expects(:find).returns("Probably valid diff")
 
           expect(@dipper.diff("checksum1", "checksum2", nil, nil)).to eq("Probably valid diff")
         end
       end
     end
 
-    describe "in windows environment", :if => Puppet.features.microsoft_windows? do
+    describe "in windows environment", :if => Oregano.features.microsoft_windows? do
       it "should fail in an informative way when trying to diff" do
-        @dipper = Puppet::FileBucket::Dipper.new(:Server => "puppetmaster", :Port => "31337")
+        @dipper = Oregano::FileBucket::Dipper.new(:Server => "oreganomaster", :Port => "31337")
         wrong_checksum = "DEADBEEF"
 
         expect { @dipper.diff(wrong_checksum, "WEIRDCKSM", nil, nil) }.to raise_error(RuntimeError, "Diff is not supported on this platform")
@@ -283,45 +283,45 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
 
   describe "listing files in remote filebucket" do
     it "is not allowed" do
-      @dipper = Puppet::FileBucket::Dipper.new(:Server => "puppetmaster", :Port=> "31337")
+      @dipper = Oregano::FileBucket::Dipper.new(:Server => "oreganomaster", :Port=> "31337")
 
       expect {
         @dipper.list(nil, nil)
-      }.to raise_error(Puppet::Error, "Listing remote file buckets is not allowed")
+      }.to raise_error(Oregano::Error, "Listing remote file buckets is not allowed")
     end
   end
 
   describe "backing up and retrieving local files" do
     with_digest_algorithms do
       it "should backup files to a local bucket" do
-        Puppet[:bucketdir] = "/non/existent/directory"
+        Oregano[:bucketdir] = "/non/existent/directory"
         file_bucket = tmpdir("bucket")
 
-        @dipper = Puppet::FileBucket::Dipper.new(:Path => file_bucket)
+        @dipper = Oregano::FileBucket::Dipper.new(:Path => file_bucket)
 
         file = make_tmp_file(plaintext)
         expect(digest(plaintext)).to eq(checksum)
 
         expect(@dipper.backup(file)).to eq(checksum)
-        expect(Puppet::FileSystem.exist?("#{file_bucket}/#{bucket_dir}/contents")).to eq(true)
+        expect(Oregano::FileSystem.exist?("#{file_bucket}/#{bucket_dir}/contents")).to eq(true)
       end
 
       it "should not backup a file that is already in the bucket" do
-        @dipper = Puppet::FileBucket::Dipper.new(:Path => "/my/bucket")
+        @dipper = Oregano::FileBucket::Dipper.new(:Path => "/my/bucket")
 
         file = make_tmp_file(plaintext)
 
-        Puppet::FileBucket::File.indirection.expects(:head).returns true
-        Puppet::FileBucket::File.indirection.expects(:save).never
+        Oregano::FileBucket::File.indirection.expects(:head).returns true
+        Oregano::FileBucket::File.indirection.expects(:save).never
         expect(@dipper.backup(file)).to eq(checksum)
       end
 
       it "should retrieve files from a local bucket" do
-        @dipper = Puppet::FileBucket::Dipper.new(:Path => "/my/bucket")
+        @dipper = Oregano::FileBucket::Dipper.new(:Path => "/my/bucket")
 
         request = nil
 
-        Puppet::FileBucketFile::File.any_instance.expects(:find).with{ |r| request = r }.once.returns(Puppet::FileBucket::File.new(plaintext))
+        Oregano::FileBucketFile::File.any_instance.expects(:find).with{ |r| request = r }.once.returns(Oregano::FileBucket::File.new(plaintext))
 
         expect(@dipper.getfile(checksum)).to eq(plaintext)
 
@@ -333,7 +333,7 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
   describe "backing up and retrieving remote files" do
     with_digest_algorithms do
       it "should backup files to a remote server" do
-        @dipper = Puppet::FileBucket::Dipper.new(:Server => "puppetmaster", :Port => "31337")
+        @dipper = Oregano::FileBucket::Dipper.new(:Server => "oreganomaster", :Port => "31337")
 
         file = make_tmp_file(plaintext)
 
@@ -342,27 +342,27 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
         request1 = nil
         request2 = nil
 
-        Puppet::FileBucketFile::Rest.any_instance.expects(:head).with { |r| request1 = r }.once.returns(nil)
-        Puppet::FileBucketFile::Rest.any_instance.expects(:save).with { |r| request2 = r }.once
+        Oregano::FileBucketFile::Rest.any_instance.expects(:head).with { |r| request1 = r }.once.returns(nil)
+        Oregano::FileBucketFile::Rest.any_instance.expects(:save).with { |r| request2 = r }.once
 
         expect(@dipper.backup(file)).to eq(checksum)
         [request1, request2].each do |r|
-          expect(r.server).to eq('puppetmaster')
+          expect(r.server).to eq('oreganomaster')
           expect(r.port).to eq(31337)
           expect(r.key).to eq("#{digest_algorithm}/#{checksum}/#{real_path}")
         end
       end
 
       it "should retrieve files from a remote server" do
-        @dipper = Puppet::FileBucket::Dipper.new(:Server => "puppetmaster", :Port => "31337")
+        @dipper = Oregano::FileBucket::Dipper.new(:Server => "oreganomaster", :Port => "31337")
 
         request = nil
 
-        Puppet::FileBucketFile::Rest.any_instance.expects(:find).with { |r| request = r }.returns(Puppet::FileBucket::File.new(plaintext))
+        Oregano::FileBucketFile::Rest.any_instance.expects(:find).with { |r| request = r }.returns(Oregano::FileBucket::File.new(plaintext))
 
         expect(@dipper.getfile(checksum)).to eq(plaintext)
 
-        expect(request.server).to eq('puppetmaster')
+        expect(request.server).to eq('oreganomaster')
         expect(request.port).to eq(31337)
         expect(request.key).to eq("#{digest_algorithm}/#{checksum}")
       end
@@ -372,22 +372,22 @@ describe Puppet::FileBucket::Dipper, :uses_checksums => true do
   describe "#restore" do
 
     describe "when restoring from a remote server" do
-      let(:klass) { Puppet::FileBucketFile::Rest }
-      let(:server) { "puppetmaster" }
+      let(:klass) { Oregano::FileBucketFile::Rest }
+      let(:server) { "oreganomaster" }
       let(:port) { 31337 }
 
       it_behaves_like "a restorable file" do
-        let (:dipper) { Puppet::FileBucket::Dipper.new(:Server => server, :Port => port.to_s) }
+        let (:dipper) { Oregano::FileBucket::Dipper.new(:Server => server, :Port => port.to_s) }
       end
     end
 
     describe "when restoring from a local server" do
-      let(:klass) { Puppet::FileBucketFile::File }
+      let(:klass) { Oregano::FileBucketFile::File }
       let(:server) { nil }
       let(:port) { nil }
 
       it_behaves_like "a restorable file" do
-        let (:dipper) { Puppet::FileBucket::Dipper.new(:Path => "/my/bucket") }
+        let (:dipper) { Oregano::FileBucket::Dipper.new(:Path => "/my/bucket") }
       end
     end
   end

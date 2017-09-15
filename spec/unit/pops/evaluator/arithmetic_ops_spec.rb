@@ -1,15 +1,15 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
-require 'puppet/pops'
-require 'puppet/pops/evaluator/evaluator_impl'
+require 'oregano/pops'
+require 'oregano/pops/evaluator/evaluator_impl'
 
 
 # relative to this spec file (./) does not work as this file is loaded by rspec
 require File.join(File.dirname(__FILE__), '/evaluator_rspec_helper')
 
-describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
+describe 'Oregano::Pops::Evaluator::EvaluatorImpl' do
   include EvaluatorRspecHelper
 
   context "When the evaluator performs arithmetic" do
@@ -36,43 +36,43 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       it "MAX + 1 => error" do
         expect{
           evaluate(literal(MAX_INTEGER) + literal(1))
-        }.to raise_error(/resulted in a value outside of Puppet Integer max range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer max range/)
       end
 
       it "MAX - -1 => error" do
         expect{
           evaluate(literal(MAX_INTEGER) - literal(-1))
-        }.to raise_error(/resulted in a value outside of Puppet Integer max range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer max range/)
       end
 
       it "MAX * 2 => error" do
         expect{
           evaluate(literal(MAX_INTEGER) * literal(2))
-        }.to raise_error(/resulted in a value outside of Puppet Integer max range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer max range/)
       end
 
       it "(MAX+1)*2 / 2 => error" do
         expect{
           evaluate(literal((MAX_INTEGER+1)*2) / literal(2))
-        }.to raise_error(/resulted in a value outside of Puppet Integer max range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer max range/)
       end
 
       it "MAX << 1 => error" do
         expect{
           evaluate(literal(MAX_INTEGER) << literal(1))
-        }.to raise_error(/resulted in a value outside of Puppet Integer max range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer max range/)
       end
 
       it "((MAX+1)*2)  << 1 => error" do
         expect{
           evaluate(literal((MAX_INTEGER+1)*2) >> literal(1))
-        }.to raise_error(/resulted in a value outside of Puppet Integer max range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer max range/)
       end
 
       it "MIN - 1 => error" do
         expect{
           evaluate(literal(MIN_INTEGER) - literal(1))
-        }.to raise_error(/resulted in a value outside of Puppet Integer min range/)
+        }.to raise_error(/resulted in a value outside of Oregano Integer min range/)
       end
 
       it "does not error on the border values" do
@@ -88,10 +88,10 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       it "6.6 / 3.3  ==  2.0"   do; expect(evaluate(literal(6.6) / literal(3.3))).to eq(2.0)  ; end
       it "-(6.0/3.0) == -2.0"   do; expect(evaluate(minus(literal(6.0) / literal(3.0)))).to eq(-2.0); end
       it "-6.0/3.0   == -2.0"   do; expect(evaluate(minus(literal(6.0)) / literal(3.0))).to eq(-2.0); end
-      it "6.6 % 3.3  ==  0.0"   do; expect { evaluate(literal(6.6) % literal(3.3))}.to raise_error(Puppet::ParseError); end
-        it "10.0 % 3.0 ==  1.0"   do; expect { evaluate(literal(10.0) % literal(3.0))}.to raise_error(Puppet::ParseError); end
-      it "3.14 << 2  == error"  do; expect { evaluate(literal(3.14) << literal(2))}.to raise_error(Puppet::ParseError); end
-      it "3.14 >> 2  == error"  do; expect { evaluate(literal(3.14) >> literal(2))}.to raise_error(Puppet::ParseError); end
+      it "6.6 % 3.3  ==  0.0"   do; expect { evaluate(literal(6.6) % literal(3.3))}.to raise_error(Oregano::ParseError); end
+        it "10.0 % 3.0 ==  1.0"   do; expect { evaluate(literal(10.0) % literal(3.0))}.to raise_error(Oregano::ParseError); end
+      it "3.14 << 2  == error"  do; expect { evaluate(literal(3.14) << literal(2))}.to raise_error(Oregano::ParseError); end
+      it "3.14 >> 2  == error"  do; expect { evaluate(literal(3.14) >> literal(2))}.to raise_error(Oregano::ParseError); end
     end
 
     context "on strings requiring boxing to Numeric" do
@@ -112,15 +112,15 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
       end
 
       it "'0888' + '010'   ==  error" do
-        expect { evaluate(literal('0888') + literal('010'))}.to raise_error(Puppet::ParseError)
+        expect { evaluate(literal('0888') + literal('010'))}.to raise_error(Oregano::ParseError)
       end
 
       it "'0xWTF' + '010'  ==  error" do
-        expect { evaluate(literal('0xWTF') + literal('010'))}.to raise_error(Puppet::ParseError)
+        expect { evaluate(literal('0xWTF') + literal('010'))}.to raise_error(Oregano::ParseError)
       end
 
       it "'0x12.3' + '010' ==  error" do
-        expect { evaluate(literal('0x12.3') + literal('010'))}.to raise_error(Puppet::ParseError)
+        expect { evaluate(literal('0x12.3') + literal('010'))}.to raise_error(Oregano::ParseError)
       end
 
       it "'012.3' + '010'  ==  20.3 (not error, floats can start with 0)" do
@@ -129,7 +129,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
     end
 
     context 'on timespans' do
-      include PuppetSpec::Compiler
+      include OreganoSpec::Compiler
 
       it 'Timespan + Timespan = Timespan' do
         code = 'notice(assert_type(Timespan, Timespan({days => 3}) + Timespan({hours => 12})))'
@@ -158,7 +158,7 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
       it 'Timespan * Timespan is an error' do
         code = 'notice(Timespan({days => 3}) * Timespan({hours => 12}))'
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /A Timestamp cannot be multiplied by a Timespan/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /A Timestamp cannot be multiplied by a Timespan/)
       end
 
       it 'Timespan + Numeric = Timespan (numeric treated as seconds)' do
@@ -198,27 +198,27 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
       it 'Timespan - Timestamp is an error' do
         code = 'notice(Timespan({days => 3}) - Timestamp())'
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /A Timestamp cannot be subtracted from a Timespan/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /A Timestamp cannot be subtracted from a Timespan/)
       end
 
       it 'Timespan * Timestamp is an error' do
         code = 'notice(Timespan({days => 3}) * Timestamp())'
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /A Timestamp cannot be multiplied by a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /A Timestamp cannot be multiplied by a Timestamp/)
       end
 
       it 'Timespan / Timestamp is an error' do
         code = 'notice(Timespan({days => 3}) / Timestamp())'
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /A Timespan cannot be divided by a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /A Timespan cannot be divided by a Timestamp/)
       end
     end
 
 
     context 'on timestamps' do
-      include PuppetSpec::Compiler
+      include OreganoSpec::Compiler
 
       it 'Timestamp + Timestamp is an error' do
         code = 'notice(Timestamp() + Timestamp())'
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /A Timestamp cannot be added to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /A Timestamp cannot be added to a Timestamp/)
       end
 
       it 'Timestamp + Timespan = Timestamp' do
@@ -253,47 +253,47 @@ describe 'Puppet::Pops::Evaluator::EvaluatorImpl' do
 
       it 'Numeric - Timestamp = Timestamp' do
         code = "notice(assert_type(Timestamp, 123 - Timestamp('2016-10-10')))"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '-' is not applicable.*when right side is a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '-' is not applicable.*when right side is a Timestamp/)
       end
 
       it 'Timestamp / Timestamp is an error' do
         code = "notice(Timestamp('2016-10-10') / Timestamp())"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\/' is not applicable to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\/' is not applicable to a Timestamp/)
       end
 
       it 'Timestamp / Timespan is an error' do
         code = "notice(Timestamp('2016-10-10') / Timespan('0-12:00:00'))"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\/' is not applicable to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\/' is not applicable to a Timestamp/)
       end
 
       it 'Timestamp / Numeric is an error' do
         code = "notice(Timestamp('2016-10-10') / 3600.123)"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\/' is not applicable to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\/' is not applicable to a Timestamp/)
       end
 
       it 'Numeric / Timestamp is an error' do
         code = "notice(3600.123 / Timestamp('2016-10-10'))"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\/' is not applicable.*when right side is a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\/' is not applicable.*when right side is a Timestamp/)
       end
 
       it 'Timestamp * Timestamp is an error' do
         code = "notice(Timestamp('2016-10-10') * Timestamp())"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\*' is not applicable to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\*' is not applicable to a Timestamp/)
       end
 
       it 'Timestamp * Timespan is an error' do
         code = "notice(Timestamp('2016-10-10') * Timespan('0-12:00:00'))"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\*' is not applicable to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\*' is not applicable to a Timestamp/)
       end
 
       it 'Timestamp * Numeric is an error' do
         code = "notice(Timestamp('2016-10-10') * 3600.123)"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\*' is not applicable to a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\*' is not applicable to a Timestamp/)
       end
 
       it 'Numeric * Timestamp is an error' do
         code = "notice(3600.123 * Timestamp('2016-10-10'))"
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Operator '\*' is not applicable.*when right side is a Timestamp/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Operator '\*' is not applicable.*when right side is a Timestamp/)
       end
     end
   end

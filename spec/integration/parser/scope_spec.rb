@@ -1,20 +1,20 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 
 describe "Two step scoping for variables" do
-  include PuppetSpec::Compiler
-  def expect_the_message_to_be(message, node = Puppet::Node.new('the node'))
+  include OreganoSpec::Compiler
+  def expect_the_message_to_be(message, node = Oregano::Node.new('the node'))
     catalog = compile_to_catalog(yield, node)
     expect(catalog.resource('Notify', 'something')[:message]).to eq(message)
   end
 
-  def expect_the_message_not_to_be(message, node = Puppet::Node.new('the node'))
+  def expect_the_message_not_to_be(message, node = Oregano::Node.new('the node'))
     catalog = compile_to_catalog(yield, node)
     expect(catalog.resource('Notify', 'something')[:message]).to_not eq(message)
   end
 
   before :each do
-    Puppet.expects(:deprecation_warning).never
+    Oregano.expects(:deprecation_warning).never
   end
 
   describe "using unsupported operators" do
@@ -41,23 +41,23 @@ describe "Two step scoping for variables" do
     end
 
     it "issues error about built-in variable when reassigning to name" do
-        enc_node = Puppet::Node.new("the_node", { :parameters => {  } })
+        enc_node = Oregano::Node.new("the_node", { :parameters => {  } })
 
         expect {
           compile_to_catalog("$name = 'never in a 0xF4240 years'", enc_node)
         }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Cannot reassign built in \(or already assigned\) variable '\$name' at line 1(\:7)? on node the_node/
         )
     end
 
     it "issues error about built-in variable when reassigning to title" do
-        enc_node = Puppet::Node.new("the_node", { :parameters => {  } })
+        enc_node = Oregano::Node.new("the_node", { :parameters => {  } })
 
         expect {
           compile_to_catalog("$title = 'never in a 0xF4240 years'", enc_node)
         }.to raise_error(
-          Puppet::Error,
+          Oregano::Error,
           /Cannot reassign built in \(or already assigned\) variable '\$title' at line 1(\:8)? on node the_node/
         )
     end
@@ -668,7 +668,7 @@ describe "Two step scoping for variables" do
 
   describe "when using an enc" do
     it "places enc parameters in top scope" do
-      enc_node = Puppet::Node.new("the node", { :parameters => { "var" => 'from_enc' } })
+      enc_node = Oregano::Node.new("the node", { :parameters => { "var" => 'from_enc' } })
 
       expect_the_message_to_be('from_enc', enc_node) do <<-MANIFEST
             notify { 'something': message => $var, }
@@ -677,17 +677,17 @@ describe "Two step scoping for variables" do
     end
 
     it "does not allow the enc to specify an existing top scope var" do
-      enc_node = Puppet::Node.new("the_node", { :parameters => { "var" => 'from_enc' } })
+      enc_node = Oregano::Node.new("the_node", { :parameters => { "var" => 'from_enc' } })
       expect {
         compile_to_catalog("$var = 'top scope'", enc_node)
       }.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         /Cannot reassign variable '\$var' at line 1(\:6)? on node the_node/
       )
     end
 
     it "evaluates enc classes in top scope when there is no node" do
-      enc_node = Puppet::Node.new("the node", { :classes => ['foo'], :parameters => { "var" => 'from_enc' } })
+      enc_node = Oregano::Node.new("the node", { :classes => ['foo'], :parameters => { "var" => 'from_enc' } })
 
       expect_the_message_to_be('from_enc', enc_node) do <<-MANIFEST
             class foo {
@@ -698,7 +698,7 @@ describe "Two step scoping for variables" do
     end
 
     it "overrides enc variables from a node scope var" do
-      enc_node = Puppet::Node.new("the_node", { :classes => ['foo'], :parameters => { 'enc_var' => 'Set from ENC.' } })
+      enc_node = Oregano::Node.new("the_node", { :classes => ['foo'], :parameters => { 'enc_var' => 'Set from ENC.' } })
 
       expect_the_message_to_be('ENC overridden in node', enc_node) do <<-MANIFEST
             node the_node {

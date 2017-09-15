@@ -1,16 +1,16 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-checksum = Puppet::Type.type(:file).attrclass(:checksum)
+checksum = Oregano::Type.type(:file).attrclass(:checksum)
 describe checksum do
   before do
-    @path = Puppet.features.microsoft_windows? ? "c:/foo/bar" : "/foo/bar"
-    @resource = Puppet::Type.type(:file).new :path => @path
+    @path = Oregano.features.microsoft_windows? ? "c:/foo/bar" : "/foo/bar"
+    @resource = Oregano::Type.type(:file).new :path => @path
     @checksum = @resource.parameter(:checksum)
   end
 
   it "should be a parameter" do
-    expect(checksum.superclass).to eq(Puppet::Parameter)
+    expect(checksum.superclass).to eq(Oregano::Parameter)
   end
 
   it "should use its current value when asked to sum content" do
@@ -79,7 +79,7 @@ describe checksum do
 
   it 'should use values allowed by the supported_checksum_types setting' do
     values = checksum.value_collection.values.reject {|v| v == :none}.map {|v| v.to_s}
-    Puppet.settings[:supported_checksum_types] = values
-    expect(Puppet.settings[:supported_checksum_types]).to eq(values)
+    Oregano.settings[:supported_checksum_types] = values
+    expect(Oregano.settings[:supported_checksum_types]).to eq(values)
   end
 end

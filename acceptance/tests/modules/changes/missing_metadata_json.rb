@@ -1,4 +1,4 @@
-test_name 'puppet module changes (on a module which is missing metadata.json)'
+test_name 'oregano module changes (on a module which is missing metadata.json)'
 
 tag 'audit:medium',
     'audit:acceptance',
@@ -15,12 +15,12 @@ apply_manifest_on master, %Q{
 }
 
 step 'Run module changes on a module which is missing metadata.json'
-on( master, puppet("module changes #{testdir}/nginx"),
+on( master, oregano("module changes #{testdir}/nginx"),
     :acceptable_exit_codes => [1] ) do
 
   pattern = Regexp.new([
 %Q{.*Error: Could not find a valid module at.*},
-%Q{.*Error: Try 'puppet help module changes' for usage.*},
+%Q{.*Error: Try 'oregano help module changes' for usage.*},
   ].join("\n"), Regexp::MULTILINE)
   assert_match(pattern, result.stderr)
 end

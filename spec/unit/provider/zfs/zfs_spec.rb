@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:zfs).provider(:zfs) do
+describe Oregano::Type.type(:zfs).provider(:zfs) do
   let(:name) { 'myzfs' }
   let(:zfs) { '/usr/sbin/zfs' }
 
   let(:resource) do
-    Puppet::Type.type(:zfs).new(:name => name, :provider => :zfs)
+    Oregano::Type.type(:zfs).new(:name => name, :provider => :zfs)
   end
 
   let(:provider) { resource.provider }
@@ -48,7 +48,7 @@ describe Puppet::Type.type(:zfs).provider(:zfs) do
       provider.create
     end
 
-    Puppet::Type.type(:zfs).validproperties.each do |prop|
+    Oregano::Type.type(:zfs).validproperties.each do |prop|
       next if prop == :ensure
       it "should include property #{prop}" do
         resource[prop] = prop
@@ -77,7 +77,7 @@ describe Puppet::Type.type(:zfs).provider(:zfs) do
     end
 
     it "should return false if returned values don't match the name" do
-      provider.expects(:zfs).with(:list, name).raises(Puppet::ExecutionFailure, "Failed")
+      provider.expects(:zfs).with(:list, name).raises(Oregano::ExecutionFailure, "Failed")
 
       expect(provider).not_to be_exists
     end

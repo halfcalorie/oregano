@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-require 'puppet/file_bucket/dipper'
+require 'oregano/file_bucket/dipper'
 
-describe "mount provider (integration)", :unless => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe "mount provider (integration)", :unless => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   family = Facter.value(:osfamily)
 
@@ -19,13 +19,13 @@ describe "mount provider (integration)", :unless => Puppet.features.microsoft_wi
     @fake_fstab = tmpfile('fstab')
     @current_options = "local"
     @current_device = "/dev/disk1s1"
-    Puppet::Type.type(:mount).defaultprovider.stubs(:default_target).returns(@fake_fstab)
+    Oregano::Type.type(:mount).defaultprovider.stubs(:default_target).returns(@fake_fstab)
     Facter.stubs(:value).with(:hostname).returns('some_host')
     Facter.stubs(:value).with(:domain).returns('some_domain')
     Facter.stubs(:value).with(:kernel).returns('Linux')
     Facter.stubs(:value).with(:operatingsystem).returns('RedHat')
     Facter.stubs(:value).with(:osfamily).returns('RedHat')
-    Puppet::Util::ExecutionStub.set do |command, options|
+    Oregano::Util::ExecutionStub.set do |command, options|
       case command[0]
       when %r{/s?bin/mount}
         if command.length == 1
@@ -53,7 +53,7 @@ describe "mount provider (integration)", :unless => Puppet.features.microsoft_wi
   end
 
   after :each do
-    Puppet::Type::Mount::ProviderParsed.clear # Work around bug #6628
+    Oregano::Type::Mount::ProviderParsed.clear # Work around bug #6628
   end
 
   def check_fstab(expected_to_be_present)
@@ -71,12 +71,12 @@ describe "mount provider (integration)", :unless => Puppet.features.microsoft_wi
   end
 
   def run_in_catalog(settings)
-    resource = Puppet::Type.type(:mount).new(settings.merge(:name => "/Volumes/foo_disk",
+    resource = Oregano::Type.type(:mount).new(settings.merge(:name => "/Volumes/foo_disk",
                                              :device => "/dev/disk1s1", :fstype => "msdos"))
-    Puppet::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to the filebucket
+    Oregano::FileBucket::Dipper.any_instance.stubs(:backup) # Don't backup to the filebucket
     resource.expects(:err).never
-    catalog = Puppet::Resource::Catalog.new
-    catalog.host_config = false # Stop Puppet from doing a bunch of magic
+    catalog = Oregano::Resource::Catalog.new
+    catalog.host_config = false # Stop Oregano from doing a bunch of magic
     catalog.add_resource resource
     catalog.apply
   end
@@ -110,10 +110,10 @@ describe "mount provider (integration)", :unless => Puppet.features.microsoft_wi
                 describe "When setting options => '#{options_setting}'" do
                   it "should leave the system in the #{expected_final_state ? 'mounted' : 'unmounted'} state, #{expected_fstab_data ? 'with' : 'without'} data in /etc/fstab" do
                     if family == "Solaris"
-                      skip("Solaris: The mock :operatingsystem value does not get changed in lib/puppet/provider/mount/parsed.rb")
+                      skip("Solaris: The mock :operatingsystem value does not get changed in lib/oregano/provider/mount/parsed.rb")
                     else
                       if options_setting && options_setting.empty?
-                        expect { run_in_catalog(:ensure=>ensure_setting, :options => options_setting) }.to raise_error Puppet::ResourceError
+                        expect { run_in_catalog(:ensure=>ensure_setting, :options => options_setting) }.to raise_error Oregano::ResourceError
                       else
                         if options_setting
                           @desired_options = options_setting

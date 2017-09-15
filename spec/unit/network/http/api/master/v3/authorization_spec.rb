@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-require 'puppet/network/http'
+require 'oregano/network/http'
 
-describe Puppet::Network::HTTP::API::Master::V3::Authorization do
-  HTTP = Puppet::Network::HTTP
+describe Oregano::Network::HTTP::API::Master::V3::Authorization do
+  HTTP = Oregano::Network::HTTP
 
   let(:response) { HTTP::MemoryResponse.new }
   let(:authz) { HTTP::API::Master::V3::Authorization.new }
@@ -19,7 +19,7 @@ describe Puppet::Network::HTTP::API::Master::V3::Authorization do
       :params => { :authenticated => true, :node => "testing", :ip => "127.0.0.1" }
     })
 
-    authz.stubs(:authconfig).returns(Puppet::Network::AuthConfigParser.new(<<-AUTH).parse)
+    authz.stubs(:authconfig).returns(Oregano::Network::AuthConfigParser.new(<<-AUTH).parse)
 path /v3/environments
 method find
 allow *
@@ -41,7 +41,7 @@ allow *
       :params => { :authenticated => true, :node => "testing", :ip => "127.0.0.1" }
     })
 
-    authz.stubs(:authconfig).returns(Puppet::Network::AuthConfigParser.new(<<-AUTH).parse)
+    authz.stubs(:authconfig).returns(Oregano::Network::AuthConfigParser.new(<<-AUTH).parse)
 path /v3/environments
 method find
 auth any

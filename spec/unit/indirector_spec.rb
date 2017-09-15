@@ -1,18 +1,18 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/defaults'
-require 'puppet/indirector'
+require 'oregano/defaults'
+require 'oregano/indirector'
 
-describe Puppet::Indirector, "when configuring routes" do
+describe Oregano::Indirector, "when configuring routes" do
   before :each do
-    Puppet::Node.indirection.reset_terminus_class
-    Puppet::Node.indirection.cache_class = nil
+    Oregano::Node.indirection.reset_terminus_class
+    Oregano::Node.indirection.cache_class = nil
   end
 
   after :each do
-    Puppet::Node.indirection.reset_terminus_class
-    Puppet::Node.indirection.cache_class = nil
+    Oregano::Node.indirection.reset_terminus_class
+    Oregano::Node.indirection.cache_class = nil
   end
 
   it "should configure routes as requested" do
@@ -23,10 +23,10 @@ describe Puppet::Indirector, "when configuring routes" do
       }
     }
 
-    Puppet::Indirector.configure_routes(routes)
+    Oregano::Indirector.configure_routes(routes)
 
-    expect(Puppet::Node.indirection.terminus_class).to eq("exec")
-    expect(Puppet::Node.indirection.cache_class).to    eq("plain")
+    expect(Oregano::Node.indirection.terminus_class).to eq("exec")
+    expect(Oregano::Node.indirection.cache_class).to    eq("plain")
   end
 
   it "should fail when given an invalid indirection" do
@@ -37,7 +37,7 @@ describe Puppet::Indirector, "when configuring routes" do
       }
     }
 
-    expect { Puppet::Indirector.configure_routes(routes) }.to raise_error(/fake_indirection does not exist/)
+    expect { Oregano::Indirector.configure_routes(routes) }.to raise_error(/fake_indirection does not exist/)
   end
 
   it "should fail when given an invalid terminus" do
@@ -48,7 +48,7 @@ describe Puppet::Indirector, "when configuring routes" do
       }
     }
 
-    expect { Puppet::Indirector.configure_routes(routes) }.to raise_error(/Could not find terminus fake_terminus/)
+    expect { Oregano::Indirector.configure_routes(routes) }.to raise_error(/Could not find terminus fake_terminus/)
   end
 
   it "should fail when given an invalid cache" do
@@ -59,14 +59,14 @@ describe Puppet::Indirector, "when configuring routes" do
       }
     }
 
-    expect { Puppet::Indirector.configure_routes(routes) }.to raise_error(/Could not find terminus fake_cache/)
+    expect { Oregano::Indirector.configure_routes(routes) }.to raise_error(/Could not find terminus fake_cache/)
   end
 end
 
-describe Puppet::Indirector, " when available to a model" do
+describe Oregano::Indirector, " when available to a model" do
   before do
     @thingie = Class.new do
-      extend Puppet::Indirector
+      extend Oregano::Indirector
     end
   end
 
@@ -75,10 +75,10 @@ describe Puppet::Indirector, " when available to a model" do
   end
 end
 
-describe Puppet::Indirector, "when registering an indirection" do
+describe Oregano::Indirector, "when registering an indirection" do
   before do
     @thingie = Class.new do
-      extend Puppet::Indirector
+      extend Oregano::Indirector
 
       # override Class#name, since we're not naming this ephemeral class
       def self.name
@@ -98,7 +98,7 @@ describe Puppet::Indirector, "when registering an indirection" do
 
   it "should create an indirection instance to manage each indirecting model" do
     @indirection = @thingie.indirects(:test)
-    expect(@indirection).to be_instance_of(Puppet::Indirector::Indirection)
+    expect(@indirection).to be_instance_of(Oregano::Indirector::Indirection)
   end
 
   it "should not allow a model to register under multiple names" do
@@ -114,7 +114,7 @@ describe Puppet::Indirector, "when registering an indirection" do
 
   it "should pass any provided options to the indirection during initialization" do
     klass = mock 'terminus class'
-    Puppet::Indirector::Indirection.expects(:new).with(@thingie, :first, {:some => :options, :indirected_class => 'Thingie'})
+    Oregano::Indirector::Indirection.expects(:new).with(@thingie, :first, {:some => :options, :indirected_class => 'Thingie'})
     @indirection = @thingie.indirects :first, :some => :options
   end
 
@@ -128,10 +128,10 @@ describe Puppet::Indirector, "when registering an indirection" do
   end
 end
 
-describe Puppet::Indirector, "when redirecting a model" do
+describe Oregano::Indirector, "when redirecting a model" do
   before do
     @thingie = Class.new do
-      extend Puppet::Indirector
+      extend Oregano::Indirector
       attr_reader :name
       def initialize(name)
         @name = name
@@ -141,7 +141,7 @@ describe Puppet::Indirector, "when redirecting a model" do
   end
 
   it "should include the Envelope module in the model" do
-    expect(@thingie.ancestors).to be_include(Puppet::Indirector::Envelope)
+    expect(@thingie.ancestors).to be_include(Oregano::Indirector::Envelope)
   end
 
   after do

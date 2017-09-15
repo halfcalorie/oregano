@@ -28,10 +28,10 @@ agents.each do |agent|
   end
 
   #------- TESTS -------#
-  step "delete the aliases database with puppet"
+  step "delete the aliases database with oregano"
   args = ['ensure=absent',
           'recipient="foo,bar,baz"']
-  on(agent, puppet_resource('mailalias', name, args))
+  on(agent, oregano_resource('mailalias', name, args))
 
 
   step "verify the alias is absent"

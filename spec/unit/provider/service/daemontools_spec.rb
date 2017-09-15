@@ -6,7 +6,7 @@
 #
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:service).provider(:daemontools)
+provider_class = Oregano::Type.type(:service).provider(:daemontools)
 
 describe provider_class do
 
@@ -99,11 +99,11 @@ describe provider_class do
   end
 
   describe "when enabling" do
-    it "should create a symlink between daemon dir and service dir", :if => Puppet.features.manages_symlinks?  do
+    it "should create a symlink between daemon dir and service dir", :if => Oregano.features.manages_symlinks?  do
       daemon_path = File.join(@daemondir, "myservice")
       service_path = File.join(@servicedir, "myservice")
-      Puppet::FileSystem.expects(:symlink?).with(service_path).returns(false)
-      Puppet::FileSystem.expects(:symlink).with(daemon_path, service_path).returns(0)
+      Oregano::FileSystem.expects(:symlink?).with(service_path).returns(false)
+      Oregano::FileSystem.expects(:symlink).with(daemon_path, service_path).returns(0)
 
       @provider.enable
     end
@@ -113,16 +113,16 @@ describe provider_class do
     it "should remove the symlink between daemon dir and service dir" do
       FileTest.stubs(:directory?).returns(false)
       path = File.join(@servicedir,"myservice")
-      Puppet::FileSystem.expects(:symlink?).with(path).returns(true)
-      Puppet::FileSystem.expects(:unlink).with(path)
+      Oregano::FileSystem.expects(:symlink?).with(path).returns(true)
+      Oregano::FileSystem.expects(:unlink).with(path)
       @provider.stubs(:texecute).returns("")
       @provider.disable
     end
 
     it "should stop the service" do
       FileTest.stubs(:directory?).returns(false)
-      Puppet::FileSystem.expects(:symlink?).returns(true)
-      Puppet::FileSystem.stubs(:unlink)
+      Oregano::FileSystem.expects(:symlink?).returns(true)
+      Oregano::FileSystem.stubs(:unlink)
       @provider.expects(:stop)
       @provider.disable
     end
@@ -139,7 +139,7 @@ describe provider_class do
       it "should return #{t} if the symlink exists" do
         @provider.stubs(:status).returns(:stopped)
         path = File.join(@servicedir,"myservice")
-        Puppet::FileSystem.expects(:symlink?).with(path).returns(t)
+        Oregano::FileSystem.expects(:symlink?).with(path).returns(t)
 
         expect(@provider.enabled?).to eq("#{t}".to_sym)
       end
@@ -154,9 +154,9 @@ describe provider_class do
   end
 
   describe "when checking status" do
-    it "and svstat fails, properly raise a Puppet::Error" do
-      @provider.expects(:svstat).with(File.join(@servicedir,"myservice")).raises(Puppet::ExecutionFailure, "failure")
-      expect { @provider.status }.to raise_error(Puppet::Error, 'Could not get status for service Service[myservice]: failure')
+    it "and svstat fails, properly raise a Oregano::Error" do
+      @provider.expects(:svstat).with(File.join(@servicedir,"myservice")).raises(Oregano::ExecutionFailure, "failure")
+      expect { @provider.status }.to raise_error(Oregano::Error, 'Could not get status for service Service[myservice]: failure')
     end
     it "and svstat returns up, then return :running" do
       @provider.expects(:svstat).with(File.join(@servicedir,"myservice")).returns("/etc/service/myservice: up (pid 454) 954326 seconds")

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Types
 describe 'Timestamp type' do
 
@@ -17,8 +17,8 @@ describe 'Timestamp type' do
     expect(DateTime._strptime('2015-05-04T10:34:11.003 UTC and bogus', '%FT%T.%N %Z')).to include(:leftover)
   end
 
-  context 'when used in Puppet expressions' do
-    include PuppetSpec::Compiler
+  context 'when used in Oregano expressions' do
+    include OreganoSpec::Compiler
     it 'is equal to itself only' do
       code = <<-CODE
           $t = Timestamp
@@ -167,7 +167,7 @@ describe 'Timestamp type' do
         code = <<-CODE
             notice(Timestamp('2015-03-01T11:12:13', []))
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /parameter 'format' variant 1 expects size to be at least 1, got 0/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /parameter 'format' variant 1 expects size to be at least 1, got 0/)
       end
 
       it 'can be created from a string, array of formats, and a timezone' do
@@ -356,7 +356,7 @@ describe 'Timestamp type' do
         code = <<-CODE
             notice(Timestamp() > Timespan(3))
         CODE
-        expect { eval_and_collect_notices(code) }.to raise_error(Puppet::Error, /Timestamps are only comparable to Timestamps, Integers, and Floats/)
+        expect { eval_and_collect_notices(code) }.to raise_error(Oregano::Error, /Timestamps are only comparable to Timestamps, Integers, and Floats/)
       end
     end
   end

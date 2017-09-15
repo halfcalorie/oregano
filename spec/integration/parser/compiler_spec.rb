@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet_spec/compiler'
+require 'oregano_spec/compiler'
 require 'matchers/resource'
 
 # COPY OF UNIT TEST
@@ -56,15 +56,15 @@ class CompilerTestResource
   end
 end
 
-describe Puppet::Parser::Compiler do
-  include PuppetSpec::Files
+describe Oregano::Parser::Compiler do
+  include OreganoSpec::Files
   include Matchers::Resource
 
   def resource(type, title)
-    Puppet::Parser::Resource.new(type, title, :scope => @scope)
+    Oregano::Parser::Resource.new(type, title, :scope => @scope)
   end
 
-  let(:environment) { Puppet::Node::Environment.create(:testing, []) }
+  let(:environment) { Oregano::Node::Environment.create(:testing, []) }
 
   before :each do
     # Push me faster, I wanna go back in time!  (Specifically, freeze time
@@ -74,20 +74,20 @@ describe Puppet::Parser::Compiler do
     now = Time.now
     Time.stubs(:now).returns(now)
 
-    @node = Puppet::Node.new("testnode",
-                             :facts => Puppet::Node::Facts.new("facts", {}),
+    @node = Oregano::Node.new("testnode",
+                             :facts => Oregano::Node::Facts.new("facts", {}),
                              :environment => environment)
     @known_resource_types = environment.known_resource_types
-    @compiler = Puppet::Parser::Compiler.new(@node)
-    @scope = Puppet::Parser::Scope.new(@compiler, :source => stub('source'))
-    @scope_resource = Puppet::Parser::Resource.new(:file, "/my/file", :scope => @scope)
+    @compiler = Oregano::Parser::Compiler.new(@node)
+    @scope = Oregano::Parser::Scope.new(@compiler, :source => stub('source'))
+    @scope_resource = Oregano::Parser::Resource.new(:file, "/my/file", :scope => @scope)
     @scope.resource = @scope_resource
   end
 
   # NEW INTEGRATION TEST
   describe "when evaluating collections" do
     it 'matches on container inherited tags' do
-      Puppet[:code] = <<-MANIFEST
+      Oregano[:code] = <<-MANIFEST
       class xport_test {
         tag('foo_bar')
         @notify { 'nbr1':
@@ -106,7 +106,7 @@ describe Puppet::Parser::Compiler do
       include xport_test
       MANIFEST
 
-      catalog = Puppet::Parser::Compiler.compile(Puppet::Node.new("mynode"))
+      catalog = Oregano::Parser::Compiler.compile(Oregano::Node.new("mynode"))
 
       expect(catalog).to have_resource("Notify[nbr1]").with_parameter(:message, 'overridden')
       expect(catalog).to have_resource("Notify[nbr2]").with_parameter(:message, 'overridden')
@@ -114,7 +114,7 @@ describe Puppet::Parser::Compiler do
   end
 
   describe "when evaluating node classes" do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
     describe "when provided classes in hash format" do
       it 'looks up default parameter values from inherited class (PUP-2532)' do
@@ -140,23 +140,23 @@ describe Puppet::Parser::Compiler do
 
   context "when converting catalog to resource" do
     it "the same environment is used for compilation as for transformation to resource form" do
-        Puppet[:code] = <<-MANIFEST
+        Oregano[:code] = <<-MANIFEST
           notify { 'dummy':
           }
         MANIFEST
 
-      Puppet::Parser::Resource::Catalog.any_instance.expects(:to_resource).with do |catalog|
-        Puppet.lookup(:current_environment).name == :production
+      Oregano::Parser::Resource::Catalog.any_instance.expects(:to_resource).with do |catalog|
+        Oregano.lookup(:current_environment).name == :production
       end
 
-      Puppet::Parser::Compiler.compile(Puppet::Node.new("mynode"))
+      Oregano::Parser::Compiler.compile(Oregano::Node.new("mynode"))
     end
   end
 
   context 'when working with $settings name space' do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
     it 'makes $settings::strict available as string' do
-      node = Puppet::Node.new("testing")
+      node = Oregano::Node.new("testing")
       catalog = compile_to_catalog(<<-MANIFEST, node)
           notify { 'test': message => $settings::strict == 'warning' }
       MANIFEST
@@ -164,7 +164,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'can return boolean settings as Boolean' do
-      node = Puppet::Node.new("testing")
+      node = Oregano::Node.new("testing")
       catalog = compile_to_catalog(<<-MANIFEST, node)
           notify { 'test': message => $settings::storeconfigs == false }
       MANIFEST
@@ -172,7 +172,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'makes all server settings available as $settings::all_local hash' do
-      node = Puppet::Node.new("testing")
+      node = Oregano::Node.new("testing")
       catalog = compile_to_catalog(<<-MANIFEST, node)
           notify { 'test': message => $settings::all_local['strict'] == 'warning' }
       MANIFEST
@@ -182,10 +182,10 @@ describe Puppet::Parser::Compiler do
   end
 
   context 'when working with $server_facts' do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
     it '$trusted is available' do
-      node = Puppet::Node.new("testing")
+      node = Oregano::Node.new("testing")
       node.add_server_facts({ "server_fact" => "foo" })
 
       catalog = compile_to_catalog(<<-MANIFEST, node)
@@ -196,7 +196,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'does not allow assignment to $server_facts' do
-      node = Puppet::Node.new("testing")
+      node = Oregano::Node.new("testing")
       node.add_server_facts({ "server_fact" => "foo" })
 
       expect do
@@ -204,29 +204,29 @@ describe Puppet::Parser::Compiler do
             $server_facts = 'changed'
             notify { 'test': message => $server_facts == 'changed' }
         MANIFEST
-      end.to raise_error(Puppet::PreformattedError, /Attempt to assign to a reserved variable name: '\$server_facts'.*/)
+      end.to raise_error(Oregano::PreformattedError, /Attempt to assign to a reserved variable name: '\$server_facts'.*/)
     end
   end
 
   describe "the compiler when using 4.x language constructs" do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
-    if Puppet.features.microsoft_windows?
+    if Oregano.features.microsoft_windows?
       it "should be able to determine the configuration version from a local version control repository" do
-        pending("Bug #14071 about semantics of Puppet::Util::Execute on Windows")
+        pending("Bug #14071 about semantics of Oregano::Util::Execute on Windows")
         # This should always work, because we should always be
-        # in the puppet repo when we run this.
+        # in the oregano repo when we run this.
         version = %x{git rev-parse HEAD}.chomp
 
-        Puppet.settings[:config_version] = 'git rev-parse HEAD'
+        Oregano.settings[:config_version] = 'git rev-parse HEAD'
 
-        compiler = Puppet::Parser::Compiler.new(Puppet::Node.new("testnode"))
+        compiler = Oregano::Parser::Compiler.new(Oregano::Node.new("testnode"))
         compiler.catalog.version.should == version
       end
     end
 
     it 'assigns multiple variables from a class' do
-      node = Puppet::Node.new("testnodex")
+      node = Oregano::Node.new("testnodex")
       catalog = compile_to_catalog(<<-PP, node)
       class foo::bar::example($x = 100)  {
         $a = 10
@@ -241,7 +241,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'errors on attempt to assigns multiple variables from a class when variable does not exist' do
-      node = Puppet::Node.new("testnodex")
+      node = Oregano::Node.new("testnodex")
       expect do
         compile_to_catalog(<<-PP, node)
         class foo::bar::example($x = 100)  {
@@ -257,7 +257,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it "should not create duplicate resources when a class is referenced both directly and indirectly by the node classifier (4792)" do
-      node = Puppet::Node.new("testnodex")
+      node = Oregano::Node.new("testnodex")
       node.classes = ['foo', 'bar']
       catalog = compile_to_catalog(<<-PP, node)
         class foo
@@ -271,7 +271,7 @@ describe Puppet::Parser::Compiler do
         }
       PP
 
-      catalog = Puppet::Parser::Compiler.compile(node)
+      catalog = Oregano::Parser::Compiler.compile(node)
 
       expect(catalog).to have_resource("Notify[foo_notify]")
       expect(catalog).to have_resource("Notify[bar_notify]")
@@ -368,7 +368,7 @@ describe Puppet::Parser::Compiler do
         # tested with strict == off since this was once conditional on strict
         # can be removed in a later version.
         before(:each) do
-          Puppet[:strict] = :off
+          Oregano[:strict] = :off
         end
 
         it 'is reported as an error' do
@@ -444,16 +444,16 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'should recompute the version after input files are re-parsed' do
-      Puppet[:code] = 'class foo { }'
+      Oregano[:code] = 'class foo { }'
       first_time = Time.at(1)
       second_time = Time.at(200)
       Time.stubs(:now).returns(first_time)
-      node = Puppet::Node.new('mynode')
-      expect(Puppet::Parser::Compiler.compile(node).version).to eq(first_time.to_i)
+      node = Oregano::Node.new('mynode')
+      expect(Oregano::Parser::Compiler.compile(node).version).to eq(first_time.to_i)
       Time.stubs(:now).returns(second_time)
-      expect(Puppet::Parser::Compiler.compile(node).version).to eq(first_time.to_i) # no change because files didn't change
-      Puppet[:code] = nil
-      expect(Puppet::Parser::Compiler.compile(node).version).to eq(second_time.to_i)
+      expect(Oregano::Parser::Compiler.compile(node).version).to eq(first_time.to_i) # no change because files didn't change
+      Oregano[:code] = nil
+      expect(Oregano::Parser::Compiler.compile(node).version).to eq(second_time.to_i)
     end
 
     ['define', 'class', 'node'].each do |thing|
@@ -466,7 +466,7 @@ describe Puppet::Parser::Compiler do
               notify { decoy: }
             }
           PP
-        end.to raise_error(Puppet::Error, /Classes, definitions, and nodes may only appear at toplevel/)
+        end.to raise_error(Oregano::Error, /Classes, definitions, and nodes may only appear at toplevel/)
       end
 
       it "'#{thing}' is not allowed inside un-evaluated conditional constructs" do
@@ -478,7 +478,7 @@ describe Puppet::Parser::Compiler do
               notify { decoy: }
             }
           PP
-        end.to raise_error(Puppet::Error, /Classes, definitions, and nodes may only appear at toplevel/)
+        end.to raise_error(Oregano::Error, /Classes, definitions, and nodes may only appear at toplevel/)
       end
     end
 
@@ -488,7 +488,7 @@ describe Puppet::Parser::Compiler do
       # explicit - the standard setting is strict == warning, here setting it to off
       #
       before(:each) do
-        Puppet[:strict] = :off
+        Oregano[:strict] = :off
       end
 
       [ 'before',
@@ -709,7 +709,7 @@ describe Puppet::Parser::Compiler do
        ['/', '/']].each do |t, r|
         it "a circular reference can be compiled with endings: title='#{t}' and ref='#{r}'" do
           expect {
-            node = Puppet::Node.new("testing")
+            node = Oregano::Node.new("testing")
             compile_to_catalog(<<-"MANIFEST", node)
             file { '/tmp/bazinga.txt#{t}':
               content => 'henrik testing',
@@ -724,7 +724,7 @@ describe Puppet::Parser::Compiler do
     context 'when working with the trusted data hash' do
       context 'and have opted in to hashed_node_data' do
         it 'should make $trusted available' do
-          node = Puppet::Node.new("testing")
+          node = Oregano::Node.new("testing")
           node.trusted_data = { "data" => "value" }
 
           catalog = compile_to_catalog(<<-MANIFEST, node)
@@ -735,7 +735,7 @@ describe Puppet::Parser::Compiler do
         end
 
         it 'should not allow assignment to $trusted' do
-          node = Puppet::Node.new("testing")
+          node = Oregano::Node.new("testing")
           node.trusted_data = { "data" => "value" }
 
           expect do
@@ -743,7 +743,7 @@ describe Puppet::Parser::Compiler do
               $trusted = 'changed'
               notify { 'test': message => $trusted == 'changed' }
             MANIFEST
-          end.to raise_error(Puppet::PreformattedError, /Attempt to assign to a reserved variable name: '\$trusted'/)
+          end.to raise_error(Oregano::PreformattedError, /Attempt to assign to a reserved variable name: '\$trusted'/)
         end
       end
     end
@@ -1102,7 +1102,7 @@ describe Puppet::Parser::Compiler do
   end
 
   describe "the compiler when handling aliases" do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
     def extract_name(ref)
       ref.sub(/.*\[(\w+)\]/, '\1')
@@ -1123,7 +1123,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'allows a relationship to be formed using metaparam relationship' do
-      node = Puppet::Node.new("testnodex")
+      node = Oregano::Node.new("testnodex")
       catalog = compile_to_catalog(<<-PP, node)
         notify { 'actual_2':  before => 'Notify[alias_1]' }
         notify { 'actual_1': alias => 'alias_1' }
@@ -1132,7 +1132,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'allows a relationship to be formed using -> operator and alias' do
-      node = Puppet::Node.new("testnodex")
+      node = Oregano::Node.new("testnodex")
       catalog = compile_to_catalog(<<-PP, node)
         notify { 'actual_2':  }
         notify { 'actual_1': alias => 'alias_1' }
@@ -1142,7 +1142,7 @@ describe Puppet::Parser::Compiler do
     end
 
     it 'errors when an alias cannot be found when relationship is formed with -> operator' do
-      node = Puppet::Node.new("testnodex")
+      node = Oregano::Node.new("testnodex")
       expect {
         catalog = compile_to_catalog(<<-PP, node)
           notify { 'actual_2':  }
@@ -1154,7 +1154,7 @@ describe Puppet::Parser::Compiler do
   end
 
   describe 'the compiler when using collection and override' do
-    include PuppetSpec::Compiler
+    include OreganoSpec::Compiler
 
     it 'allows an override when there is a default present' do
       catalog = compile_to_catalog(<<-MANIFEST)

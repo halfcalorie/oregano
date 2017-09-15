@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:package).provider(:aix)
+provider_class = Oregano::Type.type(:package).provider(:aix)
 
 describe provider_class do
   before(:each) do
     # Create a mock resource
-    @resource = Puppet::Type.type(:package).new(:name => 'mypackage', :ensure => :installed, :source => 'mysource', :provider => :aix)
+    @resource = Oregano::Type.type(:package).new(:name => 'mypackage', :ensure => :installed, :source => 'mysource', :provider => :aix)
 
     @provider = @resource.provider
   end
@@ -82,7 +82,7 @@ Name                      Level           Pre-installation Failure/Warning
 mypackage                 1.2.3.3         Already superseded by 1.2.3.4
       OUTPUT
 
-      expect { @provider.install }.to raise_error(Puppet::Error, "aix package provider is unable to downgrade packages")
+      expect { @provider.install }.to raise_error(Oregano::Error, "aix package provider is unable to downgrade packages")
     end
   end
 
@@ -100,7 +100,7 @@ mypackage                 1.2.3.3         Already superseded by 1.2.3.4
 
     it "should prefetch the right values" do
       Process.stubs(:euid).returns(0)
-      resource = Puppet::Type.type(:package).
+      resource = Oregano::Type.type(:package).
           new(:name => 'sudo.rte', :ensure => :latest,
               :source => 'mysource', :provider => :aix)
 
@@ -123,8 +123,8 @@ END
   end
 
   it "should prefetch when some packages lack sources" do
-    latest = Puppet::Type.type(:package).new(:name => 'mypackage', :ensure => :latest, :source => 'mysource', :provider => :aix)
-    absent = Puppet::Type.type(:package).new(:name => 'otherpackage', :ensure => :absent, :provider => :aix)
+    latest = Oregano::Type.type(:package).new(:name => 'mypackage', :ensure => :latest, :source => 'mysource', :provider => :aix)
+    absent = Oregano::Type.type(:package).new(:name => 'otherpackage', :ensure => :absent, :provider => :aix)
     Process.stubs(:euid).returns(0)
     provider_class.expects(:execute).returns 'mypackage:mypackage.rte:1.8.6.4::I:T:::::N:A Super Cool Package::::0::\n'
     provider_class.prefetch({ 'mypackage' => latest, 'otherpackage' => absent })

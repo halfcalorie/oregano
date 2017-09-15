@@ -1,4 +1,4 @@
-test_name "puppet module list (with circular dependencies)"
+test_name "oregano module list (with circular dependencies)"
 
 tag 'audit:low',
     'audit:integration',
@@ -49,13 +49,13 @@ on master, "[ -d #{master['distmoduledir']}/appleseed ]"
 on master, "[ -d #{master['sitemoduledir']}/crakorn ]"
 
 step "List the installed modules"
-on master, puppet("module list") do
+on master, oregano("module list") do
   assert_match /jimmy-crakorn/, stdout, 'Could not find jimmy crakorn'
   assert_match /jimmy-appleseed/, stdout, 'Could not find jimmy appleseed, but then again... wasnt it johnny appleseed?'
 end
 
 step "List the installed modules as a dependency tree"
-on master, puppet("module list --tree") do
+on master, oregano("module list --tree") do
   assert_match /jimmy-crakorn.*\[#{master['sitemoduledir']}\]/, stdout, 'Could not find jimmy crakorn'
   assert_match /jimmy-appleseed.*\[#{master['distmoduledir']}\]/, stdout, 'Could not find jimmy appleseed, but then again... wasnt it johnny appleseed?'
 end

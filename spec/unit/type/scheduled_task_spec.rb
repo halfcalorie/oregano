@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_windows? do
+describe Oregano::Type.type(:scheduled_task), :if => Oregano.features.microsoft_windows? do
 
   it 'should use name as the namevar' do
     expect(described_class.new(
@@ -33,7 +33,7 @@ describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_wi
       expect {
         described_class.new(:name => 'Test Task', :command => 'notepad.exe')
       }.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         /Parameter command failed on Scheduled_task\[Test Task\]: Must be specified using an absolute path\./
       )
     end
@@ -76,7 +76,7 @@ describe Puppet::Type.type(:scheduled_task), :if => Puppet.features.microsoft_wi
           :working_dir => 'Windows\System32'
         )
       }.to raise_error(
-        Puppet::Error,
+        Oregano::Error,
         /Parameter working_dir failed on Scheduled_task\[Test Task\]: Must be specified using an absolute path/
       )
     end

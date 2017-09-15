@@ -1,22 +1,22 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet/confine/false'
+require 'oregano/confine/false'
 
-describe Puppet::Confine::False do
+describe Oregano::Confine::False do
   it "should be named :false" do
-    expect(Puppet::Confine::False.name).to eq(:false)
+    expect(Oregano::Confine::False.name).to eq(:false)
   end
 
   it "should require a value" do
-    expect { Puppet::Confine.new }.to raise_error(ArgumentError)
+    expect { Oregano::Confine.new }.to raise_error(ArgumentError)
   end
 
   describe "when testing values" do
-    before { @confine = Puppet::Confine::False.new("foo") }
+    before { @confine = Oregano::Confine::False.new("foo") }
 
     it "should use the 'pass?' method to test validity" do
-      @confine = Puppet::Confine::False.new("foo")
+      @confine = Oregano::Confine::False.new("foo")
       @confine.label = "eh"
       @confine.expects(:pass?).with("foo")
       @confine.valid?
@@ -31,13 +31,13 @@ describe Puppet::Confine::False do
     end
 
     it "should produce a message that a value is true" do
-      @confine = Puppet::Confine::False.new("foo")
+      @confine = Oregano::Confine::False.new("foo")
       expect(@confine.message("eh")).to be_include("true")
     end
   end
 
   it "should be able to produce a summary with the number of incorrectly true values" do
-    confine = Puppet::Confine::False.new %w{one two three four}
+    confine = Oregano::Confine::False.new %w{one two three four}
     confine.expects(:pass?).times(4).returns(true).returns(false).returns(true).returns(false)
     expect(confine.summary).to eq(2)
   end
@@ -47,6 +47,6 @@ describe Puppet::Confine::False do
     c2 = mock '2', :summary => 2
     c3 = mock '3', :summary => 3
 
-    expect(Puppet::Confine::False.summarize([c1, c2, c3])).to eq(6)
+    expect(Oregano::Confine::False.summarize([c1, c2, c3])).to eq(6)
   end
 end

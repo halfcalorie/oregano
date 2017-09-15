@@ -1,14 +1,14 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-zfs = Puppet::Type.type(:zfs)
+zfs = Oregano::Type.type(:zfs)
 
 describe zfs do
   properties = [:ensure, :mountpoint, :compression, :copies, :quota, :reservation, :sharenfs, :snapdir]
 
   properties.each do |property|
     it "should have a #{property} property" do
-      expect(zfs.attrclass(property).ancestors).to be_include(Puppet::Property)
+      expect(zfs.attrclass(property).ancestors).to be_include(Oregano::Property)
     end
   end
 
@@ -16,7 +16,7 @@ describe zfs do
 
   parameters.each do |parameter|
     it "should have a #{parameter} parameter" do
-      expect(zfs.attrclass(parameter).ancestors).to be_include(Puppet::Parameter)
+      expect(zfs.attrclass(parameter).ancestors).to be_include(Oregano::Parameter)
     end
   end
 
@@ -27,15 +27,15 @@ describe zfs do
 
     zpool_provider = mock "provider"
     zpool_provider.stubs(:name).returns(:zpool)
-    Puppet::Type.type(:zpool).stubs(:defaultprovider).returns(zpool_provider)
+    Oregano::Type.type(:zpool).stubs(:defaultprovider).returns(zpool_provider)
 
-    foo_pool = Puppet::Type.type(:zpool).new(:name => "foo")
+    foo_pool = Oregano::Type.type(:zpool).new(:name => "foo")
 
-    foo_bar_zfs = Puppet::Type.type(:zfs).new(:name => "foo/bar")
-    foo_bar_baz_zfs = Puppet::Type.type(:zfs).new(:name => "foo/bar/baz")
-    foo_bar_baz_buz_zfs = Puppet::Type.type(:zfs).new(:name => "foo/bar/baz/buz")
+    foo_bar_zfs = Oregano::Type.type(:zfs).new(:name => "foo/bar")
+    foo_bar_baz_zfs = Oregano::Type.type(:zfs).new(:name => "foo/bar/baz")
+    foo_bar_baz_buz_zfs = Oregano::Type.type(:zfs).new(:name => "foo/bar/baz/buz")
 
-    config = Puppet::Resource::Catalog.new :testing do |conf|
+    config = Oregano::Resource::Catalog.new :testing do |conf|
       [foo_pool, foo_bar_zfs, foo_bar_baz_zfs, foo_bar_baz_buz_zfs].each { |resource| conf.add_resource resource }
     end
 

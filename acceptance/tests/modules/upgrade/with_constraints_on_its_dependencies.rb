@@ -1,6 +1,6 @@
-test_name "puppet module upgrade (with constraints on its dependencies)"
-require 'puppet/acceptance/module_utils'
-extend Puppet::Acceptance::ModuleUtils
+test_name "oregano module upgrade (with constraints on its dependencies)"
+require 'oregano/acceptance/module_utils'
+extend Oregano::Acceptance::ModuleUtils
 
 tag 'audit:low',       # Module management via pmt is not the primary support workflow
     'audit:acceptance',
@@ -36,9 +36,9 @@ apply_manifest_on master, <<-PP
       }';
   }
 PP
-on master, puppet("module install pmtacceptance-stdlub --version 0.0.2")
-on master, puppet("module install pmtacceptance-java --version 1.6.0")
-on master, puppet("module list --modulepath #{default_moduledir}") do
+on master, oregano("module install pmtacceptance-stdlub --version 0.0.2")
+on master, oregano("module install pmtacceptance-java --version 1.6.0")
+on master, oregano("module list --modulepath #{default_moduledir}") do
   assert_equal <<-OUTPUT, stdout
 #{default_moduledir}
 ├── notpmtacceptance-unicorns (\e[0;36mv0.0.3\e[0m)
@@ -48,14 +48,14 @@ on master, puppet("module list --modulepath #{default_moduledir}") do
 end
 
 step "Try to upgrade a module with constraints on its dependencies that cannot be met"
-on master, puppet("module upgrade pmtacceptance-java --version 1.7.1"), :acceptable_exit_codes => [1] do
+on master, oregano("module upgrade pmtacceptance-java --version 1.7.1"), :acceptable_exit_codes => [1] do
   assert_match(/No version.* can satisfy all dependencies/, stderr,
         "Unsatisfiable dependency was not displayed")
 end
 
 step "Relax constraints"
-on master, puppet("module uninstall notpmtacceptance-unicorns")
-on master, puppet("module list --modulepath #{default_moduledir}") do
+on master, oregano("module uninstall notpmtacceptance-unicorns")
+on master, oregano("module list --modulepath #{default_moduledir}") do
   assert_equal <<-OUTPUT, stdout
 #{default_moduledir}
 ├── pmtacceptance-java (\e[0;36mv1.6.0\e[0m)
@@ -64,11 +64,11 @@ on master, puppet("module list --modulepath #{default_moduledir}") do
 end
 
 step "Upgrade a single module, ignoring its dependencies"
-on master, puppet("module upgrade pmtacceptance-java --version 1.7.0 --ignore-dependencies") do
+on master, oregano("module upgrade pmtacceptance-java --version 1.7.0 --ignore-dependencies") do
   assert_equal <<-OUTPUT, stdout
 \e[mNotice: Preparing to upgrade 'pmtacceptance-java' ...\e[0m
 \e[mNotice: Found 'pmtacceptance-java' (\e[0;36mv1.6.0\e[m) in #{default_moduledir} ...\e[0m
-\e[mNotice: Downloading from https://forgeapi.puppet.com ...\e[0m
+\e[mNotice: Downloading from https://forgeapi.oregano.com ...\e[0m
 \e[mNotice: Upgrading -- do not interrupt ...\e[0m
 #{default_moduledir}
 └── pmtacceptance-java (\e[0;36mv1.6.0 -> v1.7.0\e[0m)
@@ -76,7 +76,7 @@ on master, puppet("module upgrade pmtacceptance-java --version 1.7.0 --ignore-de
 end
 
 step "Attempt to upgrade a module where dependency requires upgrade across major version"
-on master, puppet("module upgrade pmtacceptance-java"), :acceptable_exit_codes => [1] do
+on master, oregano("module upgrade pmtacceptance-java"), :acceptable_exit_codes => [1] do
   assert_match(/There are 1 newer versions/, stderr,
     'Number of newer releases was not displayed')
 

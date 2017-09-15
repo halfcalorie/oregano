@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-describe Puppet::Pops::LabelProvider do
+describe Oregano::Pops::LabelProvider do
   class TestLabelProvider
-    include Puppet::Pops::LabelProvider
+    include Oregano::Pops::LabelProvider
   end
 
   let(:labeler) { TestLabelProvider.new }
@@ -35,12 +35,12 @@ describe Puppet::Pops::LabelProvider do
   it "raises an error when missing a character to work with" do
     expect {
       labeler.a_an('"')
-    }.to raise_error(Puppet::DevError, /<"> does not appear to contain a word/)
+    }.to raise_error(Oregano::DevError, /<"> does not appear to contain a word/)
   end
 
   it "raises an error when given an empty string" do
     expect {
       labeler.a_an('')
-    }.to raise_error(Puppet::DevError, /<> does not appear to contain a word/)
+    }.to raise_error(Oregano::DevError, /<> does not appear to contain a word/)
   end
 end

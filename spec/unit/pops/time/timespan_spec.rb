@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'puppet/pops'
-require 'puppet_spec/compiler'
+require 'oregano/pops'
+require 'oregano_spec/compiler'
 
-module Puppet::Pops
+module Oregano::Pops
 module Time
 describe 'Timespan' do
-  include PuppetSpec::Compiler
+  include OreganoSpec::Compiler
 
   let! (:simple) { Timespan.from_fields(false, 1, 3, 10, 11) }
   let! (:all_fields_hash) { {'days' => 1, 'hours' => 7, 'minutes' => 10, 'seconds' => 11, 'milliseconds' => 123, 'microseconds' => 456, 'nanoseconds' => 789} }

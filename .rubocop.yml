@@ -8,12 +8,12 @@ AllCops:
     - 'autotest/**/*'
     - 'spec/**/*'
     - 'tasks/**/*'
-    - 'lib/puppet/vendor/**/*'
-    - 'lib/puppet/parser/parser.rb'
-    - 'lib/puppet/pops/parser/eparser.rb'
-    - 'lib/puppet/external/nagios/parser.rb'
-    - 'lib/puppet/module_tool/skeleton/**/*'
-    - 'lib/semantic_puppet/dependency/module_release.rb'
+    - 'lib/oregano/vendor/**/*'
+    - 'lib/oregano/parser/parser.rb'
+    - 'lib/oregano/pops/parser/eparser.rb'
+    - 'lib/oregano/external/nagios/parser.rb'
+    - 'lib/oregano/module_tool/skeleton/**/*'
+    - 'lib/semantic_oregano/dependency/module_release.rb'
 
 Lint/ConditionPosition:
   Enabled: true

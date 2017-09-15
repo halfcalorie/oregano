@@ -11,8 +11,8 @@ test_name "#11860: exec resources should not override system locale"
 #
 # Also, this test depends on the following pull requests:
 #
-#  https://github.com/puppetlabs/puppet-acceptance/pull/123
-#  https://github.com/puppetlabs/facter/pull/159
+#  https://github.com/oreganolabs/oregano-acceptance/pull/123
+#  https://github.com/oreganolabs/facter/pull/159
 #
 #######################################################################################
 
@@ -36,7 +36,7 @@ HERE
 # apply the manifest.
 #
 # note that we are passing in an extra :environment argument, which will cause the
-# framework to temporarily set this variable before executing the puppet command.
+# framework to temporarily set this variable before executing the oregano command.
 # this lets us know what value we should be looking for as the output of the exec.
 
 apply_manifest_on agents, test_LANG_manifest, :environment => {:LANG => locale_string}

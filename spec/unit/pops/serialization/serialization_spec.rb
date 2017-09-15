@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'puppet/pops'
+require 'oregano/pops'
 
-module Puppet::Pops
+module Oregano::Pops
 module Serialization
 [JSON].each do |packer_module|
-  describe "the Puppet::Pops::Serialization over #{packer_module.name}" do
+  describe "the Oregano::Pops::Serialization over #{packer_module.name}" do
   let!(:dumper) { Model::ModelTreeDumper.new }
   let(:io) { StringIO.new }
   let(:parser) { Parser::EvaluatingParser.new }
-  let(:env) { Puppet::Node::Environment.create(:testing, []) }
-  let(:loaders) { Puppet::Pops::Loaders.new(env) }
+  let(:env) { Oregano::Node::Environment.create(:testing, []) }
+  let(:loaders) { Oregano::Pops::Loaders.new(env) }
   let(:loader) { loaders.find_loader(nil) }
   let(:reader_class) { packer_module::Reader }
   let(:writer_class) { packer_module::Writer }
@@ -17,7 +17,7 @@ module Serialization
   let(:deserializer) { Deserializer.new(reader_class.new(io), loaders.find_loader(nil)) }
 
   around :each do |example|
-     Puppet.override(:loaders => loaders, :current_environment => env) do
+     Oregano.override(:loaders => loaders, :current_environment => env) do
       example.run
     end
   end
@@ -121,19 +121,19 @@ module Serialization
 
     it 'Version' do
       # It does succeed on rare occasions, so we need to repeat
-      val = SemanticPuppet::Version.parse('1.2.3-alpha2')
+      val = SemanticOregano::Version.parse('1.2.3-alpha2')
       write(val)
       val2 = read
-      expect(val2).to be_a(SemanticPuppet::Version)
+      expect(val2).to be_a(SemanticOregano::Version)
       expect(val2).to eql(val)
     end
 
     it 'VersionRange' do
       # It does succeed on rare occasions, so we need to repeat
-      val = SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4')
+      val = SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4')
       write(val)
       val2 = read
-      expect(val2).to be_a(SemanticPuppet::VersionRange)
+      expect(val2).to be_a(SemanticOregano::VersionRange)
       expect(val2).to eql(val)
     end
 
@@ -232,8 +232,8 @@ module Serialization
       val = [
         Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
         Time::Timestamp.now,
-        SemanticPuppet::Version.parse('1.2.3-alpha2'),
-        SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+        SemanticOregano::Version.parse('1.2.3-alpha2'),
+        SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
         Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
       ]
       write(val)
@@ -246,8 +246,8 @@ module Serialization
       val = {
         'duration' => Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
         'time' => Time::Timestamp.now,
-        'version' => SemanticPuppet::Version.parse('1.2.3-alpha2'),
-        'range' => SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+        'version' => SemanticOregano::Version.parse('1.2.3-alpha2'),
+        'range' => SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
         'binary' => Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
       }
       write(val)
@@ -284,10 +284,10 @@ module Serialization
       end
     end
 
-    context 'PuppetObject' do
+    context 'OreganoObject' do
       before(:each) do
         class DerivedArray < Array
-          include Types::PuppetObject
+          include Types::OreganoObject
 
           def self._pcore_type
             @type
@@ -308,7 +308,7 @@ module Serialization
         end
 
         class DerivedHash < Hash
-          include Types::PuppetObject
+          include Types::OreganoObject
 
           def self._pcore_type
             @type
@@ -332,7 +332,7 @@ module Serialization
       end
 
       after(:each) do
-        x = Puppet::Pops::Serialization
+        x = Oregano::Pops::Serialization
         x.send(:remove_const, :DerivedArray) if x.const_defined?(:DerivedArray)
         x.send(:remove_const, :DerivedHash) if x.const_defined?(:DerivedHash)
       end
@@ -344,8 +344,8 @@ module Serialization
         val = DerivedArray.new([
           Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
           Time::Timestamp.now,
-          SemanticPuppet::Version.parse('1.2.3-alpha2'),
-          SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+          SemanticOregano::Version.parse('1.2.3-alpha2'),
+          SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
           Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
         ])
         write(val)
@@ -360,8 +360,8 @@ module Serialization
         val = DerivedHash.new({
           'duration' => Time::Timespan.from_fields(false, 3, 12, 40, 31, 123),
           'time' => Time::Timestamp.now,
-          'version' => SemanticPuppet::Version.parse('1.2.3-alpha2'),
-          'range' => SemanticPuppet::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
+          'version' => SemanticOregano::Version.parse('1.2.3-alpha2'),
+          'range' => SemanticOregano::VersionRange.parse('>=1.2.3-alpha2 <1.2.4'),
           'binary' => Types::PBinaryType::Binary.from_base64('w5ZzdGVuIG1lZCByw7ZzdGVuCg==')
         })
         write(val)
@@ -386,7 +386,7 @@ module Serialization
       write(type.create(32))
 
       # Should fail since no loader knows about 'MyType'
-      expect{ read }.to raise_error(Puppet::Error, 'No implementation mapping found for Puppet Type MyType')
+      expect{ read }.to raise_error(Oregano::Error, 'No implementation mapping found for Oregano Type MyType')
     end
 
     it 'succeeds when deserializer is aware of the referenced type' do

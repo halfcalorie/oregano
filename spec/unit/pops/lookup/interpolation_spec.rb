@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet'
+require 'oregano'
 
-module Puppet::Pops
-describe 'Puppet::Pops::Lookup::Interpolation' do
+module Oregano::Pops
+describe 'Oregano::Pops::Lookup::Interpolation' do
   include Lookup::SubLookup
 
   class InterpolationTestAdapter < Lookup::LookupAdapter

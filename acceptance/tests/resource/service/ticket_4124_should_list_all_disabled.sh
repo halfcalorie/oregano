@@ -7,7 +7,7 @@
 RALSH_FILE=/tmp/ralsh-disabled-list-$$
 SERVICE_FILE=/tmp/service-disabled-list-$$
 
-puppet resource service | egrep -B2 "enable.*=>.*'false" | grep "service {" | awk -F"'" '{print $2}' | sort  > $RALSH_FILE
+oregano resource service | egrep -B2 "enable.*=>.*'false" | grep "service {" | awk -F"'" '{print $2}' | sort  > $RALSH_FILE
 
 if [ -e $SERVICE_FILE ]; then
   rm $SERVICE_FILE

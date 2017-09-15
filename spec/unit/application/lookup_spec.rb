@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'puppet/application/lookup'
-require 'puppet/pops/lookup'
+require 'oregano/application/lookup'
+require 'oregano/pops/lookup'
 
-describe Puppet::Application::Lookup do
+describe Oregano::Application::Lookup do
 
   def run_lookup(lookup)
     capture = StringIO.new
@@ -17,7 +17,7 @@ describe Puppet::Application::Lookup do
   end
 
   context "when running with incorrect command line options" do
-    let (:lookup) { Puppet::Application[:lookup] }
+    let (:lookup) { Oregano::Application[:lookup] }
 
     it "errors if no keys are given via the command line" do
       lookup.options[:node] = 'dantooine.local'
@@ -31,7 +31,7 @@ describe Puppet::Application::Lookup do
       lookup.options[:merge] = 'something_bad'
       lookup.command_line.stubs(:args).returns(['atton', 'kreia'])
 
-      expected_error = "The --merge option only accepts 'first', 'hash', 'unique', or 'deep'\nRun 'puppet lookup --help' for more details"
+      expected_error = "The --merge option only accepts 'first', 'hash', 'unique', or 'deep'\nRun 'oregano lookup --help' for more details"
 
       expect { lookup.run_command }.to raise_error(RuntimeError, expected_error)
     end
@@ -42,14 +42,14 @@ describe Puppet::Application::Lookup do
       lookup.options[:merge] = 'hash'
       lookup.command_line.stubs(:args).returns(['atton', 'kreia'])
 
-      expected_error = "The options --knock-out-prefix, --sort-merged-arrays, and --merge-hash-arrays are only available with '--merge deep'\nRun 'puppet lookup --help' for more details"
+      expected_error = "The options --knock-out-prefix, --sort-merged-arrays, and --merge-hash-arrays are only available with '--merge deep'\nRun 'oregano lookup --help' for more details"
 
       expect { lookup.run_command }.to raise_error(RuntimeError, expected_error)
     end
   end
 
   context "when running with correct command line options" do
-    let (:lookup) { Puppet::Application[:lookup] }
+    let (:lookup) { Oregano::Application[:lookup] }
 
     it "calls the lookup method with the correct arguments" do
       lookup.options[:node] = 'dantooine.local'
@@ -61,7 +61,7 @@ describe Puppet::Application::Lookup do
 
       expected_merge = { "strategy" => "deep", "sort_merged_arrays" => false, "merge_hash_arrays" => true }
 
-      (Puppet::Pops::Lookup).expects(:lookup).with(['atton', 'kreia'], nil, nil, false, expected_merge, anything).returns('rand')
+      (Oregano::Pops::Lookup).expects(:lookup).with(['atton', 'kreia'], nil, nil, false, expected_merge, anything).returns('rand')
 
       expect(run_lookup(lookup)).to eql("rand")
     end
@@ -73,7 +73,7 @@ describe Puppet::Application::Lookup do
         lookup.options[:merge] = opt
         lookup.command_line.stubs(:args).returns(['atton', 'kreia'])
         lookup.stubs(:generate_scope).yields('scope')
-        Puppet::Pops::Lookup.stubs(:lookup).returns('rand')
+        Oregano::Pops::Lookup.stubs(:lookup).returns('rand')
         expect(run_lookup(lookup)).to eql("--- rand\n...")
       end
     end
@@ -83,7 +83,7 @@ describe Puppet::Application::Lookup do
       lookup.command_line.stubs(:args).returns(['atton', 'kreia'])
       lookup.stubs(:generate_scope).yields('scope')
 
-      Puppet::Pops::Lookup.stubs(:lookup).returns('rand')
+      Oregano::Pops::Lookup.stubs(:lookup).returns('rand')
 
       expect(run_lookup(lookup)).to eql("--- rand\n...")
     end
@@ -91,14 +91,14 @@ describe Puppet::Application::Lookup do
 
 
   context 'when given a valid configuration' do
-    let (:lookup) { Puppet::Application[:lookup] }
+    let (:lookup) { Oregano::Application[:lookup] }
 
     # There is a fully configured 'sample' environment in fixtures at this location
     let(:environmentpath) { File.absolute_path(File.join(my_fixture_dir(), '../environments')) }
 
-    let(:facts) { Puppet::Node::Facts.new("facts", {}) }
+    let(:facts) { Oregano::Node::Facts.new("facts", {}) }
 
-    let(:node) { Puppet::Node.new("testnode", :facts => facts, :environment => 'production') }
+    let(:node) { Oregano::Node.new("testnode", :facts => facts, :environment => 'production') }
 
     let(:expected_json_hash) {
       {
@@ -259,9 +259,9 @@ describe Puppet::Application::Lookup do
     around(:each) do |example|
       # Initialize settings to get a full compile as close as possible to a real
       # environment load
-      Puppet.settings.initialize_global_settings
-      loader = Puppet::Environments::Directories.new(environmentpath, [])
-      Puppet.override(:environments => loader) do
+      Oregano.settings.initialize_global_settings
+      loader = Oregano::Environments::Directories.new(environmentpath, [])
+      Oregano.override(:environments => loader) do
         example.run
       end
     end
@@ -271,7 +271,7 @@ describe Puppet::Application::Lookup do
       lookup.options[:explain] = true
       lookup.command_line.stubs(:args).returns(['a'])
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         expect(run_lookup(lookup)).to eql(<<-EXPLANATION.chomp)
 Searching for "lookup_options"
   Global Data Provider (hiera configuration version 5)
@@ -299,10 +299,10 @@ Searching for "a"
     it '--debug using multiple interpolation functions produces output to the logger' do
       lookup.options[:node] = node
       lookup.command_line.stubs(:args).returns(['ab'])
-      Puppet.debug = true
+      Oregano.debug = true
       logs = []
       begin
-        Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+        Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
           expect { lookup.run_command }.to output(<<-VALUE.unindent).to_stdout
             --- This is A and This is B
             ...
@@ -319,9 +319,9 @@ Searching for "a"
       lookup.options[:node] = node
       lookup.options[:explain] = true
       lookup.command_line.stubs(:args).returns(['a'])
-      Puppet.debug = true
+      Oregano.debug = true
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         expect(run_lookup(lookup)).to eql(<<-EXPLANATION.chomp)
 Searching for "lookup_options"
   Global Data Provider (hiera configuration version 5)
@@ -390,9 +390,9 @@ Merge strategy hash
     it '--explain-options produces human readable text of a hash merge and --debug produces the same output to debug logger' do
       lookup.options[:node] = node
       lookup.options[:explain_options] = true
-      Puppet.debug = true
+      Oregano.debug = true
       logs = []
-      Puppet::Util::Log.with_destination(Puppet::Test::LogCollector.new(logs)) do
+      Oregano::Util::Log.with_destination(Oregano::Test::LogCollector.new(logs)) do
         expect(run_lookup(lookup)).to eql(<<-EXPLANATION.chomp)
 Merge strategy hash
   Global Data Provider (hiera configuration version 5)
@@ -512,8 +512,8 @@ Searching for "a"
       end
     end
 
-    context 'using a puppet function as data provider' do
-      let(:node) { Puppet::Node.new("testnode", :facts => facts, :environment => 'puppet_func_provider') }
+    context 'using a oregano function as data provider' do
+      let(:node) { Oregano::Node.new("testnode", :facts => facts, :environment => 'oregano_func_provider') }
 
       it "works OK in the absense of '--compile'" do
         lookup.options[:node] = node

@@ -12,7 +12,7 @@ agents.each do |agent|
   on(agent, "rm -f #{target}")
 
   step "run the resource agent"
-  on(agent, puppet_resource(content)) do
+  on(agent, oregano_resource(content)) do
     unless agent['locale'] == 'ja'
       stdout.index('Host[example.com]/ensure: created') or
         fail_test("missing notice about host record creation")

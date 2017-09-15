@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/util/windows'
+require 'oregano/util/windows'
 
-describe Puppet::Util::Windows::File, :if => Puppet::Util::Platform.windows? do
-  include PuppetSpec::Files
+describe Oregano::Util::Windows::File, :if => Oregano::Util::Platform.windows? do
+  include OreganoSpec::Files
 
   let(:nonexist_file) { 'C:\foo.bar' }
   let(:nonexist_path) { 'C:\somefile\that\wont\ever\exist' }
@@ -13,13 +13,13 @@ describe Puppet::Util::Windows::File, :if => Puppet::Util::Platform.windows? do
     it "should raise an error for files that do not exist by default" do
       expect {
         described_class.get_attributes(nonexist_file)
-      }.to raise_error(Puppet::Error, /GetFileAttributes/)
+      }.to raise_error(Oregano::Error, /GetFileAttributes/)
     end
 
     it "should raise an error for files that do not exist when specified" do
       expect {
         described_class.get_attributes(nonexist_file, true)
-      }.to raise_error(Puppet::Error, /GetFileAttributes/)
+      }.to raise_error(Oregano::Error, /GetFileAttributes/)
     end
 
     it "should not raise an error for files that do not exist when specified" do
@@ -38,8 +38,8 @@ describe Puppet::Util::Windows::File, :if => Puppet::Util::Platform.windows? do
       expect {
         described_class.get_long_pathname(nonexist_file)
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
-        expect(error.code).to eq(Puppet::Util::Windows::File::ERROR_FILE_NOT_FOUND)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
+        expect(error.code).to eq(Oregano::Util::Windows::File::ERROR_FILE_NOT_FOUND)
       end
     end
 
@@ -47,8 +47,8 @@ describe Puppet::Util::Windows::File, :if => Puppet::Util::Platform.windows? do
       expect {
         described_class.get_long_pathname(nonexist_path)
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
-        expect(error.code).to eq(Puppet::Util::Windows::File::ERROR_PATH_NOT_FOUND)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
+        expect(error.code).to eq(Oregano::Util::Windows::File::ERROR_PATH_NOT_FOUND)
       end
     end
 
@@ -65,8 +65,8 @@ describe Puppet::Util::Windows::File, :if => Puppet::Util::Platform.windows? do
       expect {
         described_class.get_short_pathname(nonexist_file)
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
-        expect(error.code).to eq(Puppet::Util::Windows::File::ERROR_FILE_NOT_FOUND)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
+        expect(error.code).to eq(Oregano::Util::Windows::File::ERROR_FILE_NOT_FOUND)
       end
     end
 
@@ -74,8 +74,8 @@ describe Puppet::Util::Windows::File, :if => Puppet::Util::Platform.windows? do
       expect {
         described_class.get_short_pathname(nonexist_path)
       }.to raise_error do |error|
-        expect(error).to be_a(Puppet::Util::Windows::Error)
-        expect(error.code).to eq(Puppet::Util::Windows::File::ERROR_PATH_NOT_FOUND)
+        expect(error).to be_a(Oregano::Util::Windows::Error)
+        expect(error.code).to eq(Oregano::Util::Windows::File::ERROR_PATH_NOT_FOUND)
       end
     end
 

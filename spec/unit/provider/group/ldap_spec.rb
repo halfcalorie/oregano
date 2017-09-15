@@ -1,11 +1,11 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-provider_class = Puppet::Type.type(:group).provider(:ldap)
+provider_class = Oregano::Type.type(:group).provider(:ldap)
 
 describe provider_class do
   it "should have the Ldap provider class as its baseclass" do
-    expect(provider_class.superclass).to equal(Puppet::Provider::Ldap)
+    expect(provider_class.superclass).to equal(Oregano::Provider::Ldap)
   end
 
   it "should manage :posixGroup objectclass" do

@@ -20,10 +20,10 @@ agents.each do |agent|
   on(agent, "cp /etc/aliases /tmp/aliases", :acceptable_exit_codes => [0,1])
 
   #------- TESTS -------#
-  step "create a mailalias with puppet"
+  step "create a mailalias with oregano"
   args = ['ensure=present',
           'recipient="foo,bar,baz"']
-  on(agent, puppet_resource('mailalias', name, args))
+  on(agent, oregano_resource('mailalias', name, args))
 
   step "verify the alias exists"
   on(agent, "cat /etc/aliases")  do |res|

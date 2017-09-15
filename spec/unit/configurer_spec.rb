@@ -1,39 +1,39 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/configurer'
+require 'oregano/configurer'
 
-describe Puppet::Configurer do
+describe Oregano::Configurer do
   before do
-    Puppet.settings.stubs(:use).returns(true)
-    @agent = Puppet::Configurer.new
+    Oregano.settings.stubs(:use).returns(true)
+    @agent = Oregano::Configurer.new
     @agent.stubs(:init_storage)
-    Puppet::Util::Storage.stubs(:store)
-    Puppet[:server] = "puppetmaster"
-    Puppet[:report] = true
+    Oregano::Util::Storage.stubs(:store)
+    Oregano[:server] = "oreganomaster"
+    Oregano[:report] = true
   end
 
   it "should include the Fact Handler module" do
-    expect(Puppet::Configurer.ancestors).to be_include(Puppet::Configurer::FactHandler)
+    expect(Oregano::Configurer.ancestors).to be_include(Oregano::Configurer::FactHandler)
   end
 
   describe "when executing a pre-run hook" do
     it "should do nothing if the hook is set to an empty string" do
-      Puppet.settings[:prerun_command] = ""
-      Puppet::Util.expects(:exec).never
+      Oregano.settings[:prerun_command] = ""
+      Oregano::Util.expects(:exec).never
 
       @agent.execute_prerun_command
     end
 
     it "should execute any pre-run command provided via the 'prerun_command' setting" do
-      Puppet.settings[:prerun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:prerun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       @agent.execute_prerun_command
     end
 
     it "should fail if the command fails" do
-      Puppet.settings[:prerun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:prerun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       expect(@agent.execute_prerun_command).to be_falsey
     end
@@ -41,22 +41,22 @@ describe Puppet::Configurer do
 
   describe "when executing a post-run hook" do
     it "should do nothing if the hook is set to an empty string" do
-      Puppet.settings[:postrun_command] = ""
-      Puppet::Util.expects(:exec).never
+      Oregano.settings[:postrun_command] = ""
+      Oregano::Util.expects(:exec).never
 
       @agent.execute_postrun_command
     end
 
     it "should execute any post-run command provided via the 'postrun_command' setting" do
-      Puppet.settings[:postrun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:postrun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       @agent.execute_postrun_command
     end
 
     it "should fail if the command fails" do
-      Puppet.settings[:postrun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:postrun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       expect(@agent.execute_postrun_command).to be_falsey
     end
@@ -64,29 +64,29 @@ describe Puppet::Configurer do
 
   describe "when executing a catalog run" do
     before do
-      Puppet.settings.stubs(:use).returns(true)
+      Oregano.settings.stubs(:use).returns(true)
       @agent.stubs(:download_plugins)
-      Puppet::Node::Facts.indirection.terminus_class = :memory
-      @facts = Puppet::Node::Facts.new(Puppet[:node_name_value])
-      Puppet::Node::Facts.indirection.save(@facts)
+      Oregano::Node::Facts.indirection.terminus_class = :memory
+      @facts = Oregano::Node::Facts.new(Oregano[:node_name_value])
+      Oregano::Node::Facts.indirection.save(@facts)
 
-      @catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote(Puppet[:environment].to_sym))
+      @catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote(Oregano[:environment].to_sym))
       @catalog.stubs(:to_ral).returns(@catalog)
-      Puppet::Resource::Catalog.indirection.terminus_class = :rest
-      Puppet::Resource::Catalog.indirection.stubs(:find).returns(@catalog)
+      Oregano::Resource::Catalog.indirection.terminus_class = :rest
+      Oregano::Resource::Catalog.indirection.stubs(:find).returns(@catalog)
       @agent.stubs(:send_report)
       @agent.stubs(:save_last_run_summary)
 
-      Puppet::Util::Log.stubs(:close_all)
+      Oregano::Util::Log.stubs(:close_all)
     end
 
     after :all do
-      Puppet::Node::Facts.indirection.reset_terminus_class
-      Puppet::Resource::Catalog.indirection.reset_terminus_class
+      Oregano::Node::Facts.indirection.reset_terminus_class
+      Oregano::Resource::Catalog.indirection.reset_terminus_class
     end
 
     it "should initialize storage" do
-      Puppet::Util::Storage.expects(:load)
+      Oregano::Util::Storage.expects(:load)
       @agent.run
     end
 
@@ -102,56 +102,56 @@ describe Puppet::Configurer do
 
     it "should carry on when it can't fetch its node definition" do
       error = Net::HTTPError.new(400, 'dummy server communication error')
-      Puppet::Node.indirection.expects(:find).raises(error)
+      Oregano::Node.indirection.expects(:find).raises(error)
       expect(@agent.run).to eq(0)
     end
 
     it "applies a cached catalog when it can't connect to the master" do
       error = Errno::ECONNREFUSED.new('Connection refused - connect(2)')
 
-      Puppet::Node.indirection.expects(:find).raises(error)
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything, has_entry(:ignore_cache => true)).raises(error)
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything, has_entry(:ignore_terminus => true)).returns(@catalog)
+      Oregano::Node.indirection.expects(:find).raises(error)
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything, has_entry(:ignore_cache => true)).raises(error)
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything, has_entry(:ignore_terminus => true)).returns(@catalog)
 
       expect(@agent.run).to eq(0)
     end
 
     it "should initialize a transaction report if one is not provided" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns report
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns report
 
       @agent.run
     end
 
     it "should respect node_name_fact when setting the host on a report" do
-      Puppet[:node_name_fact] = 'my_name_fact'
+      Oregano[:node_name_fact] = 'my_name_fact'
       @facts.values = {'my_name_fact' => 'node_name_from_fact'}
 
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
 
       @agent.run(:report => report)
       expect(report.host).to eq('node_name_from_fact')
     end
 
     it "should pass the new report to the catalog" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.stubs(:new).returns report
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.stubs(:new).returns report
       @catalog.expects(:apply).with{|options| options[:report] == report}
 
       @agent.run
     end
 
     it "should use the provided report if it was passed one" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
       @catalog.expects(:apply).with {|options| options[:report] == report}
 
       @agent.run(:report => report)
     end
 
     it "should set the report as a log destination" do
-      report = Puppet::Transaction::Report.new
+      report = Oregano::Transaction::Report.new
 
-      report.expects(:<<).with(instance_of(Puppet::Util::Log)).at_least_once
+      report.expects(:<<).with(instance_of(Oregano::Util::Log)).at_least_once
 
       @agent.run(:report => report)
     end
@@ -165,7 +165,7 @@ describe Puppet::Configurer do
     it "should log a failure and do nothing if no catalog can be retrieved" do
       @agent.expects(:retrieve_catalog).returns nil
 
-      Puppet.expects(:err).with "Could not retrieve catalog; skipping run"
+      Oregano.expects(:err).with "Could not retrieve catalog; skipping run"
 
       @agent.run
     end
@@ -200,19 +200,19 @@ describe Puppet::Configurer do
     end
 
     it "should create report with passed transaction_uuid and job_id" do
-      @agent = Puppet::Configurer.new(Puppet::Configurer::DownloaderFactory.new, "test_tuuid", "test_jid")
+      @agent = Oregano::Configurer.new(Oregano::Configurer::DownloaderFactory.new, "test_tuuid", "test_jid")
       @agent.stubs(:init_storage)
 
-      report = Puppet::Transaction::Report.new(nil, "test", "aaaa")
-      Puppet::Transaction::Report.expects(:new).with(anything, anything, 'test_tuuid', 'test_jid').returns(report)
+      report = Oregano::Transaction::Report.new(nil, "test", "aaaa")
+      Oregano::Transaction::Report.expects(:new).with(anything, anything, 'test_tuuid', 'test_jid').returns(report)
       @agent.expects(:send_report).with(report)
 
       @agent.run
     end
 
     it "should send the report" do
-      report = Puppet::Transaction::Report.new(nil, "test", "aaaa")
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new(nil, "test", "aaaa")
+      Oregano::Transaction::Report.expects(:new).returns(report)
       @agent.expects(:send_report).with(report)
 
       expect(report.environment).to eq("test")
@@ -224,8 +224,8 @@ describe Puppet::Configurer do
     it "should send the transaction report even if the catalog could not be retrieved" do
       @agent.expects(:retrieve_catalog).returns nil
 
-      report = Puppet::Transaction::Report.new(nil, "test", "aaaa")
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new(nil, "test", "aaaa")
+      Oregano::Transaction::Report.expects(:new).returns(report)
       @agent.expects(:send_report).with(report)
 
       expect(report.environment).to eq("test")
@@ -237,8 +237,8 @@ describe Puppet::Configurer do
     it "should send the transaction report even if there is a failure" do
       @agent.expects(:retrieve_catalog).raises "whatever"
 
-      report = Puppet::Transaction::Report.new(nil, "test", "aaaa")
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new(nil, "test", "aaaa")
+      Oregano::Transaction::Report.expects(:new).returns(report)
       @agent.expects(:send_report).with(report)
 
       expect(report.environment).to eq("test")
@@ -248,61 +248,61 @@ describe Puppet::Configurer do
     end
 
     it "should remove the report as a log destination when the run is finished" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
       @agent.run
 
-      expect(Puppet::Util::Log.destinations).not_to include(report)
+      expect(Oregano::Util::Log.destinations).not_to include(report)
     end
 
     it "should return the report exit_status as the result of the run" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
       report.expects(:exit_status).returns(1234)
 
       expect(@agent.run).to eq(1234)
     end
 
     it "should send the transaction report even if the pre-run command fails" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
-      Puppet.settings[:prerun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:prerun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
       @agent.expects(:send_report).with(report)
 
       expect(@agent.run).to be_nil
     end
 
     it "should include the pre-run command failure in the report" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
-      Puppet.settings[:prerun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:prerun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       expect(@agent.run).to be_nil
       expect(report.logs.find { |x| x.message =~ /Could not run command from prerun_command/ }).to be
     end
 
     it "should send the transaction report even if the post-run command fails" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
-      Puppet.settings[:postrun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:postrun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
       @agent.expects(:send_report).with(report)
 
       expect(@agent.run).to be_nil
     end
 
     it "should include the post-run command failure in the report" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
-      Puppet.settings[:postrun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:postrun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       report.expects(:<<).with { |log| log.message.include?("Could not run command from postrun_command") }
 
@@ -310,28 +310,28 @@ describe Puppet::Configurer do
     end
 
     it "should execute post-run command even if the pre-run command fails" do
-      Puppet.settings[:prerun_command] = "/my/precommand"
-      Puppet.settings[:postrun_command] = "/my/postcommand"
-      Puppet::Util::Execution.expects(:execute).with(["/my/precommand"]).raises(Puppet::ExecutionFailure, "Failed")
-      Puppet::Util::Execution.expects(:execute).with(["/my/postcommand"])
+      Oregano.settings[:prerun_command] = "/my/precommand"
+      Oregano.settings[:postrun_command] = "/my/postcommand"
+      Oregano::Util::Execution.expects(:execute).with(["/my/precommand"]).raises(Oregano::ExecutionFailure, "Failed")
+      Oregano::Util::Execution.expects(:execute).with(["/my/postcommand"])
 
       expect(@agent.run).to be_nil
     end
 
     it "should finalize the report" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
       report.expects(:finalize_report)
       @agent.run
     end
 
     it "should not apply the catalog if the pre-run command fails" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
-      Puppet.settings[:prerun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:prerun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       @catalog.expects(:apply).never()
       @agent.expects(:send_report)
@@ -340,11 +340,11 @@ describe Puppet::Configurer do
     end
 
     it "should apply the catalog, send the report, and return nil if the post-run command fails" do
-      report = Puppet::Transaction::Report.new
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new
+      Oregano::Transaction::Report.expects(:new).returns(report)
 
-      Puppet.settings[:postrun_command] = "/my/command"
-      Puppet::Util::Execution.expects(:execute).with(["/my/command"]).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano.settings[:postrun_command] = "/my/command"
+      Oregano::Util::Execution.expects(:execute).with(["/my/command"]).raises(Oregano::ExecutionFailure, "Failed")
 
       @catalog.expects(:apply)
       @agent.expects(:send_report)
@@ -353,7 +353,7 @@ describe Puppet::Configurer do
     end
 
     it "should refetch the catalog if the server specifies a new environment in the catalog" do
-      catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote('second_env'))
+      catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote('second_env'))
       @agent.expects(:retrieve_catalog).returns(catalog).twice
 
       @agent.run
@@ -368,8 +368,8 @@ describe Puppet::Configurer do
     end
 
     it "should fix the report if the server specifies a new environment in the catalog" do
-      report = Puppet::Transaction::Report.new(nil, "test", "aaaa")
-      Puppet::Transaction::Report.expects(:new).returns(report)
+      report = Oregano::Transaction::Report.new(nil, "test", "aaaa")
+      Oregano::Transaction::Report.expects(:new).returns(report)
       @agent.expects(:send_report).with(report)
 
       @catalog.stubs(:environment).returns("second_env")
@@ -382,45 +382,45 @@ describe Puppet::Configurer do
 
     it "sends the transaction uuid in a catalog request" do
       @agent.instance_variable_set(:@transaction_uuid, 'aaa')
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:transaction_uuid => 'aaa'))
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:transaction_uuid => 'aaa'))
       @agent.run
     end
 
     it "sends the transaction uuid in a catalog request" do
       @agent.instance_variable_set(:@job_id, 'aaa')
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:job_id => 'aaa'))
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:job_id => 'aaa'))
       @agent.run
     end
 
     it "sets the static_catalog query param to true in a catalog request" do
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:static_catalog => true))
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:static_catalog => true))
       @agent.run
     end
 
     it "sets the checksum_type query param to the default supported_checksum_types in a catalog request" do
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything,
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything,
         has_entries(:checksum_type => 'md5.sha256'))
       @agent.run
     end
 
     it "sets the checksum_type query param to the supported_checksum_types setting in a catalog request" do
       # Regenerate the agent to pick up the new setting
-      Puppet[:supported_checksum_types] = ['sha256']
-      @agent = Puppet::Configurer.new
+      Oregano[:supported_checksum_types] = ['sha256']
+      @agent = Oregano::Configurer.new
       @agent.stubs(:init_storage)
       @agent.stubs(:download_plugins)
       @agent.stubs(:send_report)
       @agent.stubs(:save_last_run_summary)
 
-      Puppet::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:checksum_type => 'sha256'))
+      Oregano::Resource::Catalog.indirection.expects(:find).with(anything, has_entries(:checksum_type => 'sha256'))
       @agent.run
     end
 
     describe "when not using a REST terminus for catalogs" do
       it "should not pass any facts when retrieving the catalog" do
-        Puppet::Resource::Catalog.indirection.terminus_class = :compiler
+        Oregano::Resource::Catalog.indirection.terminus_class = :compiler
         @agent.expects(:facts_for_uploading).never
-        Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options|
+        Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options|
           options[:facts].nil?
         }.returns @catalog
 
@@ -430,9 +430,9 @@ describe Puppet::Configurer do
 
     describe "when using a REST terminus for catalogs" do
       it "should pass the prepared facts and the facts format as arguments when retrieving the catalog" do
-        Puppet::Resource::Catalog.indirection.terminus_class = :rest
+        Oregano::Resource::Catalog.indirection.terminus_class = :rest
         @agent.expects(:facts_for_uploading).returns(:facts => "myfacts", :facts_format => :foo)
-        Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options|
+        Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options|
           options[:facts] == "myfacts" and options[:facts_format] == :foo
         }.returns @catalog
 
@@ -444,25 +444,25 @@ describe Puppet::Configurer do
   describe "when initialized with a transaction_uuid" do
     it "stores it" do
       SecureRandom.expects(:uuid).never
-      configurer = Puppet::Configurer.new(Puppet::Configurer::DownloaderFactory.new, 'foo')
+      configurer = Oregano::Configurer.new(Oregano::Configurer::DownloaderFactory.new, 'foo')
       expect(configurer.instance_variable_get(:@transaction_uuid) == 'foo')
     end
   end
 
   describe "when sending a report" do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     before do
-      Puppet.settings.stubs(:use).returns(true)
-      @configurer = Puppet::Configurer.new
-      Puppet[:lastrunfile] = tmpfile('last_run_file')
+      Oregano.settings.stubs(:use).returns(true)
+      @configurer = Oregano::Configurer.new
+      Oregano[:lastrunfile] = tmpfile('last_run_file')
 
-      @report = Puppet::Transaction::Report.new
-      Puppet[:reports] = "none"
+      @report = Oregano::Transaction::Report.new
+      Oregano[:reports] = "none"
     end
 
     it "should print a report summary if configured to do so" do
-      Puppet.settings[:summarize] = true
+      Oregano.settings[:summarize] = true
 
       @report.expects(:summary).returns "stuff"
 
@@ -471,71 +471,71 @@ describe Puppet::Configurer do
     end
 
     it "should not print a report summary if not configured to do so" do
-      Puppet.settings[:summarize] = false
+      Oregano.settings[:summarize] = false
 
       @configurer.expects(:puts).never
       @configurer.send_report(@report)
     end
 
     it "should save the report if reporting is enabled" do
-      Puppet.settings[:report] = true
+      Oregano.settings[:report] = true
 
-      Puppet::Transaction::Report.indirection.expects(:save).with(@report, nil, instance_of(Hash))
+      Oregano::Transaction::Report.indirection.expects(:save).with(@report, nil, instance_of(Hash))
       @configurer.send_report(@report)
     end
 
     it "should not save the report if reporting is disabled" do
-      Puppet.settings[:report] = false
+      Oregano.settings[:report] = false
 
-      Puppet::Transaction::Report.indirection.expects(:save).with(@report, nil, instance_of(Hash)).never
+      Oregano::Transaction::Report.indirection.expects(:save).with(@report, nil, instance_of(Hash)).never
       @configurer.send_report(@report)
     end
 
     it "should save the last run summary if reporting is enabled" do
-      Puppet.settings[:report] = true
+      Oregano.settings[:report] = true
 
       @configurer.expects(:save_last_run_summary).with(@report)
       @configurer.send_report(@report)
     end
 
     it "should save the last run summary if reporting is disabled" do
-      Puppet.settings[:report] = false
+      Oregano.settings[:report] = false
 
       @configurer.expects(:save_last_run_summary).with(@report)
       @configurer.send_report(@report)
     end
 
     it "should log but not fail if saving the report fails" do
-      Puppet.settings[:report] = true
+      Oregano.settings[:report] = true
 
-      Puppet::Transaction::Report.indirection.expects(:save).raises("whatever")
+      Oregano::Transaction::Report.indirection.expects(:save).raises("whatever")
 
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       expect { @configurer.send_report(@report) }.not_to raise_error
     end
   end
 
   describe "when saving the summary report file" do
-    include PuppetSpec::Files
+    include OreganoSpec::Files
 
     before do
-      Puppet.settings.stubs(:use).returns(true)
-      @configurer = Puppet::Configurer.new
+      Oregano.settings.stubs(:use).returns(true)
+      @configurer = Oregano::Configurer.new
 
       @report = stub 'report', :raw_summary => {}
 
-      Puppet[:lastrunfile] = tmpfile('last_run_file')
+      Oregano[:lastrunfile] = tmpfile('last_run_file')
     end
 
     it "should write the last run file" do
       @configurer.save_last_run_summary(@report)
-      expect(Puppet::FileSystem.exist?(Puppet[:lastrunfile])).to be_truthy
+      expect(Oregano::FileSystem.exist?(Oregano[:lastrunfile])).to be_truthy
     end
 
     it "should write the raw summary as yaml" do
       @report.expects(:raw_summary).returns("summary")
       @configurer.save_last_run_summary(@report)
-      expect(File.read(Puppet[:lastrunfile])).to eq(YAML.dump("summary"))
+      expect(File.read(Oregano[:lastrunfile])).to eq(YAML.dump("summary"))
     end
 
     it "should log but not fail if saving the last run summary fails" do
@@ -547,91 +547,91 @@ describe Puppet::Configurer do
         end
       end.new
 
-      Puppet::Util.expects(:replace_file).yields(fh)
+      Oregano::Util.expects(:replace_file).yields(fh)
 
-      Puppet.expects(:err)
+      Oregano.expects(:err)
       expect { @configurer.save_last_run_summary(@report) }.to_not raise_error
     end
 
     it "should create the last run file with the correct mode" do
-      Puppet.settings.setting(:lastrunfile).expects(:mode).returns('664')
+      Oregano.settings.setting(:lastrunfile).expects(:mode).returns('664')
       @configurer.save_last_run_summary(@report)
 
-      if Puppet::Util::Platform.windows?
-        require 'puppet/util/windows/security'
-        mode = Puppet::Util::Windows::Security.get_mode(Puppet[:lastrunfile])
+      if Oregano::Util::Platform.windows?
+        require 'oregano/util/windows/security'
+        mode = Oregano::Util::Windows::Security.get_mode(Oregano[:lastrunfile])
       else
-        mode = Puppet::FileSystem.stat(Puppet[:lastrunfile]).mode
+        mode = Oregano::FileSystem.stat(Oregano[:lastrunfile]).mode
       end
       expect(mode & 0777).to eq(0664)
     end
 
     it "should report invalid last run file permissions" do
-      Puppet.settings.setting(:lastrunfile).expects(:mode).returns('892')
-      Puppet.expects(:err).with(regexp_matches(/Could not save last run local report.*892 is invalid/))
+      Oregano.settings.setting(:lastrunfile).expects(:mode).returns('892')
+      Oregano.expects(:err).with(regexp_matches(/Could not save last run local report.*892 is invalid/))
       @configurer.save_last_run_summary(@report)
     end
   end
 
   describe "when requesting a node" do
     it "uses the transaction uuid in the request" do
-      Puppet::Node.indirection.expects(:find).with(anything, has_entries(:transaction_uuid => anything)).twice
+      Oregano::Node.indirection.expects(:find).with(anything, has_entries(:transaction_uuid => anything)).twice
       @agent.run
     end
 
     it "sends an explicitly configured environment request" do
-      Puppet.settings.expects(:set_by_config?).with(:environment).returns(true)
-      Puppet::Node.indirection.expects(:find).with(anything, has_entries(:configured_environment => Puppet[:environment])).twice
+      Oregano.settings.expects(:set_by_config?).with(:environment).returns(true)
+      Oregano::Node.indirection.expects(:find).with(anything, has_entries(:configured_environment => Oregano[:environment])).twice
       @agent.run
     end
 
     it "does not send a configured_environment when using the default" do
-      Puppet::Node.indirection.expects(:find).with(anything, has_entries(:configured_environment => nil)).twice
+      Oregano::Node.indirection.expects(:find).with(anything, has_entries(:configured_environment => nil)).twice
       @agent.run
     end
   end
 
   def expects_new_catalog_only(catalog)
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns catalog
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.never
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns catalog
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.never
   end
 
   def expects_cached_catalog_only(catalog)
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns catalog
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.never
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns catalog
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.never
   end
 
   def expects_fallback_to_cached_catalog(catalog)
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns catalog
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns catalog
   end
 
   def expects_fallback_to_new_catalog(catalog)
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns nil
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns catalog
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns nil
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns catalog
   end
 
   def expects_neither_new_or_cached_catalog
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
-    Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns nil
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
+    Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns nil
   end
 
   describe "when retrieving a catalog" do
     before do
-      Puppet.settings.stubs(:use).returns(true)
+      Oregano.settings.stubs(:use).returns(true)
       @agent.stubs(:facts_for_uploading).returns({})
       @agent.stubs(:download_plugins)
 
       # retrieve a catalog in the current environment, so we don't try to converge unexpectedly
-      @catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote(Puppet[:environment].to_sym))
+      @catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote(Oregano[:environment].to_sym))
 
       # this is the default when using a Configurer instance
-      Puppet::Resource::Catalog.indirection.stubs(:terminus_class).returns :rest
+      Oregano::Resource::Catalog.indirection.stubs(:terminus_class).returns :rest
     end
 
     describe "and configured to only retrieve a catalog from the cache" do
       before do
-        Puppet.settings[:use_cached_catalog] = true
+        Oregano.settings[:use_cached_catalog] = true
       end
 
       it "should first look in the cache for a catalog" do
@@ -641,7 +641,7 @@ describe Puppet::Configurer do
       end
 
       it "should not make a node request or pluginsync when a cached catalog is successfully retrieved" do
-        Puppet::Node.indirection.expects(:find).never
+        Oregano::Node.indirection.expects(:find).never
         expects_cached_catalog_only(@catalog)
         @agent.expects(:download_plugins).never
 
@@ -649,7 +649,7 @@ describe Puppet::Configurer do
       end
 
       it "should make a node request and pluginsync when a cached catalog cannot be retrieved" do
-        Puppet::Node.indirection.expects(:find).returns nil
+        Oregano::Node.indirection.expects(:find).returns nil
         expects_fallback_to_new_catalog(@catalog)
         @agent.expects(:download_plugins)
 
@@ -664,7 +664,7 @@ describe Puppet::Configurer do
       end
 
       it "should set its cached_catalog_status to 'explicitly requested' if the cached catalog is from a different environment" do
-        cached_catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote('second_env'))
+        cached_catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote('second_env'))
         expects_cached_catalog_only(cached_catalog)
 
         @agent.retrieve_catalog({})
@@ -685,17 +685,17 @@ describe Puppet::Configurer do
       end
 
       it "should not attempt to retrieve a cached catalog again if the first attempt failed" do
-        Puppet::Node.indirection.expects(:find).returns(nil)
+        Oregano::Node.indirection.expects(:find).returns(nil)
         expects_neither_new_or_cached_catalog
 
         @agent.run
       end
 
       it "should return the cached catalog when the environment doesn't match" do
-        cached_catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote('second_env'))
+        cached_catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote('second_env'))
         expects_cached_catalog_only(cached_catalog)
 
-        Puppet.expects(:info).with("Using cached catalog from environment 'second_env'")
+        Oregano.expects(:info).with("Using cached catalog from environment 'second_env'")
         expect(@agent.retrieve_catalog({})).to eq(cached_catalog)
       end
     end
@@ -707,11 +707,11 @@ describe Puppet::Configurer do
         @catalog.stubs(:write_resource_file)
         @agent.stubs(:send_report)
         @agent.stubs(:save_last_run_summary)
-        Puppet.settings[:strict_environment_mode] = true
+        Oregano.settings[:strict_environment_mode] = true
       end
 
       it "should not make a node request" do
-        Puppet::Node.indirection.expects(:find).never
+        Oregano::Node.indirection.expects(:find).never
 
         @agent.run
       end
@@ -720,7 +720,7 @@ describe Puppet::Configurer do
         @agent.instance_variable_set(:@environment, 'second_env')
         expects_new_catalog_only(@catalog)
 
-        Puppet.expects(:err).with("Not using catalog because its environment 'production' does not match agent specified environment 'second_env' and strict_environment_mode is set")
+        Oregano.expects(:err).with("Not using catalog because its environment 'production' does not match agent specified environment 'second_env' and strict_environment_mode is set")
         expect(@agent.run).to be_nil
       end
 
@@ -733,19 +733,19 @@ describe Puppet::Configurer do
 
       describe "and a cached catalog is explicitly requested" do
         before do
-          Puppet.settings[:use_cached_catalog] = true
+          Oregano.settings[:use_cached_catalog] = true
         end
 
         it "should return nil when the cached catalog's environment doesn't match the agent specified environment" do
           @agent.instance_variable_set(:@environment, 'second_env')
           expects_cached_catalog_only(@catalog)
 
-          Puppet.expects(:err).with("Not using catalog because its environment 'production' does not match agent specified environment 'second_env' and strict_environment_mode is set")
+          Oregano.expects(:err).with("Not using catalog because its environment 'production' does not match agent specified environment 'second_env' and strict_environment_mode is set")
           expect(@agent.run).to be_nil
         end
 
         it "should proceed with the cached catalog if its environment matchs the local environment" do
-          Puppet.settings[:use_cached_catalog] = true
+          Oregano.settings[:use_cached_catalog] = true
           @agent.instance_variable_set(:@environment, 'production')
           expects_cached_catalog_only(@catalog)
 
@@ -755,13 +755,13 @@ describe Puppet::Configurer do
     end
 
     it "should use the Catalog class to get its catalog" do
-      Puppet::Resource::Catalog.indirection.expects(:find).returns @catalog
+      Oregano::Resource::Catalog.indirection.expects(:find).returns @catalog
 
       @agent.retrieve_catalog({})
     end
 
     it "should set its cached_catalog_status to 'not_used' when downloading a new catalog" do
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns @catalog
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns @catalog
 
       @agent.retrieve_catalog({})
       expect(@agent.instance_variable_get(:@cached_catalog_status)).to eq('not_used')
@@ -769,14 +769,14 @@ describe Puppet::Configurer do
 
     it "should use its node_name_value to retrieve the catalog" do
       Facter.stubs(:value).returns "eh"
-      Puppet.settings[:node_name_value] = "myhost.domain.com"
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| name == "myhost.domain.com" }.returns @catalog
+      Oregano.settings[:node_name_value] = "myhost.domain.com"
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| name == "myhost.domain.com" }.returns @catalog
 
       @agent.retrieve_catalog({})
     end
 
     it "should default to returning a catalog retrieved directly from the server, skipping the cache" do
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns @catalog
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns @catalog
 
       expect(@agent.retrieve_catalog({})).to eq(@catalog)
     end
@@ -784,7 +784,7 @@ describe Puppet::Configurer do
     it "should log and return the cached catalog when no catalog can be retrieved from the server" do
       expects_fallback_to_cached_catalog(@catalog)
 
-      Puppet.expects(:info).with("Using cached catalog from environment 'production'")
+      Oregano.expects(:info).with("Using cached catalog from environment 'production'")
       expect(@agent.retrieve_catalog({})).to eq(@catalog)
     end
 
@@ -802,32 +802,32 @@ describe Puppet::Configurer do
     end
 
     it "should return the cached catalog when retrieving the remote catalog throws an exception" do
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.raises "eh"
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns @catalog
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.raises "eh"
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns @catalog
 
       expect(@agent.retrieve_catalog({})).to eq(@catalog)
     end
 
     it "should set its cached_catalog_status to 'on_failure' when retrieving the remote catalog throws an exception" do
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.raises "eh"
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns @catalog
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.raises "eh"
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_terminus] == true }.returns @catalog
 
       @agent.retrieve_catalog({})
       expect(@agent.instance_variable_get(:@cached_catalog_status)).to eq('on_failure')
     end
 
     it "should log and return nil if no catalog can be retrieved from the server and :usecacheonfailure is disabled" do
-      Puppet[:usecacheonfailure] = false
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
+      Oregano[:usecacheonfailure] = false
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
 
-      Puppet.expects(:warning).with('Not using cache on failed catalog')
+      Oregano.expects(:warning).with('Not using cache on failed catalog')
 
       expect(@agent.retrieve_catalog({})).to be_nil
     end
 
     it "should set its cached_catalog_status to 'not_used' if no catalog can be retrieved from the server and :usecacheonfailure is disabled or fails to retrieve a catalog" do
-      Puppet[:usecacheonfailure] = false
-      Puppet::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
+      Oregano[:usecacheonfailure] = false
+      Oregano::Resource::Catalog.indirection.expects(:find).with { |name, options| options[:ignore_cache] == true }.returns nil
 
       @agent.retrieve_catalog({})
       expect(@agent.instance_variable_get(:@cached_catalog_status)).to eq('not_used')
@@ -840,17 +840,17 @@ describe Puppet::Configurer do
     end
 
     it "should return nil if its cached catalog environment doesn't match server-specified environment" do
-      cached_catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote('second_env'))
+      cached_catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote('second_env'))
       @agent.instance_variable_set(:@node_environment, 'production')
 
       expects_fallback_to_cached_catalog(cached_catalog)
 
-      Puppet.expects(:err).with("Not using cached catalog because its environment 'second_env' does not match 'production'")
+      Oregano.expects(:err).with("Not using cached catalog because its environment 'second_env' does not match 'production'")
       expect(@agent.retrieve_catalog({})).to be_nil
     end
 
     it "should set its cached_catalog_status to 'not_used' if the cached catalog environment doesn't match server-specified environment" do
-      cached_catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote('second_env'))
+      cached_catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote('second_env'))
       @agent.instance_variable_set(:@node_environment, 'production')
 
       expects_fallback_to_cached_catalog(cached_catalog)
@@ -860,7 +860,7 @@ describe Puppet::Configurer do
     end
 
     it "should return its cached catalog if the environment matches the server-specified environment" do
-      cached_catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote(Puppet[:environment]))
+      cached_catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote(Oregano[:environment]))
       @agent.instance_variable_set(:@node_environment, cached_catalog.environment)
 
       expects_fallback_to_cached_catalog(cached_catalog)
@@ -869,7 +869,7 @@ describe Puppet::Configurer do
     end
 
     it "should set its cached_catalog_status to 'on_failure' if the cached catalog environment matches server-specified environment" do
-      cached_catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote(Puppet[:environment]))
+      cached_catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote(Oregano[:environment]))
       @agent.instance_variable_set(:@node_environment, cached_catalog.environment)
 
       expects_fallback_to_cached_catalog(cached_catalog)
@@ -881,13 +881,13 @@ describe Puppet::Configurer do
 
   describe "when converting the catalog" do
     before do
-      Puppet.settings.stubs(:use).returns(true)
+      Oregano.settings.stubs(:use).returns(true)
 
       catalog.stubs(:to_ral).returns ral_catalog
     end
 
-    let (:catalog) { Puppet::Resource::Catalog.new('tester', Puppet::Node::Environment.remote(Puppet[:environment].to_sym)) }
-    let (:ral_catalog) { Puppet::Resource::Catalog.new('tester', Puppet::Node::Environment.remote(Puppet[:environment].to_sym)) }
+    let (:catalog) { Oregano::Resource::Catalog.new('tester', Oregano::Node::Environment.remote(Oregano[:environment].to_sym)) }
+    let (:ral_catalog) { Oregano::Resource::Catalog.new('tester', Oregano::Node::Environment.remote(Oregano[:environment].to_sym)) }
 
     it "should convert the catalog to a RAL-formed catalog" do
       expect(@agent.convert_catalog(catalog, 10)).to equal(ral_catalog)
@@ -919,28 +919,28 @@ describe Puppet::Configurer do
   end
 
   describe "when determining whether to pluginsync" do
-    it "should default to Puppet[:pluginsync] when explicitly set by the commandline" do
-      Puppet.settings[:pluginsync] = false
-      Puppet.settings.expects(:set_by_cli?).returns(true)
+    it "should default to Oregano[:pluginsync] when explicitly set by the commandline" do
+      Oregano.settings[:pluginsync] = false
+      Oregano.settings.expects(:set_by_cli?).returns(true)
 
       expect(described_class).not_to be_should_pluginsync
     end
 
-    it "should default to Puppet[:pluginsync] when explicitly set by config" do
-      Puppet.settings[:pluginsync] = false
-      Puppet.settings.expects(:set_by_config?).returns(true)
+    it "should default to Oregano[:pluginsync] when explicitly set by config" do
+      Oregano.settings[:pluginsync] = false
+      Oregano.settings.expects(:set_by_config?).returns(true)
 
       expect(described_class).not_to be_should_pluginsync
     end
 
     it "should be true if use_cached_catalog is false" do
-      Puppet.settings[:use_cached_catalog] = false
+      Oregano.settings[:use_cached_catalog] = false
 
       expect(described_class).to be_should_pluginsync
     end
 
     it "should be false if use_cached_catalog is true" do
-      Puppet.settings[:use_cached_catalog] = true
+      Oregano.settings[:use_cached_catalog] = true
 
       expect(described_class).not_to be_should_pluginsync
     end
@@ -948,45 +948,45 @@ describe Puppet::Configurer do
 
   describe "when attempting failover" do
     it "should not failover if server_list is not set" do
-      Puppet.settings[:server_list] = []
+      Oregano.settings[:server_list] = []
       @agent.expects(:find_functional_server).never
       @agent.run
     end
 
     it "should not failover during an apply run" do
-      Puppet.settings[:server_list] = ["myserver:123"]
+      Oregano.settings[:server_list] = ["myserver:123"]
       @agent.expects(:find_functional_server).never
-      catalog = Puppet::Resource::Catalog.new("tester", Puppet::Node::Environment.remote(Puppet[:environment].to_sym))
+      catalog = Oregano::Resource::Catalog.new("tester", Oregano::Node::Environment.remote(Oregano[:environment].to_sym))
       @agent.run :catalog => catalog
     end
 
     it "should select a server when provided" do
-      Puppet.settings[:server_list] = ["myserver:123"]
-      pool = Puppet::Network::HTTP::Pool.new(Puppet[:http_keepalive_timeout])
-      Puppet::Network::HTTP::Pool.expects(:new).returns(pool)
-      Puppet.expects(:override).with({:http_pool => pool}).yields
-      Puppet.expects(:override).with({:server => "myserver", :serverport => '123'}).twice.yields
-      Puppet::Node.indirection.expects(:find).returns(nil)
+      Oregano.settings[:server_list] = ["myserver:123"]
+      pool = Oregano::Network::HTTP::Pool.new(Oregano[:http_keepalive_timeout])
+      Oregano::Network::HTTP::Pool.expects(:new).returns(pool)
+      Oregano.expects(:override).with({:http_pool => pool}).yields
+      Oregano.expects(:override).with({:server => "myserver", :serverport => '123'}).twice.yields
+      Oregano::Node.indirection.expects(:find).returns(nil)
       @agent.expects(:run_internal).returns(nil)
       @agent.run
     end
 
     it "should fallback to an empty server when failover fails" do
-      Puppet.settings[:server_list] = ["myserver:123"]
-      pool = Puppet::Network::HTTP::Pool.new(Puppet[:http_keepalive_timeout])
-      Puppet::Network::HTTP::Pool.expects(:new).returns(pool)
-      Puppet.expects(:override).with({:http_pool => pool}).yields
-      Puppet.expects(:override).with({:server => "myserver", :serverport => '123'}).yields
-      Puppet.expects(:override).with({:server => nil, :serverport => nil}).yields
+      Oregano.settings[:server_list] = ["myserver:123"]
+      pool = Oregano::Network::HTTP::Pool.new(Oregano[:http_keepalive_timeout])
+      Oregano::Network::HTTP::Pool.expects(:new).returns(pool)
+      Oregano.expects(:override).with({:http_pool => pool}).yields
+      Oregano.expects(:override).with({:server => "myserver", :serverport => '123'}).yields
+      Oregano.expects(:override).with({:server => nil, :serverport => nil}).yields
       error = Net::HTTPError.new(400, 'dummy server communication error')
-      Puppet::Node.indirection.expects(:find).raises(error)
+      Oregano::Node.indirection.expects(:find).raises(error)
       @agent.expects(:run_internal).returns(nil)
       @agent.run
     end
 
     it "should not make multiple node requets when the server is found" do
-      Puppet.settings[:server_list] = ["myserver:123"]
-      Puppet::Node.indirection.expects(:find).returns("mynode").once
+      Oregano.settings[:server_list] = ["myserver:123"]
+      Oregano::Node.indirection.expects(:find).returns("mynode").once
       @agent.expects(:prepare_and_retrieve_catalog).returns(nil)
       @agent.run
     end

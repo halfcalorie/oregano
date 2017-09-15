@@ -1,10 +1,10 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
-require 'puppet/face'
+require 'oregano/face'
 
-describe Puppet::Face[:node, '0.0.1'] do
+describe Oregano::Face[:node, '0.0.1'] do
   after :all do
-    Puppet::SSL::Host.ca_location = :none
+    Oregano::SSL::Host.ca_location = :none
   end
 
   describe '#cleanup' do
@@ -21,10 +21,10 @@ describe Puppet::Face[:node, '0.0.1'] do
 
   describe 'when running #clean' do
     before :each do
-      Puppet::Node::Facts.indirection.stubs(:terminus_class=)
-      Puppet::Node::Facts.indirection.stubs(:cache_class=)
-      Puppet::Node.stubs(:terminus_class=)
-      Puppet::Node.stubs(:cache_class=)
+      Oregano::Node::Facts.indirection.stubs(:terminus_class=)
+      Oregano::Node::Facts.indirection.stubs(:cache_class=)
+      Oregano::Node.stubs(:terminus_class=)
+      Oregano::Node.stubs(:cache_class=)
     end
 
     it 'should invoke #cleanup' do
@@ -35,10 +35,10 @@ describe Puppet::Face[:node, '0.0.1'] do
 
   describe "clean action" do
     before :each do
-      Puppet::Node::Facts.indirection.stubs(:terminus_class=)
-      Puppet::Node::Facts.indirection.stubs(:cache_class=)
-      Puppet::Node.stubs(:terminus_class=)
-      Puppet::Node.stubs(:cache_class=)
+      Oregano::Node::Facts.indirection.stubs(:terminus_class=)
+      Oregano::Node::Facts.indirection.stubs(:cache_class=)
+      Oregano::Node.stubs(:terminus_class=)
+      Oregano::Node.stubs(:cache_class=)
       subject.stubs(:cleanup)
     end
 
@@ -65,61 +65,61 @@ describe Puppet::Face[:node, '0.0.1'] do
     end
 
     context "clean action" do
-      subject { Puppet::Face[:node, :current] }
+      subject { Oregano::Face[:node, :current] }
       before :each do
-        Puppet::Util::Log.stubs(:newdestination)
-        Puppet::Util::Log.stubs(:level=)
+        Oregano::Util::Log.stubs(:newdestination)
+        Oregano::Util::Log.stubs(:level=)
       end
 
       describe "during setup" do
         it "should set facts terminus and cache class to yaml" do
-          Puppet::Node::Facts.indirection.expects(:terminus_class=).with(:yaml)
-          Puppet::Node::Facts.indirection.expects(:cache_class=).with(:yaml)
+          Oregano::Node::Facts.indirection.expects(:terminus_class=).with(:yaml)
+          Oregano::Node::Facts.indirection.expects(:cache_class=).with(:yaml)
 
           subject.clean('hostname')
         end
 
         it "should run in master mode" do
           subject.clean('hostname')
-          expect(Puppet.run_mode).to be_master
+          expect(Oregano.run_mode).to be_master
         end
 
         it "should set node cache as yaml" do
-          Puppet::Node.indirection.expects(:terminus_class=).with(:yaml)
-          Puppet::Node.indirection.expects(:cache_class=).with(:yaml)
+          Oregano::Node.indirection.expects(:terminus_class=).with(:yaml)
+          Oregano::Node.indirection.expects(:cache_class=).with(:yaml)
 
           subject.clean('hostname')
         end
 
         it "should manage the certs if the host is a CA" do
-          Puppet::SSL::CertificateAuthority.stubs(:ca?).returns(true)
-          Puppet::SSL::Host.expects(:ca_location=).with(:local)
+          Oregano::SSL::CertificateAuthority.stubs(:ca?).returns(true)
+          Oregano::SSL::Host.expects(:ca_location=).with(:local)
           subject.clean('hostname')
         end
 
         it "should not manage the certs if the host is not a CA" do
-          Puppet::SSL::CertificateAuthority.stubs(:ca?).returns(false)
-          Puppet::SSL::Host.expects(:ca_location=).with(:none)
+          Oregano::SSL::CertificateAuthority.stubs(:ca?).returns(false)
+          Oregano::SSL::Host.expects(:ca_location=).with(:none)
           subject.clean('hostname')
         end
       end
 
       describe "when cleaning certificate" do
         before :each do
-          Puppet::SSL::Host.stubs(:destroy)
+          Oregano::SSL::Host.stubs(:destroy)
           @ca = mock()
-          Puppet::SSL::CertificateAuthority.stubs(:instance).returns(@ca)
+          Oregano::SSL::CertificateAuthority.stubs(:instance).returns(@ca)
         end
 
         it "should send the :destroy order to the ca if we are a CA" do
-          Puppet::SSL::CertificateAuthority.stubs(:ca?).returns(true)
+          Oregano::SSL::CertificateAuthority.stubs(:ca?).returns(true)
           @ca.expects(:revoke).with(@host)
           @ca.expects(:destroy).with(@host)
           subject.clean_cert(@host)
         end
 
         it "should not destroy the certs if we are not a CA" do
-          Puppet::SSL::CertificateAuthority.stubs(:ca?).returns(false)
+          Oregano::SSL::CertificateAuthority.stubs(:ca?).returns(false)
           @ca.expects(:revoke).never
           @ca.expects(:destroy).never
           subject.clean_cert(@host)
@@ -129,7 +129,7 @@ describe Puppet::Face[:node, '0.0.1'] do
       describe "when cleaning cached facts" do
         it "should destroy facts" do
           @host = 'node'
-          Puppet::Node::Facts.indirection.expects(:destroy).with(@host)
+          Oregano::Node::Facts.indirection.expects(:destroy).with(@host)
 
           subject.clean_cached_facts(@host)
         end
@@ -137,14 +137,14 @@ describe Puppet::Face[:node, '0.0.1'] do
 
       describe "when cleaning cached node" do
         it "should destroy the cached node" do
-          Puppet::Node.indirection.expects(:destroy).with(@host)
+          Oregano::Node.indirection.expects(:destroy).with(@host)
           subject.clean_cached_node(@host)
         end
       end
 
       describe "when cleaning archived reports" do
         it "should tell the reports to remove themselves" do
-          Puppet::Transaction::Report.indirection.stubs(:destroy).with(@host)
+          Oregano::Transaction::Report.indirection.stubs(:destroy).with(@host)
 
           subject.clean_reports(@host)
         end

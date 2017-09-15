@@ -2,11 +2,11 @@
 require 'spec_helper'
 
 require 'openssl'
-require 'puppet/util/ssl'
+require 'oregano/util/ssl'
 
-describe Puppet::Util::SSL do
+describe Oregano::Util::SSL do
   def parse(dn)
-    Puppet::Util::SSL.subject_from_dn(dn)
+    Oregano::Util::SSL.subject_from_dn(dn)
   end
 
   describe "when getting a subject from a DN" do
@@ -61,7 +61,7 @@ describe Puppet::Util::SSL do
 
   describe "when getting a CN from a subject" do
     def cn_from(subject)
-      Puppet::Util::SSL.cn_from_subject(subject)
+      Oregano::Util::SSL.cn_from_subject(subject)
     end
 
     it "should correctly parse a subject containing only a CN" do

@@ -1,12 +1,12 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-describe Puppet::Type.type(:zpool).provider(:zpool) do
+describe Oregano::Type.type(:zpool).provider(:zpool) do
   let(:name) { 'mypool' }
   let(:zpool) { '/usr/sbin/zpool' }
 
   let(:resource) do
-    Puppet::Type.type(:zpool).new(:name => name, :provider => :zpool)
+    Oregano::Type.type(:zpool).new(:name => name, :provider => :zpool)
   end
 
   let(:provider) { resource.provider }
@@ -164,7 +164,7 @@ describe Puppet::Type.type(:zpool).provider(:zpool) do
           provider.stubs(:current_pool).returns(Hash.new("currentvalue"))
           expect {
             provider.send((field.to_s + "=").intern, "shouldvalue")
-          }.to raise_error(Puppet::Error, /can\'t be changed/)
+          }.to raise_error(Oregano::Error, /can\'t be changed/)
         end
       end
     end

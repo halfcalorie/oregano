@@ -1,24 +1,24 @@
 require 'spec_helper'
-require 'puppet/face'
-require 'puppet/file_serving/metadata'
-require 'puppet/file_serving/content'
-require 'puppet/indirector/memory'
+require 'oregano/face'
+require 'oregano/file_serving/metadata'
+require 'oregano/file_serving/content'
+require 'oregano/indirector/memory'
 
-module PuppetFaceIntegrationSpecs
-describe "Puppet plugin face" do
+module OreganoFaceIntegrationSpecs
+describe "Oregano plugin face" do
   INDIRECTORS = [
-    Puppet::Indirector::FileMetadata,
-    Puppet::Indirector::FileContent,
+    Oregano::Indirector::FileMetadata,
+    Oregano::Indirector::FileContent,
   ]
 
   INDIRECTED_CLASSES = [
-    Puppet::FileServing::Metadata,
-    Puppet::FileServing::Content,
-    Puppet::Node::Facts,
+    Oregano::FileServing::Metadata,
+    Oregano::FileServing::Content,
+    Oregano::Node::Facts,
   ]
 
   INDIRECTORS.each do |indirector|
-    class indirector::Memory < Puppet::Indirector::Memory
+    class indirector::Memory < Oregano::Indirector::Memory
       def find(request)
         model.new('/dev/null', { 'type' => 'directory' })
       end
@@ -26,8 +26,8 @@ describe "Puppet plugin face" do
   end
 
   before do
-    FileUtils.mkdir(File.join(Puppet[:vardir], 'lib'))
-    FileUtils.mkdir(File.join(Puppet[:vardir], 'facts.d'))
+    FileUtils.mkdir(File.join(Oregano[:vardir], 'lib'))
+    FileUtils.mkdir(File.join(Oregano[:vardir], 'facts.d'))
     @termini_classes = {}
     INDIRECTED_CLASSES.each do |indirected|
       @termini_classes[indirected] = indirected.indirection.terminus_class
@@ -43,7 +43,7 @@ describe "Puppet plugin face" do
   end
 
   def init_cli_args_and_apply_app(args = ["download"])
-    Puppet::Application.find(:plugin).new(stub('command_line', :subcommand_name => :plugin, :args => args))
+    Oregano::Application.find(:plugin).new(stub('command_line', :subcommand_name => :plugin, :args => args))
   end
 
   it "processes a download request" do

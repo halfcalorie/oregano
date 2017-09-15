@@ -1,6 +1,6 @@
 test_name "#4233: resource with a newline"
 
-# 2010-07-22 Jeff McCune <jeff@puppetlabs.com>
+# 2010-07-22 Jeff McCune <jeff@oreganolabs.com>
 # AffectedVersion: 2.6.0rc3
 # FixedVersion: 2.6.0
 

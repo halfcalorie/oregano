@@ -1,20 +1,20 @@
 #! /usr/bin/env ruby
 require 'spec_helper'
 
-require 'puppet_spec/files'
+require 'oregano_spec/files'
 
-if Puppet.features.microsoft_windows?
-  require 'puppet/util/windows'
+if Oregano.features.microsoft_windows?
+  require 'oregano/util/windows'
   class WindowsSecurity
-    extend Puppet::Util::Windows::Security
+    extend Oregano::Util::Windows::Security
   end
 end
 
-describe Puppet::Type.type(:file), :uses_checksums => true do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file), :uses_checksums => true do
+  include OreganoSpec::Files
   include_context 'with supported checksum types'
 
-  let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:catalog) { Oregano::Resource::Catalog.new }
   let(:path) do
     # we create a directory first so backups of :path that are stored in
     # the same directory will also be removed after the tests
@@ -29,25 +29,25 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
     File.join(parent, 'dir_testing')
   end
 
-  if Puppet.features.posix?
+  if Oregano.features.posix?
     def set_mode(mode, file)
       File.chmod(mode, file)
     end
 
     def get_mode(file)
-      Puppet::FileSystem.lstat(file).mode
+      Oregano::FileSystem.lstat(file).mode
     end
 
     def get_owner(file)
-      Puppet::FileSystem.lstat(file).uid
+      Oregano::FileSystem.lstat(file).uid
     end
 
     def get_group(file)
-      Puppet::FileSystem.lstat(file).gid
+      Oregano::FileSystem.lstat(file).gid
     end
   else
     class SecurityHelper
-      extend Puppet::Util::Windows::Security
+      extend Oregano::Util::Windows::Security
     end
 
     def set_mode(mode, file)
@@ -72,14 +72,14 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
   end
 
   around :each do |example|
-    Puppet.override(:environments => Puppet::Environments::Static.new) do
+    Oregano.override(:environments => Oregano::Environments::Static.new) do
       example.run
     end
   end
 
   before do
     # stub this to not try to create state.yaml
-    Puppet::Util::Storage.stubs(:store)
+    Oregano::Util::Storage.stubs(:store)
   end
 
   it "should not attempt to manage files that do not exist if no means of creating the file is specified" do
@@ -90,7 +90,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
     status = catalog.apply.report.resource_statuses["File[#{source}]"]
     expect(status).not_to be_failed
     expect(status).not_to be_changed
-    expect(Puppet::FileSystem.exist?(source)).to be_falsey
+    expect(Oregano::FileSystem.exist?(source)).to be_falsey
   end
 
   describe "when ensure is present using an empty file" do
@@ -106,7 +106,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       it "should do nothing" do
         report = catalog.apply.report
         expect(report.resource_statuses["File[#{path}]"]).not_to be_failed
-        expect(Puppet::FileSystem.exist?(path)).to be_truthy
+        expect(Oregano::FileSystem.exist?(path)).to be_truthy
       end
 
       it "should log nothing" do
@@ -119,7 +119,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       it "should create the file" do
         report = catalog.apply.report
         expect(report.resource_statuses["File[#{path}]"]).not_to be_failed
-        expect(Puppet::FileSystem.exist?(path)).to be_truthy
+        expect(Oregano::FileSystem.exist?(path)).to be_truthy
       end
 
       it "should log that the file was created" do
@@ -143,7 +143,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       it "should remove the file" do
         report = catalog.apply.report
         expect(report.resource_statuses["File[#{path}]"]).not_to be_failed
-        expect(Puppet::FileSystem.exist?(path)).to be_falsey
+        expect(Oregano::FileSystem.exist?(path)).to be_falsey
       end
 
       it "should log that the file was removed" do
@@ -157,7 +157,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       it "should do nothing" do
         report = catalog.apply.report
         expect(report.resource_statuses["File[#{path}]"]).not_to be_failed
-        expect(Puppet::FileSystem.exist?(path)).to be_falsey
+        expect(Oregano::FileSystem.exist?(path)).to be_falsey
       end
 
       it "should log nothing" do
@@ -289,7 +289,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             FileUtils.touch(link_target)
             File.chmod(0444, link_target)
 
-            Puppet::FileSystem.symlink(link_target, link)
+            Oregano::FileSystem.symlink(link_target, link)
           end
 
           it "should not set the executable bit on the link nor the target" do
@@ -297,8 +297,8 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
 
             catalog.apply
 
-            (Puppet::FileSystem.stat(link).mode & 07777) == 0666
-            (Puppet::FileSystem.lstat(link_target).mode & 07777) == 0444
+            (Oregano::FileSystem.stat(link).mode & 07777) == 0666
+            (Oregano::FileSystem.lstat(link_target).mode & 07777) == 0444
           end
 
           it "should ignore dangling symlinks (#6856)" do
@@ -307,7 +307,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             catalog.add_resource described_class.new(:path => link, :ensure => :link, :mode => '0666', :target => link_target, :links => :manage)
             catalog.apply
 
-            expect(Puppet::FileSystem.exist?(link)).to be_falsey
+            expect(Oregano::FileSystem.exist?(link)).to be_falsey
           end
 
           it "should create a link to the target if ensure is omitted" do
@@ -315,9 +315,9 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             catalog.add_resource described_class.new(:path => link, :target => link_target)
             catalog.apply
 
-            expect(Puppet::FileSystem.exist?(link)).to be_truthy
-            expect(Puppet::FileSystem.lstat(link).ftype).to eq('link')
-            expect(Puppet::FileSystem.readlink(link)).to eq(link_target)
+            expect(Oregano::FileSystem.exist?(link)).to be_truthy
+            expect(Oregano::FileSystem.lstat(link).ftype).to eq('link')
+            expect(Oregano::FileSystem.readlink(link)).to eq(link_target)
           end
         end
 
@@ -326,7 +326,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             target = tmpfile('dangling')
 
             FileUtils.touch(target)
-            Puppet::FileSystem.symlink(target, link)
+            Oregano::FileSystem.symlink(target, link)
             File.delete(target)
 
             catalog.add_resource described_class.new(:path => path, :source => link, :mode => '0600', :links => :follow)
@@ -339,7 +339,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             before :each do
               File.chmod(0600, link_target)
 
-              Puppet::FileSystem.symlink(link_target, link)
+              Oregano::FileSystem.symlink(link_target, link)
             end
 
             after :each do
@@ -402,7 +402,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             before :each do
               FileUtils.touch(link_target)
 
-              Puppet::FileSystem.symlink(link_target, link)
+              Oregano::FileSystem.symlink(link_target, link)
             end
 
             it "should create the file, not a symlink (#2817, #10315)" do
@@ -444,8 +444,8 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
               File.chmod(0666, real_target)
 
               # link -> target -> real_target
-              Puppet::FileSystem.symlink(real_target, target)
-              Puppet::FileSystem.symlink(target, link)
+              Oregano::FileSystem.symlink(real_target, target)
+              Oregano::FileSystem.symlink(target, link)
             end
 
             after :each do
@@ -480,7 +480,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
   describe "when writing files" do
     shared_examples "files are backed up" do |resource_options|
       it "should backup files to a filebucket when one is configured" do
-        filebucket = Puppet::Type.type(:filebucket).new :path => tmpfile("filebucket"), :name => "mybucket"
+        filebucket = Oregano::Type.type(:filebucket).new :path => tmpfile("filebucket"), :name => "mybucket"
         file = described_class.new({:path => path, :backup => "mybucket", :content => "foo"}.merge(resource_options))
         catalog.add_resource file
         catalog.add_resource filebucket
@@ -503,7 +503,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         catalog.apply
 
         backup = file[:path] + ".bak"
-        expect(Puppet::FileSystem.exist?(backup)).to be_truthy
+        expect(Oregano::FileSystem.exist?(backup)).to be_truthy
         expect(File.read(backup)).to eq("bar\n")
       end
 
@@ -518,7 +518,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         # Create a directory where the backup should be so that writing to it fails
         Dir.mkdir(File.join(dir, "testfile.bak"))
 
-        Puppet::Util::Log.stubs(:newmessage)
+        Oregano::Util::Log.stubs(:newmessage)
 
         catalog.apply
 
@@ -529,20 +529,20 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         link = tmpfile("link")
         dest1 = tmpfile("dest1")
         dest2 = tmpfile("dest2")
-        bucket = Puppet::Type.type(:filebucket).new :path => tmpfile("filebucket"), :name => "mybucket"
+        bucket = Oregano::Type.type(:filebucket).new :path => tmpfile("filebucket"), :name => "mybucket"
         file = described_class.new({:path => link, :target => dest2, :ensure => :link, :backup => "mybucket"}.merge(resource_options))
         catalog.add_resource file
         catalog.add_resource bucket
 
         File.open(dest1, "w") { |f| f.puts "whatever" }
-        Puppet::FileSystem.symlink(dest1, link)
+        Oregano::FileSystem.symlink(dest1, link)
 
         d = filebucket_digest.call(File.read(file[:path]))
 
         catalog.apply
 
-        expect(Puppet::FileSystem.readlink(link)).to eq(dest2)
-        expect(Puppet::FileSystem.exist?(bucket[:path])).to be_falsey
+        expect(Oregano::FileSystem.readlink(link)).to eq(dest2)
+        expect(Oregano::FileSystem.exist?(bucket[:path])).to be_falsey
       end
 
       it "should backup directories to the local filesystem by copying the whole directory" do
@@ -563,7 +563,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       end
 
       it "should backup directories to filebuckets by backing up each file separately" do
-        bucket = Puppet::Type.type(:filebucket).new :path => tmpfile("filebucket"), :name => "mybucket"
+        bucket = Oregano::Type.type(:filebucket).new :path => tmpfile("filebucket"), :name => "mybucket"
         file = described_class.new({:path => tmpfile("bucket_backs"), :backup => "mybucket", :content => "foo", :force => true}.merge(resource_options))
         catalog.add_resource file
         catalog.add_resource bucket
@@ -595,7 +595,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       describe "when checksum_type is #{checksum_type}" do
         # FileBucket uses the globally configured default for lookup by digest, which right now is MD5.
         it_should_behave_like "files are backed up", {:checksum => checksum_type} do
-          let(:filebucket_digest) { Proc.new {|x| Puppet::Util::Checksums.md5(x)} }
+          let(:filebucket_digest) { Proc.new {|x| Oregano::Util::Checksums.md5(x)} }
         end
       end
     end
@@ -680,13 +680,13 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       @dirs.each do |path|
         link_path = path.sub(source, dest)
 
-        expect(Puppet::FileSystem.lstat(link_path)).to be_directory
+        expect(Oregano::FileSystem.lstat(link_path)).to be_directory
       end
 
       @files.each do |path|
         link_path = path.sub(source, dest)
 
-        expect(Puppet::FileSystem.lstat(link_path).ftype).to eq("link")
+        expect(Oregano::FileSystem.lstat(link_path).ftype).to eq("link")
       end
     end
 
@@ -706,13 +706,13 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       @dirs.each do |path|
         newpath = path.sub(source, dest)
 
-        expect(Puppet::FileSystem.lstat(newpath)).to be_directory
+        expect(Oregano::FileSystem.lstat(newpath)).to be_directory
       end
 
       @files.each do |path|
         newpath = path.sub(source, dest)
 
-        expect(Puppet::FileSystem.lstat(newpath).ftype).to eq("file")
+        expect(Oregano::FileSystem.lstat(newpath).ftype).to eq("file")
       end
     end
 
@@ -745,11 +745,11 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
                              :ignore => '*.ign',)
 
       catalog.apply
-      expect(Puppet::FileSystem.exist?(srcdir)).to be_truthy
-      expect(Puppet::FileSystem.exist?(dstdir)).to be_truthy
+      expect(Oregano::FileSystem.exist?(srcdir)).to be_truthy
+      expect(Oregano::FileSystem.exist?(dstdir)).to be_truthy
       expect(File.read(srcfile).strip).to eq("don't ignore me")
       expect(File.read(cpyfile).strip).to eq("don't ignore me")
-      expect(Puppet::FileSystem.exist?("#{dstdir}/file.ign")).to be_falsey
+      expect(Oregano::FileSystem.exist?("#{dstdir}/file.ign")).to be_falsey
     end
 
     it "should not recursively manage files managed by a more specific explicit file" do
@@ -792,7 +792,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       describe "for the 2nd time" do
         with_checksum_types "one", "x" do
           let(:target_file) { File.join(path, 'x') }
-          let(:second_catalog) { Puppet::Resource::Catalog.new }
+          let(:second_catalog) { Oregano::Resource::Catalog.new }
           before(:each) do
             @options = {
               :path => path,
@@ -807,13 +807,13 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           it "should not update the target directory" do
             # Ensure the test believes the source file was written in the past.
             FileUtils.touch checksum_file, :mtime => Time.now - 20
-            catalog.add_resource Puppet::Type.send(:newfile, @options)
+            catalog.add_resource Oregano::Type.send(:newfile, @options)
             catalog.apply
             expect(File).to be_directory(path)
-            expect(Puppet::FileSystem.exist?(target_file)).to be_truthy
+            expect(Oregano::FileSystem.exist?(target_file)).to be_truthy
 
             # The 2nd time the resource should not change.
-            second_catalog.add_resource Puppet::Type.send(:newfile, @options)
+            second_catalog.add_resource Oregano::Type.send(:newfile, @options)
             result = second_catalog.apply
             status = result.report.resource_statuses["File[#{target_file}]"]
             expect(status).not_to be_failed
@@ -823,17 +823,17 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           it "should update the target directory if contents change" do
             pending "a way to appropriately mock ctime checks for a particular file" if checksum_type == 'ctime'
 
-            catalog.add_resource Puppet::Type.send(:newfile, @options)
+            catalog.add_resource Oregano::Type.send(:newfile, @options)
             catalog.apply
             expect(File).to be_directory(path)
-            expect(Puppet::FileSystem.exist?(target_file)).to be_truthy
+            expect(Oregano::FileSystem.exist?(target_file)).to be_truthy
 
             # Change the source file.
             File.open(checksum_file, "wb") { |f| f.write "some content" }
             FileUtils.touch target_file, :mtime => Time.now - 20
 
             # The 2nd time should update the resource.
-            second_catalog.add_resource Puppet::Type.send(:newfile, @options)
+            second_catalog.add_resource Oregano::Type.send(:newfile, @options)
             result = second_catalog.apply
             status = result.report.resource_statuses["File[#{target_file}]"]
             expect(status).not_to be_failed
@@ -851,7 +851,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             FileUtils.mkdir_p(File.join(two, 'three'))
             FileUtils.touch(File.join(two, 'three', 'four'))
 
-            catalog.add_resource Puppet::Type.newfile(
+            catalog.add_resource Oregano::Type.newfile(
                                :path    => path,
                                :ensure  => :directory,
                                :backup  => false,
@@ -863,8 +863,8 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             catalog.apply
 
             expect(File).to be_directory(path)
-            expect(Puppet::FileSystem.exist?(File.join(path, 'one'))).to be_falsey
-            expect(Puppet::FileSystem.exist?(File.join(path, 'three', 'four'))).to be_truthy
+            expect(Oregano::FileSystem.exist?(File.join(path, 'one'))).to be_falsey
+            expect(Oregano::FileSystem.exist?(File.join(path, 'three', 'four'))).to be_truthy
           end
 
           it "should recursively copy an empty directory" do
@@ -873,7 +873,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             three = tmpdir('three')
             file_in_dir_with_contents(three, 'a', '')
 
-            catalog.add_resource Puppet::Type.newfile(
+            catalog.add_resource Oregano::Type.newfile(
                                :path    => path,
                                :ensure  => :directory,
                                :backup  => false,
@@ -885,7 +885,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             catalog.apply
 
             expect(File).to be_directory(path)
-            expect(Puppet::FileSystem.exist?(File.join(path, 'a'))).to be_falsey
+            expect(Oregano::FileSystem.exist?(File.join(path, 'a'))).to be_falsey
           end
 
           it "should only recurse one level" do
@@ -897,7 +897,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             FileUtils.mkdir_p(File.join(two, 'z'))
             FileUtils.touch(File.join(two, 'z', 'y'))
 
-            catalog.add_resource Puppet::Type.newfile(
+            catalog.add_resource Oregano::Type.newfile(
                                :path    => path,
                                :ensure  => :directory,
                                :backup  => false,
@@ -909,9 +909,9 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
 
             catalog.apply
 
-            expect(Puppet::FileSystem.exist?(File.join(path, 'a'))).to be_truthy
-            expect(Puppet::FileSystem.exist?(File.join(path, 'a', 'b'))).to be_falsey
-            expect(Puppet::FileSystem.exist?(File.join(path, 'z'))).to be_falsey
+            expect(Oregano::FileSystem.exist?(File.join(path, 'a'))).to be_truthy
+            expect(Oregano::FileSystem.exist?(File.join(path, 'a', 'b'))).to be_falsey
+            expect(Oregano::FileSystem.exist?(File.join(path, 'z'))).to be_falsey
           end
         end
 
@@ -921,7 +921,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             two = tmpfile_with_contents('two', 'yay')
             three = tmpfile_with_contents('three', 'no')
 
-            catalog.add_resource Puppet::Type.newfile(
+            catalog.add_resource Oregano::Type.newfile(
                                :path    => path,
                                :ensure  => :file,
                                :backup  => false,
@@ -939,7 +939,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             two = tmpfile_with_contents('two', '')
             three = tmpfile_with_contents('three', 'no')
 
-            catalog.add_resource Puppet::Type.newfile(
+            catalog.add_resource Oregano::Type.newfile(
                                :path    => path,
                                :ensure  => :file,
                                :backup  => false,
@@ -969,7 +969,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             file_in_dir_with_contents(three, 'a', three)
             file_in_dir_with_contents(three, 'c', three)
 
-            obj = Puppet::Type.newfile(
+            obj = Oregano::Type.newfile(
                                :path    => dest,
                                :ensure  => :directory,
                                :backup  => false,
@@ -995,7 +995,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             FileUtils.mkdir_p(File.join(two, 'z'))
             FileUtils.touch(File.join(two, 'z', 'y'))
 
-            obj = Puppet::Type.newfile(
+            obj = Oregano::Type.newfile(
                                :path    => path,
                                :ensure  => :directory,
                                :backup  => false,
@@ -1008,10 +1008,10 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             catalog.add_resource obj
             catalog.apply
 
-            expect(Puppet::FileSystem.exist?(File.join(path, 'a'))).to be_truthy
-            expect(Puppet::FileSystem.exist?(File.join(path, 'a', 'b'))).to be_falsey
-            expect(Puppet::FileSystem.exist?(File.join(path, 'z'))).to be_truthy
-            expect(Puppet::FileSystem.exist?(File.join(path, 'z', 'y'))).to be_falsey
+            expect(Oregano::FileSystem.exist?(File.join(path, 'a'))).to be_truthy
+            expect(Oregano::FileSystem.exist?(File.join(path, 'a', 'b'))).to be_falsey
+            expect(Oregano::FileSystem.exist?(File.join(path, 'z'))).to be_truthy
+            expect(Oregano::FileSystem.exist?(File.join(path, 'z', 'y'))).to be_falsey
           end
         end
       end
@@ -1093,7 +1093,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       uri_path = resource.parameters[:source].uri.path
 
       # note that Windows file:// style URIs get an extra / in front of c:/ like /c:/
-      source_prefix = Puppet.features.microsoft_windows? ? '/' : ''
+      source_prefix = Oregano.features.microsoft_windows? ? '/' : ''
 
       # the URI can be round-tripped through unescape
       expect(URI.unescape(uri_path)).to eq(source_prefix + source)
@@ -1128,7 +1128,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
 
         it "should overwrite contents" do
           catalog.apply
-          expect(Puppet::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
+          expect(Oregano::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
         end
 
         it "should log that content changed" do
@@ -1146,9 +1146,9 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         it "should create a file with content" do
           catalog.add_resource described_class.send(:new, @options)
           catalog.apply
-          expect(Puppet::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
+          expect(Oregano::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           status = second_catalog.apply.report.resource_statuses["File[#{path}]"]
           expect(status).not_to be_failed
@@ -1161,7 +1161,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           expect(report.logs.first.source).to eq("/File[#{path}]/ensure")
           expect(report.logs.first.message).to eq("defined content as '{#{checksum_type}}#{checksum}'")
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           logs = second_catalog.apply.report.logs
           expect(logs).to be_empty
@@ -1172,9 +1172,9 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         it "should create a file with content" do
           catalog.add_resource described_class.send(:new, @options)
           catalog.apply
-          expect(Puppet::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
+          expect(Oregano::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           status = second_catalog.apply.report.resource_statuses["File[#{path}]"]
           expect(status).not_to be_failed
@@ -1187,7 +1187,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           expect(report.logs.first.source).to eq("/File[#{path}]/ensure")
           expect(report.logs.first.message).to eq("defined content as '{#{checksum_type}}#{checksum}'")
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           logs = second_catalog.apply.report.logs
           expect(logs).to be_empty
@@ -1202,9 +1202,9 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         it "should create files with content" do
           catalog.add_resource described_class.send(:new, @options)
           catalog.apply
-          expect(Puppet::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
+          expect(Oregano::FileSystem.binread(path)).to eq(CHECKSUM_PLAINTEXT)
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           status = second_catalog.apply.report.resource_statuses["File[#{path}]"]
           expect(status).not_to be_failed
@@ -1217,7 +1217,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           expect(report.logs.first.source).to eq("/File[#{path}]/ensure")
           expect(report.logs.first.message).to eq("defined content as '{#{checksum_type}}#{checksum}'")
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           logs = second_catalog.apply.report.logs
           expect(logs).to be_empty
@@ -1240,7 +1240,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
     catalog.add_resource file
     catalog.apply
 
-    expect(Puppet::FileSystem.exist?(dest)).to be_falsey
+    expect(Oregano::FileSystem.exist?(dest)).to be_falsey
   end
 
   describe "when sourcing" do
@@ -1256,7 +1256,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         }
       end
 
-      describe "on POSIX systems", :if => Puppet.features.posix? do
+      describe "on POSIX systems", :if => Oregano.features.posix? do
         it "should apply the source metadata values" do
           @options[:source_permissions] = :use
 
@@ -1266,7 +1266,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           expect(get_group(path)).to eq(get_group(checksum_file))
           expect(get_mode(path) & 07777).to eq(0770)
 
-          second_catalog = Puppet::Resource::Catalog.new
+          second_catalog = Oregano::Resource::Catalog.new
           second_catalog.add_resource described_class.send(:new, @options)
           status = second_catalog.apply.report.resource_statuses["File[#{path}]"]
           expect(status).not_to be_failed
@@ -1281,7 +1281,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         catalog.apply
         expect(get_mode(path) & 07777).to eq(0440)
 
-        second_catalog = Puppet::Resource::Catalog.new
+        second_catalog = Oregano::Resource::Catalog.new
         second_catalog.add_resource described_class.send(:new, @options)
         status = second_catalog.apply.report.resource_statuses["File[#{path}]"]
         expect(status).not_to be_failed
@@ -1309,7 +1309,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         it "should fetch if not on the local disk" do
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
         end
 
@@ -1322,7 +1322,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           FileUtils.touch httppath, :mtime => Time.parse("Sun, 22 Mar 2015 22:57:43 GMT")
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
         end
 
@@ -1332,7 +1332,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           FileUtils.touch httppath, :mtime => Time.parse("Sun, 22 Mar 2015 22:22:34 GMT")
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
         end
 
@@ -1341,7 +1341,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           mtime = File.stat(httppath).mtime
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
           expect(File.stat(httppath).mtime).to eq mtime
         end
@@ -1360,7 +1360,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         it "should fetch if not on the local disk" do
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
         end
 
@@ -1368,7 +1368,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           File.open(httppath, "wb") { |f| f.puts "Content originally on disk\n" }
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
         end
 
@@ -1378,7 +1378,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           FileUtils.touch httppath, :mtime => disk_mtime
           catalog.add_resource resource
           catalog.apply
-          expect(Puppet::FileSystem.exist?(httppath)).to be_truthy
+          expect(Oregano::FileSystem.exist?(httppath)).to be_truthy
           expect(File.read(httppath)).to eq "Content via HTTP\n"
           expect(File.stat(httppath).mtime).to eq disk_mtime
         end
@@ -1386,15 +1386,15 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       end
     end
 
-    describe "on Windows systems", :if => Puppet.features.microsoft_windows? do
+    describe "on Windows systems", :if => Oregano.features.microsoft_windows? do
       def expects_sid_granted_full_access_explicitly(path, sid)
-        inherited_ace = Puppet::Util::Windows::AccessControlEntry::INHERITED_ACE
+        inherited_ace = Oregano::Util::Windows::AccessControlEntry::INHERITED_ACE
 
         aces = get_aces_for_path_by_sid(path, sid)
         expect(aces).not_to be_empty
 
         aces.each do |ace|
-          expect(ace.mask).to eq(Puppet::Util::Windows::File::FILE_ALL_ACCESS)
+          expect(ace.mask).to eq(Oregano::Util::Windows::File::FILE_ALL_ACCESS)
           expect(ace.flags & inherited_ace).not_to eq(inherited_ace)
         end
       end
@@ -1404,13 +1404,13 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       end
 
       def expects_at_least_one_inherited_ace_grants_full_access(path, sid)
-        inherited_ace = Puppet::Util::Windows::AccessControlEntry::INHERITED_ACE
+        inherited_ace = Oregano::Util::Windows::AccessControlEntry::INHERITED_ACE
 
         aces = get_aces_for_path_by_sid(path, sid)
         expect(aces).not_to be_empty
 
         expect(aces.any? do |ace|
-          ace.mask == Puppet::Util::Windows::File::FILE_ALL_ACCESS &&
+          ace.mask == Oregano::Util::Windows::File::FILE_ALL_ACCESS &&
             (ace.flags & inherited_ace) == inherited_ace
         end).to be_truthy
       end
@@ -1422,11 +1422,11 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       describe "when processing SYSTEM ACEs" do
         before do
           @sids = {
-            :current_user => Puppet::Util::Windows::ADSI::User.current_user_sid.sid,
-            :system => Puppet::Util::Windows::SID::LocalSystem,
-            :users => Puppet::Util::Windows::SID::BuiltinUsers,
-            :power_users => Puppet::Util::Windows::SID::PowerUsers,
-            :none => Puppet::Util::Windows::SID::Nobody
+            :current_user => Oregano::Util::Windows::ADSI::User.current_user_sid.sid,
+            :system => Oregano::Util::Windows::SID::LocalSystem,
+            :users => Oregano::Util::Windows::SID::BuiltinUsers,
+            :power_users => Oregano::Util::Windows::SID::PowerUsers,
+            :none => Oregano::Util::Windows::SID::Nobody
           }
         end
 
@@ -1478,7 +1478,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
               expect(system_aces).not_to be_empty
 
               system_aces.each do |ace|
-                expect(ace.mask).to eq(Puppet::Util::Windows::File::FILE_GENERIC_READ)
+                expect(ace.mask).to eq(Oregano::Util::Windows::File::FILE_GENERIC_READ)
               end
             end
 
@@ -1516,13 +1516,13 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           end
 
           def grant_everyone_full_access(path)
-            sd = Puppet::Util::Windows::Security.get_security_descriptor(path)
+            sd = Oregano::Util::Windows::Security.get_security_descriptor(path)
             sd.dacl.allow(
               'S-1-1-0', #everyone
-              Puppet::Util::Windows::File::FILE_ALL_ACCESS,
-              Puppet::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
-              Puppet::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE)
-            Puppet::Util::Windows::Security.set_security_descriptor(path, sd)
+              Oregano::Util::Windows::File::FILE_ALL_ACCESS,
+              Oregano::Util::Windows::AccessControlEntry::OBJECT_INHERIT_ACE |
+              Oregano::Util::Windows::AccessControlEntry::CONTAINER_INHERIT_ACE)
+            Oregano::Util::Windows::Security.set_security_descriptor(path, sd)
           end
 
           after :each do
@@ -1565,8 +1565,8 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
                 expect(system_aces).not_to be_empty
 
                 system_aces.each do |ace|
-                  # unlike files, Puppet sets execute bit on directories that are readable
-                  expect(ace.mask).to eq(Puppet::Util::Windows::File::FILE_GENERIC_READ | Puppet::Util::Windows::File::FILE_GENERIC_EXECUTE)
+                  # unlike files, Oregano sets execute bit on directories that are readable
+                  expect(ace.mask).to eq(Oregano::Util::Windows::File::FILE_GENERIC_READ | Oregano::Util::Windows::File::FILE_GENERIC_EXECUTE)
                 end
               end
 
@@ -1613,7 +1613,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       # this file should get removed
       File.open(@purgee, "w") { |f| f.print "footest" }
 
-      lfobj = Puppet::Type.newfile(
+      lfobj = Oregano::Type.newfile(
         :title   => "localfile",
         :path    => @localfile,
         :content => "rahtest",
@@ -1621,7 +1621,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         :backup  => false
       )
 
-      destobj = Puppet::Type.newfile(
+      destobj = Oregano::Type.newfile(
         :title   => "destdir",
         :path    => destdir,
         :source  => sourcedir,
@@ -1643,25 +1643,25 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
     end
 
     it "should purge files that are neither remote nor otherwise managed" do
-      expect(Puppet::FileSystem.exist?(@purgee)).to be_falsey
+      expect(Oregano::FileSystem.exist?(@purgee)).to be_falsey
     end
   end
 
   describe "when using validate_cmd" do
     it "should fail the file resource if command fails" do
       catalog.add_resource(described_class.new(:path => path, :content => "foo", :validate_cmd => "/usr/bin/env false"))
-      Puppet::Util::Execution.expects(:execute).with("/usr/bin/env false", {:combine => true, :failonfail => true}).raises(Puppet::ExecutionFailure, "Failed")
+      Oregano::Util::Execution.expects(:execute).with("/usr/bin/env false", {:combine => true, :failonfail => true}).raises(Oregano::ExecutionFailure, "Failed")
       report = catalog.apply.report
       expect(report.resource_statuses["File[#{path}]"]).to be_failed
-      expect(Puppet::FileSystem.exist?(path)).to be_falsey
+      expect(Oregano::FileSystem.exist?(path)).to be_falsey
     end
 
     it "should succeed the file resource if command succeeds" do
       catalog.add_resource(described_class.new(:path => path, :content => "foo", :validate_cmd => "/usr/bin/env true"))
-      Puppet::Util::Execution.expects(:execute).with("/usr/bin/env true", {:combine => true, :failonfail => true}).returns ''
+      Oregano::Util::Execution.expects(:execute).with("/usr/bin/env true", {:combine => true, :failonfail => true}).returns ''
       report = catalog.apply.report
       expect(report.resource_statuses["File[#{path}]"]).not_to be_failed
-      expect(Puppet::FileSystem.exist?(path)).to be_truthy
+      expect(Oregano::FileSystem.exist?(path)).to be_truthy
     end
   end
 
@@ -1689,7 +1689,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
     raise "Got #{status_failures.length} failure(s) while applying: #{status_fail_msg}"
   end
 
-  describe "copying a file that is a link to a file", :if => Puppet.features.manages_symlinks? do
+  describe "copying a file that is a link to a file", :if => Oregano.features.manages_symlinks? do
     let(:target) { tmpfile('target') }
     let(:link) { tmpfile('link') }
     let(:copy) { tmpfile('copy') }
@@ -1708,7 +1708,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         :source => link,
         :links => "follow")
       catalog.apply
-      expect(Puppet::FileSystem).to be_file(copy)
+      expect(Oregano::FileSystem).to be_file(copy)
       expect(File.read(target)).to eq(File.read(copy))
     end
 
@@ -1727,12 +1727,12 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
         :source => link,
         :links => "manage")
       catalog.apply
-      expect(Puppet::FileSystem).to be_symlink(copy)
+      expect(Oregano::FileSystem).to be_symlink(copy)
       expect(File.read(link)).to eq(File.read(copy))
     end
   end
 
-  describe "copying a file that is a link to a directory", :if => Puppet.features.manages_symlinks? do
+  describe "copying a file that is a link to a directory", :if => Oregano.features.manages_symlinks? do
     let(:target) { tmpdir('target') }
     let(:link) { tmpfile('link') }
     let(:copy) { tmpfile('copy') }
@@ -1752,7 +1752,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           :recurse => false,
           :links => "follow")
         catalog.apply
-        expect(Puppet::FileSystem).to be_directory(copy)
+        expect(Oregano::FileSystem).to be_directory(copy)
       end
 
       it "should copy the link itself if :links => manage" do
@@ -1770,7 +1770,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           :recurse => false,
           :links => "manage")
         catalog.apply
-        expect(Puppet::FileSystem).to be_symlink(copy)
+        expect(Oregano::FileSystem).to be_symlink(copy)
         expect(Dir.entries(link)).to eq(Dir.entries(copy))
       end
     end
@@ -1791,7 +1791,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           :recurse => true,
           :links => "follow")
         catalog.apply
-        expect(Puppet::FileSystem).to be_directory(copy)
+        expect(Oregano::FileSystem).to be_directory(copy)
         expect(Dir.entries(target)).to eq(Dir.entries(copy))
       end
 
@@ -1810,7 +1810,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           :recurse => true,
           :links => "manage")
         catalog.apply
-        expect(Puppet::FileSystem).to be_symlink(copy)
+        expect(Oregano::FileSystem).to be_symlink(copy)
         expect(Dir.entries(link)).to eq(Dir.entries(copy))
       end
     end
@@ -1826,14 +1826,14 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
           :path           => path,
           :ensure         => :file,
           :checksum       => checksum,
-          :checksum_value => Puppet::Util::Checksums.send(checksum, contents)
+          :checksum_value => Oregano::Util::Checksums.send(checksum, contents)
         }
       end
 
       def verify_file(transaction)
         status = transaction.report.resource_statuses["File[#{path}]"]
         expect(status).not_to be_failed
-        expect(Puppet::FileSystem).to be_file(path)
+        expect(Oregano::FileSystem).to be_file(path)
         expect(File.read(path)).to eq(contents)
         status
       end
@@ -1870,7 +1870,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
             @options[:ensure] = :absent
             catalog.add_resource described_class.new(@options)
             catalog.apply
-            expect(Puppet::FileSystem).to_not be_file(path)
+            expect(Oregano::FileSystem).to_not be_file(path)
           end
         end
       end
@@ -1895,7 +1895,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       status = catalog.apply.report.resource_statuses["File[#{path}]"]
       expect(status).not_to be_failed
       expect(status).to be_changed
-      expect(Puppet::FileSystem).to be_directory(path)
+      expect(Oregano::FileSystem).to be_directory(path)
     end
 
     it "should not update mtime on an old directory" do
@@ -1904,7 +1904,7 @@ describe Puppet::Type.type(:file), :uses_checksums => true do
       FileUtils.touch path, :mtime => disk_mtime
       status = catalog.apply.report.resource_statuses["File[#{path}]"]
       expect(status).to be_nil
-      expect(Puppet::FileSystem).to be_directory(path)
+      expect(Oregano::FileSystem).to be_directory(path)
       expect(File.stat(path).mtime).to eq(disk_mtime)
     end
   end

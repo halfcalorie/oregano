@@ -26,7 +26,7 @@ test_name "tests that user resource will not add users that already exist." do
 
   step "verify that we don't try to create a user account that already exists" do
     agents.each do |agent|
-      on(agent, puppet_resource('user', user, 'ensure=present')) do
+      on(agent, oregano_resource('user', user, 'ensure=present')) do
         fail_test "tried to create '#{user}' user" if stdout.include? 'created'
       end
     end

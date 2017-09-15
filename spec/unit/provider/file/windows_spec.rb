@@ -1,18 +1,18 @@
 #! /usr/bin/env ruby
 
 require 'spec_helper'
-if Puppet.features.microsoft_windows?
-  require 'puppet/util/windows'
+if Oregano.features.microsoft_windows?
+  require 'oregano/util/windows'
   class WindowsSecurity
-    extend Puppet::Util::Windows::Security
+    extend Oregano::Util::Windows::Security
   end
 end
 
-describe Puppet::Type.type(:file).provider(:windows), :if => Puppet.features.microsoft_windows? do
-  include PuppetSpec::Files
+describe Oregano::Type.type(:file).provider(:windows), :if => Oregano.features.microsoft_windows? do
+  include OreganoSpec::Files
 
   let(:path) { tmpfile('windows_file_spec') }
-  let(:resource) { Puppet::Type.type(:file).new :path => path, :mode => '0777', :provider => described_class.name }
+  let(:resource) { Oregano::Type.type(:file).new :path => path, :mode => '0777', :provider => described_class.name }
   let(:provider) { resource.provider }
   let(:sid)      { 'S-1-1-50' }
   let(:account)  { 'quinn' }
@@ -43,28 +43,28 @@ describe Puppet::Type.type(:file).provider(:windows), :if => Puppet.features.mic
     it "should pass along any errors encountered" do
       expect do
         provider.mode = '0644'
-      end.to raise_error(Puppet::Error, /failed to set mode/)
+      end.to raise_error(Oregano::Error, /failed to set mode/)
     end
   end
 
   describe "#id2name" do
     it "should return the name of the user identified by the sid" do
-      Puppet::Util::Windows::SID.expects(:valid_sid?).with(sid).returns(true)
-      Puppet::Util::Windows::SID.expects(:sid_to_name).with(sid).returns(account)
+      Oregano::Util::Windows::SID.expects(:valid_sid?).with(sid).returns(true)
+      Oregano::Util::Windows::SID.expects(:sid_to_name).with(sid).returns(account)
 
       expect(provider.id2name(sid)).to eq(account)
     end
 
     it "should return the argument if it's already a name" do
-      Puppet::Util::Windows::SID.expects(:valid_sid?).with(account).returns(false)
-      Puppet::Util::Windows::SID.expects(:sid_to_name).never
+      Oregano::Util::Windows::SID.expects(:valid_sid?).with(account).returns(false)
+      Oregano::Util::Windows::SID.expects(:sid_to_name).never
 
       expect(provider.id2name(account)).to eq(account)
     end
 
     it "should return nil if the user doesn't exist" do
-      Puppet::Util::Windows::SID.expects(:valid_sid?).with(sid).returns(true)
-      Puppet::Util::Windows::SID.expects(:sid_to_name).with(sid).returns(nil)
+      Oregano::Util::Windows::SID.expects(:valid_sid?).with(sid).returns(true)
+      Oregano::Util::Windows::SID.expects(:sid_to_name).with(sid).returns(nil)
 
       expect(provider.id2name(sid)).to eq(nil)
     end
@@ -72,7 +72,7 @@ describe Puppet::Type.type(:file).provider(:windows), :if => Puppet.features.mic
 
   describe "#name2id" do
     it "should delegate to name_to_sid" do
-      Puppet::Util::Windows::SID.expects(:name_to_sid).with(account).returns(sid)
+      Oregano::Util::Windows::SID.expects(:name_to_sid).with(account).returns(sid)
 
       expect(provider.name2id(account)).to eq(sid)
     end
@@ -102,7 +102,7 @@ describe Puppet::Type.type(:file).provider(:windows), :if => Puppet.features.mic
 
       expect {
         provider.owner = sid
-      }.to raise_error(Puppet::Error, /Failed to set owner/)
+      }.to raise_error(Oregano::Error, /Failed to set owner/)
     end
   end
 
@@ -130,7 +130,7 @@ describe Puppet::Type.type(:file).provider(:windows), :if => Puppet.features.mic
 
       expect {
         provider.group = sid
-      }.to raise_error(Puppet::Error, /Failed to set group/)
+      }.to raise_error(Oregano::Error, /Failed to set group/)
     end
   end
 
@@ -140,15 +140,15 @@ describe Puppet::Type.type(:file).provider(:windows), :if => Puppet.features.mic
         described_class.any_instance.stubs(:supports_acl?).returns false
 
         expect {
-          Puppet::Type.type(:file).new :path => path, k => v
-        }.to raise_error(Puppet::Error, /Can only manage owner, group, and mode on filesystems that support Windows ACLs, such as NTFS/)
+          Oregano::Type.type(:file).new :path => path, k => v
+        }.to raise_error(Oregano::Error, /Can only manage owner, group, and mode on filesystems that support Windows ACLs, such as NTFS/)
       end
     end
 
     it "should not fail if the filesystem doesn't support ACLs and we're not managing permissions" do
       described_class.any_instance.stubs(:supports_acl?).returns false
 
-      Puppet::Type.type(:file).new :path => path
+      Oregano::Type.type(:file).new :path => path
     end
   end
 end

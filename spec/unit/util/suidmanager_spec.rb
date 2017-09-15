@@ -2,9 +2,9 @@
 
 require 'spec_helper'
 
-describe Puppet::Util::SUIDManager do
+describe Oregano::Util::SUIDManager do
   let :user do
-    Puppet::Type.type(:user).new(:name => 'name', :uid => 42, :gid => 42)
+    Oregano::Type.type(:user).new(:name => 'name', :uid => 42, :gid => 42)
   end
 
   let :xids do
@@ -12,7 +12,7 @@ describe Puppet::Util::SUIDManager do
   end
 
   before :each do
-    Puppet::Util::SUIDManager.stubs(:convert_xid).returns(42)
+    Oregano::Util::SUIDManager.stubs(:convert_xid).returns(42)
     pwent = stub('pwent', :name => 'fred', :uid => 42, :gid => 42)
     Etc.stubs(:getpwuid).with(42).returns(pwent)
 
@@ -30,8 +30,8 @@ describe Puppet::Util::SUIDManager do
 
   describe "#uid" do
     it "should allow setting euid/egid" do
-      Puppet::Util::SUIDManager.egid = user[:gid]
-      Puppet::Util::SUIDManager.euid = user[:uid]
+      Oregano::Util::SUIDManager.egid = user[:gid]
+      Oregano::Util::SUIDManager.euid = user[:uid]
 
       expect(xids[:egid]).to eq(user[:gid])
       expect(xids[:euid]).to eq(user[:uid])
@@ -40,13 +40,13 @@ describe Puppet::Util::SUIDManager do
 
   describe "#asuser" do
     it "should not get or set euid/egid when not root" do
-      Puppet.features.stubs(:microsoft_windows?).returns(false)
+      Oregano.features.stubs(:microsoft_windows?).returns(false)
       Process.stubs(:uid).returns(1)
 
       Process.stubs(:egid).returns(51)
       Process.stubs(:euid).returns(50)
 
-      Puppet::Util::SUIDManager.asuser(user[:uid], user[:gid]) {}
+      Oregano::Util::SUIDManager.asuser(user[:uid], user[:gid]) {}
 
       expect(xids).to be_empty
     end
@@ -54,19 +54,19 @@ describe Puppet::Util::SUIDManager do
     context "when root and not windows" do
       before :each do
         Process.stubs(:uid).returns(0)
-        Puppet.features.stubs(:microsoft_windows?).returns(false)
+        Oregano.features.stubs(:microsoft_windows?).returns(false)
       end
 
       it "should set euid/egid" do
         Process.stubs(:egid).returns(51).then.returns(51).then.returns(user[:gid])
         Process.stubs(:euid).returns(50).then.returns(50).then.returns(user[:uid])
 
-        Puppet::Util::SUIDManager.stubs(:convert_xid).with(:gid, 51).returns(51)
-        Puppet::Util::SUIDManager.stubs(:convert_xid).with(:uid, 50).returns(50)
-        Puppet::Util::SUIDManager.stubs(:initgroups).returns([])
+        Oregano::Util::SUIDManager.stubs(:convert_xid).with(:gid, 51).returns(51)
+        Oregano::Util::SUIDManager.stubs(:convert_xid).with(:uid, 50).returns(50)
+        Oregano::Util::SUIDManager.stubs(:initgroups).returns([])
 
         yielded = false
-        Puppet::Util::SUIDManager.asuser(user[:uid], user[:gid]) do
+        Oregano::Util::SUIDManager.asuser(user[:uid], user[:gid]) do
           expect(xids[:egid]).to eq(user[:gid])
           expect(xids[:euid]).to eq(user[:uid])
           yielded = true
@@ -82,14 +82,14 @@ describe Puppet::Util::SUIDManager do
 
       it "should just yield if user and group are nil" do
         yielded = false
-        Puppet::Util::SUIDManager.asuser(nil, nil) { yielded = true }
+        Oregano::Util::SUIDManager.asuser(nil, nil) { yielded = true }
         expect(yielded).to be_truthy
         expect(xids).to eq({})
       end
 
       it "should just change group if only group is given" do
         yielded = false
-        Puppet::Util::SUIDManager.asuser(nil, 42) { yielded = true }
+        Oregano::Util::SUIDManager.asuser(nil, 42) { yielded = true }
         expect(yielded).to be_truthy
         expect(xids).to eq({ :egid => 42 })
       end
@@ -98,7 +98,7 @@ describe Puppet::Util::SUIDManager do
         Process.stubs(:initgroups)
 
         yielded = false
-        Puppet::Util::SUIDManager.asuser(42) { yielded = true }
+        Oregano::Util::SUIDManager.asuser(42) { yielded = true }
         expect(yielded).to be_truthy
         expect(xids).to eq({ :euid => 42, :egid => 42 })
       end
@@ -108,23 +108,23 @@ describe Puppet::Util::SUIDManager do
         # internal behaviour in a reliable fashion, given we need multiple
         # sequenced calls to the same methods. --daniel 2012-02-05
         horror = sequence('of user and group changes')
-        Puppet::Util::SUIDManager.expects(:change_group).with(43, false).in_sequence(horror)
-        Puppet::Util::SUIDManager.expects(:change_user).with(42, false).in_sequence(horror)
-        Puppet::Util::SUIDManager.expects(:change_group).
-          with(Puppet::Util::SUIDManager.egid, false).in_sequence(horror)
-        Puppet::Util::SUIDManager.expects(:change_user).
-          with(Puppet::Util::SUIDManager.euid, false).in_sequence(horror)
+        Oregano::Util::SUIDManager.expects(:change_group).with(43, false).in_sequence(horror)
+        Oregano::Util::SUIDManager.expects(:change_user).with(42, false).in_sequence(horror)
+        Oregano::Util::SUIDManager.expects(:change_group).
+          with(Oregano::Util::SUIDManager.egid, false).in_sequence(horror)
+        Oregano::Util::SUIDManager.expects(:change_user).
+          with(Oregano::Util::SUIDManager.euid, false).in_sequence(horror)
 
         yielded = false
-        Puppet::Util::SUIDManager.asuser(42, 43) { yielded = true }
+        Oregano::Util::SUIDManager.asuser(42, 43) { yielded = true }
         expect(yielded).to be_truthy
       end
     end
 
     it "should not get or set euid/egid on Windows" do
-      Puppet.features.stubs(:microsoft_windows?).returns true
+      Oregano.features.stubs(:microsoft_windows?).returns true
 
-      Puppet::Util::SUIDManager.asuser(user[:uid], user[:gid]) {}
+      Oregano::Util::SUIDManager.asuser(user[:uid], user[:gid]) {}
 
       expect(xids).to be_empty
     end
@@ -138,7 +138,7 @@ describe Puppet::Util::SUIDManager do
           Process.egid = gid
         end
 
-        Puppet::Util::SUIDManager.change_group(42, true)
+        Oregano::Util::SUIDManager.change_group(42, true)
 
         expect(xids[:egid]).to eq(42)
         expect(xids[:gid]).to eq(42)
@@ -150,7 +150,7 @@ describe Puppet::Util::SUIDManager do
           Process.egid = 42
         end
 
-        Puppet::Util::SUIDManager.change_group(42, true)
+        Oregano::Util::SUIDManager.change_group(42, true)
 
         expect(xids[:egid]).to eq(42)
         expect(xids[:gid]).to eq(42)
@@ -159,7 +159,7 @@ describe Puppet::Util::SUIDManager do
 
     describe "when changing temporarily" do
       it "should change only egid" do
-        Puppet::Util::SUIDManager.change_group(42, false)
+        Oregano::Util::SUIDManager.change_group(42, false)
 
         expect(xids[:egid]).to eq(42)
         expect(xids[:gid]).to eq(0)
@@ -175,9 +175,9 @@ describe Puppet::Util::SUIDManager do
           Process.euid = uid
         end
 
-        Puppet::Util::SUIDManager.expects(:initgroups).with(42)
+        Oregano::Util::SUIDManager.expects(:initgroups).with(42)
 
-        Puppet::Util::SUIDManager.change_user(42, true)
+        Oregano::Util::SUIDManager.change_user(42, true)
 
         expect(xids[:euid]).to eq(42)
         expect(xids[:uid]).to eq(42)
@@ -188,9 +188,9 @@ describe Puppet::Util::SUIDManager do
           Process.euid = 42
         end
 
-        Puppet::Util::SUIDManager.expects(:initgroups).with(42)
+        Oregano::Util::SUIDManager.expects(:initgroups).with(42)
 
-        Puppet::Util::SUIDManager.change_user(42, true)
+        Oregano::Util::SUIDManager.change_user(42, true)
 
         expect(xids[:euid]).to eq(42)
         expect(xids[:uid]).to eq(42)
@@ -199,8 +199,8 @@ describe Puppet::Util::SUIDManager do
 
     describe "when changing temporarily" do
       it "should change only euid and groups" do
-        Puppet::Util::SUIDManager.stubs(:initgroups).returns([])
-        Puppet::Util::SUIDManager.change_user(42, false)
+        Oregano::Util::SUIDManager.stubs(:initgroups).returns([])
+        Oregano::Util::SUIDManager.change_user(42, false)
 
         expect(xids[:euid]).to eq(42)
         expect(xids[:uid]).to eq(0)
@@ -212,9 +212,9 @@ describe Puppet::Util::SUIDManager do
         when_not_root = sequence 'when_not_root'
 
         Process.expects(:euid=).in_sequence(when_not_root)
-        Puppet::Util::SUIDManager.expects(:initgroups).in_sequence(when_not_root)
+        Oregano::Util::SUIDManager.expects(:initgroups).in_sequence(when_not_root)
 
-        Puppet::Util::SUIDManager.change_user(0, false)
+        Oregano::Util::SUIDManager.change_user(0, false)
       end
 
       it "should set groups before euid if changing from root" do
@@ -222,10 +222,10 @@ describe Puppet::Util::SUIDManager do
 
         when_root = sequence 'when_root'
 
-        Puppet::Util::SUIDManager.expects(:initgroups).in_sequence(when_root)
+        Oregano::Util::SUIDManager.expects(:initgroups).in_sequence(when_root)
         Process.expects(:euid=).in_sequence(when_root)
 
-        Puppet::Util::SUIDManager.change_user(50, false)
+        Oregano::Util::SUIDManager.change_user(50, false)
       end
     end
   end
@@ -233,42 +233,42 @@ describe Puppet::Util::SUIDManager do
   describe "#root?" do
     describe "on POSIX systems" do
       before :each do
-        Puppet.features.stubs(:posix?).returns(true)
-        Puppet.features.stubs(:microsoft_windows?).returns(false)
+        Oregano.features.stubs(:posix?).returns(true)
+        Oregano.features.stubs(:microsoft_windows?).returns(false)
       end
 
       it "should be root if uid is 0" do
         Process.stubs(:uid).returns(0)
 
-        expect(Puppet::Util::SUIDManager).to be_root
+        expect(Oregano::Util::SUIDManager).to be_root
       end
 
       it "should not be root if uid is not 0" do
         Process.stubs(:uid).returns(1)
 
-        expect(Puppet::Util::SUIDManager).not_to be_root
+        expect(Oregano::Util::SUIDManager).not_to be_root
       end
     end
 
-    describe "on Microsoft Windows", :if => Puppet.features.microsoft_windows? do
+    describe "on Microsoft Windows", :if => Oregano.features.microsoft_windows? do
       it "should be root if user is privileged" do
-        Puppet::Util::Windows::User.stubs(:admin?).returns true
+        Oregano::Util::Windows::User.stubs(:admin?).returns true
 
-        expect(Puppet::Util::SUIDManager).to be_root
+        expect(Oregano::Util::SUIDManager).to be_root
       end
 
       it "should not be root if user is not privileged" do
-        Puppet::Util::Windows::User.stubs(:admin?).returns false
+        Oregano::Util::Windows::User.stubs(:admin?).returns false
 
-        expect(Puppet::Util::SUIDManager).not_to be_root
+        expect(Oregano::Util::SUIDManager).not_to be_root
       end
     end
   end
 end
 
-describe 'Puppet::Util::SUIDManager#groups=' do
+describe 'Oregano::Util::SUIDManager#groups=' do
   subject do
-    Puppet::Util::SUIDManager
+    Oregano::Util::SUIDManager
   end
 
 

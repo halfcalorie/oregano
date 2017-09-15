@@ -1,7 +1,7 @@
 test_name "Zone:IP ip-type and ip configuration"
 confine :to, :platform => 'solaris'
-require 'puppet/acceptance/solaris_util'
-extend Puppet::Acceptance::ZoneUtils
+require 'oregano/acceptance/solaris_util'
+extend Oregano::Acceptance::ZoneUtils
 
 tag 'audit:medium',
     'audit:refactor',  # Use block style `test_name`
